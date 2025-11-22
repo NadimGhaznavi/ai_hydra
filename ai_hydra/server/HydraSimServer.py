@@ -1,4 +1,4 @@
-# ai_hydra/server/HydraSimServer.py
+# ai-hydra/server/HydraSimServer.py
 #
 # AI Snake Lab – HydraSimServer
 # Author: Nadim-Daniel Ghaznavi
@@ -9,14 +9,15 @@
 import asyncio
 from datetime import datetime
 
-from env.Env import Env
-from policy.Policy import Policy
-from model.Model import Model
-from misc.DataLoader import DataLoader
-from network.MQClient import MQClient
+from ai_hydra.env.Env import Env
+from ai_hydra.policy.Policy import Policy
+from ai_hydra.model.Model import Model
+from ai_hydra.misc.DataLoader import DataLoader
+from ai_hydra.network.MQClient import MQClient
 
-from constants.DMQ import DMQ
-from constants.DSim import DSim
+from ai_hydra.constants.DMQ import DMQ
+from ai_hydra.constants.DSim import DSim
+
 
 class HydraSimServer:
     """

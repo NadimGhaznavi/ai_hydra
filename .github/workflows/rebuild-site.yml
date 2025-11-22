@@ -1,0 +1,19 @@
+# .github/workflows/rebuild-site.yml
+name: Rebuild GitHub Pages Site
+
+on:
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trigger GitHub Pages Build
+        run: |
+          git config --global user.email "nghaznavi@gmail.com"
+          git config --global user.name "Nadim Ghaznavi"
+          git commit --allow-empty -m "Trigger GitHub Pages rebuild"
+          git push
