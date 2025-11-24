@@ -17,11 +17,11 @@ import argparse
 
 from copy import deepcopy
 
-from ai_snake_lab.utils.LabLogger import LabLogger
+from ai_hydra.utils.LabLogger import LabLogger
 
-from ai_snake_lab.constants.DSim import DSim
-from ai_snake_lab.constants.DMQ import DMQ, DMQ_Label
-from ai_snake_lab.constants.DLabLogger import DLog
+from ai_hydra.constants.DSim import DSim
+from ai_hydra.constants.DMQ import DMQ, DMQ_Label
+from ai_hydra.constants.DLabLogger import DLog
 
 
 class SimRouter:

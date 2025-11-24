@@ -1,4 +1,4 @@
-# ai-hydra/server/HydraSimServer.py
+# ai_hydra/server/HydraSimServer.py
 #
 # AI Snake Lab – HydraSimServer
 # Author: Nadim-Daniel Ghaznavi

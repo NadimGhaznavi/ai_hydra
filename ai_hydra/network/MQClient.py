@@ -1,4 +1,4 @@
-# ai_snake_lab/utils/MQClient.py
+# ai_hydra/network/MQClient.py
 #
 #    AI Snake Lab
 #    Author: Nadim-Daniel Ghaznavi
@@ -16,10 +16,9 @@ import sys
 import random
 from datetime import datetime
 
-from ai_snake_lab.utils.MQHelper import mq_srv_msg
-
-from ai_snake_lab.constants.DSim import DSim
-from ai_snake_lab.constants.DMQ import DMQ, DMQ_Label
+from ai_hydra.network.MQHelper import mq_srv_msg
+from ai_hydra.constants.DSim import DSim
+from ai_hydra.constants.DMQ import DMQ, DMQ_Label
 
 
 class MQClient:
@@ -35,7 +34,7 @@ class MQClient:
 
         self.identity = self.identity_str.encode()
 
-        self.lablog = LabLogger(client_id=f"{self.identity_str}")
+        # self.lablog = LabLogger(client_id=f"{self.identity_str}")
         self.socket.setsockopt(zmq.IDENTITY, self.identity)
         if not self.router:
             self.router = DSim.HOST
@@ -51,8 +50,8 @@ class MQClient:
 
         # Start sending heartbeat messages
         self.heartbeat_task = asyncio.create_task(self.send_heartbeat())
-        self.lablog.loglevel(loglevel)
-        self.lablog.info(f"{DMQ_Label.CONNECTED_TO_ROUTER} {self.router_addr}")
+        # self.lablog.loglevel(loglevel)
+        # self.lablog.info(f"{DMQ_Label.CONNECTED_TO_ROUTER} {self.router_addr}")
 
     async def send_heartbeat(self):
         """Periodic heartbeat to let the SimRouter know this client is alive."""

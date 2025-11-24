@@ -9,7 +9,7 @@ ai_snake_lab/utils/MQHelper.py
     License: GPL 3.0
 """
 
-from ai_snake_lab.constants.DMQ import DMQ
+from ai_hydra.constants.DMQ import DMQ
 
 
 def mq_srv_msg(elem, data):
