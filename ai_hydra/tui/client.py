@@ -15,6 +15,13 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+try:
+    # Python 3.9+
+    from importlib.resources import files
+except ImportError:
+    # Python 3.8 fallback
+    from importlib_resources import files
+
 import zmq
 import zmq.asyncio
 from textual.app import App, ComposeResult
@@ -52,7 +59,34 @@ class HydraClient(App):
     """Minimal TUI client for AI Hydra simulation system."""
     
     TITLE = "AI Hydra - Snake Game AI Monitor"
-    CSS_PATH = Path(__file__).parent / "hydra_client.tcss"
+    CSS_PATH = "hydra_client.tcss"  # Textual will look in the same directory as this file
+    
+    # Reactive variables for real-time updates
+    simulation_state = var("idle")
+    game_score = var(0)
+    snake_length = var(3)
+    moves_count = var(0)
+    runtime_seconds = var(0)
+    
+    def __init__(self, server_address: str = "tcp://localhost:5555"):
+        super().__init__()
+        self.server_address = server_address
+        
+        # ZeroMQ setup
+        self.context = zmq.asyncio.Context()
+        self.socket = None
+        self.client_id = f"hydra-client-{uuid.uuid4().hex[:8]}"
+        self.is_connected = False
+        
+        # Background tasks
+        self.message_handler_task = None
+        self.heartbeat_task = None
+        
+        # Game board
+        self.game_board = None
+        
+        # Logging
+        self.logger = logging.getLogger(__name__)
     
     # Reactive variables for real-time updates
     simulation_state = var("idle")

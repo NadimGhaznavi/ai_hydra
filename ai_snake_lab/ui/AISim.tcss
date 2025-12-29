@@ -1,0 +1,209 @@
+/*
+ai_snake_lab/ui/AISim.tcss
+
+    AI Snake Lab
+    Author: Nadim-Daniel Ghaznavi
+    Copyright: (c) 2024-2025 Nadim-Daniel Ghaznavi
+    GitHub: https://github.com/NadimGhaznavi/ai_snake_lab
+    Website: https://snakelab.osoyalce.com
+    License: GPL 3.0
+*/
+
+Screen {
+    layout: grid;
+    grid-size: 3 5;
+    grid-rows: 3 11 9 4 24;
+    grid-columns: 32 46 36;
+}
+
+#title {
+    column-span: 3;
+    width: 100%;
+    padding: 0 1;
+    border: round #0c323e;
+    color: #3e99af;
+    background: black;
+    text-style: bold;
+    align: center middle; }
+
+#settings_box {
+    border-title-color: #5fc442;
+    border-title-style: bold;
+    border: round #0c323e;
+    padding: 0 1;
+    background: black;
+}
+
+#game_box {
+    row-span: 3;
+    border-title-color: #5fc442;
+    border-subtitle-color: #5fc442;
+    border: round #0c323e;
+    background: black;
+    align: center middle;
+    padding: 0 1; 
+}
+
+#runtime_box {
+    height: 100%;
+    border-title-color: #5fc442;
+    border-title-style: bold;
+    border: round #0c323e;
+    padding: 0 1;
+    background: black;
+}
+
+#highscores_box {
+    row-span: 2;
+    border-title-color: #5fc442;
+    border-title-style: bold;
+    border: round #0c323e;
+    padding: 0 1;
+    background: black;
+
+}
+
+#filler_2 {
+}
+
+#filler_3 {
+}
+
+TabbedPlots {
+    column-span: 3;
+    height: 19;
+    width: 114;
+    background: black
+}
+
+#game_score_plot {
+    height: 15;
+    width: 100%;
+}
+
+#highscore_plot {
+    height: 15;
+    width: 100%;
+}
+
+#loss_plot {
+    height: 15;
+    width: 100%;
+}
+
+#legend {
+    border: round #0c323e;
+}
+
+Button {
+    align: center middle;
+    border: round #0c323e;
+    width: 10;
+    background: black; 
+}
+
+#game_board {
+    border: round #0c323e;
+    align: center middle;
+    background: black;
+}
+
+
+
+#button_defaults {
+    color: #7657b3ff;
+    text-style: bold; 
+}
+
+#button_pause {
+    color: #c49b42;
+    text-style: bold; 
+}
+
+#button_reset {
+    color: #c44242;
+    text-style: bold; 
+}
+
+#button_resume {
+    color: #5fc442;
+    text-style: bold; 
+}
+
+#button_start {
+    color: #5fc442;
+    text-style: bold; 
+}
+
+#button_stop {
+    color: #c44242;
+    text-style: bold;
+}
+
+#button_restart {
+    color: #3e99af;
+    text-style: bold; 
+}
+
+#button_quit {
+    color: #c44242;
+    text-style: bold; 
+}
+
+#button_update {
+    color: #7657b3ff;
+    text-style: bold; 
+}
+
+.input_10 {
+    width: 10;
+}
+
+.label {
+    width: 19;
+    color: #afa73eff;
+}
+
+.label_settings {
+    color: #5fc442;
+    width: 18;
+}
+
+.label_settings_12 {
+    color: #5fc442;
+    width: 12;
+}
+
+.label_settings_19 {
+    color: #5fc442;
+    width: 19;
+}
+
+.paused #button_pause {
+    display: none;
+}
+
+.paused #button_start {
+    display: none;
+}
+
+.running #button_start {
+    display: none;
+}
+
+.running #button_resume {
+    display: none;
+}
+
+.stopped #button_pause {
+    display: none;
+}
+
+.stopped #button_resume {
+    display: none;
+}
+
+.variable {
+    color: #afa73eff
+}
+
