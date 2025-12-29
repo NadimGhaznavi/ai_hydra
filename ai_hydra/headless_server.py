@@ -108,7 +108,7 @@ class HeadlessServer:
         
         try:
             # Start server in background
-            server_task = asyncio.create_task(self.server.start())
+            await self.server.start_background()
             
             # Wait for shutdown signal
             self.logger.info("Server running. Press Ctrl+C to stop.")
@@ -119,14 +119,6 @@ class HeadlessServer:
             # Stop the server gracefully
             if self.server:
                 await self.server.stop()
-            
-            # Cancel server task
-            server_task.cancel()
-            
-            try:
-                await server_task
-            except asyncio.CancelledError:
-                self.logger.info("Server task cancelled successfully")
             
         except Exception as e:
             # Only log as error if it's not a graceful shutdown

@@ -97,20 +97,54 @@ class ZMQServer:
         
         self.is_running = True
         
-        # Start background tasks
+        self.logger.info("ZMQ server started successfully")
+        
+        # Start background tasks (don't wait for them)
+        self.logger.info("Starting background tasks...")
         heartbeat_task = asyncio.create_task(self._heartbeat_loop())
         status_task = asyncio.create_task(self._status_update_loop())
-        message_task = asyncio.create_task(self._message_loop())
+        
+        self.logger.info("Background tasks started, starting message loop...")
+        
+        try:
+            # Run message loop in foreground - this will block until server stops
+            await self._message_loop()
+        except asyncio.CancelledError:
+            self.logger.info("ZMQ server message loop cancelled")
+        except Exception as e:
+            self.logger.error(f"Message loop error: {e}")
+            raise
+        finally:
+            self.logger.info("Cleaning up background tasks...")
+            # Cancel background tasks
+            heartbeat_task.cancel()
+            status_task.cancel()
+            
+            # Wait for tasks to finish
+            try:
+                await asyncio.gather(heartbeat_task, status_task, return_exceptions=True)
+            except Exception:
+                pass
+    
+    async def start_background(self) -> None:
+        """Start the ZeroMQ server as background tasks."""
+        self.logger.info(f"Starting ZMQ server on {self.bind_address}")
+        
+        # Create and bind socket
+        self.socket = self.context.socket(zmq.REP)
+        self.socket.bind(self.bind_address)
+        
+        self.is_running = True
         
         self.logger.info("ZMQ server started successfully")
         
-        try:
-            # Wait for all tasks
-            await asyncio.gather(heartbeat_task, status_task, message_task)
-        except asyncio.CancelledError:
-            self.logger.info("ZMQ server tasks cancelled")
-        finally:
-            await self.stop()
+        # Start all tasks as background tasks
+        self.logger.info("Starting all tasks as background...")
+        self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+        self.status_task = asyncio.create_task(self._status_update_loop())
+        self.message_task = asyncio.create_task(self._message_loop())
+        
+        self.logger.info("All background tasks started")
     
     async def stop(self) -> None:
         """Stop the ZeroMQ server."""
@@ -122,6 +156,29 @@ class ZMQServer:
         if self.simulation_state == SimulationState.RUNNING:
             await self._stop_simulation()
         
+        # Cancel background tasks if they exist
+        if hasattr(self, 'heartbeat_task'):
+            self.heartbeat_task.cancel()
+        if hasattr(self, 'status_task'):
+            self.status_task.cancel()
+        if hasattr(self, 'message_task'):
+            self.message_task.cancel()
+        
+        # Wait for tasks to finish
+        tasks = []
+        if hasattr(self, 'heartbeat_task'):
+            tasks.append(self.heartbeat_task)
+        if hasattr(self, 'status_task'):
+            tasks.append(self.status_task)
+        if hasattr(self, 'message_task'):
+            tasks.append(self.message_task)
+        
+        if tasks:
+            try:
+                await asyncio.gather(*tasks, return_exceptions=True)
+            except Exception:
+                pass
+        
         # Close socket and context
         if self.socket:
             self.socket.close()
@@ -131,12 +188,15 @@ class ZMQServer:
     
     async def _message_loop(self) -> None:
         """Main message processing loop."""
+        self.logger.info("Message loop started")
         while self.is_running:
             try:
                 # Wait for message with timeout
                 if await self.socket.poll(timeout=1000):  # 1 second timeout
+                    self.logger.debug("Message received, processing...")
                     message_data = await self.socket.recv_string()
                     self.messages_received += 1
+                    self.logger.info(f"Received message: {message_data[:100]}...")
                     
                     # Process message
                     response = await self._process_message(message_data)
@@ -144,8 +204,10 @@ class ZMQServer:
                     # Send response
                     await self.socket.send_string(response.to_json())
                     self.messages_sent += 1
+                    self.logger.info(f"Sent response: {response.message_type.value}")
                     
             except zmq.error.ContextTerminated:
+                self.logger.info("ZMQ context terminated")
                 break
             except Exception as e:
                 self.logger.error(f"Error in message loop: {e}")
@@ -161,6 +223,8 @@ class ZMQServer:
                     self.messages_sent += 1
                 except:
                     pass
+        
+        self.logger.info("Message loop ended")
     
     async def _process_message(self, message_data: str) -> ZMQMessage:
         """
