@@ -1,6 +1,6 @@
 [project]
 name = "ai-hydra"
-version = "0.2.2"
+version = "0.2.3"
 description = "A sophisticated parallel neural network exploration system for Snake Game AI with budget-constrained tree search"
 authors = [{ name = "Nadim-Daniel Ghaznavi", email = "nghaznavi@gmail.com" }]
 license = { text = "GPL-3.0" }
@@ -39,19 +39,21 @@ dependencies = [
     "torch>=2.0.0",
     "hydra-core>=1.3.0",
     "hydra-zen>=0.11.0",
+    "omegaconf>=2.3.0",
     "numpy>=1.24.0",
     
     # ZeroMQ for headless server communication
     "pyzmq>=25.0.0",
     
-    # Testing framework
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "hypothesis>=6.0.0",
+    # System monitoring and utilities
+    "psutil>=5.9.0",
     
-    # Optional visualization and monitoring
-    "matplotlib>=3.7.0",
-    "tensorboard>=2.13.0",
+    # Data handling and serialization
+    "pyyaml>=6.0",
+    
+    # Testing framework (needed for runtime property-based testing)
+    "pytest>=7.0.0",
+    "hypothesis>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -60,6 +62,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.15.0",
     "pytest-timeout>=2.1.0",
+    "pytest-asyncio>=0.21.0",
     "hypothesis>=6.0.0",
     "black>=23.0.0",
     "isort>=5.12.0",
@@ -79,6 +82,9 @@ viz = [
 server = [
     "python-daemon>=3.0.0",
     "aiohttp>=3.8.0",
+]
+all = [
+    "ai-hydra[dev,docs,viz,server]",
 ]
 
 [project.scripts]
