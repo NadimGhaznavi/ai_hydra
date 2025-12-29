@@ -10,6 +10,9 @@ include requirements-docs.txt
 include pyproject.toml
 include poetry.lock
 
+# Include examples
+recursive-include examples *.py *.md
+
 # Include documentation
 recursive-include docs *.rst *.md *.py *.bat Makefile
 recursive-include docs/_static *

@@ -226,13 +226,37 @@ Examples:
             log_file=args.log_file
         )
         
+        # Setup signal handlers in main thread
+        def signal_handler(signum, frame):
+            print(f"\n🛑 Received signal {signum}, shutting down server...")
+            # Set the shutdown event from the main thread
+            if hasattr(server, 'shutdown_event') and server.shutdown_event:
+                # We need to schedule this in the event loop
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.call_soon_threadsafe(server.shutdown_event.set)
+                except RuntimeError:
+                    # No running loop, just exit
+                    print("🔄 Force shutdown...")
+                    sys.exit(0)
+            else:
+                sys.exit(0)
+        
+        # Handle SIGINT (Ctrl+C) and SIGTERM
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
         try:
+            print("🚀 Starting AI Hydra Server...")
+            print("📡 Press Ctrl+C to stop")
             asyncio.run(server.start())
         except KeyboardInterrupt:
-            print("\nServer interrupted by user")
+            print("\n🛑 Server interrupted by user")
         except Exception as e:
-            print(f"Server failed: {e}")
+            print(f"❌ Server failed: {e}")
             sys.exit(1)
+        finally:
+            print("👋 Server shutdown complete")
 
 
 if __name__ == "__main__":
