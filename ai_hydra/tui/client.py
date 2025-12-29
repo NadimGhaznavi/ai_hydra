@@ -52,7 +52,7 @@ class HydraClient(App):
     """Minimal TUI client for AI Hydra simulation system."""
     
     TITLE = "AI Hydra - Snake Game AI Monitor"
-    CSS_PATH = "ai_hydra/tui/hydra_client.tcss"
+    CSS_PATH = Path(__file__).parent / "hydra_client.tcss"
     
     # Reactive variables for real-time updates
     simulation_state = var("idle")
