@@ -1,8 +1,8 @@
 """
 AI Hydra TUI Client
 
-Minimal terminal user interface for the AI Hydra simulation system.
-Adapts proven patterns from ai_snake_lab while integrating with AI Hydra's ZeroMQ protocol.
+Terminal user interface for the AI Hydra simulation system.
+Uses the correct AI Hydra ZeroMQ protocol for communication.
 """
 
 import argparse
@@ -15,13 +15,6 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-try:
-    # Python 3.9+
-    from importlib.resources import files
-except ImportError:
-    # Python 3.8 fallback
-    from importlib_resources import files
-
 import zmq
 import zmq.asyncio
 from textual.app import App, ComposeResult
@@ -31,6 +24,7 @@ from textual.theme import Theme
 from textual.widgets import Button, Input, Label, Log, Static
 
 from ai_hydra.tui.game_board import HydraGameBoard
+from ai_hydra.zmq_protocol import ZMQMessage, MessageType
 
 
 # AI Hydra Theme (adapted from ai_snake_lab)
@@ -56,7 +50,7 @@ HYDRA_THEME = Theme(
 
 
 class HydraClient(App):
-    """Minimal TUI client for AI Hydra simulation system."""
+    """TUI client for AI Hydra simulation system using correct ZeroMQ protocol."""
     
     TITLE = "AI Hydra - Snake Game AI Monitor"
     CSS_PATH = "hydra_client.tcss"  # Textual will look in the same directory as this file
@@ -72,42 +66,14 @@ class HydraClient(App):
         super().__init__()
         self.server_address = server_address
         
-        # ZeroMQ setup
-        self.context = zmq.asyncio.Context()
+        # ZeroMQ setup - will be initialized in connect_to_server
+        self.context = None
         self.socket = None
         self.client_id = f"hydra-client-{uuid.uuid4().hex[:8]}"
         self.is_connected = False
         
         # Background tasks
-        self.message_handler_task = None
-        self.heartbeat_task = None
-        
-        # Game board
-        self.game_board = None
-        
-        # Logging
-        self.logger = logging.getLogger(__name__)
-    
-    # Reactive variables for real-time updates
-    simulation_state = var("idle")
-    game_score = var(0)
-    snake_length = var(3)
-    moves_count = var(0)
-    runtime_seconds = var(0)
-    
-    def __init__(self, server_address: str = "tcp://localhost:5555"):
-        super().__init__()
-        self.server_address = server_address
-        
-        # ZeroMQ setup
-        self.context = zmq.asyncio.Context()
-        self.socket = None
-        self.client_id = f"hydra-client-{uuid.uuid4().hex[:8]}"
-        self.is_connected = False
-        
-        # Background tasks
-        self.message_handler_task = None
-        self.heartbeat_task = None
+        self.status_poll_task = None
         
         # Game board
         self.game_board = None
@@ -196,103 +162,103 @@ class HydraClient(App):
     async def connect_to_server(self) -> bool:
         """Establish connection to the AI Hydra server."""
         try:
+            # Use async ZMQ context and socket
+            self.context = zmq.asyncio.Context()
             self.socket = self.context.socket(zmq.REQ)
             self.socket.connect(self.server_address)
             
-            # Test connection with ping
-            await self.send_command("ping", {})
+            # Test connection with get_status
+            response = await self.send_command(MessageType.GET_STATUS, {})
             
-            self.is_connected = True
-            self.log_message(f"Connected to server at {self.server_address}")
-            
-            # Start background tasks
-            self.message_handler_task = asyncio.create_task(self.handle_messages())
-            self.heartbeat_task = asyncio.create_task(self.send_heartbeat())
-            
-            return True
+            if response:
+                self.is_connected = True
+                self.log_message(f"Connected to server at {self.server_address}")
+                
+                # Start background status polling
+                self.status_poll_task = asyncio.create_task(self.poll_status())
+                
+                return True
+            else:
+                self.log_message("Failed to get response from server", level="error")
+                return False
             
         except Exception as e:
             self.log_message(f"Connection failed: {e}", level="error")
             self.is_connected = False
             return False
     
-    async def send_command(self, command: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def send_command(self, message_type: MessageType, data: Dict[str, Any]) -> Optional[ZMQMessage]:
         """Send a command to the server and wait for response."""
-        if not self.is_connected or not self.socket:
-            self.log_message("Not connected to server", level="error")
+        if not self.socket:
+            self.log_message("No socket available", level="error")
             return None
             
         try:
-            message = {
-                "client_id": self.client_id,
-                "command": command,
-                "data": data,
-                "timestamp": time.time()
-            }
+            # Create AI Hydra protocol message
+            request_id = str(uuid.uuid4())
+            message = ZMQMessage.create_command(
+                message_type=message_type,
+                client_id=self.client_id,
+                request_id=request_id,
+                data=data
+            )
             
-            await self.socket.send_string(json.dumps(message))
+            # Send message
+            await self.socket.send_string(message.to_json())
             
             # Wait for response with timeout
             if await self.socket.poll(timeout=5000):  # 5 second timeout
                 response_data = await self.socket.recv_string()
-                return json.loads(response_data)
+                response = ZMQMessage.from_json(response_data)
+                return response
             else:
-                self.log_message(f"Timeout waiting for response to {command}", level="warning")
+                self.log_message(f"Timeout waiting for response to {message_type.value}", level="warning")
                 return None
                 
         except Exception as e:
-            self.log_message(f"Error sending command {command}: {e}", level="error")
+            self.log_message(f"Error sending command {message_type.value}: {e}", level="error")
             return None
     
-    async def handle_messages(self) -> None:
-        """Handle incoming messages from server."""
+    async def poll_status(self) -> None:
+        """Poll server status periodically."""
         while self.is_connected:
             try:
-                # For now, we'll use polling since we're using REQ/REP pattern
-                # In a full implementation, we'd use PUB/SUB for status updates
-                await asyncio.sleep(1.0)  # Poll every second
+                response = await self.send_command(MessageType.GET_STATUS, {})
+                if response and response.data:
+                    await self.process_status_update(response.data)
                 
-                # Request status update
-                response = await self.send_command("get_status", {})
-                if response and "data" in response:
-                    await self.process_status_update(response["data"])
+                await asyncio.sleep(1.0)  # Poll every second
                     
             except Exception as e:
-                self.log_message(f"Message handling error: {e}", level="error")
+                self.log_message(f"Status polling error: {e}", level="error")
                 await asyncio.sleep(1.0)
     
     async def process_status_update(self, status_data: Dict[str, Any]) -> None:
         """Process status update from server."""
         try:
-            # Update reactive variables
-            if "simulation_state" in status_data:
-                self.simulation_state = status_data["simulation_state"]
+            # Update reactive variables based on AI Hydra protocol
+            if "simulation_status" in status_data:
+                self.simulation_state = status_data["simulation_status"]
                 
             if "game_state" in status_data:
                 game_state = status_data["game_state"]
                 self.game_score = game_state.get("score", 0)
-                self.snake_length = len(game_state.get("snake_body", []))
+                
+                snake_body = game_state.get("snake_body", [])
+                self.snake_length = len(snake_body)
+                
                 self.moves_count = game_state.get("moves_count", 0)
                 
                 # Update game board
                 if self.game_board:
                     await self.game_board.update_game_state(game_state)
                     
-            if "runtime_seconds" in status_data:
-                self.runtime_seconds = status_data["runtime_seconds"]
+            if "performance" in status_data:
+                performance = status_data["performance"]
+                # Could extract runtime from performance metrics if available
                 
         except Exception as e:
             self.log_message(f"Error processing status update: {e}", level="error")
-    
-    async def send_heartbeat(self) -> None:
-        """Send periodic heartbeat to server."""
-        while self.is_connected:
-            try:
-                await self.send_command("heartbeat", {"client_id": self.client_id})
-                await asyncio.sleep(30.0)  # Heartbeat every 30 seconds
-            except Exception as e:
-                self.log_message(f"Heartbeat error: {e}", level="error")
-                await asyncio.sleep(30.0)
     
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
@@ -312,53 +278,61 @@ class HydraClient(App):
     async def start_simulation(self) -> None:
         """Start the simulation."""
         config = self.get_simulation_config()
-        response = await self.send_command("start_simulation", config)
+        response = await self.send_command(MessageType.START_SIMULATION, {"config": config})
         
-        if response and response.get("success"):
+        if response and response.message_type == MessageType.SIMULATION_STARTED:
             self.simulation_state = "running"
             self.log_message("Simulation started")
         else:
-            error_msg = response.get("error", "Unknown error") if response else "No response"
+            error_msg = "Unknown error"
+            if response and response.data:
+                error_msg = response.data.get("error_message", error_msg)
             self.log_message(f"Failed to start simulation: {error_msg}", level="error")
     
     async def stop_simulation(self) -> None:
         """Stop the simulation."""
-        response = await self.send_command("stop_simulation", {})
+        response = await self.send_command(MessageType.STOP_SIMULATION, {})
         
-        if response and response.get("success"):
+        if response and response.message_type == MessageType.SIMULATION_STOPPED:
             self.simulation_state = "stopped"
             self.log_message("Simulation stopped")
         else:
-            error_msg = response.get("error", "Unknown error") if response else "No response"
+            error_msg = "Unknown error"
+            if response and response.data:
+                error_msg = response.data.get("error_message", error_msg)
             self.log_message(f"Failed to stop simulation: {error_msg}", level="error")
     
     async def pause_simulation(self) -> None:
         """Pause the simulation."""
-        response = await self.send_command("pause_simulation", {})
+        response = await self.send_command(MessageType.PAUSE_SIMULATION, {})
         
-        if response and response.get("success"):
+        if response and response.message_type == MessageType.SIMULATION_PAUSED:
             self.simulation_state = "paused"
             self.log_message("Simulation paused")
         else:
-            error_msg = response.get("error", "Unknown error") if response else "No response"
+            error_msg = "Unknown error"
+            if response and response.data:
+                error_msg = response.data.get("error_message", error_msg)
             self.log_message(f"Failed to pause simulation: {error_msg}", level="error")
     
     async def resume_simulation(self) -> None:
         """Resume the simulation."""
-        response = await self.send_command("resume_simulation", {})
+        response = await self.send_command(MessageType.RESUME_SIMULATION, {})
         
-        if response and response.get("success"):
+        if response and response.message_type == MessageType.SIMULATION_RESUMED:
             self.simulation_state = "running"
             self.log_message("Simulation resumed")
         else:
-            error_msg = response.get("error", "Unknown error") if response else "No response"
+            error_msg = "Unknown error"
+            if response and response.data:
+                error_msg = response.data.get("error_message", error_msg)
             self.log_message(f"Failed to resume simulation: {error_msg}", level="error")
     
     async def reset_simulation(self) -> None:
         """Reset the simulation."""
-        response = await self.send_command("reset_simulation", {})
+        response = await self.send_command(MessageType.RESET_SIMULATION, {})
         
-        if response and response.get("success"):
+        if response and response.message_type == MessageType.SIMULATION_RESET:
             self.simulation_state = "idle"
             self.game_score = 0
             self.snake_length = 3
@@ -375,7 +349,9 @@ class HydraClient(App):
             
             self.log_message("Simulation reset")
         else:
-            error_msg = response.get("error", "Unknown error") if response else "No response"
+            error_msg = "Unknown error"
+            if response and response.data:
+                error_msg = response.data.get("error_message", error_msg)
             self.log_message(f"Failed to reset simulation: {error_msg}", level="error")
     
     def get_simulation_config(self) -> Dict[str, Any]:
@@ -484,10 +460,8 @@ class HydraClient(App):
         self.is_connected = False
         
         # Cancel background tasks
-        if self.message_handler_task:
-            self.message_handler_task.cancel()
-        if self.heartbeat_task:
-            self.heartbeat_task.cancel()
+        if self.status_poll_task:
+            self.status_poll_task.cancel()
         
         # Close socket
         if self.socket:
