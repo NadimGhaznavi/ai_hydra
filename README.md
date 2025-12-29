@@ -15,6 +15,7 @@ The AI Hydra addresses the fundamental problem where legacy AI regularly scores 
 - **🎯 Collision Avoidance Mastery**: Achieve consistent scores > 10 through deep thinking
 - **🔄 Deterministic Reproducibility**: Seed-controlled randomness for reliable experiments
 - **📡 ZeroMQ Headless Operation**: Complete message-based control without GUI dependencies
+- **🖥️ Terminal User Interface**: Real-time visualization and control via Textual TUI
 - **⚙️ Hydra Zen Configuration**: Flexible parameter management for concurrent systems
 - **🧪 Comprehensive Testing**: Property-based tests with timeout protection
 
@@ -28,6 +29,28 @@ cd ai-hydra
 pip install -r requirements.txt
 pip install -e .
 ```
+
+### TUI Client (Recommended)
+
+For interactive visualization and control, use the Terminal User Interface:
+
+```bash
+# Install TUI dependencies
+pip install -e .[tui]
+
+# Start the headless server (in one terminal)
+ai-hydra-server
+
+# Start the TUI client (in another terminal)
+ai-hydra-tui --server tcp://localhost:5555
+```
+
+The TUI provides:
+- **Real-time game visualization** with colorful Snake game display
+- **Interactive controls** for start, stop, pause, resume, reset
+- **Live status monitoring** showing score, moves, snake length, runtime
+- **Configuration interface** for grid size and move budget
+- **Message logging** with real-time updates and error handling
 
 ### Basic Usage
 
@@ -61,7 +84,7 @@ print(f"Collision avoidance achieved: {result.final_score > 10}")
 
 ### Headless Operation
 
-For production deployments, run the system headlessly:
+For production deployments or programmatic control:
 
 ```python
 from ai_hydra.headless_server import HeadlessServer
@@ -71,10 +94,17 @@ server = HeadlessServer(port=5555)
 server.start()
 
 print("Headless AI agent running on port 5555")
-print("Control via ZeroMQ messages")
+print("Control via ZeroMQ messages or TUI client")
 ```
 
-Control via client:
+Control via TUI client (recommended):
+
+```bash
+# Start TUI for interactive control
+ai-hydra-tui --server tcp://localhost:5555
+```
+
+Or control programmatically via ZeroMQ client:
 
 ```python
 from ai_hydra.zmq_client_example import ZMQClient
@@ -94,6 +124,71 @@ status = client.send_command("GET_STATUS")
 print(f"Current score: {status['current_score']}")
 ```
 
+## Terminal User Interface (TUI)
+
+AI Hydra includes a sophisticated terminal-based user interface built with [Textual](https://textual.textualize.io/) for real-time visualization and control.
+
+### TUI Features
+
+- **🎮 Real-time Game Visualization**: Watch the Snake game play with colorful terminal graphics
+- **🎛️ Interactive Controls**: Start, stop, pause, resume, and reset simulations with buttons
+- **📊 Live Status Monitoring**: Real-time display of score, moves, snake length, and runtime
+- **⚙️ Configuration Interface**: Adjust grid size, move budget, and other parameters
+- **📝 Message Logging**: Color-coded real-time messages and error handling
+- **🎨 Themed Interface**: Beautiful AI Hydra color scheme adapted from proven TUI patterns
+
+### TUI Usage
+
+```bash
+# Install TUI dependencies
+pip install -e .[tui]
+
+# Start the TUI client
+ai-hydra-tui --server tcp://localhost:5555
+
+# With custom server address
+ai-hydra-tui --server tcp://192.168.1.100:5555
+
+# Enable verbose logging
+ai-hydra-tui --verbose
+```
+
+### TUI Interface Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AI Hydra - Snake Game AI Monitor         │
+├─────────────────┬───────────────────────────┬───────────────┤
+│   Control       │                           │    Status     │
+│   Panel         │        Game Board         │    Panel      │
+│                 │                           │               │
+│ [Start] [Stop]  │    ████████████████       │ State: Running│
+│ [Pause][Resume] │    █▓▓▓▓▓▓▓▓▓▓▓▓▓█       │ Score: 42     │
+│ [Reset]         │    █▓░░░●░░░░░░░░▓█       │ Moves: 156    │
+│                 │    █▓░░░░░░░░░░░▓█       │ Length: 8     │
+│ Grid: 20,20     │    █▓░░░░░░░░░░░▓█       │ Runtime: 2:34 │
+│ Budget: 100     │    █▓░░░░░░░░░░░▓█       │               │
+│                 │    █▓▓▓▓▓▓▓▓▓▓▓▓▓█       │               │
+│                 │    ████████████████       │               │
+├─────────────────┴───────────────────────────┴───────────────┤
+│                        Messages                             │
+│ [12:34:56] Connected to server at tcp://localhost:5555     │
+│ [12:34:57] Simulation started                              │
+│ [12:34:58] Score increased to 42                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### TUI Controls
+
+- **Keyboard**: `Tab` to navigate, `Enter` to activate, `Ctrl+C` to quit
+- **Start**: Begin simulation with current configuration
+- **Stop**: Stop current simulation
+- **Pause/Resume**: Pause and resume running simulations
+- **Reset**: Reset simulation and clear all data
+- **Configuration**: Adjust grid size (format: "width,height") and move budget
+
+For complete TUI documentation, see [`ai_hydra/tui/README.md`](ai_hydra/tui/README.md).
+
 ## Architecture
 
 The system consists of several key components:
@@ -105,6 +200,7 @@ The system consists of several key components:
 - **Tree Search**: Budget-constrained exploration with parallel NN evaluation
 - **Oracle Trainer**: Learning system that improves NN from tree search results
 - **ZeroMQ Server**: Headless communication layer for remote control
+- **TUI Client**: Terminal user interface for real-time visualization and control
 
 ### Decision Flow
 
@@ -270,7 +366,10 @@ make html
 # Start headless server
 python -m ai_hydra.headless_server
 
-# Connect with example client
+# Option 1: Connect with TUI client (recommended)
+ai-hydra-tui --server tcp://localhost:5555
+
+# Option 2: Connect with example client
 python -m ai_hydra.zmq_client_example --mode interactive
 ```
 
