@@ -1,0 +1,176 @@
+/*
+AI Hydra TUI Client Styles
+
+CSS styling for the AI Hydra terminal user interface.
+Adapted from ai_snake_lab with AI Hydra branding.
+*/
+
+Screen {
+    layout: grid;
+    grid-size: 3 4;
+    grid-rows: 3 1fr 1fr 1fr;
+    grid-columns: 1fr 2fr 1fr;
+}
+
+#title {
+    column-span: 3;
+    width: 100%;
+    padding: 0 1;
+    border: round #0c323e;
+    color: #88C0D0;
+    background: black;
+    text-style: bold;
+    align: center middle;
+}
+
+#game_box {
+    row-span: 3;
+    border-title-color: #A3BE8C;
+    border-subtitle-color: #A3BE8C;
+    border: round #0c323e;
+    background: black;
+    align: center middle;
+    padding: 0 1;
+}
+
+#control_panel {
+    border-title-color: #88C0D0;
+    border-title-style: bold;
+    border: round #0c323e;
+    padding: 0 1;
+    background: black;
+}
+
+#status_panel {
+    border-title-color: #EBCB8B;
+    border-title-style: bold;
+    border: round #0c323e;
+    padding: 0 1;
+    background: black;
+}
+
+#log_panel {
+    border-title-color: #B48EAD;
+    border-title-style: bold;
+    border: round #0c323e;
+    padding: 0 1;
+    background: black;
+}
+
+#game_board {
+    border: round #0c323e;
+    align: center middle;
+    background: black;
+}
+
+Button {
+    align: center middle;
+    border: round #0c323e;
+    width: 10;
+    background: black;
+    margin: 0 1;
+}
+
+#btn_start {
+    color: #A3BE8C;
+    text-style: bold;
+}
+
+#btn_stop {
+    color: #BF616A;
+    text-style: bold;
+}
+
+#btn_pause {
+    color: #EBCB8B;
+    text-style: bold;
+}
+
+#btn_resume {
+    color: #88C0D0;
+    text-style: bold;
+}
+
+#btn_reset {
+    color: #B48EAD;
+    text-style: bold;
+}
+
+.button_row {
+    height: 3;
+    align: center middle;
+}
+
+.config_label {
+    width: 12;
+    color: #88C0D0;
+}
+
+.config_input {
+    width: 15;
+}
+
+.section_header {
+    color: #88C0D0;
+    text-style: bold;
+    padding: 0 0 1 0;
+}
+
+.status_label {
+    width: 12;
+    color: #EBCB8B;
+}
+
+.status_value {
+    color: #A3BE8C;
+    text-style: bold;
+}
+
+/* State-based button visibility */
+.idle #btn_pause {
+    display: none;
+}
+
+.idle #btn_resume {
+    display: none;
+}
+
+.running #btn_start {
+    display: none;
+}
+
+.running #btn_resume {
+    display: none;
+}
+
+.paused #btn_start {
+    display: none;
+}
+
+.paused #btn_pause {
+    display: none;
+}
+
+.stopped #btn_pause {
+    display: none;
+}
+
+.stopped #btn_resume {
+    display: none;
+}
+
+/* Log styling */
+Log {
+    background: black;
+    color: #31b8e6;
+}
+
+/* Input styling */
+Input {
+    background: #111111;
+    color: #31b8e6;
+}
+
+Input:focus {
+    border: solid #88C0D0;
+}

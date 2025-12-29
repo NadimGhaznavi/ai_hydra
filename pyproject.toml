@@ -83,12 +83,17 @@ server = [
     "python-daemon>=3.0.0",
     "aiohttp>=3.8.0",
 ]
+tui = [
+    "textual>=0.41.0",
+    "rich>=13.0.0",
+]
 
 [project.scripts]
 ai-hydra = "ai_hydra.cli:simple_cli"
 ai-hydra-advanced = "ai_hydra.cli:run_simulation_cli"
 ai-hydra-server = "ai_hydra.headless_server:main"
 ai-hydra-config = "ai_hydra.cli:create_config_file"
+ai-hydra-tui = "ai_hydra.tui.client:main"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/NadimGhaznavi/ai-hydra/issues"
