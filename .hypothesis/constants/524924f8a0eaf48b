@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/headless_server.py
+# hypothesis_version: 6.148.8
+
+[5.0, '--bind', '--daemon', '--heartbeat', '--log-file', '--log-level', 'DEBUG', 'ERROR', 'INFO', 'WARNING', '__main__', 'headless_server', 'store_true', 'tcp://*:5555', 'w+']

@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/neural_network.py
+# hypothesis_version: 6.148.8
+
+[200, '19 → 200 → 200 → 3', 'architecture', 'hidden_size', 'input_features', 'output_actions', 'total_parameters', 'trainable_parameters']

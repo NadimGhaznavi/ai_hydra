@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/zmq_client_example.py
+# hypothesis_version: 6.148.8
+
+[1000, 10000, '\nExiting...', '  quit - Exit client', '--mode', '--server', 'Client mode', 'Commands:', 'Enter command: ', 'Server address', '__main__', 'config', 'demo', 'game_state', 'grid_size', 'initial_snake_length', 'interactive', 'move_budget', 'nn_enabled', 'pause', 'performance', 'quit', 'random_seed', 'reset', 'resume', 'start', 'status', 'stop', 'tcp://localhost:5555']

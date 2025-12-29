@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/master_game.py
+# hypothesis_version: 6.148.8
+
+[0.0, 'Master game summary', 'Master move applied', 'avg_score_per_move', 'clone_created', 'collision', 'collisions', 'current_score', 'current_snake_length', 'final_score', 'final_snake_length', 'food_consumed', 'food_eaten', 'game_completed', 'game_duration', 'game_efficiency', 'grid_size', 'initial_score', 'is_terminal', 'master_game', 'max_score', 'move', 'move_number', 'moves_played', 'new_score', 'outcome', 'result', 'reward', 'score_after', 'score_before', 'score_change', 'score_progression', 'snake_length', 'termination_reason', 'total_moves', 'tracking_enabled', 'unknown']

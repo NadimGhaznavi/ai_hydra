@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/exploration_clone.py
+# hypothesis_version: 6.148.8
+
+['ACTIVE', 'TERMINATED', 'clone_id', 'cumulative_reward', 'current_score', 'depth', 'is_terminated', 'parent_id', 'path_length', 'step_count', 'termination_reason']

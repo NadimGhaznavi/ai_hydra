@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/zmq_server.py
+# hypothesis_version: 6.148.8
+
+[0.1, 0.5, 1.0, 5.0, 100, 1000, 1024, '--bind', '--heartbeat', '--log-level', 'INFO', 'InvalidState', 'Logging level', 'Simulation paused', 'Simulation resumed', 'Simulation started', 'Simulation stopped', 'Stopping ZMQ server', 'UnsupportedMessage', 'ValidationError', 'ZMQ server stopped', 'ZeroMQ bind address', '__main__', 'collision_penalty', 'config', 'connected_clients', 'empty_move_reward', 'error', 'error_message', 'error_type', 'food_reward', 'game_state', 'grid_size', 'idle', 'initial_snake_length', 'master_game', 'max_tree_depth', 'message', 'message_processor', 'messages_received', 'messages_sent', 'move_budget', 'nn_enabled', 'oracle_trainer', 'paused', 'performance', 'random_seed', 'recoverable', 'running', 'server_id', 'simulation_state', 'stopped', 'tcp://*:5555', 'unknown', 'uptime_seconds', 'zmq_server']

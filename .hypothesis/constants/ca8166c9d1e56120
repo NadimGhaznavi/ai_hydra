@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/oracle_trainer.py
+# hypothesis_version: 6.148.8
+
+[0.0, 0.001, 100, 'batch_size', 'correct_predictions', 'learning_rate', 'model_state_dict', 'optimizer_state_dict', 'oracle_trainer', 'overall_accuracy', 'pending_samples', 'recent_accuracy', 'total_predictions', 'training_statistics', 'training_updates']

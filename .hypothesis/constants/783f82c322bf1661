@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/budget_controller.py
+# hypothesis_version: 6.148.8
+
+[0.0, -1000, 100, 'Budget exhausted', 'Budget reinitialized', 'BudgetController', 'avg_moves_per_round', 'budget_at_end', 'budget_at_start', 'budget_consumed', 'budget_controller', 'budget_efficiency', 'budget_history', 'budget_remaining', 'budget_utilization', 'can_continue', 'consumed', 'current_budget', 'efficiency_metrics', 'initial_budget', 'is_exhausted', 'moves_executed', 'moves_in_final_round', 'moves_in_round', 'new_budget', 'old_budget', 'peak_round_size', 'remaining', 'reset_budget', 'round', 'round_history', 'round_number', 'rounds_completed', 'total_budget', 'total_consumed', 'total_moves_consumed', 'total_rounds', 'tracking_enabled', 'tracking_reset', 'utilization_rate']

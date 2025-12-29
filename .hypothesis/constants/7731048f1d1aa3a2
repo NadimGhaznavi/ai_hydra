@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/models.py
+# hypothesis_version: 6.148.8
+
+[100, 'Direction', 'FOOD', 'GameBoard', 'LEFT_TURN', 'Position', 'RIGHT_TURN', 'SNAKE', 'STRAIGHT', 'WALL']

@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/game_logic.py
+# hypothesis_version: 6.148.8
+
+[100, 'EMPTY', 'FOOD', 'MAX_MOVES', 'SNAKE', 'WALL']
