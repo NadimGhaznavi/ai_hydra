@@ -77,19 +77,195 @@ def save_model(pipeline: SimulationPipeline, output_dir: Path, experiment_name: 
     print(f"Model saved to {model_file}")
 
 
-@hydra.main(version_base=None, config_path=None, config_name="config")
-def run_simulation_cli(cfg: DictConfig) -> None:
+def simple_cli():
+    """Simple CLI entry point without Hydra configuration complexity."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="AI Hydra - Parallel Neural Network Snake Game AI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run with default settings
+  ai-hydra
+  
+  # Run with custom grid size
+  ai-hydra --grid-size 8 8
+  
+  # Run with more thinking budget
+  ai-hydra --budget 100
+  
+  # Run multiple games
+  ai-hydra --num-games 5
+        """
+    )
+    
+    parser.add_argument(
+        "--grid-size", 
+        nargs=2, 
+        type=int, 
+        default=[10, 10],
+        help="Grid size (width height), default: 10 10"
+    )
+    
+    parser.add_argument(
+        "--budget", 
+        type=int, 
+        default=50,
+        help="Move budget for tree search, default: 50"
+    )
+    
+    parser.add_argument(
+        "--num-games", 
+        type=int, 
+        default=1,
+        help="Number of games to run, default: 1"
+    )
+    
+    parser.add_argument(
+        "--seed", 
+        type=int, 
+        default=42,
+        help="Random seed, default: 42"
+    )
+    
+    parser.add_argument(
+        "--no-nn", 
+        action="store_true",
+        help="Disable neural network (tree search only)"
+    )
+    
+    parser.add_argument(
+        "--verbose", 
+        action="store_true",
+        help="Enable verbose logging"
+    )
+    
+    args = parser.parse_args()
+    
+    # Create configurations from arguments
+    sim_config = SimulationConfig(
+        grid_size=tuple(args.grid_size),
+        move_budget=args.budget,
+        random_seed=args.seed,
+        nn_enabled=not args.no_nn
+    )
+    
+    net_config = NetworkConfig()
+    
+    log_config = LoggingConfig(
+        level="DEBUG" if args.verbose else "INFO"
+    )
+    
+    exp_config = ExperimentConfig(
+        num_simulations=args.num_games,
+        experiment_name="cli_run"
+    )
+    
+    repro_config = ReproducibilityConfig(
+        master_seed=args.seed
+    )
+    
+    # Print startup info
+    print("🐍 AI Hydra - Parallel Neural Network Snake AI")
+    print("=" * 50)
+    print(f"🎮 Grid Size: {args.grid_size[0]}x{args.grid_size[1]}")
+    print(f"🧠 Move Budget: {args.budget}")
+    print(f"🎯 Games to Run: {args.num_games}")
+    print(f"🔢 Random Seed: {args.seed}")
+    print(f"🤖 Neural Network: {'Enabled' if not args.no_nn else 'Disabled'}")
+    print()
+    
+    # Setup logging
+    import logging
+    logging.basicConfig(
+        level=getattr(logging, log_config.level),
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    logger = logging.getLogger("cli")
+    
+    try:
+        # Validate configurations
+        ConfigurationManager.validate_all_configs(
+            sim_config, net_config, log_config, exp_config, repro_config
+        )
+        
+        # Setup reproducibility
+        ConfigurationManager.setup_reproducibility(repro_config)
+        
+        # Create pipeline
+        from .simulation_pipeline import SimulationPipeline
+        pipeline = SimulationPipeline(sim_config, net_config, log_config)
+        
+        # Initialize pipeline
+        if not pipeline.initialize_pipeline():
+            logger.error("Failed to initialize pipeline")
+            return 1
+        
+        # Run simulations
+        if exp_config.num_simulations == 1:
+            logger.info("🚀 Starting simulation...")
+            result = pipeline.run_complete_simulation()
+            results = [result]
+        else:
+            logger.info(f"🚀 Starting {exp_config.num_simulations} simulations...")
+            results = pipeline.run_multiple_simulations(exp_config.num_simulations)
+        
+        # Process results
+        successful_results = [r for r in results if r.success]
+        logger.info(f"✅ Completed {len(successful_results)}/{len(results)} simulations successfully")
+        
+        if successful_results:
+            # Calculate statistics
+            scores = [r.game_result.final_score for r in successful_results if r.game_result]
+            
+            if scores:
+                print("\n📊 Results:")
+                print(f"   Average Score: {sum(scores)/len(scores):.1f}")
+                print(f"   Best Score: {max(scores)}")
+                print(f"   Worst Score: {min(scores)}")
+                
+                success_count = sum(1 for score in scores if score > 10)
+                print(f"   Success Rate: {success_count}/{len(scores)} ({100*success_count/len(scores):.1f}%)")
+                
+                if success_count > 0:
+                    print("🎉 Great! Scores > 10 indicate successful collision avoidance!")
+                else:
+                    print("💪 Keep trying! Scores > 10 indicate successful AI learning.")
+        
+        # Shutdown pipeline
+        pipeline.shutdown_pipeline()
+        logger.info("🏁 Simulation completed")
+        return 0
+        
+    except Exception as e:
+        logger.error(f"❌ Simulation failed: {e}")
+        return 1
+
+
+# Keep the Hydra version for advanced users
+@hydra.main(version_base=None, config_path=None, config_name=None)
+def run_simulation_cli(cfg: DictConfig = None) -> None:
     """
     Main CLI entry point for running simulations.
     
     This function is called by Hydra with the resolved configuration.
     """
-    # Convert DictConfig to dataclass instances
-    sim_config = SimulationConfig(**cfg.simulation)
-    net_config = NetworkConfig(**cfg.network)
-    log_config = LoggingConfig(**cfg.logging)
-    exp_config = ExperimentConfig(**cfg.experiment)
-    repro_config = ReproducibilityConfig(**cfg.reproducibility)
+    # Use default configurations if no config provided
+    if cfg is None or len(cfg) == 0:
+        sim_config = SimulationConfig()
+        net_config = NetworkConfig()
+        log_config = LoggingConfig()
+        exp_config = ExperimentConfig()
+        repro_config = ReproducibilityConfig()
+    else:
+        # Convert DictConfig to dataclass instances
+        sim_config = SimulationConfig(**cfg.get('simulation', {}))
+        net_config = NetworkConfig(**cfg.get('network', {}))
+        log_config = LoggingConfig(**cfg.get('logging', {}))
+        exp_config = ExperimentConfig(**cfg.get('experiment', {}))
+        repro_config = ReproducibilityConfig(**cfg.get('reproducibility', {}))
     
     # Setup logging
     setup_logging(log_config)

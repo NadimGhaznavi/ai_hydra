@@ -205,6 +205,10 @@ cs_repro(ReproducibilityConfig(
     benchmark_mode=False
 ), name="flexible")
 
+# Store main configuration
+cs_main = store()
+cs_main(SimulationConfigZen, name="config")  # This is the main config Hydra looks for
+
 
 class ConfigValidator:
     """Validates configuration objects for correctness and completeness."""
