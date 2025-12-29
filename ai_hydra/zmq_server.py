@@ -356,7 +356,9 @@ class ZMQServer:
     
     async def _handle_stop_simulation(self, message: ZMQMessage) -> ZMQMessage:
         """Handle stop simulation command."""
+        self.logger.info("Received STOP_SIMULATION command, stopping simulation...")
         await self._stop_simulation()
+        self.logger.info("Simulation stop completed, sending response")
         
         return ZMQMessage.create_response(
             MessageType.SIMULATION_STOPPED,
@@ -509,9 +511,14 @@ class ZMQServer:
         if self.simulation_state in [SimulationState.RUNNING, SimulationState.PAUSED]:
             self.simulation_state = SimulationState.STOPPED
             
-            # Wait for simulation thread to finish
+            # Wait for simulation thread to finish (non-blocking)
             if self.simulation_thread and self.simulation_thread.is_alive():
-                self.simulation_thread.join(timeout=5.0)
+                # Use asyncio to wait for thread without blocking
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None, 
+                    lambda: self.simulation_thread.join(timeout=5.0)
+                )
             
             self.logger.info("Simulation stopped")
     

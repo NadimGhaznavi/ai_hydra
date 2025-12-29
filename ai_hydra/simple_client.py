@@ -89,7 +89,8 @@ class SimpleHydraClient:
             
             # Wait for response with timeout
             print("  Waiting for response...")
-            if await self.socket.poll(timeout=5000):  # 5 second timeout
+            timeout_ms = 10000 if message_type == MessageType.STOP_SIMULATION else 5000
+            if await self.socket.poll(timeout=timeout_ms):
                 response_data = await self.socket.recv_string()
                 response = ZMQMessage.from_json(response_data)
                 
@@ -99,12 +100,31 @@ class SimpleHydraClient:
                 return response
             else:
                 print(f"✗ Timeout waiting for response to {message_type.value}")
+                # Reset socket after timeout to avoid state issues
+                await self._reset_socket()
                 return None
                 
         except Exception as e:
             print(f"✗ Error sending command {message_type.value}: {e}")
             self.logger.error(f"Send error: {e}")
+            # Reset socket after error to avoid state issues
+            await self._reset_socket()
             return None
+    
+    async def _reset_socket(self) -> None:
+        """Reset the socket after timeout or error."""
+        try:
+            if self.socket:
+                self.socket.close()
+            
+            # Create new socket
+            self.socket = self.context.socket(zmq.REQ)
+            self.socket.connect(self.server_address)
+            print("  Socket reset due to timeout/error")
+            
+        except Exception as e:
+            print(f"✗ Error resetting socket: {e}")
+            self.socket = None
     
     async def get_status(self) -> None:
         """Get server status."""
