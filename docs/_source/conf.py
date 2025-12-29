@@ -13,6 +13,19 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+# Debug information for ReadTheDocs
+print(f"Python path: {sys.path}")
+print(f"Project root: {project_root}")
+print(f"Current working directory: {os.getcwd()}")
+
+# Try to import the project to verify it's available
+try:
+    import ai_hydra
+    print(f"Successfully imported ai_hydra from {ai_hydra.__file__}")
+except ImportError as e:
+    print(f"Warning: Could not import ai_hydra: {e}")
+    # This is expected during initial setup
+
 # -- Project information -----------------------------------------------------
 
 project = 'AI Hydra'

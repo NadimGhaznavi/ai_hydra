@@ -116,6 +116,19 @@ ZeroMQ Communication Layer
    :undoc-members:
    :show-inheritance:
 
+TUI Client
+----------
+
+.. automodule:: ai_hydra.tui.client
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: ai_hydra.tui.game_board
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Simulation Pipeline
 -------------------
 
