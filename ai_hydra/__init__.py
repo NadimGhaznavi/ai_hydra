@@ -6,7 +6,7 @@ for Snake Game AI decision making, combining the speed of neural network predict
 with the reliability of tree search to eliminate collision-based "blunder" moves.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __author__ = "AI Hydra Team"
 
 # Core components

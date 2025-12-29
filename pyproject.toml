@@ -1,6 +1,6 @@
 [project]
 name = "ai-hydra"
-version = "0.2.5"
+version = "0.3.0"
 description = "A sophisticated parallel neural network exploration system for Snake Game AI with budget-constrained tree search"
 authors = [{ name = "Nadim-Daniel Ghaznavi", email = "nghaznavi@gmail.com" }]
 license = { text = "GPL-3.0" }
