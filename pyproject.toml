@@ -1,6 +1,6 @@
 [project]
 name = "ai-hydra"
-version = "0.2.4"
+version = "0.2.5"
 description = "A sophisticated parallel neural network exploration system for Snake Game AI with budget-constrained tree search"
 authors = [{ name = "Nadim-Daniel Ghaznavi", email = "nghaznavi@gmail.com" }]
 license = { text = "GPL-3.0" }
@@ -82,9 +82,6 @@ viz = [
 server = [
     "python-daemon>=3.0.0",
     "aiohttp>=3.8.0",
-]
-all = [
-    "ai-hydra[dev,docs,viz,server]",
 ]
 
 [project.scripts]
