@@ -77,13 +77,16 @@ class HeadlessServer:
     
     def _setup_signal_handlers(self):
         """Setup signal handlers for graceful shutdown."""
-        def signal_handler(signum, frame):
-            self.logger.info(f"Received signal {signum}, initiating shutdown...")
+        # For async code, we should use asyncio signal handling
+        loop = asyncio.get_running_loop()
+        
+        def signal_handler():
+            self.logger.info("Received shutdown signal, initiating graceful shutdown...")
             self.shutdown_event.set()
         
-        # Handle SIGINT (Ctrl+C) and SIGTERM
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # Handle SIGINT (Ctrl+C) and SIGTERM using asyncio
+        loop.add_signal_handler(signal.SIGINT, signal_handler)
+        loop.add_signal_handler(signal.SIGTERM, signal_handler)
     
     async def start(self):
         """Start the headless server."""
@@ -108,9 +111,14 @@ class HeadlessServer:
             server_task = asyncio.create_task(self.server.start())
             
             # Wait for shutdown signal
+            self.logger.info("Server running. Press Ctrl+C to stop.")
             await self.shutdown_event.wait()
             
             self.logger.info("Shutdown signal received, stopping server...")
+            
+            # Stop the server gracefully
+            if self.server:
+                await self.server.stop()
             
             # Cancel server task
             server_task.cancel()
@@ -118,15 +126,16 @@ class HeadlessServer:
             try:
                 await server_task
             except asyncio.CancelledError:
-                pass
+                self.logger.info("Server task cancelled successfully")
             
         except Exception as e:
-            self.logger.error(f"Server error: {e}")
-            raise
+            # Only log as error if it's not a graceful shutdown
+            if not self.shutdown_event.is_set():
+                self.logger.error(f"Server error: {e}")
+                raise
+            else:
+                self.logger.info(f"Server stopped during shutdown: {e}")
         finally:
-            if self.server:
-                await self.server.stop()
-            
             self.logger.info("Headless server stopped")
     
     async def stop(self):
@@ -226,32 +235,13 @@ Examples:
             log_file=args.log_file
         )
         
-        # Setup signal handlers in main thread
-        def signal_handler(signum, frame):
-            print(f"\n🛑 Received signal {signum}, shutting down server...")
-            # Set the shutdown event from the main thread
-            if hasattr(server, 'shutdown_event') and server.shutdown_event:
-                # We need to schedule this in the event loop
-                try:
-                    loop = asyncio.get_running_loop()
-                    loop.call_soon_threadsafe(server.shutdown_event.set)
-                except RuntimeError:
-                    # No running loop, just exit
-                    print("🔄 Force shutdown...")
-                    sys.exit(0)
-            else:
-                sys.exit(0)
-        
-        # Handle SIGINT (Ctrl+C) and SIGTERM
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
-        
         try:
             print("🚀 Starting AI Hydra Server...")
             print("📡 Press Ctrl+C to stop")
             asyncio.run(server.start())
         except KeyboardInterrupt:
             print("\n🛑 Server interrupted by user")
+            sys.exit(0)  # Exit with success code for Ctrl+C
         except Exception as e:
             print(f"❌ Server failed: {e}")
             sys.exit(1)
