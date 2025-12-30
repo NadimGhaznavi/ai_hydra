@@ -12,13 +12,6 @@ Screen {
     grid-columns: 32 46 36;
 }
 
-Screen {
-    layout: grid;
-    grid-size: 3 5;
-    grid-rows: 3 11 9 4 24;
-    grid-columns: 32 46 36;
-}
-
 #title {
     column-span: 3;
     width: 100%;
