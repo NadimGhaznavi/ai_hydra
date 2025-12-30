@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/hydra_venv/bin/pytest
+# hypothesis_version: 6.148.8
+
+['__main__']

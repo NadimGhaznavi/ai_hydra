@@ -1,7 +1,7 @@
 AI Hydra Documentation
 =======================
 
-Welcome to the AI Hydra documentation. This system implements a sophisticated **parallel neural network exploration system** for Snake Game AI that achieves mastery over basic collision avoidance through exhaustive concurrent NN exploration.
+Welcome to the AI Hydra documentation. This system implements an AI agent that uses a **parallel neural network exploration system** to play the classic video Snake Game. AI that achieves mastery over basic collision avoidance through exhaustive exploration and increases the chance of finding food.
 
 .. toctree::
    :maxdepth: 2

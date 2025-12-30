@@ -123,7 +123,58 @@ sequenceDiagram
     ZMQ->>CLIENT: GAME_OVER (final results)
 ```
 
-### Component Interaction Flow
+## Decision Flow Architecture
+
+### System Initialization
+
+The AI Hydra system follows a structured initialization process before beginning decision cycles:
+
+```mermaid
+flowchart TD
+    START([System Start]) --> CONFIG[Load Hydra Zen Configuration]
+    CONFIG --> VALIDATE{Validate Configuration}
+    VALIDATE -->|Invalid| ERROR[Configuration Error]
+    VALIDATE -->|Valid| INIT_HM[Initialize HydraMgr]
+    
+    INIT_HM --> INIT_MG[Initialize Master Game]
+    INIT_MG --> INIT_BC[Initialize Budget Controller]
+    INIT_BC --> INIT_SM[Initialize State Manager]
+    INIT_SM --> INIT_NN[Initialize Neural Network]
+    INIT_NN --> INIT_OT[Initialize Oracle Trainer]
+    INIT_OT --> INIT_LOG[Setup Logging System]
+    
+    INIT_LOG --> READY[System Ready for Decision Cycles]
+    ERROR --> END([System Exit])
+    READY --> DECISION_CYCLE[Begin Decision Cycle Loop]
+```
+
+### Starting State Definition
+
+Before each decision cycle begins, the system establishes a well-defined starting state:
+
+**Master Game State:**
+- GameBoard with current snake position, body, direction, food location, and score
+- Move count tracking for circular pattern detection
+- Deterministic random state for reproducible food placement
+
+**Budget Controller State:**
+- Move budget initialized to configured value (default: 100 moves)
+- Budget consumption counter reset to 0
+- Round tracking for budget management
+
+**State Manager State:**
+- No active exploration clones (clean slate)
+- Clone ID generator reset for new tree
+- Tree structure tracking cleared
+
+**Neural Network State:**
+- Model loaded with current weights
+- Feature extractor ready for game state processing
+- Oracle trainer prepared for prediction comparison
+
+### Decision Cycle Sequence
+
+The complete decision-making process follows this detailed sequence:
 
 ```mermaid
 sequenceDiagram
@@ -131,45 +182,149 @@ sequenceDiagram
     participant MG as Master Game
     participant BC as Budget Controller
     participant SM as State Manager
+    participant NN as Neural Network
+    participant FE as Feature Extractor
+    participant OT as Oracle Trainer
     participant EC as Exploration Clones
     participant GL as Game Logic
     participant LOG as Logger
     
-    HM->>BC: Initialize budget (100 moves)
-    HM->>SM: Create 3 initial clones from master
-    SM->>EC: Create clones 1, 2, 3
+    Note over HM: === DECISION CYCLE START ===
     
-    loop Until budget exhausted (allowing round completion)
-        Note over HM: Round 1: Execute clones 1L, 2S, 3R
-        loop For each active clone
-            EC->>GL: Execute move (left/straight/right)
-            GL->>EC: Return MoveResult with new board and reward
-            EC->>LOG: Log step (1L RESULT:EMPTY REWARD:0 SCORE:5)
-            BC->>BC: Decrement budget
+    HM->>BC: Reset budget to configured value (100)
+    HM->>MG: Get current GameBoard state
+    MG->>HM: Return current GameBoard
+    
+    Note over HM: === NEURAL NETWORK PREDICTION ===
+    HM->>FE: Extract features from GameBoard
+    FE->>HM: Return 19-dimensional feature vector
+    HM->>NN: Predict optimal move from features
+    NN->>HM: Return move probabilities [Left, Straight, Right]
+    HM->>LOG: Log NN prediction and confidence
+    
+    Note over HM: === TREE EXPLORATION INITIALIZATION ===
+    HM->>SM: Create 3 initial clones from master GameBoard
+    SM->>EC: Create clones 1, 2, 3 (each tests NN prediction first)
+    SM->>HM: Return initial clone set
+    
+    Note over HM: === ROUND-BASED EXPLORATION ===
+    loop Until budget exhausted OR all clones terminated
+        Note over HM: Execute current round of active clones
+        
+        loop For each active clone in current round
+            HM->>EC: Get clone's current GameBoard
+            EC->>HM: Return GameBoard state
+            HM->>GL: Execute clone's assigned move
+            GL->>HM: Return MoveResult (new_board, outcome, reward, is_terminal)
+            HM->>BC: Decrement budget by 1
+            HM->>LOG: Log clone step (ID, outcome, reward, score)
             
-            alt Clone survives (not WALL/SNAKE)
-                EC->>SM: Request sub-clone creation
-                SM->>EC: Create 3 new sub-clones (1LL, 1LS, 1LR)
-            else Clone terminates
-                EC->>HM: Return path and cumulative reward
+            alt Clone terminated (WALL/SNAKE collision)
+                HM->>EC: Mark clone as terminated
+                EC->>HM: Return final path and cumulative reward
+            else Clone ate food (+10 reward)
+                HM->>EC: Mark clone as terminated (optimal outcome)
+                EC->>HM: Return path with +10 reward
+            else Clone survived (0 reward) AND budget > 0
+                HM->>SM: Request 3 sub-clones from this clone
+                SM->>EC: Create sub-clones (L, S, R moves)
+                SM->>HM: Return new sub-clones for next round
+            else Budget exhausted
+                Note over HM: Complete current round, then evaluate
             end
         end
         
-        Note over HM: Round 2: Execute surviving sub-clones (1LL, 1LS, 1LR, 2SL, 2SS, 2SR)
-        Note over HM: Round 3: Execute further sub-clones from survivors
+        HM->>BC: Check remaining budget
+        BC->>HM: Return budget status
         
-        alt Budget exhausted
-            Note over HM: Complete current round, then evaluate
+        alt Budget > 0 AND active clones exist
+            Note over HM: Prepare next round with surviving clones
+        else Budget exhausted OR no active clones
             break
         end
     end
     
-    HM->>HM: Evaluate all paths, select optimal
-    HM->>GL: Apply winning move to master board
-    HM->>SM: Destroy exploration tree (any order)
-    HM->>BC: Reset budget
-    HM->>SM: Create 3 new initial clones (1, 2, 3)
+    Note over HM: === PATH EVALUATION ===
+    HM->>HM: Collect all completed paths with rewards
+    HM->>HM: Find path with highest cumulative reward
+    HM->>HM: Break ties by selecting path with fewest moves
+    HM->>LOG: Log optimal path selection details
+    
+    Note over HM: === ORACLE TRAINING ===
+    HM->>OT: Compare NN prediction with optimal tree result
+    alt NN prediction != optimal move
+        OT->>NN: Generate training sample
+        OT->>NN: Update network weights
+        HM->>LOG: Log training sample generation
+    else NN prediction == optimal move
+        HM->>LOG: Log NN prediction accuracy
+    end
+    
+    Note over HM: === MASTER GAME UPDATE ===
+    HM->>GL: Apply optimal move to master GameBoard
+    GL->>MG: Return updated GameBoard
+    MG->>HM: Confirm state update
+    HM->>LOG: Log master move application
+    
+    Note over HM: === TREE CLEANUP ===
+    HM->>SM: Destroy entire exploration tree
+    SM->>HM: Confirm tree destruction
+    
+    Note over HM: === TERMINATION CHECK ===
+    HM->>MG: Check if game is terminal
+    alt Game over (collision/max moves)
+        MG->>HM: Return terminal status
+        HM->>LOG: Log game completion
+        Note over HM: === SIMULATION END ===
+    else Game continues
+        MG->>HM: Return active status
+        Note over HM: === NEXT DECISION CYCLE ===
+    end
 ```
+
+### Decision Cycle States
+
+Each decision cycle progresses through these distinct states:
+
+1. **INITIALIZATION**: Reset budget, get master state, prepare components
+2. **NN_PREDICTION**: Extract features, get neural network move prediction
+3. **TREE_SETUP**: Create initial exploration clones from master state
+4. **EXPLORATION**: Execute rounds of clone moves within budget constraints
+5. **EVALUATION**: Analyze all paths and select optimal move
+6. **ORACLE_TRAINING**: Compare NN vs tree search, update network if needed
+7. **MASTER_UPDATE**: Apply winning move to authoritative game state
+8. **CLEANUP**: Destroy exploration tree and prepare for next cycle
+9. **TERMINATION_CHECK**: Determine if simulation should continue
+
+### Budget Management Flow
+
+The budget system ensures computational constraints are respected:
+
+```mermaid
+flowchart TD
+    BUDGET_INIT[Initialize Budget: 100 moves] --> ROUND_START[Start New Round]
+    ROUND_START --> CLONE_MOVE[Execute Clone Move]
+    CLONE_MOVE --> DECREMENT[Budget = Budget - 1]
+    DECREMENT --> CHECK_RESULT{Check Move Result}
+    
+    CHECK_RESULT -->|Collision/Food| TERMINATE_CLONE[Terminate Clone]
+    CHECK_RESULT -->|Survived| CHECK_BUDGET{Budget > 0?}
+    
+    CHECK_BUDGET -->|Yes| CREATE_SUBCLONES[Create 3 Sub-clones]
+    CHECK_BUDGET -->|No| COMPLETE_ROUND[Complete Current Round]
+    
+    CREATE_SUBCLONES --> MORE_CLONES{More Clones in Round?}
+    TERMINATE_CLONE --> MORE_CLONES
+    
+    MORE_CLONES -->|Yes| CLONE_MOVE
+    MORE_CLONES -->|No| CHECK_ACTIVE{Active Clones for Next Round?}
+    
+    CHECK_ACTIVE -->|Yes & Budget > 0| ROUND_START
+    CHECK_ACTIVE -->|No or Budget = 0| EVALUATE_PATHS[Evaluate All Paths]
+    
+    COMPLETE_ROUND --> EVALUATE_PATHS
+    EVALUATE_PATHS --> SELECT_OPTIMAL[Select Optimal Move]
+    SELECT_OPTIMAL --> RESET_BUDGET[Reset Budget for Next Cycle]
 
 ## Components and Interfaces
 

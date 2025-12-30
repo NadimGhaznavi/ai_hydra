@@ -6,5 +6,6 @@ Can you create a "How to update the project version" document? So that should in
 Credits used: 5.78
 Elapsed time: 3m 7s
 
+I'd like to rework the "Decision Flow Architecture" to make it more clear. Then we'll need to check the requirements to make sure things are still aligned. I you to outline the steps involved in initialization: Define the starting state. Then walk through the steps, like in a sequence diagram. This should clarify the decision making process and the flow of the system overall.
 
 
