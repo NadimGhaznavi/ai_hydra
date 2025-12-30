@@ -9,7 +9,7 @@ Screen {
     layout: grid;
     grid-size: 3 4;
     grid-rows: 3 13 24;
-    grid-columns: 50 46 36;
+    grid-columns: 55 46 36;
 }
 
 #title {
@@ -66,7 +66,7 @@ Screen {
 Button {
     align: center middle;
     border: round #0c323e;
-    width: 10
+    width: 10;
     background: black;
     margin: 0 1;
 }
