@@ -1,0 +1,4 @@
+
+I would like you creating a document on testing. It should include a list of the tests that have been implemented and instructions on running single, groups or all tests. Add it to the "docs" documentation.
+
+

@@ -8,7 +8,7 @@ Adapted from ai_snake_lab with AI Hydra branding.
 Screen {
     layout: grid;
     grid-size: 3 4;
-    grid-rows: 3 13 24;
+    grid-rows: 3 7 14;
     grid-columns: 55 46 36;
 }
 
@@ -102,7 +102,7 @@ Button {
 }
 
 .config_label {
-    width: 12;
+    width: 13;
     color: #88C0D0;
 }
 
