@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Version Updater",
+  "description": "Automatically updates minor and major versions in pyproject.toml and __init__.py files when changes are made to the project",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.py",
+      "*.toml",
+      "*.md",
+      "*.txt",
+      "*.yaml",
+      "*.yml"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file has been modified in the project. Please check if the changes warrant a version update and if so, update the version numbers in both pyproject.toml and __init__.py files. Consider incrementing the minor version for new features or significant changes, and the major version for breaking changes. Make sure both files have consistent version numbers."
+  }
+}

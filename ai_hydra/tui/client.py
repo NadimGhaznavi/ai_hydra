@@ -108,20 +108,20 @@ class HydraClient(App):
         # Control panel
         yield Vertical(
             Horizontal(
-                Button("Start", id="btn_start", variant="success"),
-                Button("Stop", id="btn_stop", variant="error"), 
-                Button("Pause", id="btn_pause", variant="warning"),
-                Button("Resume", id="btn_resume", variant="primary"),
-                Button("Reset", id="btn_reset", variant="default"),
+                Button("Start", id="btn_start", variant="success", compact=True),
+                Button("Stop", id="btn_stop", variant="error", compact=True), 
+                Button("Pause", id="btn_pause", variant="warning", compact=True),
+                Button("Resume", id="btn_resume", variant="primary", compact=True),
+                Button("Reset", id="btn_reset", variant="default", compact=True),
                 classes="button_row"
             ),
             Horizontal(
                 Label("Grid Size:", classes="config_label"),
-                Input(value="20,20", id="grid_size", classes="config_input")
+                Input(value="20,20", id="grid_size", classes="config_input", compact=True)
             ),
             Horizontal(
                 Label("Move Budget:", classes="config_label"),
-                Input(value="100", id="move_budget", classes="config_input")
+                Input(value="100", id="move_budget", classes="config_input", compact=True)
             ),
             id="control_panel"
         )

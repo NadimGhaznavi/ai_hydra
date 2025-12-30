@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Auto Git Commit",
+  "description": "Automatically checks in modified files with git when any file is edited",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check in the modified files with git. Use `git add .` to stage all changes and then `git commit -m \"Auto-commit: updated files\"` to commit them."
+  }
+}

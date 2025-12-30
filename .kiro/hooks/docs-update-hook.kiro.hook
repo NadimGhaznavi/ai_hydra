@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Documentation Updater",
+  "description": "Automatically updates documentation in the docs directory when code files are modified, including new features, requirements, and design documentation",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.py",
+      "*.md",
+      "*.toml",
+      "*.yaml",
+      "*.yml",
+      "*.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file has been modified that may require documentation updates. Please review the changes and update the documentation in the docs directory as needed. This should include:\n\n1. **Feature Documentation**: Update any feature documentation if new functionality was added\n2. **Requirements Documentation**: Update requirements.md if new requirements were introduced\n3. **Design Documentation**: Update design documents if architectural changes were made\n4. **API Documentation**: Update API docs if public interfaces changed\n5. **Configuration Documentation**: Update config docs if new configuration options were added\n6. **Testing Documentation**: Update testing docs if new test patterns or standards were introduced\n\nFocus on keeping documentation current with the codebase and ensuring all new features, requirements, and design decisions are properly documented."
+  }
+}
