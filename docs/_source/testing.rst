@@ -21,8 +21,15 @@ The project uses the following testing tools:
 - **pytest**: Primary testing framework with extensive plugin support
 - **Hypothesis**: Property-based testing library for generating test cases
 - **pytest-cov**: Code coverage reporting
-- **pytest-timeout**: Timeout protection for long-running tests
-- **pytest-asyncio**: Support for async/await testing patterns
+- **pytest-timeout**: Timeout protection for long-running tests (critical for decision cycles)
+- **pytest-asyncio**: Support for async/await testing patterns (ZeroMQ components)
+
+**Timeout Requirements**: All tests must include timeout decorators to prevent hanging during decision cycle testing. The enhanced decision flow with 9 distinct states requires careful timeout management:
+
+- Unit tests: 30 seconds maximum
+- Property-based tests: 60 seconds maximum  
+- Integration tests: 2-5 minutes maximum
+- End-to-end tests: 5-10 minutes maximum
 
 Test Organization
 -----------------
@@ -86,6 +93,104 @@ Integration tests validate component interactions:
 - **Simulation Pipeline** (``test_simulation_pipeline.py``): Component coordination
 - **Hybrid Execution** (``test_hybrid_execution.py``): Neural network + tree search integration
 - **Headless Operation** (``test_headless_operation.py``): ZeroMQ server functionality
+
+Decision Flow Testing
+~~~~~~~~~~~~~~~~~~~~
+
+The enhanced decision flow architecture with 9 distinct states requires comprehensive testing:
+
+**State Transition Testing**
+
+.. code-block:: python
+
+    @pytest.mark.integration
+    @timeout_test(180)  # 3 minute timeout
+    def test_decision_cycle_state_transitions(self):
+        """Test all 9 decision cycle states execute in correct order."""
+        config = SimulationConfig(grid_size=(6, 6), move_budget=15, random_seed=42)
+        hydra_mgr = HydraMgr(config)
+        
+        # Mock state tracker to verify state transitions
+        state_tracker = DecisionCycleStateTracker()
+        hydra_mgr.add_state_observer(state_tracker)
+        
+        # Execute decision cycle
+        result = hydra_mgr.execute_decision_cycle()
+        
+        # Verify all states were executed in correct order
+        expected_states = [
+            "INITIALIZATION", "NN_PREDICTION", "TREE_SETUP", 
+            "EXPLORATION", "EVALUATION", "ORACLE_TRAINING",
+            "MASTER_UPDATE", "CLEANUP", "TERMINATION_CHECK"
+        ]
+        
+        assert state_tracker.states_executed == expected_states
+        assert state_tracker.state_durations["EXPLORATION"] > 0
+        assert state_tracker.state_durations["NN_PREDICTION"] > 0
+
+**Budget Management Testing**
+
+.. code-block:: python
+
+    @pytest.mark.property
+    @given(budget=st.integers(min_value=5, max_value=50))
+    @settings(max_examples=10, deadline=5000)
+    @timeout_test(120)
+    def test_budget_lifecycle_with_round_completion(self, budget):
+        """
+        **Feature: ai-hydra, Property 5: Budget Lifecycle Management**
+        **Validates: Requirements 4.1, 4.2, 6.2**
+        
+        For any budget value, the system should complete current round
+        even if budget is exhausted, then properly reset for next cycle.
+        """
+        config = SimulationConfig(grid_size=(6, 6), move_budget=budget, random_seed=42)
+        hydra_mgr = HydraMgr(config)
+        
+        # Execute decision cycle
+        result = hydra_mgr.execute_decision_cycle()
+        
+        # Verify budget was properly managed
+        assert result.budget_used <= budget + 3  # Allow round completion
+        assert result.budget_used > 0
+        
+        # Verify budget reset for next cycle
+        next_budget = hydra_mgr.budget_controller.get_remaining_budget()
+        assert next_budget == budget
+
+**Neural Network Integration Testing**
+
+.. code-block:: python
+
+    @pytest.mark.integration
+    @timeout_test(90)
+    def test_nn_oracle_training_integration(self):
+        """Test neural network and oracle trainer integration."""
+        config = SimulationConfig(
+            grid_size=(6, 6), 
+            move_budget=20, 
+            nn_enabled=True, 
+            random_seed=42
+        )
+        hydra_mgr = HydraMgr(config)
+        
+        # Execute multiple decision cycles to test learning
+        initial_accuracy = hydra_mgr.oracle_trainer.get_prediction_accuracy()
+        
+        for _ in range(5):  # Multiple cycles for learning
+            result = hydra_mgr.execute_decision_cycle()
+            
+            # Verify NN prediction was made
+            assert result.nn_prediction is not None
+            assert result.oracle_comparison is not None
+            
+            # Verify training occurred if predictions differed
+            if result.nn_prediction != result.optimal_move:
+                assert result.training_sample_generated
+        
+        # Verify accuracy tracking
+        final_accuracy = hydra_mgr.oracle_trainer.get_prediction_accuracy()
+        assert final_accuracy is not None
 
 Performance Tests
 ~~~~~~~~~~~~~~~~~
@@ -383,16 +488,45 @@ Unit tests validate specific behaviors:
 Integration Test Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Integration tests validate component interactions:
+Integration tests validate component interactions and the enhanced decision flow:
 
 .. code-block:: python
 
-    @timeout_test(120)  # 2 minute timeout
+    @timeout_test(120)  # 2 minute timeout for decision cycle testing
+    def test_complete_decision_cycle_with_nn_integration(self):
+        """Test complete decision cycle with neural network integration."""
+        sim_config = SimulationConfig(
+            grid_size=(6, 6),
+            move_budget=10,  # Reduced for testing
+            nn_enabled=True,
+            random_seed=42
+        )
+        
+        hydra_mgr = HydraMgr(sim_config)
+        
+        # Test all 9 decision cycle states
+        initial_score = hydra_mgr.master_game.get_score()
+        
+        # Execute one complete decision cycle
+        decision_result = hydra_mgr.execute_decision_cycle()
+        
+        # Verify decision cycle completed all states
+        assert decision_result.move in [Move.LEFT_TURN, Move.STRAIGHT, Move.RIGHT_TURN]
+        assert decision_result.budget_used > 0
+        assert decision_result.paths_evaluated > 0
+        assert decision_result.nn_prediction is not None
+        assert decision_result.oracle_comparison is not None
+        
+        # Verify master game state updated
+        final_score = hydra_mgr.master_game.get_score()
+        assert final_score >= initial_score  # Score should not decrease
+
+    @timeout_test(300)  # 5 minute timeout for complete simulation
     def test_complete_game_simulation_start_to_finish(self):
         """Test complete game simulations from start to finish."""
         sim_config = SimulationConfig(
             grid_size=(6, 6),
-            move_budget=10,
+            move_budget=10,  # Reduced for testing
             nn_enabled=True,
             random_seed=42
         )
@@ -400,8 +534,15 @@ Integration tests validate component interactions:
         pipeline = SimulationPipeline(sim_config)
         result = pipeline.run_complete_simulation()
         
+        # Verify simulation completed properly
         assert result.success
         assert result.game_result.total_moves > 0
+        assert result.game_result.decision_cycles > 0
+        
+        # Verify all decision cycle states were executed
+        assert result.game_result.nn_predictions > 0
+        assert result.game_result.oracle_comparisons > 0
+        assert result.game_result.budget_resets > 0
 
 Continuous Integration
 ----------------------

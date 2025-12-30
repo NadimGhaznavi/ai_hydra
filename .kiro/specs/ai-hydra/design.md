@@ -633,22 +633,58 @@ class OracleTrainer:
     def get_prediction_accuracy(self) -> float
 ```
 
-### Hybrid Execution Flow
+### Neural Network Integration Flow
 
-**Decision Cycle with Neural Network:**
-1. **NN Prediction**: Neural network predicts optimal move from current GameBoard
-2. **Forced Exploration**: All 3 initial clones execute the NN-predicted move
-3. **Tree Search**: Clones continue tree exploration from NN move results  
-4. **Oracle Comparison**: Compare NN prediction with tree search optimal result
-5. **Decision**: Use tree search result if different from NN, otherwise use NN prediction
-6. **Training**: Generate training sample if NN was wrong, update network
+The hybrid system integrates neural network predictions with tree search validation:
 
-**Modified Clone Naming:**
-- **NN Prediction**: N + move (NL, NS, NR)
-- **Initial Clones**: All start with NN move, then 1L, 2S, 3R for their second moves
-- **Example**: If NN predicts Left, clones become 1LL, 2LS, 3LR for their second moves
+```mermaid
+flowchart TD
+    START[Decision Cycle Start] --> EXTRACT[Extract Game Features]
+    EXTRACT --> NN_PREDICT[Neural Network Prediction]
+    NN_PREDICT --> CREATE_CLONES[Create 3 Initial Clones]
+    
+    CREATE_CLONES --> CLONE1[Clone 1: Test NN Move + Left]
+    CREATE_CLONES --> CLONE2[Clone 2: Test NN Move + Straight] 
+    CREATE_CLONES --> CLONE3[Clone 3: Test NN Move + Right]
+    
+    CLONE1 --> TREE_SEARCH[Tree Search Exploration]
+    CLONE2 --> TREE_SEARCH
+    CLONE3 --> TREE_SEARCH
+    
+    TREE_SEARCH --> EVALUATE[Evaluate All Paths]
+    EVALUATE --> OPTIMAL[Select Optimal Path]
+    OPTIMAL --> COMPARE[Compare NN vs Optimal]
+    
+    COMPARE -->|NN Correct| USE_NN[Use NN Prediction]
+    COMPARE -->|NN Wrong| USE_TREE[Use Tree Search Result]
+    
+    USE_NN --> APPLY_MOVE[Apply Move to Master]
+    USE_TREE --> TRAIN_NN[Generate Training Sample]
+    TRAIN_NN --> APPLY_MOVE
+    
+    APPLY_MOVE --> NEXT_CYCLE[Next Decision Cycle]
+```
 
-**Responsibilities:**
+**Neural Network Decision Process:**
+1. **Feature Extraction**: Convert GameBoard to 19-dimensional feature vector
+2. **NN Prediction**: Get move probabilities for [Left, Straight, Right]
+3. **Forced Exploration**: All 3 initial clones start by testing the NN-predicted move
+4. **Tree Validation**: Continue tree search from NN move results
+5. **Oracle Comparison**: Compare NN prediction with tree search optimal result
+6. **Decision Selection**: Use tree search result if different from NN, otherwise use NN
+7. **Learning**: Generate training sample if NN was incorrect
+
+**Modified Clone Naming with NN Integration:**
+- **NN Prediction Phase**: Log as "NN PREDICTION:LEFT CONFIDENCE:0.85"
+- **Initial Clones**: All start with NN move, then diverge:
+  - If NN predicts Left: 1LL, 2LS, 3LR (Left+Left, Left+Straight, Left+Right)
+  - If NN predicts Straight: 1SL, 2SS, 3SR
+  - If NN predicts Right: 1RL, 2RS, 3RR
+- **Sub-clones**: Continue normal expansion from surviving clones
+
+### Clone Execution and Tree Expansion
+
+**Exploration Clone Responsibilities:**
 - Execute individual moves using Game_Logic
 - Maintain path history from root to current position
 - Report results back to HydraMgr
@@ -665,6 +701,94 @@ class ExplorationClone:
     def get_clone_id(self) -> str
     def log_step(self, step_number: int, reward: int) -> None
 ```
+
+**Tree Expansion Rules:**
+- Each surviving clone (reward ≥ 0) creates exactly 3 sub-clones if budget allows
+- Sub-clones test all possible moves: Left turn, Straight, Right turn
+- Clone naming follows hierarchical pattern: 1 → 1L, 1S, 1R → 1LL, 1LS, 1LR, etc.
+- Terminated clones (collision or food) immediately return their path and reward
+
+### Decision Cycle Walkthrough Example
+
+To illustrate the complete decision flow, here's a concrete example of one decision cycle:
+
+**Initial State:**
+- Master GameBoard: Snake at (10,10), facing RIGHT, score=5, budget=100
+- Neural Network predicts: STRAIGHT (confidence: 0.75)
+
+**Step 1: Neural Network Prediction**
+```
+[10:30:01.120] NN PREDICTION:STRAIGHT CONFIDENCE:0.75
+```
+
+**Step 2: Create Initial Clones**
+- Clone 1: Tests STRAIGHT + LEFT_TURN → Clone ID: "1SL"
+- Clone 2: Tests STRAIGHT + STRAIGHT → Clone ID: "2SS"  
+- Clone 3: Tests STRAIGHT + RIGHT_TURN → Clone ID: "3SR"
+
+**Step 3: Round 1 Execution (Budget: 100 → 97)**
+```
+[10:30:01.123] 1SL RESULT:EMPTY REWARD:0 SCORE:5 (Budget: 99)
+[10:30:01.124] 2SS RESULT:FOOD REWARD:10 SCORE:15 (Budget: 98)
+[10:30:01.125] 3SR RESULT:WALL REWARD:-10 SCORE:5 (Budget: 97)
+```
+
+**Step 4: Clone Status After Round 1**
+- Clone 1SL: Survived, creates sub-clones (1SLL, 1SLS, 1SLR)
+- Clone 2SS: Terminated (food eaten, optimal outcome)
+- Clone 3SR: Terminated (wall collision)
+
+**Step 5: Round 2 Execution (Budget: 97 → 94)**
+```
+[10:30:01.126] 1SLL RESULT:EMPTY REWARD:0 SCORE:5 (Budget: 96)
+[10:30:01.127] 1SLS RESULT:SNAKE REWARD:-10 SCORE:5 (Budget: 95)
+[10:30:01.128] 1SLR RESULT:FOOD REWARD:10 SCORE:15 (Budget: 94)
+```
+
+**Step 6: Continue Until Budget Exhausted or All Terminated**
+- Process continues with surviving clones creating sub-clones
+- Budget decrements with each move execution
+- Clones terminate on collision or food consumption
+
+**Step 7: Path Evaluation**
+```
+[10:30:01.140] PATH EVALUATION:
+  - Path 2SS: [STRAIGHT, STRAIGHT] Reward: +10 (OPTIMAL)
+  - Path 1SLR: [STRAIGHT, LEFT, RIGHT] Reward: +10 
+  - Path 1SLL: [STRAIGHT, LEFT, LEFT] Reward: 0
+  - Path 1SLS: [STRAIGHT, LEFT, STRAIGHT] Reward: -10
+  - Path 3SR: [STRAIGHT, RIGHT] Reward: -10
+```
+
+**Step 8: Optimal Move Selection**
+- Multiple paths with +10 reward: 2SS (2 moves) vs 1SLR (3 moves)
+- Select 2SS for efficiency (fewer moves)
+- Optimal first move: STRAIGHT
+
+**Step 9: Oracle Training**
+```
+[10:30:01.141] ORACLE: NN=STRAIGHT OPTIMAL=STRAIGHT DECISION=STRAIGHT
+[10:30:01.142] TRAINING: NN_CORRECT NO_SAMPLE_NEEDED
+```
+
+**Step 10: Master Game Update**
+```
+[10:30:01.143] MASTER: APPLY_MOVE=STRAIGHT NEW_SCORE=5 POSITION=(11,10)
+```
+
+**Step 11: Tree Cleanup and Reset**
+```
+[10:30:01.144] TREE: DESTROYED_CLONES=7 BUDGET_RESET=100
+[10:30:01.145] NEXT_CYCLE: READY
+```
+
+This example shows how the system:
+1. Uses NN prediction to guide initial exploration
+2. Manages budget constraints across tree expansion
+3. Evaluates paths based on cumulative rewards
+4. Selects optimal moves with tie-breaking rules
+5. Learns from tree search results
+6. Maintains clean state transitions between cycles
 
 ## Headless Operation and ZeroMQ Integration
 

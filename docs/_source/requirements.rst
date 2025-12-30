@@ -287,3 +287,57 @@ Requirement 15: Maximum Moves Limit to Prevent Circular Patterns
 5. THE Game_Logic SHALL return a "MAX_MOVES" outcome with 0 reward and is_terminal=True when the move limit is exceeded
 6. THE Game_Logic SHALL increment the move count before checking the max moves limit on each move execution
 7. THE Master_Game SHALL track move count and reset it only when the game is restarted, not between decision cycles
+
+Requirement 15: Decision Flow Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a system architect, I want a structured 9-state decision cycle that ensures consistent, predictable, and monitorable decision-making processes, so that the system behavior is reliable and debuggable.
+
+**Acceptance Criteria:**
+
+1. THE HydraMgr SHALL execute each decision cycle through exactly 9 sequential states: INITIALIZATION, NN_PREDICTION, TREE_SETUP, EXPLORATION, EVALUATION, ORACLE_TRAINING, MASTER_UPDATE, CLEANUP, and TERMINATION_CHECK
+2. THE system SHALL complete each state fully before proceeding to the next state, ensuring atomic state transitions
+3. THE system SHALL log entry and exit from each decision cycle state with timestamps and performance metrics
+4. WHEN any state fails, THE system SHALL implement appropriate error handling and recovery mechanisms specific to that state
+5. THE INITIALIZATION state SHALL reset budget controller, retrieve master game state, and prepare all components for the new cycle
+6. THE NN_PREDICTION state SHALL extract features and generate neural network move predictions with confidence scores
+7. THE TREE_SETUP state SHALL create exactly 3 initial exploration clones from the master GameBoard state
+8. THE EXPLORATION state SHALL execute budget-constrained tree search with round-based clone management
+9. THE EVALUATION state SHALL analyze all completed paths and select the optimal move using reward-based criteria
+10. THE ORACLE_TRAINING state SHALL compare NN predictions with tree search results and update network weights when predictions differ
+11. THE MASTER_UPDATE state SHALL apply the optimal move to the authoritative master game state
+12. THE CLEANUP state SHALL destroy the entire exploration tree and reset all clone tracking structures
+13. THE TERMINATION_CHECK state SHALL determine whether the simulation should continue or terminate based on game state
+14. THE system SHALL maintain state transition timing metrics for performance monitoring and optimization
+15. THE system SHALL ensure that each decision cycle state is idempotent and can be safely retried in case of transient failures
+
+Requirement 16: Enhanced Budget Management with Round Completion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a performance engineer, I want budget management that allows current rounds to complete even when budget is exhausted, so that all clones in a round receive fair exploration opportunity and prevent bias toward earlier clones.
+
+**Acceptance Criteria:**
+
+1. THE Budget_Controller SHALL allow the current round of clone execution to complete even when the move budget reaches zero
+2. THE system SHALL track round numbers and moves per round for comprehensive budget analysis
+3. WHEN budget is exhausted during a round, THE system SHALL complete all remaining clones in that round before proceeding to evaluation
+4. THE Budget_Controller SHALL reset to the full configured budget at the start of each new decision cycle
+5. THE system SHALL log budget consumption patterns including moves per round and round completion statistics
+6. THE Budget_Controller SHALL provide budget utilization metrics including percentage used and efficiency ratios
+7. THE system SHALL ensure that budget exhaustion does not cause premature termination of active clones within the current round
+
+Requirement 17: Neural Network Oracle Training System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a machine learning researcher, I want the neural network to learn continuously from tree search results, so that the system becomes more efficient over time while maintaining decision quality.
+
+**Acceptance Criteria:**
+
+1. THE Oracle_Trainer SHALL compare neural network predictions with tree search optimal results after each decision cycle
+2. WHEN NN prediction differs from tree search optimal move, THE Oracle_Trainer SHALL generate a training sample and update network weights
+3. WHEN NN prediction matches tree search optimal move, THE Oracle_Trainer SHALL record the successful prediction for accuracy tracking
+4. THE Oracle_Trainer SHALL maintain prediction accuracy statistics over time including success rate and improvement trends
+5. THE Neural_Network SHALL use online learning with single-sample updates to adapt quickly to new patterns
+6. THE system SHALL log all oracle training events including prediction comparisons, training sample generation, and accuracy updates
+7. THE Oracle_Trainer SHALL use CrossEntropyLoss and Adam optimizer with configurable learning rate for network updates
+8. THE system SHALL track neural network learning progress and provide metrics on prediction improvement over time

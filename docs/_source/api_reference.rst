@@ -38,6 +38,20 @@ Game Logic
 Main Orchestrator
 -----------------
 
+The HydraMgr class implements the enhanced 9-state decision cycle architecture for optimal move selection.
+
+**Decision Cycle States:**
+
+1. **INITIALIZATION**: Reset budget and prepare components
+2. **NN_PREDICTION**: Generate neural network move predictions  
+3. **TREE_SETUP**: Create initial exploration clones
+4. **EXPLORATION**: Execute budget-constrained tree search
+5. **EVALUATION**: Analyze paths and select optimal move
+6. **ORACLE_TRAINING**: Update NN from tree search results
+7. **MASTER_UPDATE**: Apply move to authoritative game state
+8. **CLEANUP**: Destroy exploration tree
+9. **TERMINATION_CHECK**: Determine simulation continuation
+
 .. automodule:: ai_hydra.hydra_mgr
    :members:
    :undoc-members:

@@ -9,6 +9,7 @@ Welcome to the AI Hydra documentation. This system implements an AI agent that u
 
    getting_started
    architecture
+   decision_flow
    zmq_protocol
    deployment
    testing

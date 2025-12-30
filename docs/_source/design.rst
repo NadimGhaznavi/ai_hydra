@@ -60,26 +60,159 @@ The system uses a message-based communication pattern:
 4. **HydraMgr** executes decision cycles and logs results
 5. **ZeroMQ Server** broadcasts status updates to all clients
 
-Component Interaction Flow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Decision Flow Architecture
+------------------------
 
-The decision cycle follows this pattern:
+System Initialization
+~~~~~~~~~~~~~~~~~~~~~~
 
-1. **HydraMgr** initializes budget (100 moves)
-2. **State Manager** creates 3 initial clones from master
-3. **Exploration Loop** (until budget exhausted):
+The AI Hydra system follows a structured initialization process before beginning decision cycles:
+
+1. **Configuration Loading and Validation**
    
-   * Execute clones with different moves (left/straight/right)
-   * **Game Logic** returns MoveResult with new board and reward
-   * **Budget Controller** decrements budget
-   * For surviving clones, create 3 new sub-clones
-   * For terminated clones, return path and cumulative reward
+   - Load Hydra Zen configuration object
+   - Validate all required parameters and ranges
+   - Handle configuration errors with detailed messages
 
-4. **Path Evaluation** selects optimal path
-5. **Game Logic** applies winning move to master board
-6. **State Manager** destroys exploration tree
-7. **Budget Controller** resets budget
-8. Cycle repeats with 3 new initial clones
+2. **Component Initialization Sequence**
+   
+   - Initialize HydraMgr (main orchestrator)
+   - Initialize Master Game with GameBoard
+   - Initialize Budget Controller with move budget
+   - Initialize State Manager for clone lifecycle
+   - Initialize Neural Network and Feature Extractor
+   - Initialize Oracle Trainer for NN learning
+   - Setup comprehensive logging system
+
+3. **System Ready State**
+   
+   - All components initialized and validated
+   - Ready to begin decision cycle execution
+   - Logging system active for monitoring
+
+Starting State Definition
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before each decision cycle begins, the system establishes a well-defined starting state:
+
+**Master Game State:**
+
+* GameBoard with current snake position, body, direction, food location, and score
+* Move count tracking for circular pattern detection
+* Deterministic random state for reproducible food placement
+
+**Budget Controller State:**
+
+* Move budget initialized to configured value (default: 100 moves)
+* Budget consumption counter reset to 0
+* Round tracking for budget management
+
+**State Manager State:**
+
+* No active exploration clones (clean slate)
+* Clone ID generator reset for new tree
+* Tree structure tracking cleared
+
+**Neural Network State:**
+
+* Model loaded with current weights
+* Feature extractor ready for game state processing
+* Oracle trainer prepared for prediction comparison
+
+Decision Cycle Sequence
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The complete decision-making process follows this detailed sequence with 9 distinct states:
+
+1. **INITIALIZATION**
+   
+   - Reset budget to configured value (100 moves)
+   - Get current GameBoard state from Master Game
+   - Prepare all components for new decision cycle
+
+2. **NN_PREDICTION**
+   
+   - Extract 19-dimensional feature vector from GameBoard
+   - Neural network predicts optimal move probabilities [Left, Straight, Right]
+   - Log NN prediction and confidence for oracle comparison
+
+3. **TREE_SETUP**
+   
+   - Create 3 initial exploration clones from master GameBoard
+   - Each clone tests NN prediction first, then diverges
+   - Initialize clone hierarchy with proper naming (1, 2, 3)
+
+4. **EXPLORATION**
+   
+   - Execute rounds of clone moves within budget constraints
+   - For each active clone in current round:
+     
+     * Execute clone's assigned move via GameLogic
+     * Decrement budget by 1
+     * Log clone step (ID, outcome, reward, score)
+     * Handle termination (collision/food) or create sub-clones
+   
+   - Continue until budget exhausted OR all clones terminated
+   - Allow current round completion even if budget exceeded
+
+5. **EVALUATION**
+   
+   - Collect all completed paths with cumulative rewards
+   - Find path with highest cumulative reward
+   - Break ties by selecting path with fewest moves
+   - Log optimal path selection details
+
+6. **ORACLE_TRAINING**
+   
+   - Compare NN prediction with optimal tree search result
+   - If predictions differ:
+     
+     * Generate training sample
+     * Update network weights
+     * Log training sample generation
+   
+   - If predictions match:
+     
+     * Log NN prediction accuracy
+
+7. **MASTER_UPDATE**
+   
+   - Apply optimal move to master GameBoard via GameLogic
+   - Confirm state update
+   - Log master move application
+
+8. **CLEANUP**
+   
+   - Destroy entire exploration tree structure
+   - Reset all clone tracking
+   - Prepare for next cycle
+
+9. **TERMINATION_CHECK**
+   
+   - Check if game is terminal (collision/max moves)
+   - If game over: log completion and end simulation
+   - If game continues: proceed to next decision cycle
+
+Budget Management Flow
+~~~~~~~~~~~~~~~~~~~~~~
+
+The budget system ensures computational constraints are respected:
+
+**Budget Lifecycle:**
+
+1. **Initialize Budget**: Set to configured value (100 moves)
+2. **Round Execution**: Execute all active clones in current round
+3. **Budget Consumption**: Decrement by 1 for each clone move
+4. **Budget Check**: Verify remaining budget after each round
+5. **Round Completion**: Allow current round to finish even if budget exceeded
+6. **Path Evaluation**: Evaluate all paths when budget exhausted or no active clones
+7. **Budget Reset**: Reset to original value for next decision cycle
+
+**Budget States:**
+
+* **Active**: Budget > 0, continue exploration
+* **Exhausted**: Budget ≤ 0, complete current round then evaluate
+* **Reset**: Budget restored to original value for next cycle
 
 Components and Interfaces
 -------------------------

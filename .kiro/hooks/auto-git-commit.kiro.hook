@@ -12,5 +12,7 @@
   "then": {
     "type": "askAgent",
     "prompt": "Check in the modified files with git. Use `git add .` to stage all changes and then `git commit -m \"Auto-commit: updated files\"` to commit them."
-  }
+  },
+  "workspaceFolderName": "ai_hydra",
+  "shortName": "auto-git-commit"
 }

@@ -53,38 +53,93 @@ Tree Search Components
 Decision Flow Architecture
 --------------------------
 
-The system follows a structured decision-making process:
+System Initialization
+~~~~~~~~~~~~~~~~~~~~~~
 
-1. **Neural Network Prediction Phase**
+The AI Hydra system follows a structured initialization process before beginning decision cycles:
+
+1. **Configuration Loading**: Load and validate Hydra Zen configuration
+2. **Component Initialization**: Initialize HydraMgr, Master Game, Budget Controller, State Manager, Neural Network, and Oracle Trainer
+3. **Logging Setup**: Configure comprehensive logging system
+4. **System Ready**: Prepare for decision cycle execution
+
+Starting State Definition
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before each decision cycle begins, the system establishes a well-defined starting state:
+
+**Master Game State:**
+- GameBoard with current snake position, body, direction, food location, and score
+- Move count tracking for circular pattern detection
+- Deterministic random state for reproducible food placement
+
+**Budget Controller State:**
+- Move budget initialized to configured value (default: 100 moves)
+- Budget consumption counter reset to 0
+- Round tracking for budget management
+
+**State Manager State:**
+- No active exploration clones (clean slate)
+- Clone ID generator reset for new tree
+- Tree structure tracking cleared
+
+**Neural Network State:**
+- Model loaded with current weights
+- Feature extractor ready for game state processing
+- Oracle trainer prepared for prediction comparison
+
+Decision Cycle Sequence
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The complete decision-making process follows this detailed sequence:
+
+1. **INITIALIZATION**: Reset budget, get master state, prepare components
+
+2. **NN_PREDICTION**: Extract features, get neural network move prediction
    
    - Extract 19 features from current GameBoard state
    - Neural network predicts optimal move with confidence score
    - Log prediction for oracle comparison
 
-2. **Tree Search Exploration Phase**
+3. **TREE_SETUP**: Create initial exploration clones from master state
    
    - Initialize budget controller with configured move allowance
    - Create 3 initial exploration clones from master GameBoard
+   - Each clone tests the NN prediction first
+
+4. **EXPLORATION**: Execute rounds of clone moves within budget constraints
+   
    - Execute budget-constrained tree search with dynamic expansion
    - Allow current round completion even if budget exceeded
+   - Create sub-clones from surviving clones (L, S, R moves)
+   - Terminate clones on collision or food consumption
 
-3. **Path Evaluation Phase**
+5. **EVALUATION**: Analyze all paths and select optimal move
    
    - Collect cumulative rewards from all completed exploration paths
-   - Select path with highest reward (random selection for ties)
+   - Select path with highest reward (fewest moves for ties)
    - Extract first move from optimal path
 
-4. **Oracle Training Phase**
+6. **ORACLE_TRAINING**: Compare NN vs tree search, update network if needed
    
    - Compare neural network prediction with tree search result
    - Generate training sample if predictions differ
    - Update neural network weights using tree search as ground truth
 
-5. **Master Game Update Phase**
+7. **MASTER_UPDATE**: Apply winning move to authoritative game state
    
    - Apply selected move to master game through GameLogic
+   - Confirm state update and log master move application
+
+8. **CLEANUP**: Destroy exploration tree and prepare for next cycle
+   
    - Reset exploration tree and budget for next cycle
-   - Continue until game termination
+   - Destroy entire exploration tree structure
+
+9. **TERMINATION_CHECK**: Determine if simulation should continue
+   
+   - Check if game has ended (collision/max moves)
+   - Continue until game termination or user stop
 
 Budget-Constrained Tree Search
 ------------------------------
@@ -95,17 +150,27 @@ The tree search algorithm implements several key innovations:
   - Executes all active clones in synchronized rounds
   - Allows current round to complete even if budget exceeded
   - Provides predictable computational costs
+  - Tracks moves per round for logging and analysis
 
 **Dynamic Tree Expansion**
   - Creates 3 sub-clones from each surviving clone
   - Hierarchical naming system (1, 2, 3 → 1L, 1S, 1R → 1LL, 1LS, 1LR)
   - Natural termination on collision or budget exhaustion
+  - Efficient cleanup in any order after decision cycle
 
 **Reward-Based Evaluation**
-  - +10 reward for eating food
+  - +10 reward for eating food (terminates clone optimally)
   - -10 penalty for collisions (wall or self)
   - 0 reward for empty square movement
   - Cumulative reward tracking across entire paths
+  - Tie-breaking by fewest moves for efficiency
+
+**Budget Management Flow**
+  - Initialize budget to configured value (default: 100 moves)
+  - Decrement budget by 1 for each clone move execution
+  - Complete current round even if budget exhausted
+  - Reset budget after each decision cycle
+  - Track budget utilization for performance metrics
 
 Hybrid Neural Network Integration
 ---------------------------------
