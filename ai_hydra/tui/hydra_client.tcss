@@ -8,7 +8,7 @@ Adapted from ai_snake_lab with AI Hydra branding.
 Screen {
     layout: grid;
     grid-size: 3 4;
-    grid-rows: 3 11 13 24;
+    grid-rows: 3 13 24;
     grid-columns: 32 46 36;
 }
 
