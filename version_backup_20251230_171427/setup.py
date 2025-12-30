@@ -12,7 +12,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="ai-hydra",
-    version="0.6.0",
+    version="0.3.1",
     author="AI Hydra Team",
     author_email="team@ai-hydra.com",
     description="A budget-constrained tree search system for Snake Game AI with neural network integration",

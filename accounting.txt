@@ -3,5 +3,8 @@ I would like you creating a document on testing. It should include a list of the
 6.16 credits
 
 Can you create a "How to update the project version" document? So that should include the list of files where the project version needs to be updated (i.e. the pyproject.toml file and a list of __init__.py files). This should be a procedure an operator can follow.
+Credits used: 5.78
+Elapsed time: 3m 7s
+
 
 
