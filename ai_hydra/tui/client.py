@@ -98,13 +98,6 @@ class HydraClient(App):
         # Title
         yield Label(self.TITLE, id="title")
         
-        # Game board
-        self.game_board = HydraGameBoard(board_size=(20, 20), id="game_board")
-        yield Vertical(
-            self.game_board,
-            id="game_box"
-        )
-        
         # Control panel
         yield Vertical(
             Horizontal(
@@ -124,6 +117,13 @@ class HydraClient(App):
                 Input(value="100", id="move_budget", classes="config_input", compact=True)
             ),
             id="control_panel"
+        )
+        
+        # Game board
+        self.game_board = HydraGameBoard(board_size=(20, 20), id="game_board")
+        yield Vertical(
+            self.game_board,
+            id="game_box"
         )
         
         # Status display
