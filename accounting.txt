@@ -1,4 +1,7 @@
 
 I would like you creating a document on testing. It should include a list of the tests that have been implemented and instructions on running single, groups or all tests. Add it to the "docs" documentation.
+6.16 credits
+
+Can you create a "How to update the project version" document? So that should include the list of files where the project version needs to be updated (i.e. the pyproject.toml file and a list of __init__.py files). This should be a procedure an operator can follow.
 
 

@@ -12,6 +12,7 @@ Welcome to the AI Hydra documentation. This system implements a sophisticated **
    zmq_protocol
    deployment
    testing
+   version_update_procedure
    troubleshooting
    api_reference
 
