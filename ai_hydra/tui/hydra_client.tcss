@@ -9,7 +9,7 @@ Screen {
     layout: grid;
     grid-size: 3 4;
     grid-rows: 3 13 24;
-    grid-columns:  46 36;
+    grid-columns: 50 46 36;
 }
 
 #title {
