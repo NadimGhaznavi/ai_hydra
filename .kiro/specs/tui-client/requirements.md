@@ -13,6 +13,7 @@ This document specifies the requirements for a Terminal User Interface (TUI) cli
 - **Status_Display**: Real-time information about simulation state
 - **Performance_Monitor**: Display of system performance metrics
 - **Message_Protocol**: ZeroMQ communication protocol between client and server
+- **Epoch**: A complete game cycle from start to game over, representing one training iteration
 
 ## Requirements
 
@@ -51,8 +52,10 @@ This document specifies the requirements for a Terminal User Interface (TUI) cli
 2. WHEN the simulation is running, THE Status_Display SHALL show total moves executed
 3. WHEN the simulation is running, THE Status_Display SHALL show current snake length
 4. WHEN the simulation is running, THE Status_Display SHALL show simulation runtime
-5. WHEN a new high score is achieved, THE Status_Display SHALL highlight the achievement
-6. THE Status_Display SHALL update at least once per second during active simulation
+5. WHEN the simulation is running, THE Status_Display SHALL show current epoch number (game number)
+6. WHEN a new game starts, THE Status_Display SHALL increment the epoch counter
+7. WHEN a new high score is achieved, THE Status_Display SHALL highlight the achievement
+8. THE Status_Display SHALL update at least once per second during active simulation
 
 ### Requirement 4: Performance Metrics Dashboard
 
@@ -112,11 +115,11 @@ This document specifies the requirements for a Terminal User Interface (TUI) cli
 
 #### Acceptance Criteria
 
-1. WHEN games complete, THE TUI_Client SHALL log game scores and statistics
-2. WHEN high scores are achieved, THE TUI_Client SHALL maintain a high score history
-3. THE TUI_Client SHALL display performance trends in graphical format
-4. THE TUI_Client SHALL allow exporting simulation data to files
-5. WHEN viewing history, THE TUI_Client SHALL support filtering and searching
+1. WHEN games complete, THE TUI_Client SHALL log game scores, epoch numbers, and statistics
+2. WHEN high scores are achieved, THE TUI_Client SHALL maintain a high score history with epoch information
+3. THE TUI_Client SHALL display performance trends in graphical format with epoch-based timeline
+4. THE TUI_Client SHALL allow exporting simulation data to files including epoch tracking
+5. WHEN viewing history, THE TUI_Client SHALL support filtering and searching by epoch ranges
 6. THE TUI_Client SHALL maintain data persistence across application restarts
 
 ### Requirement 9: Multi-Session Support
