@@ -3,6 +3,8 @@ Testing Guide
 
 This document provides comprehensive information about the AI Hydra testing framework, including test organization, execution instructions, and coverage details.
 
+For complete development standards including directory layout and file organization, see :doc:`development_standards`.
+
 Overview
 --------
 

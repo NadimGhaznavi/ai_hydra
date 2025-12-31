@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documented file naming conventions for Python files, tests, documentation, and configuration
   - Provided directory creation guidelines and migration procedures for reorganization
   - Included automation tools for structure validation and import path checking
+- **Development Standards Documentation**: Comprehensive development standards and guidelines documentation
+  - Created docs/_source/runbook/development_standards.rst with complete development standards
+  - Integrated directory layout standards with existing SDLC procedures documentation
+  - Documented code organization standards, import organization, and module structure guidelines
+  - Provided configuration management standards and file migration procedures
+  - Included automation and tooling documentation for structure validation and maintenance
+  - Updated main documentation index to include development standards in operations runbook
 - **Token Tracker System**: Complete implementation of comprehensive token usage tracking system
   - Core data models (TokenTransaction, TrackerConfig) with validation and CSV serialization
   - Thread-safe CSV operations with file locking and concurrent access protection

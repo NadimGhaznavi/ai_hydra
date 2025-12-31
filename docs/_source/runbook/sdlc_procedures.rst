@@ -3,6 +3,8 @@ Software Development Lifecycle (SDLC) Procedures
 
 This document outlines the complete Software Development Lifecycle procedures for the AI Hydra project using Kiro IDE. These procedures ensure consistent development practices, quality assurance, and efficient project management.
 
+For detailed development standards including directory layout, code organization, and file naming conventions, see :doc:`development_standards`.
+
 Overview
 --------
 
