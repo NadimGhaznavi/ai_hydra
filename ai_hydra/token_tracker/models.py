@@ -199,7 +199,10 @@ class TokenTransaction:
 
     def _sanitize_csv_text(self, text: str) -> str:
         """
-        Sanitize text for CSV storage.
+        Sanitize text for CSV storage with comprehensive special character and Unicode handling.
+
+        This method ensures that text is safe for CSV storage while preserving
+        Unicode characters and handling special characters that could break CSV parsing.
 
         Args:
             text: Text to sanitize
@@ -207,16 +210,124 @@ class TokenTransaction:
         Returns:
             str: Sanitized text safe for CSV storage
         """
-        # Replace newlines with escaped sequences
-        sanitized = text.replace("\n", "\\n").replace("\r", "\\r")
+        import unicodedata
+        import re
 
-        # Escape quotes
+        # Handle None or empty input
+        if not text:
+            return ""
+
+        # Ensure text is a string
+        if not isinstance(text, str):
+            text = str(text)
+
+        # Step 1: Normalize Unicode characters to ensure consistent representation
+        # Use NFC (Canonical Decomposition, followed by Canonical Composition)
+        # This handles accented characters and other Unicode normalization issues
+        try:
+            sanitized = unicodedata.normalize("NFC", text)
+        except (TypeError, ValueError):
+            # Fallback if normalization fails
+            sanitized = text
+
+        # Step 2: Handle control characters and problematic Unicode
+        # Remove or replace control characters that can break CSV parsing
+        control_chars = {
+            "\x00": "",  # NULL character - remove completely
+            "\x01": "",  # Start of Heading - remove
+            "\x02": "",  # Start of Text - remove
+            "\x03": "",  # End of Text - remove
+            "\x04": "",  # End of Transmission - remove
+            "\x05": "",  # Enquiry - remove
+            "\x06": "",  # Acknowledge - remove
+            "\x07": "",  # Bell - remove
+            "\x08": "",  # Backspace - remove
+            "\x0b": " ",  # Vertical Tab - replace with space
+            "\x0c": " ",  # Form Feed - replace with space
+            "\x0e": "",  # Shift Out - remove
+            "\x0f": "",  # Shift In - remove
+            "\x10": "",  # Data Link Escape - remove
+            "\x11": "",  # Device Control 1 - remove
+            "\x12": "",  # Device Control 2 - remove
+            "\x13": "",  # Device Control 3 - remove
+            "\x14": "",  # Device Control 4 - remove
+            "\x15": "",  # Negative Acknowledge - remove
+            "\x16": "",  # Synchronous Idle - remove
+            "\x17": "",  # End of Transmission Block - remove
+            "\x18": "",  # Cancel - remove
+            "\x19": "",  # End of Medium - remove
+            "\x1a": "",  # Substitute - remove
+            "\x1b": "",  # Escape - remove
+            "\x1c": "",  # File Separator - remove
+            "\x1d": "",  # Group Separator - remove
+            "\x1e": "",  # Record Separator - remove
+            "\x1f": "",  # Unit Separator - remove
+            "\x7f": "",  # Delete - remove
+        }
+
+        for char, replacement in control_chars.items():
+            sanitized = sanitized.replace(char, replacement)
+
+        # Step 3: Handle line breaks and carriage returns
+        # Replace with escaped sequences for CSV safety
+        sanitized = sanitized.replace("\r\n", "\\r\\n")  # Windows line endings
+        sanitized = sanitized.replace("\n", "\\n")  # Unix line endings
+        sanitized = sanitized.replace("\r", "\\r")  # Mac line endings
+
+        # Step 4: Handle CSV-specific special characters
+        # Escape double quotes by doubling them (CSV standard)
         sanitized = sanitized.replace('"', '""')
 
-        # Limit length to prevent extremely large CSV cells
-        max_length = 1000
+        # Handle commas - they don't need escaping if the field is quoted,
+        # but we'll note their presence for proper CSV writing
+
+        # Step 5: Handle other potentially problematic characters
+        # Replace tab characters with spaces for better readability
+        sanitized = sanitized.replace("\t", "    ")  # 4 spaces for tab
+
+        # Step 6: Remove or replace other Unicode categories that might cause issues
+        # Remove format characters (Cf category) that are invisible but can cause issues
+        sanitized = "".join(
+            char
+            for char in sanitized
+            if unicodedata.category(char) != "Cf"
+            or char in ["\u200c", "\u200d"]  # Keep zero-width joiners
+        )
+
+        # Step 7: Handle extremely long text
+        # Use configurable max length with intelligent truncation
+        max_length = 1000  # This could be made configurable
         if len(sanitized) > max_length:
-            sanitized = sanitized[:max_length] + "...[truncated]"
+            # Try to truncate at word boundary if possible
+            truncate_pos = max_length - 15  # Leave room for truncation marker
+
+            # Look for a good truncation point (space, punctuation)
+            good_break_chars = [" ", ".", ",", ";", "!", "?", "\n", "\r"]
+            best_break = -1
+
+            for i in range(truncate_pos, max(0, truncate_pos - 50), -1):
+                if i < len(sanitized) and sanitized[i] in good_break_chars:
+                    best_break = i
+                    break
+
+            if best_break > 0:
+                sanitized = sanitized[:best_break] + "...[truncated]"
+            else:
+                sanitized = sanitized[:truncate_pos] + "...[truncated]"
+
+        # Step 8: Final validation - ensure the result is valid UTF-8
+        try:
+            # Test that the string can be encoded/decoded properly
+            sanitized.encode("utf-8").decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            # If there are still encoding issues, use a more aggressive approach
+            sanitized = sanitized.encode("utf-8", errors="replace").decode("utf-8")
+
+        # Step 9: Ensure we don't return empty string if original had content
+        if not sanitized.strip() and text.strip():
+            # If sanitization removed everything but original had content,
+            # provide a safe placeholder
+            sanitized = "[content removed during sanitization]"
 
         return sanitized
 

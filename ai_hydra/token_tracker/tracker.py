@@ -158,21 +158,34 @@ class TokenTracker:
 
         except Exception as e:
             self._update_failure_statistics()
-            recovery_result = self.error_handler.handle_error(
-                e,
-                "token_tracker",
-                "record_transaction",
-                {"prompt_length": len(prompt_text), "tokens_used": tokens_used},
-            )
+            self.logger.error(f"Failed to record transaction: {e}")
 
-            if recovery_result.success and recovery_result.should_retry:
-                # Retry once with recovered data
-                try:
-                    return self._retry_record_transaction(
-                        prompt_text, tokens_used, elapsed_time, context, recovery_result
-                    )
-                except Exception as retry_error:
-                    self.logger.error(f"Retry failed: {retry_error}")
+            # Try to handle the error based on its type
+            if "CSV" in str(e) or "write" in str(e).lower():
+                # Create a dummy transaction for error handling
+                dummy_transaction = TokenTransaction.create_new(
+                    prompt_text=prompt_text[:100],  # Truncated for error handling
+                    tokens_used=tokens_used,
+                    elapsed_time=elapsed_time,
+                    workspace_folder="unknown",
+                    hook_trigger_type="unknown",
+                )
+                recovery_result = self.error_handler.handle_csv_write_error(
+                    e, self.config.get_csv_file_path(), dummy_transaction
+                )
+
+                if recovery_result.success and recovery_result.should_retry:
+                    # Retry once with recovered data
+                    try:
+                        return self._retry_record_transaction(
+                            prompt_text,
+                            tokens_used,
+                            elapsed_time,
+                            context,
+                            recovery_result,
+                        )
+                    except Exception as retry_error:
+                        self.logger.error(f"Retry failed: {retry_error}")
 
             return False
 
@@ -299,6 +312,77 @@ class TokenTracker:
             cleanup_results["error"] = str(e)
 
         return cleanup_results
+
+    def test_unicode_compatibility(self) -> Dict[str, Any]:
+        """
+        Test Unicode and special character compatibility.
+
+        Returns:
+            Dict[str, Any]: Test results for Unicode handling
+        """
+        # Test strings with various Unicode and special characters
+        test_strings = [
+            # Basic Unicode characters
+            "Hello, 世界! 🌍",  # Chinese characters and emoji
+            "Café résumé naïve",  # Accented characters
+            "Москва Россия",  # Cyrillic
+            "العربية",  # Arabic
+            "日本語",  # Japanese
+            "한국어",  # Korean
+            "Ελληνικά",  # Greek
+            # Special characters and symbols
+            "Special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?",
+            "Math symbols: ∑∏∫∆∇∂∞±≤≥≠≈∝∈∉∪∩⊂⊃",
+            "Currency: $€£¥₹₽₩₪₨₦₡₵₸₴₲₱₫₪",
+            "Arrows: ←→↑↓↔↕↖↗↘↙⇐⇒⇑⇓⇔⇕",
+            # Problematic characters for CSV
+            'Text with "quotes" and commas, semicolons;',
+            "Text with\nnewlines\rand\ttabs",
+            "Text with\x00null\x01control\x02characters",
+            # Emoji and symbols
+            "Emoji test: 😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘",
+            "Symbols: ♠♣♥♦♪♫♬♭♮♯⚡⚽⚾⛄⛅⛈⛎⛏⛑⛓⛔⛕⛖⛗⛘⛙⛚⛛",
+            # Mixed content
+            'Mixed: Hello 世界 with "quotes", newlines\nand tabs\t!',
+            # Edge cases
+            "",  # Empty string
+            " ",  # Single space
+            "\n",  # Single newline
+            "\t",  # Single tab
+            "a" * 2000,  # Very long string
+        ]
+
+        try:
+            # Use CSV writer's Unicode validation method
+            results = self.csv_writer.validate_unicode_handling(test_strings)
+
+            # Add tracker-level statistics
+            results["tracker_statistics"] = {
+                "total_test_strings": len(test_strings),
+                "unicode_categories_tested": [
+                    "Latin Extended",
+                    "CJK (Chinese, Japanese, Korean)",
+                    "Arabic",
+                    "Cyrillic",
+                    "Greek",
+                    "Mathematical Symbols",
+                    "Currency Symbols",
+                    "Emoji",
+                    "Control Characters",
+                    "CSV Special Characters",
+                ],
+            }
+
+            self.logger.info(f"Unicode compatibility test completed: {results}")
+            return results
+
+        except Exception as e:
+            self.logger.error(f"Unicode compatibility test failed: {e}")
+            return {
+                "unicode_support_verified": False,
+                "error": str(e),
+                "test_completed": False,
+            }
 
     def export_data(
         self,

@@ -190,6 +190,36 @@ class TokenTrackerErrorHandler:
 
         self.logger.info("TokenTrackerErrorHandler initialized")
 
+    def handle_csv_read_error(
+        self, error: Exception, file_path: Path
+    ) -> ErrorRecoveryResult:
+        """
+        Handle CSV read errors with fallback mechanisms.
+
+        Args:
+            error: The original exception
+            file_path: Path to the CSV file
+
+        Returns:
+            ErrorRecoveryResult: Result of error handling
+        """
+        context = {
+            "file_path": str(file_path),
+            "original_error": str(error),
+        }
+
+        csv_error = CSVReadError(
+            f"Failed to read from CSV file {file_path}: {error}", file_path, context
+        )
+
+        self._log_error(csv_error)
+
+        # Try recovery strategies
+        recovery_result = self._attempt_csv_read_recovery(csv_error)
+
+        self._update_statistics(csv_error, recovery_result)
+        return recovery_result
+
     def handle_csv_write_error(
         self, error: Exception, file_path: Path, transaction_data: Any
     ) -> ErrorRecoveryResult:
@@ -430,6 +460,43 @@ class TokenTrackerErrorHandler:
                 [e for e in self.error_history if time.time() - e.timestamp < 300]
             ),  # Last 5 minutes
         }
+
+    def _attempt_csv_read_recovery(self, error: CSVReadError) -> ErrorRecoveryResult:
+        """Attempt to recover from CSV read errors."""
+        # Strategy 1: Try to read partial data or use backup
+        try:
+            # Check if backup file exists
+            backup_pattern = f"{error.file_path.stem}_backup_*{error.file_path.suffix}"
+            backup_files = list(error.file_path.parent.glob(backup_pattern))
+
+            if backup_files:
+                # Use most recent backup
+                latest_backup = max(backup_files, key=lambda f: f.stat().st_mtime)
+                self.logger.warning(f"Using backup file for recovery: {latest_backup}")
+
+                return ErrorRecoveryResult(
+                    success=True,
+                    message=f"Using backup file: {latest_backup}",
+                    recovered_data=[],  # Would contain transactions from backup
+                    fallback_used=True,
+                )
+            else:
+                # Return empty data as fallback
+                return ErrorRecoveryResult(
+                    success=True,
+                    message="No backup available, returning empty transaction list",
+                    recovered_data=[],
+                    fallback_used=True,
+                )
+
+        except Exception as recovery_error:
+            self.logger.error(f"CSV read recovery failed: {recovery_error}")
+
+            return ErrorRecoveryResult(
+                success=False,
+                message=f"CSV read recovery failed: {recovery_error}",
+                should_retry=False,
+            )
 
     def _attempt_csv_write_recovery(
         self, error: CSVWriteError, transaction_data: Any

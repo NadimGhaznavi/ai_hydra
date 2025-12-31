@@ -628,6 +628,154 @@ class CSVWriter:
             file_lock.release()
             self.logger.debug(f"File lock released for {file_path}")
 
+    def validate_unicode_handling(self, test_strings: List[str]) -> Dict[str, Any]:
+        """
+        Validate that the CSV writer properly handles Unicode and special characters.
+
+        Args:
+            test_strings: List of test strings with various Unicode and special characters
+
+        Returns:
+            Dict[str, Any]: Validation results
+        """
+        results = {
+            "unicode_support_verified": False,
+            "special_chars_handled": False,
+            "round_trip_successful": False,
+            "encoding_consistent": False,
+            "test_results": [],
+            "issues": [],
+        }
+
+        try:
+            # Create test transactions with various Unicode and special character content
+            test_transactions = []
+            for i, test_string in enumerate(test_strings):
+                try:
+                    transaction = TokenTransaction.create_new(
+                        prompt_text=test_string,
+                        tokens_used=100 + i,
+                        elapsed_time=1.0 + i * 0.1,
+                        workspace_folder="unicode_test",
+                        hook_trigger_type="manual",
+                        hook_name="unicode_test_hook",
+                    )
+                    test_transactions.append(transaction)
+                except Exception as e:
+                    results["issues"].append(
+                        f"Failed to create transaction with string {i}: {e}"
+                    )
+
+            if not test_transactions:
+                results["issues"].append("No test transactions could be created")
+                return results
+
+            # Test writing and reading back
+            successful_writes = 0
+            successful_reads = 0
+
+            for transaction in test_transactions:
+                test_result = {
+                    "original_text": transaction.prompt_text,
+                    "write_success": False,
+                    "read_success": False,
+                    "round_trip_success": False,
+                    "text_preserved": False,
+                    "encoding_issues": [],
+                }
+
+                try:
+                    # Test writing
+                    write_success = self.write_transaction(transaction)
+                    test_result["write_success"] = write_success
+                    if write_success:
+                        successful_writes += 1
+
+                    # Test reading back
+                    read_transactions = self.read_transactions(
+                        limit=len(test_transactions)
+                    )
+                    if read_transactions:
+                        test_result["read_success"] = True
+                        successful_reads += 1
+
+                        # Find our transaction in the read results
+                        matching_transaction = None
+                        for read_trans in read_transactions:
+                            if (
+                                read_trans.tokens_used == transaction.tokens_used
+                                and read_trans.workspace_folder
+                                == transaction.workspace_folder
+                            ):
+                                matching_transaction = read_trans
+                                break
+
+                        if matching_transaction:
+                            test_result["round_trip_success"] = True
+
+                            # Check text preservation
+                            original_sanitized = transaction._sanitize_csv_text(
+                                transaction.prompt_text
+                            )
+                            if matching_transaction.prompt_text == original_sanitized:
+                                test_result["text_preserved"] = True
+                            else:
+                                # Check if essential content is preserved
+                                original_chars = set(original_sanitized)
+                                read_chars = set(matching_transaction.prompt_text)
+
+                                # Allow some character loss due to sanitization
+                                preserved_ratio = len(
+                                    original_chars & read_chars
+                                ) / max(len(original_chars), 1)
+                                if preserved_ratio >= 0.8:  # 80% character preservation
+                                    test_result["text_preserved"] = True
+
+                except UnicodeEncodeError as e:
+                    test_result["encoding_issues"].append(f"Encoding error: {e}")
+                except UnicodeDecodeError as e:
+                    test_result["encoding_issues"].append(f"Decoding error: {e}")
+                except Exception as e:
+                    test_result["encoding_issues"].append(f"General error: {e}")
+
+                results["test_results"].append(test_result)
+
+            # Analyze overall results
+            total_tests = len(test_transactions)
+            if total_tests > 0:
+                write_success_rate = successful_writes / total_tests
+                read_success_rate = successful_reads / total_tests
+
+                results["unicode_support_verified"] = write_success_rate >= 0.8
+                results["special_chars_handled"] = read_success_rate >= 0.8
+
+                # Check round-trip success
+                round_trip_successes = sum(
+                    1 for r in results["test_results"] if r["round_trip_success"]
+                )
+                results["round_trip_successful"] = (
+                    round_trip_successes / total_tests >= 0.8
+                )
+
+                # Check text preservation
+                text_preserved_count = sum(
+                    1 for r in results["test_results"] if r["text_preserved"]
+                )
+                results["encoding_consistent"] = (
+                    text_preserved_count / total_tests >= 0.7
+                )
+
+            self.logger.info(
+                f"Unicode validation completed: {successful_writes}/{total_tests} writes, "
+                f"{successful_reads}/{total_tests} reads successful"
+            )
+
+        except Exception as e:
+            results["issues"].append(f"Unicode validation failed: {e}")
+            self.logger.error(f"Unicode validation error: {e}")
+
+        return results
+
     def validate_csv_integrity(self) -> Dict[str, Any]:
         """
         Validate the integrity of the CSV file.

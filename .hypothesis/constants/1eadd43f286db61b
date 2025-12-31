@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/token_tracker/csv_writer.py
+# hypothesis_version: 6.148.8
+
+[0.1, 100, 3600, 'CSV file is empty', 'a', 'actual_count', 'agent_execution_id', 'all_data_valid', 'elapsed_time', 'error_message', 'error_occurred', 'expected_count', 'fallback_path', 'file_exists', 'file_patterns', 'file_readable', 'file_size_bytes', 'file_writable', 'header_valid', 'headers', 'hook_name', 'hook_trigger_type', 'integrity_verified', 'invalid_rows', 'issues', 'no_duplicates', 'prompt_text', 'r', 'rb', 'session_id', 'success', 'timestamp', 'tokens_used', 'total_rows', 'transactions_added', 'transactions_failed', 'unknown', 'utf-8', 'valid_rows', 'validation_issues', 'validation_passed', 'w', 'wb', 'workspace_folder']
