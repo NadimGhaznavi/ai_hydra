@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Agent hook integration with automatic token tracking on AI interactions
   - Configuration management with runtime updates and state consistency
   - Debug utilities for file patterns preservation testing
+  - **Maintenance Utilities**: Comprehensive maintenance system for token tracking
+    - MaintenanceManager class for CSV file rotation and cleanup operations
+    - Automatic file rotation based on configurable size and row count limits (50MB or 100k rows)
+    - Data compression support for archived files with gzip compression
+    - Cleanup functionality for old data based on retention policies
+    - Archive statistics and maintenance recommendations system
+    - Thread-safe operations with proper error handling and recovery
+    - Comprehensive maintenance API with rotation, cleanup, and monitoring capabilities
 
 ### Changed
 - **Documentation**: Comprehensive updates for token tracking system

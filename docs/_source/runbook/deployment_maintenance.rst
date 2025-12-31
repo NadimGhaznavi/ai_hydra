@@ -338,6 +338,35 @@ Scheduled Maintenance
    
    # Configuration backup
    tar -czf /backups/config_$(date +%Y%m%d).tar.gz /etc/ai_hydra /opt/ai_hydra/.kiro
+   
+   # Token tracker maintenance
+   python3 << EOF
+   from ai_hydra.token_tracker import TokenTracker
+   
+   try:
+       tracker = TokenTracker()
+       
+       # Get maintenance recommendations
+       recommendations = tracker.get_maintenance_recommendations()
+       print("=== Token Tracker Maintenance ===")
+       
+       if recommendations['rotation_recommended']:
+           print("File rotation recommended")
+       if recommendations['cleanup_recommended']:
+           print("Archive cleanup recommended")
+       
+       # Perform maintenance if needed
+       if any([recommendations['rotation_recommended'], 
+               recommendations['cleanup_recommended']]):
+           print("Performing token tracker maintenance...")
+           results = tracker.perform_maintenance()
+           print(f"Maintenance completed: rotation={results['rotation_performed']}, cleanup={results['cleanup_performed']}")
+       else:
+           print("No token tracker maintenance needed")
+           
+   except Exception as e:
+       print(f"Token tracker maintenance failed: {e}")
+   EOF
 
 **Monthly Maintenance Tasks:**
 
@@ -486,6 +515,33 @@ System Monitoring
                
            except Exception as e:
                self.metrics['application_error'] = str(e)
+       
+       def collect_token_tracker_metrics(self):
+           """Collect token tracker metrics."""
+           try:
+               from ai_hydra.token_tracker import TokenTracker
+               
+               tracker = TokenTracker()
+               
+               # Get tracker statistics
+               stats = tracker.get_statistics()
+               
+               # Get maintenance recommendations
+               recommendations = tracker.get_maintenance_recommendations()
+               
+               # Get archive statistics
+               archive_stats = tracker.maintenance_manager.get_archive_statistics()
+               
+               self.metrics.update({
+                   'token_tracker': {
+                       'statistics': stats,
+                       'recommendations': recommendations,
+                       'archive_stats': archive_stats
+                   }
+               })
+               
+           except Exception as e:
+               self.metrics['token_tracker_error'] = str(e)
                
        def check_thresholds(self):
            """Check if metrics exceed alert thresholds."""
@@ -499,6 +555,20 @@ System Monitoring
                
            if self.metrics.get('disk_usage', 0) > 90:
                alerts.append(f"High disk usage: {self.metrics['disk_usage']}%")
+           
+           # Token tracker specific alerts
+           if 'token_tracker' in self.metrics:
+               tt_metrics = self.metrics['token_tracker']
+               
+               # Check for high-priority maintenance recommendations
+               if tt_metrics.get('recommendations', {}).get('rotation_recommended'):
+                   alerts.append("Token tracker file rotation recommended")
+               
+               # Check archive size
+               archive_stats = tt_metrics.get('archive_stats', {})
+               archive_size_mb = archive_stats.get('total_size_bytes', 0) / (1024 * 1024)
+               if archive_size_mb > 1000:  # Alert at 1GB
+                   alerts.append(f"Token tracker archives using {archive_size_mb:.1f}MB")
                
            return alerts
            
@@ -523,6 +593,7 @@ System Monitoring
            """Run complete monitoring cycle."""
            self.collect_system_metrics()
            self.collect_application_metrics()
+           self.collect_token_tracker_metrics()
            
            # Log metrics
            with open('/var/log/ai_hydra/metrics.log', 'a') as f:
