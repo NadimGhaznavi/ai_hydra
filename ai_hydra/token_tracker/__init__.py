@@ -9,7 +9,13 @@ from .models import TokenTransaction, TrackerConfig
 from .tracker import TokenTracker
 from .csv_writer import CSVWriter
 from .metadata_collector import MetadataCollector
-from .error_handler import TokenTrackerError, CSVWriteError, ValidationError
+from .hook import TokenTrackingHook
+from .error_handler import (
+    TokenTrackerError,
+    CSVWriteError,
+    ValidationError,
+    HookExecutionError,
+)
 
 __all__ = [
     "TokenTransaction",
@@ -17,9 +23,11 @@ __all__ = [
     "TokenTracker",
     "CSVWriter",
     "MetadataCollector",
+    "TokenTrackingHook",
     "TokenTrackerError",
     "CSVWriteError",
     "ValidationError",
+    "HookExecutionError",
 ]
 
 __version__ = "1.0.0"

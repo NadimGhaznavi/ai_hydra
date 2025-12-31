@@ -76,19 +76,19 @@ This implementation plan converts the token tracking system design into a series
     - **Property 4: Hook-Tracker Integration (metadata portion)**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
 
-- [ ] 6. Develop agent hook integration
-  - [ ] 6.1 Create TokenTrackingHook class
+- [-] 6. Develop agent hook integration
+  - [x] 6.1 Create TokenTrackingHook class
     - Implement Kiro IDE hook interface following existing patterns
     - Add automatic triggering on agent execution events
     - Integrate with MetadataCollector for context gathering
     - Implement token usage extraction from execution results
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 6.2 Write property test for hook-tracker integration
+  - [x] 6.2 Write property test for hook-tracker integration
     - **Property 4: Hook-Tracker Integration**
     - **Validates: Requirements 2.1, 2.2, 2.3, 8.1, 8.2, 8.3, 8.4, 8.5**
 
-  - [ ] 6.3 Implement configuration management for hook
+  - [x] 6.3 Implement configuration management for hook
     - Add enable/disable functionality for automatic tracking
     - Create configuration validation and loading
     - Implement runtime configuration changes

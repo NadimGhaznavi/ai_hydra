@@ -25,6 +25,7 @@ class TokenTrackerErrorType(Enum):
     DISK_SPACE_ERROR = "disk_space_error"
     CONFIGURATION_ERROR = "configuration_error"
     METADATA_ERROR = "metadata_error"
+    HOOK_EXECUTION_ERROR = "hook_execution_error"
 
 
 class TokenTrackerError(Exception):
@@ -141,6 +142,19 @@ class MetadataError(TokenTrackerError):
     ):
         self.metadata_type = metadata_type
         super().__init__(message, TokenTrackerErrorType.METADATA_ERROR, context)
+
+
+class HookExecutionError(TokenTrackerError):
+    """Exception raised when hook execution fails."""
+
+    def __init__(
+        self,
+        message: str,
+        hook_phase: str,
+        context: Optional[Dict[str, Any]] = None,
+    ):
+        self.hook_phase = hook_phase
+        super().__init__(message, TokenTrackerErrorType.HOOK_EXECUTION_ERROR, context)
 
 
 @dataclass
@@ -435,6 +449,45 @@ class TokenTrackerErrorHandler:
         self._update_statistics(metadata_error, recovery_result)
         return recovery_result
 
+    def handle_hook_execution_error(
+        self,
+        hook_phase: str,
+        error: Exception,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> ErrorRecoveryResult:
+        """
+        Handle hook execution errors with graceful degradation.
+
+        Args:
+            hook_phase: Phase of hook execution that failed
+            error: Original exception
+            context: Additional context information
+
+        Returns:
+            ErrorRecoveryResult: Result of error handling
+        """
+        error_context = {
+            "hook_phase": hook_phase,
+            "original_error": str(error),
+            "error_type": type(error).__name__,
+        }
+        if context:
+            error_context.update(context)
+
+        hook_error = HookExecutionError(
+            f"Hook execution failed in {hook_phase}: {error}",
+            hook_phase,
+            error_context,
+        )
+
+        self._log_error(hook_error)
+
+        # Attempt graceful recovery
+        recovery_result = self._attempt_hook_execution_recovery(hook_error)
+
+        self._update_statistics(hook_error, recovery_result)
+        return recovery_result
+
     def get_error_statistics(self) -> Dict[str, Any]:
         """
         Get comprehensive error handling statistics.
@@ -676,6 +729,39 @@ class TokenTrackerErrorHandler:
             return ErrorRecoveryResult(
                 success=False,
                 message=f"Failed to create default metadata: {default_error}",
+                should_retry=False,
+            )
+
+    def _attempt_hook_execution_recovery(
+        self, error: HookExecutionError
+    ) -> ErrorRecoveryResult:
+        """Attempt to recover from hook execution errors."""
+        # Strategy: Log error and continue gracefully without interrupting workflow
+        try:
+            # For hook execution errors, we generally want to fail gracefully
+            # without interrupting the main workflow
+            recovery_message = (
+                f"Hook execution error in {error.hook_phase} handled gracefully"
+            )
+
+            # Provide minimal recovery data based on the hook phase
+            recovery_data = {
+                "hook_phase": error.hook_phase,
+                "error_handled": True,
+                "continue_execution": True,
+            }
+
+            return ErrorRecoveryResult(
+                success=True,
+                message=recovery_message,
+                recovered_data=recovery_data,
+                fallback_used=True,
+            )
+
+        except Exception as recovery_error:
+            return ErrorRecoveryResult(
+                success=False,
+                message=f"Failed to recover from hook execution error: {recovery_error}",
                 should_retry=False,
             )
 
