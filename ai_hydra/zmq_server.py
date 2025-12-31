@@ -77,9 +77,8 @@ class ZMQServer:
         self.last_status_update = time.time()
         self.status_update_interval = 1.0  # seconds
         
-        # Logging
-        self.logger = logging.getLogger("zmq_server")
-        self.logger.setLevel(logging.INFO)
+        # Logging - inherit from root logger configuration
+        self.logger = logging.getLogger("ai_hydra.zmq_server")
         
         # Message statistics
         self.messages_received = 0
