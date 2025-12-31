@@ -1,55 +1,50 @@
-AI Hydra Documentation
-=======================
+AI Hydra: Hybrid Neural Network + Tree Search System
+===================================================
 
-Welcome to the AI Hydra documentation. This system implements an AI agent that uses a **parallel neural network exploration system** to play the classic video Snake Game. AI that achieves mastery over basic collision avoidance through exhaustive exploration and increases the chance of finding food.
+AI Hydra is an advanced Snake game AI that combines neural network predictions 
+with tree search validation to achieve superior performance through hybrid 
+decision-making and continuous learning.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+Quick Links
+-----------
 
-   getting_started
-   architecture
-   decision_flow
-   zmq_protocol
-   token_tracking
-   token_tracking_implementation_status
-   deployment
-   testing
-   runbook
-   version_update_procedure
-   troubleshooting
-   api_reference
+📚 **End User Documentation**
+   Complete guides for using AI Hydra, from installation to advanced features.
+   
+   * :doc:`end_user/getting_started` - Installation and setup
+   * :doc:`end_user/quickstart` - Run your first simulation
+   * :doc:`end_user/troubleshooting` - Common issues and solutions
+   * :doc:`end_user/tui_getting_started` - Terminal user interface guide
+   * :doc:`end_user/tui_controls` - TUI controls and navigation
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Terminal User Interface:
+🏗️ **Architecture & Code Documentation**
+   Technical documentation for developers and researchers.
+   
+   * :doc:`architecture/architecture` - System design overview
+   * :doc:`architecture/api_reference` - Complete API documentation
+   * :doc:`architecture/decision_flow` - Decision-making algorithms
+   * :doc:`architecture/design` - Detailed system design
+   * :doc:`architecture/tui_architecture` - TUI system architecture
+   * :doc:`architecture/zmq_protocol` - ZeroMQ communication protocol
 
-   tui_getting_started
-   tui_architecture
-   tui_controls
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Project Specifications:
-
-   requirements
-   design
-   tasks
-
-.. toctree::
-   :maxdepth: 2
-   :caption: TUI Client Specifications:
-
-   .. tui_requirements
-   .. tui_design
-   .. tui_tasks
+⚙️ **Operations Runbook**
+   Procedures for project management and maintenance using Kiro IDE.
+   
+   * :doc:`runbook/token_tracking` - Token usage monitoring
+   * :doc:`runbook/version_update_procedure` - Release procedures
+   * :doc:`runbook/deployment` - Deployment instructions
+   * :doc:`runbook/testing` - Testing procedures and standards
+   * :doc:`runbook/runbook` - General operational procedures
+   * :doc:`runbook/requirements` - Project requirements
+   * :doc:`runbook/tasks` - Implementation tasks
+   * :doc:`runbook/token_tracking_implementation_status` - Token tracking status
 
 Overview
 --------
 
-AI Hydra addresses the fundamental problem where legacy AI regularly scores below 10 by implementing a "deep thinking" architecture that explores multiple NN learning trajectories simultaneously before making each move.
+AI Hydra addresses the fundamental problem where legacy AI regularly scores below 10 by implementing a "deep thinking" architecture that explores multiple neural network learning trajectories simultaneously before making each move.
 
-**Core Architecture**: Every decision spawns multiple concurrent NN instances that explore different learning paths through a budget-constrained tree search. The system exhausts its move budget analyzing alternatives before making a single move in the master game, prioritizing decision quality over speed.
+**Core Architecture**: Every decision spawns multiple concurrent neural network instances that explore different learning paths through a budget-constrained tree search. The system exhausts its move budget analyzing alternatives before making a single move in the master game, prioritizing decision quality over speed.
 
 Key Features
 ------------
@@ -62,6 +57,7 @@ Key Features
 * **Terminal User Interface**: Real-time visualization and control via Textual TUI
 * **Hydra Zen Configuration**: Flexible parameter management for concurrent systems
 * **Comprehensive Testing**: Property-based tests with timeout protection
+* **Token Tracking System**: Monitor AI token usage across all interactions
 
 Quick Start
 -----------
@@ -93,22 +89,8 @@ Quick Start
    result = hydra_mgr.run_simulation()
    print(f"Final score: {result.final_score}")
 
-Headless Operation
-------------------
-
-.. code-block:: python
-
-   from ai_hydra.headless_server import HeadlessServer
-   
-   # Start headless AI agent
-   server = HeadlessServer(port=5555)
-   server.start()
-   
-   # Control via ZeroMQ messages from any client
-   # See zmq_client_example.py for client implementation
-
-Architecture
-------------
+System Architecture
+-------------------
 
 The system consists of several key components:
 
@@ -120,6 +102,7 @@ The system consists of several key components:
 * **Oracle Trainer**: Learning system that improves NN from tree search results
 * **ZeroMQ Server**: Headless communication layer for remote control
 * **TUI Client**: Terminal user interface for real-time visualization and control
+* **Token Tracker**: Comprehensive AI token usage monitoring and analysis
 
 Performance Expectations
 -------------------------
@@ -128,7 +111,6 @@ Performance Expectations
 * **Collision Avoidance**: Consistent scores > 10 through exhaustive exploration
 * **Resource Intensive**: Expects slow execution due to parallel NN exploration
 * **Scalable Budget**: Computational cost scales with move budget allocation
-
 Indices and tables
 ==================
 
