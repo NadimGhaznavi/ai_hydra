@@ -917,6 +917,9 @@ class CSVWriter:
                     results["issues"].append(
                         "Transactions are not in chronological order"
                     )
+            else:
+                # Single transaction or no transactions are always in chronological order
+                results["chronological_order_valid"] = True
 
             # Check for duplicates (by session_id + agent_execution_id + timestamp)
             seen_keys = set()
