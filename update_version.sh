@@ -164,10 +164,12 @@ if [ -f "docs/_source/conf.py" ]; then
     print_success "✓ Updated docs/_source/conf.py"
 fi
 
-# Update setup.py if it exists
-update_file_version "setup.py" \
-    "s/version=\"[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\"/version=\"$NEW_VERSION\"/" \
-    "legacy setup file"
+# Update setup.py if it exists (DEPRECATED - setup.py has been removed)
+# This section is kept for backward compatibility but setup.py is no longer used
+if [ -f "setup.py" ]; then
+    print_warning "Found setup.py - this file should be removed as it's no longer used"
+    print_warning "The project now uses pyproject.toml exclusively for packaging"
+fi
 
 # Update CHANGELOG.md with new release heading
 update_changelog "$NEW_VERSION"
@@ -204,9 +206,9 @@ if [ -f "docs/_source/conf.py" ]; then
     grep -E "(release|version) = " docs/_source/conf.py
 fi
 
-# Check setup.py
+# Check setup.py (DEPRECATED)
 if [ -f "setup.py" ]; then
-    echo "⚙️  setup.py:"
+    echo "⚠️  setup.py (DEPRECATED - should be removed):"
     grep "version=" setup.py | head -1
 fi
 
