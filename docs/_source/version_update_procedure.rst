@@ -78,19 +78,7 @@ Update ``docs/_source/conf.py``:
     release = 'X.Y.Z'  # ← Update this line
     version = 'X.Y.Z'  # ← Update this line
 
-**Step 5: Update Legacy Setup File (if present)**
-
-If ``setup.py`` exists, update it:
-
-.. code-block:: python
-
-    setup(
-        name="ai-hydra",
-        version="X.Y.Z",  # ← Update this line
-        # ... rest of setup configuration
-    )
-
-**Step 6: Verification**
+**Step 5: Verification**
 
 Verify all versions are consistent:
 
