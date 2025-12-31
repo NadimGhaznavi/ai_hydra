@@ -86,6 +86,7 @@ cp ai_hydra/__init__.py "$BACKUP_DIR/" 2>/dev/null || true
 cp ai_hydra/tui/__init__.py "$BACKUP_DIR/" 2>/dev/null || true
 cp docs/_source/conf.py "$BACKUP_DIR/" 2>/dev/null || true
 cp setup.py "$BACKUP_DIR/" 2>/dev/null || true
+cp CHANGELOG.md "$BACKUP_DIR/" 2>/dev/null || true
 
 # Function to update version in a file
 update_file_version() {
@@ -179,6 +180,9 @@ update_file_version "setup.py" \
     "s/version=\"[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\"/version=\"$NEW_VERSION\"/" \
     "legacy setup file"
 
+# Update CHANGELOG.md with new release heading
+update_changelog "$NEW_VERSION"
+
 echo ""
 print_success "Version update complete!"
 
@@ -215,6 +219,12 @@ fi
 if [ -f "setup.py" ]; then
     echo "⚙️  setup.py:"
     grep "version=" setup.py | head -1
+fi
+
+# Check CHANGELOG.md
+if [ -f "CHANGELOG.md" ]; then
+    echo "📝 CHANGELOG.md:"
+    grep -A 2 "## \[Unreleased\]" CHANGELOG.md | head -5
 fi
 
 echo ""
