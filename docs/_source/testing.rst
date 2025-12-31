@@ -200,6 +200,52 @@ Performance tests validate system efficiency and resource usage:
 - **Collision Avoidance Improvement** (``test_collision_avoidance_improvement.py``): AI learning metrics
 - **Parallel NN Lifecycle** (``test_parallel_nn_lifecycle.py``): Resource management efficiency
 
+Documentation Tests
+~~~~~~~~~~~~~~~~~~~
+
+Documentation tests validate the integrity and accuracy of project documentation:
+
+- **Documentation Test Suite** (``test_documentation.py``): Comprehensive documentation validation
+
+The documentation test suite provides automated validation of:
+
+**RST Syntax Validation**
+  Validates that all RST files have correct syntax using docutils parsing
+
+**Cross-Reference Validation**
+  Ensures all ``:ref:`` references point to valid labels within the documentation
+
+**Content Accuracy Testing**
+  Verifies that documentation content matches the actual system architecture and requirements
+
+**Build Integrity Testing**
+  Tests that Sphinx can successfully build HTML documentation without critical errors
+
+**Internal Link Validation**
+  Checks that all internal links within generated HTML documentation are valid
+
+**Code Block Validation**
+  Validates that Python code blocks in documentation have correct syntax
+
+**Table of Contents Structure**
+  Ensures the main index.rst has a valid toctree structure with existing files
+
+**Decision Flow Content Validation**
+  Specifically validates that decision flow documentation contains required sections and technical details
+
+Example usage:
+
+.. code-block:: bash
+
+    # Run documentation tests
+    python test_documentation.py
+    
+    # Run with custom docs directory
+    python test_documentation.py /path/to/docs
+    
+    # Integration with pytest
+    pytest test_documentation.py -v
+
 Running Tests
 -------------
 
@@ -307,6 +353,20 @@ Run Async Tests
     
     # Run async tests with specific event loop
     pytest -m asyncio --asyncio-mode=auto
+
+Run Documentation Tests
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    # Run documentation validation tests
+    python test_documentation.py
+    
+    # Run with verbose output
+    python test_documentation.py docs
+    
+    # Integration with pytest (if test is in tests/ directory)
+    pytest test_documentation.py -v
 
 Advanced Test Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -559,6 +619,9 @@ Fast Test Subset
     
     # Run with reduced property test examples
     pytest --hypothesis-max-examples=10
+    
+    # Run documentation tests in CI
+    python test_documentation.py
 
 Full Test Suite
 ~~~~~~~~~~~~~~~
@@ -567,6 +630,9 @@ Full Test Suite
 
     # Run complete test suite (for nightly builds)
     pytest --cov=ai_hydra --cov-report=xml --timeout=1800
+    
+    # Include documentation validation
+    python test_documentation.py
 
 Test Data and Fixtures
 ----------------------

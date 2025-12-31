@@ -61,7 +61,7 @@ The system uses a message-based communication pattern:
 5. **ZeroMQ Server** broadcasts status updates to all clients
 
 Decision Flow Architecture
-------------------------
+--------------------------
 
 System Initialization
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -331,21 +331,20 @@ HeadlessServer (Entry Point)
 
     class HeadlessServer:
         def __init__(self, bind_address: str, log_level: str, log_file: str):
-            """Method implementation."""
+            """Initialize headless server with configuration."""
             pass
 
         async def start(self) -> None:
-            """Method implementation."""
+            """Start the headless server."""
             pass
 
         def _setup_signal_handlers(self) -> None:
-            """Method implementation."""
+            """Setup signal handlers for graceful shutdown."""
             pass
 
         def _setup_logging(self) -> None:
-            """Method implementation."""
+            """Configure logging for headless operation."""
             pass
-
 
 Core AI Components
 ~~~~~~~~~~~~~~~~~~
@@ -367,27 +366,32 @@ HydraMgr (Main Orchestrator)
 
     class HydraMgr:
         def run_simulation(self) -> GameResult:
-            """Method implementation."""
+            """Run complete simulation."""
             pass
 
         def execute_decision_cycle(self) -> Move:
-            """Method implementation."""
+            """Execute single decision cycle."""
             pass
 
-        def execute_simulation_round(self) -> List[MoveResult]  # Execute all active clones
+        def execute_simulation_round(self) -> List[MoveResult]:
+            """Execute all active clones."""
+            pass
+            
         def evaluate_exploration_paths(self) -> OptimalPath:
-            """Method implementation."""
+            """Evaluate paths and select optimal move."""
             pass
 
         def apply_move_to_master(self, move: Move) -> None:
-            """Method implementation."""
+            """Apply optimal move to master game."""
             pass
 
         def reset_exploration_tree(self) -> None:
-            """Method implementation."""
+            """Reset tree for next cycle."""
             pass
 
-        def get_current_status(self) -> SimulationStatus  # For ZeroMQ integration
+        def get_current_status(self) -> SimulationStatus:
+            """Get current status for ZeroMQ integration."""
+            pass
 
 **Execution Flow:**
 
@@ -397,8 +401,8 @@ HydraMgr (Main Orchestrator)
 * Logs each clone step with identifier (a1, b2, c3, etc.)
 * Provides status information for headless monitoring
 
-Game_Board (Pure State Container)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GameBoard (Pure State Container)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -413,28 +417,36 @@ Game_Board (Pure State Container)
 
     class GameBoard:
         def get_snake_head(self) -> Position:
-            """Method implementation."""
+            """Get snake head position."""
             pass
 
-        def get_snake_body(self) -> List[Position]
+        def get_snake_body(self) -> List[Position]:
+            """Get snake body segments."""
+            pass
+            
         def get_direction(self) -> Direction:
-            """Method implementation."""
+            """Get current movement direction."""
             pass
 
         def get_food_position(self) -> Position:
-            """Method implementation."""
+            """Get food position."""
             pass
 
         def get_score(self) -> int:
-            """Method implementation."""
+            """Get current score."""
             pass
 
         def get_random_state(self) -> RandomState:
-            """Method implementation."""
+            """Get random state for deterministic behavior."""
             pass
 
-        def clone(self) -> 'GameBoard'
-        def to_tensor(self) -> torch.Tensor  # For PyTorch integration
+        def clone(self) -> 'GameBoard':
+            """Create independent copy of board."""
+            pass
+            
+        def to_tensor(self) -> torch.Tensor:
+            """Convert to PyTorch tensor."""
+            pass
 
 **State Representation:**
 
@@ -450,8 +462,8 @@ Game_Board (Pure State Container)
         random_state: RandomState
         grid_size: Tuple[int, int]
 
-Master Game (Orchestration Layer)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+MasterGame (Orchestration Layer)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -466,28 +478,27 @@ Master Game (Orchestration Layer)
 
     class MasterGame:
         def get_current_board(self) -> GameBoard:
-            """Method implementation."""
+            """Get current authoritative board state."""
             pass
 
         def apply_move(self, move: Move) -> MoveResult:
-            """Method implementation."""
+            """Apply move and get result."""
             pass
 
         def is_terminal(self) -> bool:
-            """Method implementation."""
+            """Check if game has ended."""
             pass
 
         def get_score(self) -> int:
-            """Method implementation."""
+            """Get current game score."""
             pass
 
         def clone_board(self) -> GameBoard:
-            """Method implementation."""
+            """Create board clone for exploration."""
             pass
 
-
-Budget Controller (Resource Management)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BudgetController (Resource Management)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -502,23 +513,28 @@ Budget Controller (Resource Management)
 
     class BudgetController:
         def initialize_budget(self, budget: int) -> None:
-            """Method implementation."""
+            """Initialize budget for new cycle."""
             pass
 
-        def consume_move(self) -> None  # Decrement budget, allow round completion
+        def consume_move(self) -> None:
+            """Decrement budget, allow round completion."""
+            pass
+            
         def get_remaining_budget(self) -> int:
-            """Method implementation."""
+            """Get remaining budget."""
             pass
 
         def reset_budget(self) -> None:
-            """Method implementation."""
+            """Reset budget for new cycle."""
             pass
 
-        def is_budget_exhausted(self) -> bool  # True when budget <= 0
+        def is_budget_exhausted(self) -> bool:
+            """Check if budget is exhausted."""
+            pass
+            
         def get_moves_in_current_round(self) -> int:
-            """Method implementation."""
+            """Get moves executed in current round."""
             pass
-
 
 **Budget Management:**
 
@@ -526,8 +542,8 @@ Budget Controller (Resource Management)
 * Tracks moves per round for logging and analysis
 * Resets budget and round counter after each decision cycle
 
-State Manager (Clone Lifecycle)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StateManager (Clone Lifecycle)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -541,11 +557,25 @@ State Manager (Clone Lifecycle)
 .. code-block:: python
 
     class StateManager:
-        def create_initial_clones(self, master_board: GameBoard) -> List[ExplorationClone]
-        def create_sub_clones(self, parent_clone: ExplorationClone) -> List[ExplorationClone]
-        def destroy_exploration_tree(self) -> None  # Efficient cleanup, any order
-        def generate_clone_id(self, parent_id: str, move_type: str) -> str  # e.g., "1" + "L" = "1L"
-        def get_active_clones(self) -> List[ExplorationClone]
+        def create_initial_clones(self, master_board: GameBoard) -> List[ExplorationClone]:
+            """Create initial exploration clones."""
+            pass
+            
+        def create_sub_clones(self, parent_clone: ExplorationClone) -> List[ExplorationClone]:
+            """Create sub-clones from parent."""
+            pass
+            
+        def destroy_exploration_tree(self) -> None:
+            """Efficient cleanup, any order."""
+            pass
+            
+        def generate_clone_id(self, parent_id: str, move_type: str) -> str:
+            """Generate clone ID (e.g., '1' + 'L' = '1L')."""
+            pass
+            
+        def get_active_clones(self) -> List[ExplorationClone]:
+            """Get currently active clones."""
+            pass
 
 **Clone Identification:**
 
@@ -557,8 +587,8 @@ State Manager (Clone Lifecycle)
 Neural Network Components
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Feature_Extractor (Game State to NN Input)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FeatureExtractor (Game State to NN Input)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -571,23 +601,25 @@ Feature_Extractor (Game State to NN Input)
 .. code-block:: python
 
     class FeatureExtractor:
-        def extract_features(self, board: GameBoard) -> torch.Tensor
-        def get_collision_features(self, board: GameBoard) -> List[bool]  # Snake + Wall collision (6 features):
-            """Method implementation."""
+        def extract_features(self, board: GameBoard) -> torch.Tensor:
+            """Extract 19-dimensional feature vector."""
+            pass
+            
+        def get_collision_features(self, board: GameBoard) -> List[bool]:
+            """Snake + Wall collision (6 features)."""
             pass
 
-        def get_direction_features(self, board: GameBoard) -> List[bool]  # Current direction (4 features):
-            """Method implementation."""
+        def get_direction_features(self, board: GameBoard) -> List[bool]:
+            """Current direction (4 features)."""
             pass
 
-        def get_food_features(self, board: GameBoard) -> List[float]     # Food relative position (2 features):
-            """Method implementation."""
+        def get_food_features(self, board: GameBoard) -> List[float]:
+            """Food relative position (2 features)."""
             pass
 
-        def get_snake_features(self, board: GameBoard) -> List[bool]     # Snake length bits (7 features):
-            """Method implementation."""
+        def get_snake_features(self, board: GameBoard) -> List[bool]:
+            """Snake length bits (7 features)."""
             pass
-
 
 **Feature Vector (19 total features):**
 
@@ -618,8 +650,8 @@ Feature_Extractor (Game State to NN Input)
         # Snake length as binary representation (7 features: up to 127 length)
         snake_length_bits: List[bool]  # 7 bits for snake length
 
-Neural_Network (Move Prediction)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+NeuralNetwork (Move Prediction)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -646,8 +678,8 @@ Neural_Network (Move Prediction)
             x = self.output_layer(x)
             return self.softmax(x)  # Probabilities for [Left, Straight, Right]
 
-Oracle_Trainer (Learning from Tree Search)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OracleTrainer (Learning from Tree Search)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Responsibilities:**
 
@@ -662,21 +694,20 @@ Oracle_Trainer (Learning from Tree Search)
 
     class OracleTrainer:
         def compare_predictions(self, nn_move: Move, optimal_move: Move) -> bool:
-            """Method implementation."""
+            """Compare NN prediction with optimal move."""
             pass
 
         def generate_training_sample(self, features: torch.Tensor, optimal_move: Move) -> TrainingSample:
-            """Method implementation."""
+            """Generate training sample when predictions differ."""
             pass
 
         def update_network(self, training_samples: List[TrainingSample]) -> None:
-            """Method implementation."""
+            """Update network weights with training samples."""
             pass
 
         def get_prediction_accuracy(self) -> float:
-            """Method implementation."""
+            """Get current prediction accuracy."""
             pass
-
 
 Hybrid Execution Flow
 ~~~~~~~~~~~~~~~~~~~~~
@@ -712,30 +743,32 @@ ExplorationClone (Individual Path Explorer)
 
     class ExplorationClone:
         def execute_move(self, move: Move) -> MoveResult:
-            """Method implementation."""
+            """Execute move and return result."""
             pass
 
         def get_cumulative_reward(self) -> int:
-            """Method implementation."""
+            """Get total reward for this path."""
             pass
 
-        def get_path_from_root(self) -> List[Move]
+        def get_path_from_root(self) -> List[Move]:
+            """Get complete path from root."""
+            pass
+            
         def is_terminated(self) -> bool:
-            """Method implementation."""
+            """Check if clone has terminated."""
             pass
 
         def get_current_board(self) -> GameBoard:
-            """Method implementation."""
+            """Get current board state."""
             pass
 
         def get_clone_id(self) -> str:
-            """Method implementation."""
+            """Get unique clone identifier."""
             pass
 
         def log_step(self, step_number: int, reward: int) -> None:
-            """Method implementation."""
+            """Log step with details."""
             pass
-
 
 Headless Operation and ZeroMQ Integration
 ------------------------------------------
@@ -878,7 +911,7 @@ Core Game Entities
         grid_size: Tuple[int, int]
         
         def clone(self) -> 'GameBoard':
-            """Create a deep copy of this game board"""
+            """Create a deep copy of this game board."""
             return GameBoard(
                 snake_head=self.snake_head,
                 snake_body=self.snake_body,
@@ -941,15 +974,17 @@ Logging and Debugging
 
     class SimulationLogger:
         def log_clone_step(self, clone_id: str, result: str, reward: int, score: int) -> None:
-            """Method implementation."""
+            """Log individual clone step."""
             pass
 
         def log_decision_cycle(self, cycle_number: int, winning_clone: str, 
-                              total_paths: int, budget_used: int) -> None
-        def log_master_move(self, move: str, new_score: int) -> None:
-            """Method implementation."""
+                              total_paths: int, budget_used: int) -> None:
+            """Log complete decision cycle."""
             pass
-
+            
+        def log_master_move(self, move: str, new_score: int) -> None:
+            """Log master move application."""
+            pass
 
 Tree Structure Models
 ~~~~~~~~~~~~~~~~~~~~~
@@ -995,7 +1030,7 @@ Configuration Models
 Correctness Properties
 ----------------------
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
 Property 1: Configuration Validation and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1126,18 +1161,20 @@ Error Categories and Recovery Strategies
 
     class ErrorHandler:
         async def handle_clone_failure(self, clone_id: CloneId, error: Exception) -> RecoveryAction:
-            """Method implementation."""
+            """Handle clone execution failure."""
             pass
 
         async def handle_budget_inconsistency(self) -> None:
-            """Method implementation."""
+            """Handle budget tracking issues."""
             pass
 
         async def handle_state_corruption(self, corrupted_state: GameState) -> GameState:
-            """Method implementation."""
+            """Handle state corruption and recovery."""
             pass
 
-        def validate_system_invariants(self) -> List[InvariantViolation]
+        def validate_system_invariants(self) -> List[InvariantViolation]:
+            """Validate system invariants."""
+            pass
 
 **Fault Isolation:**
 
@@ -1204,6 +1241,7 @@ Property-Based Testing Configuration
     def test_budget_lifecycle_management(config, initial_state, budget):
         """Feature: ai-hydra, Property 5: Budget Lifecycle Management"""
         # Test implementation
+        pass
 
 ZeroMQ Testing Strategy
 ~~~~~~~~~~~~~~~~~~~~~~~

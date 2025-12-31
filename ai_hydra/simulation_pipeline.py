@@ -309,26 +309,26 @@ class SimulationPipeline:
         """Collect statistics from all pipeline components."""
         stats = {}
         
-        # Master game statistics
-        if self.master_game:
-            stats["master_game"] = self.master_game.get_game_statistics()
+        # Master game statistics - get from HydraMgr's master game
+        if self.hydra_mgr and self.hydra_mgr.master_game:
+            stats["master_game"] = self.hydra_mgr.master_game.get_game_statistics()
         
-        # Budget controller statistics
-        if self.budget_controller:
-            stats["budget_controller"] = self.budget_controller.get_budget_utilization_patterns()
+        # Budget controller statistics - get from HydraMgr's budget controller
+        if self.hydra_mgr and self.hydra_mgr.budget_controller:
+            stats["budget_controller"] = self.hydra_mgr.budget_controller.get_budget_utilization_patterns()
         
-        # State manager statistics
-        if self.state_manager:
+        # State manager statistics - get from HydraMgr's state manager
+        if self.hydra_mgr and self.hydra_mgr.state_manager:
             stats["state_manager"] = {
-                "tree_stats": self.state_manager.get_tree_statistics(),
-                "exploration_efficiency": self.state_manager.get_tree_exploration_efficiency()
+                "tree_stats": self.hydra_mgr.state_manager.get_tree_statistics(),
+                "exploration_efficiency": self.hydra_mgr.state_manager.get_tree_exploration_efficiency()
             }
         
         # Neural network statistics (if enabled)
-        if self.simulation_config.nn_enabled and self.oracle_trainer:
+        if self.simulation_config.nn_enabled and self.hydra_mgr and self.hydra_mgr.oracle_trainer:
             stats["neural_network"] = {
-                "training_stats": self.oracle_trainer.get_training_statistics(),
-                "network_info": self.neural_network.get_network_info() if self.neural_network else {}
+                "training_stats": self.hydra_mgr.oracle_trainer.get_training_statistics(),
+                "network_info": self.hydra_mgr.neural_network.get_network_info() if self.hydra_mgr.neural_network else {}
             }
         
         return stats

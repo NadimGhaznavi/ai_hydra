@@ -226,6 +226,66 @@ class TestPerformance:
         assert efficiency > 0.1, f"Poor budget efficiency: {efficiency:.3f}"
 ```
 
+### 6. Documentation Tests
+
+**Purpose**: Validate documentation integrity, accuracy, and build process
+
+**Characteristics:**
+- Automated validation of RST syntax and structure
+- Cross-reference validation between documents
+- Content accuracy verification against source code
+- Build integrity testing with Sphinx
+- Code block syntax validation
+
+**Example Structure:**
+```python
+class TestDocumentation:
+    """Documentation validation tests."""
+    
+    def test_rst_syntax_validation(self):
+        """Test that all RST files have valid syntax."""
+        rst_files = list(Path("docs/_source").glob("*.rst"))
+        
+        for rst_file in rst_files:
+            try:
+                with open(rst_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                docutils.core.publish_doctree(content)
+            except Exception as e:
+                pytest.fail(f"RST syntax error in {rst_file.name}: {e}")
+    
+    def test_cross_references(self):
+        """Test that all cross-references are valid."""
+        rst_files = list(Path("docs/_source").glob("*.rst"))
+        all_labels = set()
+        all_references = []
+        
+        # Extract labels and references
+        for rst_file in rst_files:
+            content = rst_file.read_text(encoding='utf-8')
+            labels = re.findall(r'^\.\. _([^:]+):', content, re.MULTILINE)
+            all_labels.update(labels)
+            refs = re.findall(r':ref:`([^`]+)`', content)
+            all_references.extend([(ref, rst_file.name) for ref in refs])
+        
+        # Check for broken references
+        for ref, filename in all_references:
+            assert ref in all_labels, f"Broken reference in {filename}: :ref:`{ref}`"
+    
+    def test_sphinx_build_integrity(self):
+        """Test that Sphinx can build documentation without errors."""
+        result = subprocess.run([
+            "make", "html"
+        ], cwd="docs", capture_output=True, text=True)
+        
+        assert result.returncode == 0, f"Sphinx build failed: {result.stderr}"
+        
+        # Check that HTML files were generated
+        html_dir = Path("docs/_build/html")
+        html_files = list(html_dir.glob("*.html"))
+        assert len(html_files) >= 5, f"Too few HTML files generated: {len(html_files)}"
+```
+
 ## Test Organization
 
 ### Directory Structure
@@ -256,6 +316,8 @@ tests/
 │   ├── test_decision_cycle_performance.py
 │   ├── test_memory_usage.py
 │   └── test_scalability.py
+├── documentation/           # Documentation tests
+│   └── test_documentation_integrity.py
 ├── fixtures/                # Test data and fixtures
 │   ├── sample_configs.py
 │   ├── test_game_states.py
@@ -270,6 +332,7 @@ tests/
 - **Integration tests**: `test_{integration_scenario}.py`
 - **E2E tests**: `test_{user_workflow}.py`
 - **Performance tests**: `test_{performance_aspect}.py`
+- **Documentation tests**: `test_documentation_{aspect}.py`
 
 ## Test Configuration
 
@@ -297,6 +360,7 @@ markers = [
     "integration: Integration tests",
     "e2e: End-to-end tests",
     "performance: Performance tests",
+    "documentation: Documentation tests",
     "slow: Slow tests (skip in CI)",
     "timeout: Tests with custom timeout limits",
 ]
@@ -417,14 +481,17 @@ test_matrix:
   fast_tests:
     - pytest tests/unit/ -m "not slow"
     - pytest tests/property/ -m "not slow" --max-examples=20
+    - python test_documentation.py  # Documentation validation
   
   comprehensive_tests:
     - pytest tests/ --max-examples=50
     - pytest tests/performance/ -m "not slow"
+    - python test_documentation.py
   
   nightly_tests:
     - pytest tests/ --max-examples=100
     - pytest tests/performance/
+    - python test_documentation.py
 ```
 
 ### Test Execution Time Management
@@ -582,7 +649,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.11]
-        test-category: [unit, property, integration]
+        test-category: [unit, property, integration, documentation]
     
     steps:
       - uses: actions/checkout@v3
@@ -598,9 +665,14 @@ jobs:
       
       - name: Run tests
         run: |
-          pytest tests/${{ matrix.test-category }}/ --cov=ai_hydra --cov-report=xml
+          if [ "${{ matrix.test-category }}" = "documentation" ]; then
+            python test_documentation.py
+          else
+            pytest tests/${{ matrix.test-category }}/ --cov=ai_hydra --cov-report=xml
+          fi
       
       - name: Upload coverage
+        if: matrix.test-category != 'documentation'
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml

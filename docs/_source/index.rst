@@ -37,9 +37,9 @@ Welcome to the AI Hydra documentation. This system implements an AI agent that u
    :maxdepth: 2
    :caption: TUI Client Specifications:
 
-   tui_requirements
-   tui_design
-   tui_tasks
+   .. tui_requirements
+   .. tui_design
+   .. tui_tasks
 
 Overview
 --------

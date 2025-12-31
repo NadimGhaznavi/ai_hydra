@@ -157,7 +157,8 @@ class MasterGame:
         current_stats.update({
             'current_score': self._current_board.score,
             'current_snake_length': len(self._current_board.snake_body) + 1,
-            'moves_played': len(self.move_history),
+            'total_moves': len(self.move_history),  # Changed from 'moves_played' to 'total_moves'
+            'moves_played': len(self.move_history),  # Keep both for backward compatibility
             'score_progression': self.score_history.copy(),
             'is_terminal': self.is_terminal(),
             'average_score_per_move': self._current_board.score / max(1, len(self.move_history))
@@ -172,7 +173,7 @@ class MasterGame:
         
         self.logger.log_system_event("Master game summary", {
             "final_score": stats['current_score'],
-            "total_moves": stats['moves_played'],
+            "total_moves": stats['total_moves'],
             "food_eaten": stats['food_eaten'],
             "collisions": stats['collisions'],
             "max_score": stats['max_score'],
@@ -204,8 +205,8 @@ class MasterGame:
         self.logger.log_system_event("Master game completed", {
             "termination_reason": "collision" if self.game_statistics['collisions'] > 0 else "unknown",
             "final_score": stats['current_score'],
-            "total_moves": stats['moves_played'],
+            "total_moves": stats['total_moves'],
             "food_consumed": stats['food_eaten'],
             "final_snake_length": stats['current_snake_length'],
-            "game_efficiency": f"{stats['food_eaten'] / max(1, stats['moves_played']) * 100:.1f}%"
+            "game_efficiency": f"{stats['food_eaten'] / max(1, stats['total_moves']) * 100:.1f}%"
         })
