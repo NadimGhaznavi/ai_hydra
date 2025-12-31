@@ -6,12 +6,14 @@ This document provides a step-by-step procedure for updating the AI Hydra projec
 Overview
 --------
 
-The AI Hydra project uses semantic versioning (MAJOR.MINOR.PATCH) and maintains version information in multiple files that must be updated synchronously during releases.
+The AI Hydra project uses semantic versioning (MAJOR.MINOR.PATCH) and maintains version information in multiple files that must be updated synchronously during releases. The project follows modern Python packaging standards using ``pyproject.toml`` as the primary configuration file.
 
 **Current Version Locations:**
 - Primary version source: ``pyproject.toml``
 - Python package versions: ``ai_hydra/__init__.py``, ``ai_hydra/tui/__init__.py``
 - Documentation version: ``docs/_source/conf.py``
+
+**Note:** Legacy ``setup.py`` files are no longer used and should be removed if found. The project has been modernized to use ``pyproject.toml`` exclusively for packaging configuration.
 
 Version Update Checklist
 -------------------------
@@ -155,48 +157,32 @@ Primary Version Files
 Automated Update Script
 -----------------------
 
-You can use this script to update all versions automatically:
+The project includes an enhanced automated version update script (``update_version.sh``) that handles all version updates and includes additional features:
+
+**Key Features:**
+- Comprehensive version validation and error checking
+- Interactive confirmation before making changes
+- Automatic CHANGELOG.md update with release timestamps
+- Deprecation warnings for legacy setup.py files
+- Colored output for better user experience
+- Verification of all updated files
+
+**Script Location:** ``update_version.sh`` (project root)
+
+**Enhanced Script Capabilities:**
 
 .. code-block:: bash
 
     #!/bin/bash
-    # update_version.sh - Automated version update script
+    # Enhanced update_version.sh - Automated version update script for AI Hydra
     
-    if [ $# -eq 0 ]; then
-        echo "Usage: $0 <new_version>"
-        echo "Example: $0 0.6.0"
-        exit 1
-    fi
-    
-    NEW_VERSION=$1
-    
-    echo "Updating AI Hydra version to $NEW_VERSION..."
-    
-    # Update pyproject.toml
-    sed -i "s/version = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version = \"$NEW_VERSION\"/" pyproject.toml
-    
-    # Update main package __init__.py
-    sed -i "s/__version__ = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/__version__ = \"$NEW_VERSION\"/" ai_hydra/__init__.py
-    
-    # Update TUI package __init__.py
-    sed -i "s/__version__ = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/__version__ = \"$NEW_VERSION\"/" ai_hydra/tui/__init__.py
-    
-    # Update documentation conf.py
-    sed -i "s/release = '[0-9]\+\.[0-9]\+\.[0-9]\+'/release = '$NEW_VERSION'/" docs/_source/conf.py
-    sed -i "s/version = '[0-9]\+\.[0-9]\+\.[0-9]\+'/version = '$NEW_VERSION'/" docs/_source/conf.py
-    
-    echo "Version update complete. Verifying..."
-    
-    # Verify updates
-    echo "=== Version Check ==="
-    echo "pyproject.toml:"
-    grep "version.*=" pyproject.toml
-    echo "ai_hydra/__init__.py:"
-    grep "__version__" ai_hydra/__init__.py
-    echo "ai_hydra/tui/__init__.py:"
-    grep "__version__" ai_hydra/tui/__init__.py
-    echo "docs/_source/conf.py:"
-    grep -E "(release|version) = " docs/_source/conf.py
+    # Features:
+    # - Version format validation (semantic versioning)
+    # - Interactive confirmation
+    # - Automatic CHANGELOG.md updates
+    # - Legacy setup.py deprecation warnings
+    # - Comprehensive verification
+    # - Colored output and error handling
 
 **Usage:**
 
@@ -205,8 +191,50 @@ You can use this script to update all versions automatically:
     # Make script executable
     chmod +x update_version.sh
     
-    # Update to version 0.6.0
+    # Update to version 0.6.0 (interactive mode)
     ./update_version.sh 0.6.0
+    
+    # The script will:
+    # 1. Validate the version format
+    # 2. Show current vs new version
+    # 3. Ask for confirmation
+    # 4. Update all version files
+    # 5. Update CHANGELOG.md with release timestamp
+    # 6. Verify all changes
+    # 7. Provide next steps guidance
+
+**Script Output Example:**
+
+.. code-block:: text
+
+    [INFO] Updating AI Hydra version to 0.6.0...
+    [INFO] Current version: 0.5.3
+    [INFO] New version: 0.6.0
+    
+    Do you want to proceed with the version update? (y/N): y
+    
+    [INFO] Starting version update process...
+    [INFO] Updating primary version (pyproject.toml): pyproject.toml
+    [SUCCESS] ✓ Updated pyproject.toml
+    [INFO] Updating main package version: ai_hydra/__init__.py
+    [SUCCESS] ✓ Updated ai_hydra/__init__.py
+    [INFO] Updating TUI package version: ai_hydra/tui/__init__.py
+    [SUCCESS] ✓ Updated ai_hydra/tui/__init__.py
+    [INFO] Updating documentation version: docs/_source/conf.py
+    [SUCCESS] ✓ Updated docs/_source/conf.py
+    [INFO] Updating CHANGELOG.md with release 0.6.0
+    [SUCCESS] ✓ Updated CHANGELOG.md with release 0.6.0
+    
+    [SUCCESS] Version update complete!
+
+**Legacy File Handling:**
+
+The enhanced script includes deprecation warnings for legacy files:
+
+.. code-block:: text
+
+    [WARNING] Found setup.py - this file should be removed as it's no longer used
+    [WARNING] The project now uses pyproject.toml exclusively for packaging
 
 Manual Update Template
 ----------------------
@@ -341,16 +369,34 @@ Common Issues and Solutions
 
     pip install -e .
 
-**Issue: Tests Reference Old Version**
+**Issue: Legacy setup.py Found**
 
-*Problem:* Some tests hardcode version numbers and fail after update.
+*Problem:* The script warns about setup.py files that should be removed.
 
-*Solution:* Update test files that reference specific versions:
+*Solution:* Remove the legacy setup.py file as the project now uses pyproject.toml exclusively:
 
 .. code-block:: bash
 
-    # Find tests with hardcoded versions
-    grep -r "0\.[0-9]\+\.[0-9]\+" tests/
+    # Remove legacy setup.py (if it exists)
+    rm setup.py
+    
+    # Verify pyproject.toml is the primary packaging file
+    cat pyproject.toml | grep -A 5 "\[project\]"
+
+**Issue: Project Structure Changes**
+
+*Problem:* Legacy files or incorrect project structure after cleanup.
+
+*Solution:* Ensure clean project structure following modern Python packaging:
+
+.. code-block:: bash
+
+    # Verify modern project structure
+    ls -la | grep -E "(pyproject\.toml|setup\.py)"
+    
+    # Should show pyproject.toml only, no setup.py
+    # Tests should be in tests/ directory, not in project root
+    # Legacy files like qasync.sh, manual_test_server.py should be removed
 
 Version History Tracking
 -------------------------
