@@ -70,6 +70,48 @@ Generic client class for router communication that:
 * **Message Protocol**: Structured JSON message handling with timeout management
 * **Context Management**: Python context manager support for resource cleanup
 * **Error Recovery**: Graceful error handling and automatic cleanup
+* **Format Conversion**: Automatic conversion between ZMQMessage and RouterConstants formats
+
+Message Format Adapter
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The MQClient includes a built-in message format adapter that:
+
+* **Transparent Conversion**: Automatically converts between ZMQMessage and RouterConstants formats
+* **Bidirectional Support**: Handles both outgoing and incoming message conversion
+* **Validation**: Validates message format compliance before processing
+* **Error Handling**: Provides detailed error messages for format validation failures
+* **Backward Compatibility**: Maintains compatibility with existing internal components
+
+**Conversion Process:**
+
+.. code-block:: python
+
+    # Outgoing: ZMQMessage → RouterConstants
+    zmq_message = {
+        "message_type": "HEARTBEAT",
+        "client_id": "client_001",
+        "timestamp": 1640995200.123,
+        "data": {"status": "active"}
+    }
+    
+    # Converted to RouterConstants format
+    router_message = {
+        "sender": "HydraClient",
+        "elem": "HEARTBEAT",
+        "client_id": "client_001", 
+        "timestamp": 1640995200.123,
+        "data": {"status": "active"}
+    }
+
+**Error Handling:**
+
+The format adapter provides comprehensive error handling:
+
+* **Missing Fields**: Detailed error messages for missing required fields
+* **Invalid Types**: Type validation with specific error descriptions
+* **Unknown Message Types**: Clear errors for unsupported message types
+* **Conversion Failures**: Graceful handling with fallback mechanisms
 
 Client Registration System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,14 +126,19 @@ Automatic client management through:
 Message Structure
 -----------------
 
-All messages follow a standardized JSON structure with enhanced routing information:
+The AI Hydra system uses two message formats depending on the communication context:
+
+RouterConstants Format (Router Communication)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Messages sent to and from the router use the RouterConstants format with an ``elem`` field:
 
 .. code-block:: python
 
     {
         "sender": "HydraClient",           # Sender type for routing
+        "elem": "START_SIMULATION",        # Message type (RouterConstants format)
         "client_id": "client_001",         # Unique client identifier
-        "message_type": "START_SIMULATION", # Message type classification
         "timestamp": 1640995200.123,       # Message timestamp
         "request_id": "req_12345",         # Request correlation ID
         "data": {                          # Message payload
@@ -101,14 +148,53 @@ All messages follow a standardized JSON structure with enhanced routing informat
         }
     }
 
+ZMQMessage Format (Internal Communication)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Internal components use the ZMQMessage format with a ``message_type`` field:
+
+.. code-block:: python
+
+    {
+        "message_type": "START_SIMULATION", # Message type (ZMQMessage format)
+        "client_id": "client_001",         # Unique client identifier
+        "timestamp": 1640995200.123,       # Message timestamp
+        "request_id": "req_12345",         # Request correlation ID
+        "data": {                          # Message payload
+            "grid_size": [8, 8],
+            "move_budget": 50,
+            "nn_enabled": true
+        }
+    }
+
+Message Format Conversion
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The MQClient automatically handles format conversion between these two formats:
+
+* **Outgoing Messages**: Converts ZMQMessage format to RouterConstants format when sending to router
+* **Incoming Messages**: Converts RouterConstants format to ZMQMessage format for internal processing
+* **Backward Compatibility**: Internal components continue using ZMQMessage format unchanged
+* **Transparent Operation**: Format conversion is handled automatically by MQClient
+
 **Message Routing Fields:**
 
 * ``sender``: Identifies sender type (HydraClient, HydraServer) for intelligent routing
+* ``elem``: Message type in RouterConstants format (used for router communication)
+* ``message_type``: Message type in ZMQMessage format (used for internal communication)
 * ``client_id``: Unique identifier for client connection tracking and response routing
-* ``message_type``: Standardized message type for protocol handling
 * ``timestamp``: Message creation timestamp for ordering and timeout detection
 * ``request_id``: Correlation ID for matching requests with responses
 * ``data``: Structured payload containing message-specific information
+
+**Format Conversion Process:**
+
+The MQClient handles automatic conversion between message formats:
+
+1. **Internal to Router**: ZMQMessage ``message_type`` → RouterConstants ``elem``
+2. **Router to Internal**: RouterConstants ``elem`` → ZMQMessage ``message_type``
+3. **Field Mapping**: All other fields (client_id, timestamp, data) are preserved
+4. **Validation**: Both formats are validated before processing
 
 Message Types
 -------------
@@ -180,13 +266,18 @@ System Messages
 **HEARTBEAT**
     Client registration and keep-alive message sent every 5 seconds.
 
-    Request Data:
-        * ``client_type``: Type of client (TUI, API, Monitor)
-        * ``capabilities``: List of supported operations
+    RouterConstants Format:
+        * ``sender``: Client type (HydraClient, HydraServer)
+        * ``elem``: "HEARTBEAT"
+        * ``client_id``: Unique client identifier
+        * ``timestamp``: Message timestamp
+        * ``data``: Client capabilities and status
 
     Response:
         * ``status``: "HEARTBEAT_ACK"
         * ``server_time``: Server timestamp for synchronization
+
+    **Note**: Heartbeat messages use RouterConstants format to ensure proper router processing.
 
 **ERROR**
     Error notification with detailed information and recovery guidance.

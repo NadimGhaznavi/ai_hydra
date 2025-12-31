@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Documentation**: Router message protocol fix documentation
+  - Created comprehensive router message protocol fix design document (docs/_source/architecture/router_message_protocol_fix.rst)
+  - Added detailed problem statement, solution overview, and architecture documentation
+  - Documented message format mapping between ZMQMessage and RouterConstants formats
+  - Included format conversion process, validation, error handling, and testing strategy
+  - Added migration and deployment guidance with backward compatibility considerations
+
+### Changed
+- **Documentation**: Updated ZeroMQ protocol documentation for message format standardization
+  - Enhanced message structure documentation to include both RouterConstants and ZMQMessage formats
+  - Added message format conversion section with automatic conversion details
+  - Updated heartbeat message documentation to specify RouterConstants format requirement
+  - Added Message Format Adapter section with conversion process and error handling details
+- **Documentation**: Updated requirements specification with router message protocol fix requirements
+  - Added Requirements 31-35 covering message format standardization, heartbeat protocol compliance
+  - Defined bidirectional message format conversion and error handling requirements
+  - Established message format migration and backward compatibility requirements
+- **Documentation**: Updated architecture documentation with message format adapter information
+  - Enhanced MQClient description to include built-in message format conversion capabilities
+  - Added Message Format Adapter component description with transparent operation details
+  - Updated RouterConstants description to clarify router message format expectations
+- **Specifications**: Added comprehensive requirements documentation for router message protocol fix
+  - Created detailed requirements document with 5 main requirements covering message format standardization
+  - Defined acceptance criteria for heartbeat protocol compliance and bidirectional message conversion
+  - Established error handling, validation, and backward compatibility requirements
+  - Added glossary of key terms and components for router-MQClient communication protocol
+
 ## [Release 0.8.0] - 2025-12-31 17:08
 
 

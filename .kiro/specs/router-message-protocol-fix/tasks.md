@@ -6,23 +6,23 @@ This implementation plan fixes the message format mismatch between the AI Hydra 
 
 ## Tasks
 
-- [ ] 1. Update MQClient message format conversion
+- [x] 1. Update MQClient message format conversion
   - Add message type to RouterConstants elem mapping
   - Implement format conversion methods in MQClient
   - Update heartbeat message format to use `elem` field
   - _Requirements: 1.2, 2.1, 2.2_
 
-- [ ] 1.1 Write property test for message format conversion
+- [x] 1.1 Write property test for message format conversion
   - **Property 1: Message Format Round-Trip Conversion**
   - **Validates: Requirements 1.3, 3.1, 3.2, 3.3, 3.5**
 
-- [ ] 2. Fix heartbeat message format in MQClient
+- [x] 2. Fix heartbeat message format in MQClient
   - Modify `_send_heartbeat()` method to use RouterConstants format
   - Ensure heartbeat includes `sender`, `elem`, `data`, `client_id`, `timestamp` fields
   - Test heartbeat messages are processed without "Malformed message" errors
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 2.1 Write property test for heartbeat message processing
+- [x] 2.1 Write property test for heartbeat message processing
   - **Property 3: Heartbeat Message Processing**
   - **Validates: Requirements 2.3, 2.4, 2.5**
 

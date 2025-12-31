@@ -41,10 +41,13 @@ Router Components
   Central message routing component using ZeroMQ ROUTER socket that manages client connections, routes messages between clients and servers, and provides heartbeat-based client lifecycle management.
 
 **MQClient**
-  Generic client class for router communication that supports both client and server roles, provides automatic connection management with reconnection support, and handles structured message protocol with timeout management.
+  Generic client class for router communication that supports both client and server roles, provides automatic connection management with reconnection support, handles structured message protocol with timeout management, and includes built-in message format conversion between ZMQMessage and RouterConstants formats.
+
+**Message Format Adapter**
+  Built-in component within MQClient that automatically converts between ZMQMessage format (used internally) and RouterConstants format (used for router communication), ensuring transparent operation and backward compatibility.
 
 **RouterConstants**
-  Centralized configuration for message types, network settings, and protocol constants that ensures consistent communication across all components.
+  Centralized configuration for message types, network settings, and protocol constants that ensures consistent communication across all components and defines the standard message format expected by the router.
 
 System Components
 -----------------

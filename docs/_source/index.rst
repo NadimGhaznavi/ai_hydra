@@ -26,6 +26,7 @@ Quick Links
    * :doc:`architecture/design` - Detailed system design
    * :doc:`architecture/tui_architecture` - TUI system architecture
    * :doc:`architecture/zmq_protocol` - ZeroMQ communication protocol
+   * :doc:`architecture/router_message_protocol_fix` - Router message format standardization
 
 ⚙️ **Operations Runbook**
    Procedures for project management and maintenance using Kiro IDE.
