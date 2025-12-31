@@ -243,24 +243,21 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Start server on default port
+  # Start server connecting to default router
   python -m ai_hydra.headless_server
   
-  # Start server on custom port with debug logging
-  python -m ai_hydra.headless_server --bind "tcp://*:6666" --log-level DEBUG
+  # Start server with custom router and debug logging
+  python -m ai_hydra.headless_server --router "tcp://192.168.1.100:5556" --log-level DEBUG
   
   # Start server with log file
-  python -m ai_hydra.headless_server --log-file /var/log/snake_ai.log
-  
-  # Start server for remote connections
-  python -m ai_hydra.headless_server --bind "tcp://0.0.0.0:5555"
+  python -m ai_hydra.headless_server --log-file /var/log/ai_hydra.log
         """
     )
     
     parser.add_argument(
-        "--bind", 
-        default="tcp://*:5555",
-        help="ZeroMQ bind address (default: tcp://*:5555)"
+        "--router", 
+        default="tcp://localhost:5556",
+        help="AI Hydra router address (default: tcp://localhost:5556)"
     )
     
     parser.add_argument(
@@ -298,16 +295,16 @@ Examples:
             
             # Create daemon context
             with daemon.DaemonContext(
-                pidfile=daemon.pidfile.PIDLockFile('/var/run/snake_ai_server.pid'),
-                stdout=open('/var/log/snake_ai_stdout.log', 'w+'),
-                stderr=open('/var/log/snake_ai_stderr.log', 'w+'),
+                pidfile=daemon.pidfile.PIDLockFile('/var/run/ai_hydra_server.pid'),
+                stdout=open('/var/log/ai_hydra_stdout.log', 'w+'),
+                stderr=open('/var/log/ai_hydra_stderr.log', 'w+'),
             ):
                 # Run server as daemon
                 server = HeadlessServer(
-                    bind_address=args.bind,
+                    router_address=args.router,
                     heartbeat_interval=args.heartbeat,
                     log_level=args.log_level,
-                    log_file=args.log_file or '/var/log/snake_ai.log'
+                    log_file=args.log_file or '/var/log/ai_hydra.log'
                 )
                 asyncio.run(server.start())
                 
@@ -320,7 +317,7 @@ Examples:
     else:
         # Run in foreground
         server = HeadlessServer(
-            bind_address=args.bind,
+            router_address=args.router,
             heartbeat_interval=args.heartbeat,
             log_level=args.log_level,
             log_file=args.log_file
