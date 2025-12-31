@@ -236,13 +236,33 @@ ZMQServer (Headless Interface)
 .. code-block:: python
 
     class ZMQServer:
-        async def start(self) -> None
-        async def stop(self) -> None
-        async def _process_message(self, message_data: str) -> ZMQMessage
-        async def _handle_start_simulation(self, message: ZMQMessage) -> ZMQMessage
-        async def _handle_stop_simulation(self, message: ZMQMessage) -> ZMQMessage
-        async def _handle_get_status(self, message: ZMQMessage) -> ZMQMessage
-        async def _send_status_update(self) -> None
+        async def start(self) -> None:
+            """Start the ZeroMQ server."""
+            pass
+            
+        async def stop(self) -> None:
+            """Stop the ZeroMQ server."""
+            pass
+            
+        async def _process_message(self, message_data: str) -> ZMQMessage:
+            """Process incoming message."""
+            pass
+            
+        async def _handle_start_simulation(self, message: ZMQMessage) -> ZMQMessage:
+            """Handle start simulation command."""
+            pass
+            
+        async def _handle_stop_simulation(self, message: ZMQMessage) -> ZMQMessage:
+            """Handle stop simulation command."""
+            pass
+            
+        async def _handle_get_status(self, message: ZMQMessage) -> ZMQMessage:
+            """Handle status query."""
+            pass
+            
+        async def _send_status_update(self) -> None:
+            """Send status update broadcast."""
+            pass
 
 **Message Types Supported:**
 
@@ -310,10 +330,22 @@ HeadlessServer (Entry Point)
 .. code-block:: python
 
     class HeadlessServer:
-        def __init__(self, bind_address: str, log_level: str, log_file: str)
-        async def start(self) -> None
-        def _setup_signal_handlers(self) -> None
-        def _setup_logging(self) -> None
+        def __init__(self, bind_address: str, log_level: str, log_file: str):
+            """Method implementation."""
+            pass
+
+        async def start(self) -> None:
+            """Method implementation."""
+            pass
+
+        def _setup_signal_handlers(self) -> None:
+            """Method implementation."""
+            pass
+
+        def _setup_logging(self) -> None:
+            """Method implementation."""
+            pass
+
 
 Core AI Components
 ~~~~~~~~~~~~~~~~~~
@@ -334,12 +366,27 @@ HydraMgr (Main Orchestrator)
 .. code-block:: python
 
     class HydraMgr:
-        def run_simulation(self) -> GameResult
-        def execute_decision_cycle(self) -> Move
+        def run_simulation(self) -> GameResult:
+            """Method implementation."""
+            pass
+
+        def execute_decision_cycle(self) -> Move:
+            """Method implementation."""
+            pass
+
         def execute_simulation_round(self) -> List[MoveResult]  # Execute all active clones
-        def evaluate_exploration_paths(self) -> OptimalPath
-        def apply_move_to_master(self, move: Move) -> None
-        def reset_exploration_tree(self) -> None
+        def evaluate_exploration_paths(self) -> OptimalPath:
+            """Method implementation."""
+            pass
+
+        def apply_move_to_master(self, move: Move) -> None:
+            """Method implementation."""
+            pass
+
+        def reset_exploration_tree(self) -> None:
+            """Method implementation."""
+            pass
+
         def get_current_status(self) -> SimulationStatus  # For ZeroMQ integration
 
 **Execution Flow:**
@@ -365,12 +412,27 @@ Game_Board (Pure State Container)
 .. code-block:: python
 
     class GameBoard:
-        def get_snake_head(self) -> Position
+        def get_snake_head(self) -> Position:
+            """Method implementation."""
+            pass
+
         def get_snake_body(self) -> List[Position]
-        def get_direction(self) -> Direction
-        def get_food_position(self) -> Position
-        def get_score(self) -> int
-        def get_random_state(self) -> RandomState
+        def get_direction(self) -> Direction:
+            """Method implementation."""
+            pass
+
+        def get_food_position(self) -> Position:
+            """Method implementation."""
+            pass
+
+        def get_score(self) -> int:
+            """Method implementation."""
+            pass
+
+        def get_random_state(self) -> RandomState:
+            """Method implementation."""
+            pass
+
         def clone(self) -> 'GameBoard'
         def to_tensor(self) -> torch.Tensor  # For PyTorch integration
 
@@ -403,11 +465,26 @@ Master Game (Orchestration Layer)
 .. code-block:: python
 
     class MasterGame:
-        def get_current_board(self) -> GameBoard
-        def apply_move(self, move: Move) -> MoveResult
-        def is_terminal(self) -> bool
-        def get_score(self) -> int
-        def clone_board(self) -> GameBoard
+        def get_current_board(self) -> GameBoard:
+            """Method implementation."""
+            pass
+
+        def apply_move(self, move: Move) -> MoveResult:
+            """Method implementation."""
+            pass
+
+        def is_terminal(self) -> bool:
+            """Method implementation."""
+            pass
+
+        def get_score(self) -> int:
+            """Method implementation."""
+            pass
+
+        def clone_board(self) -> GameBoard:
+            """Method implementation."""
+            pass
+
 
 Budget Controller (Resource Management)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -424,12 +501,24 @@ Budget Controller (Resource Management)
 .. code-block:: python
 
     class BudgetController:
-        def initialize_budget(self, budget: int) -> None
+        def initialize_budget(self, budget: int) -> None:
+            """Method implementation."""
+            pass
+
         def consume_move(self) -> None  # Decrement budget, allow round completion
-        def get_remaining_budget(self) -> int
-        def reset_budget(self) -> None
+        def get_remaining_budget(self) -> int:
+            """Method implementation."""
+            pass
+
+        def reset_budget(self) -> None:
+            """Method implementation."""
+            pass
+
         def is_budget_exhausted(self) -> bool  # True when budget <= 0
-        def get_moves_in_current_round(self) -> int
+        def get_moves_in_current_round(self) -> int:
+            """Method implementation."""
+            pass
+
 
 **Budget Management:**
 
@@ -483,10 +572,22 @@ Feature_Extractor (Game State to NN Input)
 
     class FeatureExtractor:
         def extract_features(self, board: GameBoard) -> torch.Tensor
-        def get_collision_features(self, board: GameBoard) -> List[bool]  # Snake + Wall collision (6 features)
-        def get_direction_features(self, board: GameBoard) -> List[bool]  # Current direction (4 features)
-        def get_food_features(self, board: GameBoard) -> List[float]     # Food relative position (2 features)
-        def get_snake_features(self, board: GameBoard) -> List[bool]     # Snake length bits (7 features)
+        def get_collision_features(self, board: GameBoard) -> List[bool]  # Snake + Wall collision (6 features):
+            """Method implementation."""
+            pass
+
+        def get_direction_features(self, board: GameBoard) -> List[bool]  # Current direction (4 features):
+            """Method implementation."""
+            pass
+
+        def get_food_features(self, board: GameBoard) -> List[float]     # Food relative position (2 features):
+            """Method implementation."""
+            pass
+
+        def get_snake_features(self, board: GameBoard) -> List[bool]     # Snake length bits (7 features):
+            """Method implementation."""
+            pass
+
 
 **Feature Vector (19 total features):**
 
@@ -560,10 +661,22 @@ Oracle_Trainer (Learning from Tree Search)
 .. code-block:: python
 
     class OracleTrainer:
-        def compare_predictions(self, nn_move: Move, optimal_move: Move) -> bool
-        def generate_training_sample(self, features: torch.Tensor, optimal_move: Move) -> TrainingSample
-        def update_network(self, training_samples: List[TrainingSample]) -> None
-        def get_prediction_accuracy(self) -> float
+        def compare_predictions(self, nn_move: Move, optimal_move: Move) -> bool:
+            """Method implementation."""
+            pass
+
+        def generate_training_sample(self, features: torch.Tensor, optimal_move: Move) -> TrainingSample:
+            """Method implementation."""
+            pass
+
+        def update_network(self, training_samples: List[TrainingSample]) -> None:
+            """Method implementation."""
+            pass
+
+        def get_prediction_accuracy(self) -> float:
+            """Method implementation."""
+            pass
+
 
 Hybrid Execution Flow
 ~~~~~~~~~~~~~~~~~~~~~
@@ -598,13 +711,31 @@ ExplorationClone (Individual Path Explorer)
 .. code-block:: python
 
     class ExplorationClone:
-        def execute_move(self, move: Move) -> MoveResult
-        def get_cumulative_reward(self) -> int
+        def execute_move(self, move: Move) -> MoveResult:
+            """Method implementation."""
+            pass
+
+        def get_cumulative_reward(self) -> int:
+            """Method implementation."""
+            pass
+
         def get_path_from_root(self) -> List[Move]
-        def is_terminated(self) -> bool
-        def get_current_board(self) -> GameBoard
-        def get_clone_id(self) -> str
-        def log_step(self, step_number: int, reward: int) -> None
+        def is_terminated(self) -> bool:
+            """Method implementation."""
+            pass
+
+        def get_current_board(self) -> GameBoard:
+            """Method implementation."""
+            pass
+
+        def get_clone_id(self) -> str:
+            """Method implementation."""
+            pass
+
+        def log_step(self, step_number: int, reward: int) -> None:
+            """Method implementation."""
+            pass
+
 
 Headless Operation and ZeroMQ Integration
 ------------------------------------------
@@ -809,10 +940,16 @@ Logging and Debugging
 .. code-block:: python
 
     class SimulationLogger:
-        def log_clone_step(self, clone_id: str, result: str, reward: int, score: int) -> None
+        def log_clone_step(self, clone_id: str, result: str, reward: int, score: int) -> None:
+            """Method implementation."""
+            pass
+
         def log_decision_cycle(self, cycle_number: int, winning_clone: str, 
                               total_paths: int, budget_used: int) -> None
-        def log_master_move(self, move: str, new_score: int) -> None
+        def log_master_move(self, move: str, new_score: int) -> None:
+            """Method implementation."""
+            pass
+
 
 Tree Structure Models
 ~~~~~~~~~~~~~~~~~~~~~
@@ -988,9 +1125,18 @@ Error Categories and Recovery Strategies
 .. code-block:: python
 
     class ErrorHandler:
-        async def handle_clone_failure(self, clone_id: CloneId, error: Exception) -> RecoveryAction
-        async def handle_budget_inconsistency(self) -> None
-        async def handle_state_corruption(self, corrupted_state: GameState) -> GameState
+        async def handle_clone_failure(self, clone_id: CloneId, error: Exception) -> RecoveryAction:
+            """Method implementation."""
+            pass
+
+        async def handle_budget_inconsistency(self) -> None:
+            """Method implementation."""
+            pass
+
+        async def handle_state_corruption(self, corrupted_state: GameState) -> GameState:
+            """Method implementation."""
+            pass
+
         def validate_system_invariants(self) -> List[InvariantViolation]
 
 **Fault Isolation:**
