@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/tui/game_board.py
+# hypothesis_version: 6.148.8
+
+['food_position', 'grid_size', 'snake_body', 'snake_head']

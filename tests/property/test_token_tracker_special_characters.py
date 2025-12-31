@@ -23,7 +23,7 @@ class TestTokenTrackerSpecialCharacters:
             # Unicode characters from various categories
             st.text(
                 alphabet=st.characters(
-                    whitelist_categories=(
+                    categories=(
                         "Lu",
                         "Ll",
                         "Nd",
@@ -33,7 +33,7 @@ class TestTokenTrackerSpecialCharacters:
                         "Pc",
                         "Pd",
                     ),
-                    whitelist_characters=["\n", "\r", "\t", '"', "'", ",", ";", "\\"],
+                    include_characters=["\n", "\r", "\t", '"', "'", ",", ";", "\\"],
                 ),
                 min_size=1,
                 max_size=500,
@@ -41,7 +41,7 @@ class TestTokenTrackerSpecialCharacters:
             # Emoji and symbols
             st.text(
                 alphabet=st.characters(
-                    whitelist_categories=("So", "Sm", "Sc", "Sk"),
+                    categories=("So", "Sm", "Sc", "Sk"),
                     min_codepoint=0x1F300,  # Emoji range
                     max_codepoint=0x1F9FF,
                 ),
@@ -76,22 +76,18 @@ class TestTokenTrackerSpecialCharacters:
                 max_size=100,
             ),
             # Control characters mixed with text
-            st.text(
-                alphabet=st.characters(
-                    whitelist_characters=[
-                        "Hello",
-                        " ",
-                        "World",
-                        "\n",
-                        "\r",
-                        "\t",
-                        "\x00",
-                        "\x01",
-                        "\x02",
-                    ]
-                ),
-                min_size=1,
-                max_size=200,
+            st.sampled_from(
+                [
+                    "Hello",
+                    " ",
+                    "World",
+                    "\n",
+                    "\r",
+                    "\t",
+                    "\x00",
+                    "\x01",
+                    "\x02",
+                ]
             ),
         ),
         tokens_used=st.integers(min_value=1, max_value=10000),
@@ -269,13 +265,14 @@ class TestTokenTrackerSpecialCharacters:
     @given(
         csv_problematic_chars=st.text(
             alphabet=st.characters(
-                whitelist_characters=['"', "'", ",", ";", "\n", "\r", "\t", "\\"]
+                categories=(),  # Empty categories to allow include_characters
+                include_characters=['"', "'", ",", ";", "\n", "\r", "\t", "\\"],
             ),
             min_size=1,
             max_size=100,
         ),
         normal_text=st.text(
-            alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd")),
+            alphabet=st.characters(categories=("Lu", "Ll", "Nd")),
             min_size=5,
             max_size=100,
         ),

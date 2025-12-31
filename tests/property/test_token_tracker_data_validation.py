@@ -236,17 +236,15 @@ class TestTokenTrackerDataValidation:
             reconstructed_transaction = TokenTransaction.from_csv_row(csv_row)
 
             # Validate data preservation (accounting for CSV sanitization)
-            # The prompt text may be sanitized for CSV safety
-            original_sanitized = (
-                original_transaction.prompt_text.replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace('"', '""')
+            # The prompt text may be sanitized for CSV safety - apply same sanitization
+            # to original text for comparison
+            original_sanitized = original_transaction._sanitize_csv_text(
+                original_transaction.prompt_text
             )
+
             assert (
                 reconstructed_transaction.prompt_text == original_sanitized
-                or reconstructed_transaction.prompt_text
-                == original_transaction.prompt_text
-            )
+            ), f"Expected '{original_sanitized}', got '{reconstructed_transaction.prompt_text}'"
             assert (
                 reconstructed_transaction.tokens_used
                 == original_transaction.tokens_used
@@ -644,11 +642,12 @@ class TestTokenTrackerDataValidation:
                     # Prompt text should be preserved (may be sanitized for CSV)
                     assert len(retrieved.prompt_text) > 0
                     if len(original.prompt_text) <= config.max_prompt_length:
-                        # Should be mostly preserved if within limits
-                        assert (
-                            len(retrieved.prompt_text)
-                            >= len(original.prompt_text) * 0.8
+                        # Compare against sanitized version since control chars are removed
+                        sanitized_original = original._sanitize_csv_text(
+                            original.prompt_text
                         )
+                        # Should preserve sanitized content exactly
+                        assert retrieved.prompt_text == sanitized_original
 
                     # File patterns should be preserved
                     if original.file_patterns == []:

@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/token_tracker/error_handler.py
+# hypothesis_version: 6.148.8
+
+[0.0, 0.1, 0.5, 1.0, 100, 300, '.kiro_token_tracker', 'agent_execution_id', 'alternative_path', 'available_space', 'configuration_error', 'context', 'csv_read_error', 'csv_write_error', 'data_type', 'disk_space_error', 'error_type', 'errors_by_type', 'failed_recoveries', 'failure_count', 'fallback_activations', 'fallback_path', 'file_lock_error', 'file_path', 'file_patterns', 'hook_name', 'hook_trigger_type', 'issue_count', 'issues', 'metadata_error', 'metadata_type', 'operation', 'original_error', 'permission_error', 'queue_file', 'recent_errors', 'required_space', 'session_id', 'space_deficit', 'timeout', 'timestamp', 'total_errors', 'unknown', 'validation_error', 'workspace_folder']
