@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/token_tracker/maintenance.py
+# hypothesis_version: 6.148.8
+
+[0.0, 1.5, 100, 1024, 100000, '%Y%m%d_%H%M%S', '%Y-%m', '.gz', 'action', 'archived_file', 'archives', 'archives_by_month', 'cleanup_errors', 'cleanup_old_data', 'cleanup_performed', 'cleanup_recommended', 'cleanup_results', 'compressed', 'compressed_archives', 'compression_applied', 'count', 'current_status', 'date', 'enable_compression', 'error', 'file_exists', 'file_size_mb', 'high', 'issues', 'low', 'maintenance_started', 'max_file_size_mb', 'max_rows_per_file', 'medium', 'mtime', 'new_file_created', 'newest_archive', 'oldest_archive', 'path', 'priority', 'r', 'rb', 'reason', 'recommendations', 'rotate_csv_file', 'rotation', 'rotation_needed', 'rotation_performed', 'rotation_recommended', 'rotation_results', 'row_count', 'rows_archived', 'size', 'size_bytes', 'space_freed_bytes', 'success', 'total_archives', 'total_size', 'total_size_bytes', 'utf-8', 'w', 'wb']
