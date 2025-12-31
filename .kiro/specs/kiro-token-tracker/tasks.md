@@ -61,18 +61,18 @@ This implementation plan converts the token tracking system design into a series
     - **Property 7: Special Character Handling**
     - **Validates: Requirements 6.3, 6.4**
 
-- [ ] 4. Checkpoint - Core functionality validation
+- [x] 4. Checkpoint - Core functionality validation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement metadata collection system
-  - [ ] 5.1 Create MetadataCollector class
+- [x] 5. Implement metadata collection system
+  - [x] 5.1 Create MetadataCollector class
     - Implement workspace information collection
     - Add hook context extraction methods
     - Create execution metadata gathering functionality
     - Handle missing or unavailable metadata gracefully
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [ ] 5.2 Write property test for metadata capture completeness
+  - [x] 5.2 Write property test for metadata capture completeness
     - **Property 4: Hook-Tracker Integration (metadata portion)**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
 
