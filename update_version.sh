@@ -108,6 +108,47 @@ update_file_version() {
     fi
 }
 
+# Function to update CHANGELOG.md with new release heading
+update_changelog() {
+    local version=$1
+    local changelog_file="CHANGELOG.md"
+    
+    if [ ! -f "$changelog_file" ]; then
+        print_warning "CHANGELOG.md not found (skipping changelog update)"
+        return 0
+    fi
+    
+    print_status "Updating CHANGELOG.md with release $version"
+    
+    # Get current date and time in the desired format
+    local release_date=$(date '+%Y-%m-%d %H:%M')
+    local release_heading="## [Release $version] - $release_date"
+    
+    # Create a temporary file for the updated changelog
+    local temp_file=$(mktemp)
+    
+    # Process the changelog: add new release heading after [Unreleased]
+    awk -v release_heading="$release_heading" '
+    /^## \[Unreleased\]/ {
+        print $0
+        print ""
+        print release_heading
+        print ""
+        next
+    }
+    { print }
+    ' "$changelog_file" > "$temp_file"
+    
+    # Replace the original file
+    if mv "$temp_file" "$changelog_file"; then
+        print_success "✓ Updated CHANGELOG.md with release $version"
+    else
+        print_error "✗ Failed to update CHANGELOG.md"
+        rm -f "$temp_file"
+        return 1
+    fi
+}
+
 # Update pyproject.toml
 update_file_version "pyproject.toml" \
     "s/version = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version = \"$NEW_VERSION\"/" \
