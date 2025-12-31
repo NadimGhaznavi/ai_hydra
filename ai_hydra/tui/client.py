@@ -242,16 +242,18 @@ class HydraClient(App):
                 
             if "game_state" in status_data:
                 game_state = status_data["game_state"]
-                self.game_score = game_state.get("score", 0)
-                
-                snake_body = game_state.get("snake_body", [])
-                self.snake_length = len(snake_body)
-                
-                self.moves_count = game_state.get("moves_count", 0)
-                
-                # Update game board
-                if self.game_board:
-                    await self.game_board.update_game_state(game_state)
+                # Check if game_state is not None before accessing it
+                if game_state is not None:
+                    self.game_score = game_state.get("score", 0)
+                    
+                    snake_body = game_state.get("snake_body", [])
+                    self.snake_length = len(snake_body)
+                    
+                    self.moves_count = game_state.get("moves_count", 0)
+                    
+                    # Update game board
+                    if self.game_board:
+                        await self.game_board.update_game_state(game_state)
                     
             if "performance" in status_data:
                 performance = status_data["performance"]
@@ -386,9 +388,9 @@ class HydraClient(App):
         try:
             log_widget = self.query_one("#message_log", Log)
             if level == "error":
-                log_widget.write_line(f"[red]{formatted_message}[/red]")
+                log_widget.write_line(f"[red]{formatted_message}[/]")
             elif level == "warning":
-                log_widget.write_line(f"[yellow]{formatted_message}[/yellow]")
+                log_widget.write_line(f"[yellow]{formatted_message}[/]")
             else:
                 log_widget.write_line(formatted_message)
         except Exception:
