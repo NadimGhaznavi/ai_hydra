@@ -359,3 +359,75 @@ Requirement 18: Documentation Integrity and Validation
 8. THE Documentation_Test_Suite SHALL run as part of the continuous integration pipeline to catch documentation issues early
 9. THE Documentation_Test_Suite SHALL provide detailed error reporting with file names, line numbers, and specific validation failures
 10. THE Documentation_Test_Suite SHALL complete validation within 2 minutes to support rapid development feedback cycles
+
+Requirement 19: Router-Based Message Routing System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a system architect, I want a centralized router-based messaging system that enables multiple clients to connect to a single AI server through intelligent message routing, so that the system can scale to support distributed deployments and multiple concurrent users.
+
+**Acceptance Criteria:**
+
+1. THE HydraRouter SHALL implement a ZeroMQ ROUTER socket that accepts connections from multiple clients simultaneously
+2. THE HydraRouter SHALL route messages between clients and servers based on sender type identification (HydraClient/HydraServer)
+3. THE HydraRouter SHALL maintain a registry of active clients with unique client IDs and connection tracking
+4. THE HydraRouter SHALL implement heartbeat-based client registration where clients send heartbeat messages every 5 seconds
+5. THE HydraRouter SHALL automatically detect and remove inactive clients after a 15-second timeout period
+6. THE HydraRouter SHALL provide a standalone CLI command (ai-hydra-router) with configurable address and port options
+7. THE HydraRouter SHALL support distributed deployment where router and AI server run on different machines
+8. THE HydraRouter SHALL handle message routing errors gracefully and provide informative error responses
+9. THE HydraRouter SHALL implement background task management for heartbeat processing and client cleanup
+10. THE HydraRouter SHALL log all routing activities including client connections, disconnections, and message routing statistics
+
+Requirement 20: MQClient Generic Communication Interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a developer, I want a unified client interface for router communication that supports both client and server roles, so that all components can communicate through the router using a consistent API with automatic connection management.
+
+**Acceptance Criteria:**
+
+1. THE MQClient SHALL provide a unified interface for both client and server communication with the router
+2. THE MQClient SHALL implement automatic connection management with reconnection support for network failures
+3. THE MQClient SHALL handle structured JSON message protocol with sender identification and client ID tracking
+4. THE MQClient SHALL provide timeout handling for all message operations with configurable timeout values
+5. THE MQClient SHALL implement Python context manager support for automatic resource cleanup
+6. THE MQClient SHALL support both synchronous and asynchronous message operations
+7. THE MQClient SHALL provide automatic heartbeat functionality to maintain client registration with the router
+8. THE MQClient SHALL handle connection errors gracefully with automatic retry mechanisms
+9. THE MQClient SHALL support message type validation and structured data payload handling
+10. THE MQClient SHALL provide comprehensive error handling with informative error messages and recovery guidance
+
+Requirement 21: Enhanced TUI Epoch Display Integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a user monitoring AI training progress, I want to see the current epoch number displayed in the TUI status widget, so that I can track training progress and understand the AI's learning state in real-time.
+
+**Acceptance Criteria:**
+
+1. THE TUI status widget SHALL display "Epoch: N" between Snake Length and Runtime information
+2. THE epoch display SHALL update reactively when the epoch value changes using Textual's reactive variable system
+3. THE TUI SHALL extract epoch information from game_state data in status update messages
+4. THE epoch display SHALL reset to 0 when the simulation is reset or restarted
+5. THE TUI SHALL handle missing epoch information gracefully by displaying "Epoch: --" when data is unavailable
+6. THE epoch display SHALL integrate with the existing TUI layout without disrupting other status information
+7. THE TUI SHALL support epoch display in both demo mode and production mode via ai-hydra-tui command
+8. THE epoch display SHALL be tested with comprehensive unit, property-based, and integration tests
+9. THE TUI SHALL process epoch updates efficiently without impacting overall TUI performance
+10. THE epoch display SHALL maintain consistency with the AI agent's actual epoch tracking
+
+Requirement 22: Comprehensive Router System Testing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**User Story:** As a quality assurance engineer, I want comprehensive test coverage for the router system including unit tests, property-based tests, integration tests, and end-to-end tests, so that the router system is reliable, robust, and maintains high quality standards.
+
+**Acceptance Criteria:**
+
+1. THE test suite SHALL include unit tests for individual router components (HydraRouter, MQClient, RouterConstants)
+2. THE test suite SHALL include property-based tests that validate universal router behavior properties using Hypothesis
+3. THE test suite SHALL include integration tests that validate component interactions and message routing workflows
+4. THE test suite SHALL include end-to-end tests that validate complete router system workflows from client connection to message delivery
+5. THE test suite SHALL achieve comprehensive edge case coverage including network failures, malformed messages, and resource exhaustion
+6. THE test suite SHALL validate router constants and configuration with 13/13 tests passing for RouterConstants
+7. THE test suite SHALL use mock-based isolation for integration testing to ensure reliable and fast test execution
+8. THE test suite SHALL validate requirements compliance including Requirements 3.5 and 3.6 for epoch display feature
+9. THE test suite SHALL include performance testing for message throughput and resource usage under load
+10. THE test suite SHALL provide requirements traceability linking each test to specific acceptance criteria

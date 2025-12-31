@@ -1,23 +1,24 @@
-ZeroMQ Communication Protocol
-=============================
+ZeroMQ Router-Based Communication Protocol
+==========================================
 
-The AI Hydra agent provides a comprehensive ZeroMQ-based communication protocol for headless operation, enabling complete separation of AI logic from presentation layers.
+The AI Hydra system provides a comprehensive ZeroMQ router-based communication protocol that enables distributed, scalable operation with multiple clients connecting to a centralized AI server through an intelligent message routing system.
 
 Overview
 --------
 
-The ZeroMQ protocol enables:
+The router-based protocol enables:
 
-* **Complete Headless Operation**: AI agent runs without GUI dependencies
-* **Message-Based Control**: All operations controlled via structured messages
-* **Real-time Monitoring**: Live status updates and performance metrics
-* **Multi-Client Support**: Multiple clients can connect simultaneously
-* **Language Agnostic**: Clients can be written in any language with ZeroMQ support
+* **Distributed Architecture**: Router and AI server can run on different machines
+* **Multiple Client Support**: Multiple TUI clients, monitoring tools, and API clients can connect simultaneously
+* **Intelligent Message Routing**: Messages are routed based on sender type and client registration
+* **Automatic Client Management**: Heartbeat-based client registration and lifecycle management
+* **Fault Tolerance**: Automatic detection and cleanup of inactive clients
+* **Scalable Deployment**: Support for local and remote deployment scenarios
 
 Architecture
 ------------
 
-The communication architecture follows a client-server pattern:
+The communication architecture follows a router-based pattern with centralized message routing:
 
 .. code-block:: text
 
@@ -28,32 +29,86 @@ The communication architecture follows a client-server pattern:
               └──────────────────────┼──────────────────────┘
                                      │
                            ┌─────────▼───────┐
-                           │  ZeroMQ Server  │
+                           │  HydraRouter    │
+                           │   (Port 5556)   │ ← Central Message Router
                            └─────────┬───────┘
                                      │
                            ┌─────────▼───────┐
-                           │ Headless AI     │
-                           │ Agent           │
+                           │ Headless Server │
+                           │ (AI Agent)      │ ← AI Processing Engine
                            └─────────────────┘
+
+**Network Flow:**
+
+1. **Client Connection**: Clients connect to HydraRouter at port 5556
+2. **Registration**: Clients register via heartbeat messages every 5 seconds
+3. **Message Routing**: Router intelligently routes messages between clients and server
+4. **AI Processing**: Headless server processes AI decisions and sends responses back through router
+5. **Broadcast Distribution**: Router distributes status updates and broadcasts to all registered clients
+
+Router Components
+-----------------
+
+HydraRouter
+~~~~~~~~~~~
+
+The central message routing component that:
+
+* **Connection Management**: Handles multiple client connections using ZeroMQ ROUTER socket
+* **Client Registration**: Manages client lifecycle through heartbeat-based registration
+* **Message Routing**: Routes messages based on sender type (HydraClient/HydraServer)
+* **Inactive Client Detection**: Automatically removes clients after 15-second timeout
+* **Background Tasks**: Manages async tasks for heartbeat processing and cleanup
+
+MQClient
+~~~~~~~~
+
+Generic client class for router communication that:
+
+* **Unified Interface**: Provides consistent API for both client and server roles
+* **Connection Management**: Automatic connection and reconnection support
+* **Message Protocol**: Structured JSON message handling with timeout management
+* **Context Management**: Python context manager support for resource cleanup
+* **Error Recovery**: Graceful error handling and automatic cleanup
+
+Client Registration System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Automatic client management through:
+
+* **Heartbeat Messages**: Clients send heartbeat every 5 seconds to maintain registration
+* **Timeout Detection**: Router removes clients inactive for more than 15 seconds
+* **Background Processing**: Async task handles client lifecycle management
+* **Resource Cleanup**: Automatic cleanup of inactive client resources
 
 Message Structure
 -----------------
 
-All messages follow a standardized JSON structure:
+All messages follow a standardized JSON structure with enhanced routing information:
 
 .. code-block:: python
 
     {
-        "message_type": "START_SIMULATION",
-        "timestamp": 1640995200.123,
-        "client_id": "client_001",
-        "request_id": "req_12345",
-        "data": {
+        "sender": "HydraClient",           # Sender type for routing
+        "client_id": "client_001",         # Unique client identifier
+        "message_type": "START_SIMULATION", # Message type classification
+        "timestamp": 1640995200.123,       # Message timestamp
+        "request_id": "req_12345",         # Request correlation ID
+        "data": {                          # Message payload
             "grid_size": [8, 8],
             "move_budget": 50,
             "nn_enabled": true
         }
     }
+
+**Message Routing Fields:**
+
+* ``sender``: Identifies sender type (HydraClient, HydraServer) for intelligent routing
+* ``client_id``: Unique identifier for client connection tracking and response routing
+* ``message_type``: Standardized message type for protocol handling
+* ``timestamp``: Message creation timestamp for ordering and timeout detection
+* ``request_id``: Correlation ID for matching requests with responses
+* ``data``: Structured payload containing message-specific information
 
 Message Types
 -------------
@@ -118,6 +173,36 @@ Command Messages
 
     Response:
         * ``status``: "SIMULATION_RESET"
+
+System Messages
+~~~~~~~~~~~~~~~
+
+**HEARTBEAT**
+    Client registration and keep-alive message sent every 5 seconds.
+
+    Request Data:
+        * ``client_type``: Type of client (TUI, API, Monitor)
+        * ``capabilities``: List of supported operations
+
+    Response:
+        * ``status``: "HEARTBEAT_ACK"
+        * ``server_time``: Server timestamp for synchronization
+
+**ERROR**
+    Error notification with detailed information and recovery guidance.
+
+    Data:
+        * ``error_code``: Standardized error code
+        * ``error_message``: Human-readable error description
+        * ``error_context``: Additional context information
+        * ``recovery_suggestions``: Recommended recovery actions
+
+**OK**
+    Acknowledgment message for successful operations.
+
+    Data:
+        * ``operation``: Operation that was acknowledged
+        * ``result_summary``: Brief summary of operation result
 
 Broadcast Messages
 ~~~~~~~~~~~~~~~~~~
@@ -198,8 +283,77 @@ Performance Metrics
 Client Implementation
 ---------------------
 
-Basic Client Example
-~~~~~~~~~~~~~~~~~~~~
+Router-Based Client Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    from ai_hydra.mq_client import MQClient
+    import asyncio
+
+    class RouterClient:
+        def __init__(self, router_address="tcp://localhost:5556"):
+            self.client = MQClient(
+                router_address=router_address,
+                client_id="example_client",
+                sender_type="HydraClient"
+            )
+        
+        async def connect(self):
+            """Connect to router and start heartbeat."""
+            await self.client.connect()
+            await self.client.start_heartbeat()
+        
+        async def start_simulation(self, config):
+            """Start simulation with configuration."""
+            response = await self.client.send_command(
+                "start_simulation", 
+                config
+            )
+            return response
+        
+        async def get_status(self):
+            """Get current simulation status."""
+            response = await self.client.send_command("get_status")
+            return response
+        
+        async def stop_simulation(self):
+            """Stop current simulation."""
+            response = await self.client.send_command("stop_simulation")
+            return response
+        
+        async def disconnect(self):
+            """Disconnect from router."""
+            await self.client.disconnect()
+
+    # Usage example
+    async def main():
+        client = RouterClient()
+        
+        try:
+            await client.connect()
+            
+            # Start simulation
+            config = {
+                "grid_size": [8, 8],
+                "move_budget": 50,
+                "random_seed": 42
+            }
+            result = await client.start_simulation(config)
+            print(f"Simulation started: {result}")
+            
+            # Monitor status
+            while True:
+                status = await client.get_status()
+                if status.get("is_game_over"):
+                    break
+                await asyncio.sleep(1)
+                
+        finally:
+            await client.disconnect()
+
+Legacy Direct Client Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -207,7 +361,8 @@ Basic Client Example
     import json
     import time
 
-    class ZMQClient:
+    class DirectZMQClient:
+        """Legacy direct connection client (deprecated)."""
         def __init__(self, server_address="tcp://localhost:5555"):
             self.context = zmq.Context()
             self.socket = self.context.socket(zmq.REQ)
@@ -225,15 +380,6 @@ Basic Client Example
             self.socket.send_string(json.dumps(message))
             response = self.socket.recv_string()
             return json.loads(response)
-        
-        def start_simulation(self, config):
-            return self.send_command("START_SIMULATION", config)
-        
-        def get_status(self):
-            return self.send_command("GET_STATUS")
-        
-        def stop_simulation(self):
-            return self.send_command("STOP_SIMULATION")
 
 Monitoring Client Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,33 +422,99 @@ Monitoring Client Example
             elif message_type == "GAME_OVER":
                 self._handle_game_over(data)
 
-Server Configuration
---------------------
+Router and Server Configuration
+-------------------------------
 
-The ZeroMQ server supports various configuration options:
+Router Configuration
+~~~~~~~~~~~~~~~~~~~~~
+
+The HydraRouter can be configured and deployed independently:
+
+.. code-block:: bash
+
+    # Start router with default settings
+    ai-hydra-router
+    
+    # Start router with custom configuration
+    ai-hydra-router --address 0.0.0.0 --port 5556 --log-level INFO
+    
+    # Start router for remote deployment
+    ai-hydra-router --address 0.0.0.0 --port 5556 --log-level DEBUG
+
+.. code-block:: python
+
+    from ai_hydra.router import HydraRouter
+    import asyncio
+    
+    # Programmatic router configuration
+    async def start_router():
+        router = HydraRouter(
+            bind_address="0.0.0.0",
+            port=5556,
+            heartbeat_interval=5,      # Heartbeat interval in seconds
+            client_timeout=15,         # Client timeout in seconds
+            log_level="INFO"
+        )
+        
+        await router.start()
+        print("Router started and listening for connections")
+        
+        try:
+            await router.run_forever()
+        except KeyboardInterrupt:
+            await router.stop()
+
+Server Configuration
+~~~~~~~~~~~~~~~~~~~~
+
+The headless server connects to the router instead of binding directly:
+
+.. code-block:: bash
+
+    # Connect server to local router
+    ai-hydra-server --router tcp://localhost:5556
+    
+    # Connect server to remote router
+    ai-hydra-server --router tcp://production-router:5556 --log-level INFO
 
 .. code-block:: python
 
     from ai_hydra.headless_server import HeadlessServer
     
-    # Basic configuration
+    # Server configuration for router connection
+    server = HeadlessServer(
+        router_address="tcp://localhost:5556",
+        client_id="ai_server_001",
+        log_level="INFO",
+        log_file="ai_agent.log"
+    )
+
+TUI Client Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The TUI client connects to the router for distributed operation:
+
+.. code-block:: bash
+
+    # Connect TUI to local router
+    ai-hydra-tui --router tcp://localhost:5556
+    
+    # Connect TUI to remote router
+    ai-hydra-tui --router tcp://production-router:5556
+
+Legacy Direct Server Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    from ai_hydra.headless_server import HeadlessServer
+    
+    # Legacy direct binding (deprecated)
     server = HeadlessServer(
         command_port=5555,      # Port for command messages
         broadcast_port=5556,    # Port for status broadcasts
         log_level="INFO",       # Logging level
         log_file="ai_agent.log" # Log file path
-    )
-    
-    # Advanced configuration
-    server = HeadlessServer(
-        command_port=5555,
-        broadcast_port=5556,
-        bind_address="0.0.0.0", # Bind to all interfaces
-        max_clients=10,         # Maximum concurrent clients
-        heartbeat_interval=5,   # Heartbeat interval in seconds
-        message_timeout=30,     # Message timeout in seconds
-        log_level="DEBUG",
-        log_file="/var/log/snake_ai.log"
     )
 
 Error Handling
@@ -342,40 +554,93 @@ Security Considerations
 Deployment Examples
 -------------------
 
-Local Development
-~~~~~~~~~~~~~~~~~
+Local Development with Router
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-    # Start headless server
+    # Terminal 1: Start router
+    ai-hydra-router --address localhost --port 5556 --log-level DEBUG
+    
+    # Terminal 2: Start headless server
+    ai-hydra-server --router tcp://localhost:5556 --log-level INFO
+    
+    # Terminal 3: Start TUI client
+    ai-hydra-tui --router tcp://localhost:5556
+
+Distributed Production Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    # Machine 1 (Router): Start central router
+    ai-hydra-router --address 0.0.0.0 --port 5556 --log-level INFO
+    
+    # Machine 2 (AI Server): Connect to remote router
+    ai-hydra-server --router tcp://router-machine:5556 --log-level INFO
+    
+    # Machine 3 (Client): Connect TUI to remote router
+    ai-hydra-tui --router tcp://router-machine:5556
+    
+    # Machine 4 (Monitoring): Connect monitoring client
+    python monitoring_client.py --router tcp://router-machine:5556
+
+Docker Deployment
+~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    # docker-compose.yml
+    version: '3.8'
+    services:
+      router:
+        image: ai-hydra:latest
+        command: ai-hydra-router --address 0.0.0.0 --port 5556
+        ports:
+          - "5556:5556"
+        networks:
+          - ai-hydra-net
+      
+      ai-server:
+        image: ai-hydra:latest
+        command: ai-hydra-server --router tcp://router:5556
+        depends_on:
+          - router
+        networks:
+          - ai-hydra-net
+      
+      tui-client:
+        image: ai-hydra:latest
+        command: ai-hydra-tui --router tcp://router:5556
+        depends_on:
+          - router
+          - ai-server
+        networks:
+          - ai-hydra-net
+        stdin_open: true
+        tty: true
+    
+    networks:
+      ai-hydra-net:
+        driver: bridge
+
+Legacy Local Development
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    # Legacy direct connection (deprecated)
     python -m ai_hydra.headless_server
 
-    # Connect with example client
+    # Connect with legacy client
     python -m ai_hydra.zmq_client_example --mode interactive
 
-Production Deployment
-~~~~~~~~~~~~~~~~~~~~~
+Remote Monitoring with Router
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-    # Run as daemon with logging
-    python -m ai_hydra.headless_server \
-        --bind "0.0.0.0" \
-        --command-port 5555 \
-        --broadcast-port 5556 \
-        --log-file /var/log/snake_ai.log \
-        --log-level INFO \
-        --daemon
-
-Remote Monitoring
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-    # Connect from remote machine
-    python -m ai_hydra.zmq_client_example \
-        --server "tcp://production-server:5555" \
-        --monitor "tcp://production-server:5556" \
-        --mode demo
+    # Connect monitoring tools from any machine
+    python monitoring_client.py --router tcp://production-router:5556 --client-id monitor_001
 
 This protocol provides a robust foundation for integrating the AI Hydra agent into larger systems and enables flexible deployment scenarios.

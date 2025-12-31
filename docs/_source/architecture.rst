@@ -1,7 +1,50 @@
 Architecture Overview
 =====================
 
-AI Hydra implements a sophisticated hybrid system that combines neural network predictions with budget-constrained tree search for Snake Game AI decision making.
+AI Hydra implements a sophisticated hybrid system that combines neural network predictions with budget-constrained tree search for Snake Game AI decision making. The system features a distributed router-based architecture that enables multiple clients to connect to a centralized AI server through an intelligent message routing system.
+
+Network Architecture
+--------------------
+
+The AI Hydra system uses a router-based messaging architecture that transforms the traditional direct client-server model into a scalable, distributed system:
+
+.. code-block:: text
+
+    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+    │   TUI Client    │    │ Monitoring Tool │    │   API Client    │
+    └─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+              │                      │                      │
+              └──────────────────────┼──────────────────────┘
+                                     │
+                           ┌─────────▼───────┐
+                           │  HydraRouter    │
+                           │   (Port 5556)   │
+                           └─────────┬───────┘
+                                     │
+                           ┌─────────▼───────┐
+                           │ Headless Server │
+                           │ (AI Agent)      │
+                           └─────────────────┘
+
+**Key Architecture Benefits:**
+
+* **Scalability**: Multiple clients can connect to a single AI server through the router
+* **Distributed Deployment**: Router and server can run on different machines
+* **Intelligent Routing**: Messages are routed based on sender type and client registration
+* **Fault Tolerance**: Automatic client detection and cleanup with heartbeat management
+* **Resource Efficiency**: Centralized AI processing with distributed client access
+
+Router Components
+~~~~~~~~~~~~~~~~~
+
+**HydraRouter**
+  Central message routing component using ZeroMQ ROUTER socket that manages client connections, routes messages between clients and servers, and provides heartbeat-based client lifecycle management.
+
+**MQClient**
+  Generic client class for router communication that supports both client and server roles, provides automatic connection management with reconnection support, and handles structured message protocol with timeout management.
+
+**RouterConstants**
+  Centralized configuration for message types, network settings, and protocol constants that ensures consistent communication across all components.
 
 System Components
 -----------------
@@ -49,6 +92,24 @@ Tree Search Components
 
 **ExplorationClone**
   Executes individual moves using GameLogic, maintains path history from root to current position, and reports results back to the orchestration system.
+
+Router System Components
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+**HydraRouter**
+  Central message routing system that manages client connections using ZeroMQ ROUTER socket, implements heartbeat-based client registration and lifecycle management, provides intelligent message routing based on sender type, and supports distributed deployment across multiple machines.
+
+**MQClient**
+  Generic message queue client that provides unified interface for router communication, supports both client and server connection modes, implements automatic connection management with reconnection support, handles structured JSON message protocol with timeout management, and provides Python context manager support for resource cleanup.
+
+**Message Protocol**
+  Standardized JSON message structure with sender identification, client ID tracking, message type classification, timestamp and request ID correlation, and structured data payload for commands, responses, and broadcasts.
+
+**Client Registration System**
+  Automatic client registration via heartbeat messages sent every 5 seconds, inactive client detection and removal after 15-second timeout, background task management for heartbeat processing, and graceful client cleanup with resource management.
+
+**CLI Integration**
+  Router command (``ai-hydra-router``) with configurable address and port options, updated server command (``ai-hydra-server --router``) for router connection, updated TUI command (``ai-hydra-tui --router``) for router communication, and support for remote deployment with distributed router access.
 
 Decision Flow Architecture
 --------------------------

@@ -6,7 +6,7 @@ The AI Hydra Terminal User Interface is built using the `Textual <https://textua
 Architecture Overview
 ---------------------
 
-The TUI follows a reactive architecture pattern where the UI responds to both user interactions and server-pushed updates:
+The TUI follows a reactive architecture pattern where the UI responds to both user interactions and server-pushed updates through a router-based messaging system:
 
 .. code-block:: text
 
@@ -20,10 +20,15 @@ The TUI follows a reactive architecture pattern where the UI responds to both us
    │         └────────────────┼────────────────┘            │
    │                          │                             │
    │  ┌─────────────────────────────────────────────────┐   │
-   │  │         Communication Manager                   │   │
+   │  │         MQClient Communication                  │   │
    │  └─────────────────────────────────────────────────┘   │
    └─────────────────────┬───────────────────────────────────┘
-                         │ ZeroMQ REQ/REP
+                         │ Router Protocol
+   ┌─────────────────────▼───────────────────────────────────┐
+   │                HydraRouter                              │
+   │              (Port 5556)                               │
+   └─────────────────────┬───────────────────────────────────┘
+                         │
    ┌─────────────────────▼───────────────────────────────────┐
    │                AI Hydra Server                          │
    └─────────────────────────────────────────────────────────┘
@@ -47,13 +52,15 @@ The main Textual application class that orchestrates all UI components:
        snake_length = var(3)
        moves_count = var(0)
        runtime_seconds = var(0)
+       epoch = var(0)  # Neural network training epoch
 
 **Key Features:**
 
-* **Reactive Variables**: Automatic UI updates when values change
-* **Async Communication**: Non-blocking ZeroMQ message handling
+* **Reactive Variables**: Automatic UI updates when values change including epoch display
+* **Router Communication**: Uses MQClient for router-based messaging
 * **State Management**: Centralized application state tracking
 * **Error Handling**: Graceful error recovery and user notification
+* **Epoch Tracking**: Real-time display of neural network training progress
 
 HydraGameBoard (Game Visualization)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,25 +88,33 @@ Custom Textual widget for real-time Snake game visualization:
 Communication Layer
 ~~~~~~~~~~~~~~~~~~~
 
-Handles all ZeroMQ communication with the AI Hydra server:
+Handles all router-based communication using MQClient:
 
 **Message Flow:**
 
-1. **Command Messages**: User actions → ZeroMQ REQ → Server
-2. **Status Updates**: Server → ZeroMQ REP → UI Updates
-3. **Heartbeat**: Periodic connection health checks
-4. **Error Handling**: Automatic reconnection and error recovery
+1. **Client Registration**: Automatic registration with router via heartbeat
+2. **Command Messages**: User actions → Router → Server
+3. **Status Updates**: Server → Router → UI Updates
+4. **Heartbeat Management**: Automatic heartbeat every 5 seconds
+5. **Error Handling**: Automatic reconnection and error recovery
+
+**Router Integration:**
+
+* **MQClient**: Uses unified client interface for router communication
+* **Heartbeat System**: Maintains registration with 5-second heartbeat interval
+* **Message Routing**: Messages routed through HydraRouter at port 5556
+* **Distributed Support**: Can connect to remote routers for distributed deployment
 
 **Supported Commands:**
 
-* ``ping``: Test server connectivity
+* ``ping``: Test server connectivity through router
 * ``start_simulation``: Begin simulation with configuration
 * ``stop_simulation``: Stop current simulation
 * ``pause_simulation``: Pause running simulation
 * ``resume_simulation``: Resume paused simulation
 * ``reset_simulation``: Reset simulation state
-* ``get_status``: Retrieve current status
-* ``heartbeat``: Maintain connection
+* ``get_status``: Retrieve current status including epoch information
+* ``heartbeat``: Maintain router registration
 
 Reactive System
 ---------------
