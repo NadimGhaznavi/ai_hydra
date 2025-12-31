@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "CHANGELOG Updater",
+  "description": "Automatically updates CHANGELOG.md with commit information when git commits are made",
+  "version": "1",
+  "when": {
+    "type": "agentExecutionCompleted",
+    "patterns": [
+      "*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check if any git commits were made during this execution. If commits were made, update the CHANGELOG.md file by adding the commit information to the '# Unreleased' section.\n\nSteps:\n1. Check git log for recent commits (last 5 commits): `git log --oneline -5`\n2. If new commits exist that aren't already in CHANGELOG.md, add them to the '# Unreleased' section\n3. Format commit entries under the appropriate subsection (Added/Changed/Fixed) based on the commit category:\n   - `feat`: Add to ### Added section\n   - `fix`: Add to ### Fixed section  \n   - `docs`: Add to ### Changed section\n   - `style`: Add to ### Changed section\n   - `refactor`: Add to ### Changed section\n   - `test`: Add to ### Added section (if new tests) or ### Changed section (if test updates)\n   - `chore`: Add to ### Changed section\n\n4. Format entries as:\n   - **Component**: Brief description of the change\n   - Use the commit message description, removing the category prefix\n   - Group related commits together when possible\n\n5. Maintain the existing format and structure of CHANGELOG.md\n6. Do not duplicate entries that are already present\n7. Only add entries for commits made in this session\n\nExample format:\n```\n### Added\n- **Router System**: Complete message routing between clients and servers\n- **TUI Features**: New epoch display in status widget\n\n### Fixed  \n- **Dependencies**: Resolved missing textual package error handling\n```\n\nOnly update the CHANGELOG.md if there are actually new commits to document."
+  },
+  "workspaceFolderName": "ai_hydra",
+  "shortName": "changelog-updater"
+}
