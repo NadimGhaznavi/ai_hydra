@@ -12,7 +12,6 @@ The AI Hydra project uses semantic versioning (MAJOR.MINOR.PATCH) and maintains 
 - Primary version source: ``pyproject.toml``
 - Python package versions: ``ai_hydra/__init__.py``, ``ai_hydra/tui/__init__.py``
 - Documentation version: ``docs/_source/conf.py``
-- Legacy setup file: ``setup.py`` (if present)
 
 Version Update Checklist
 -------------------------
