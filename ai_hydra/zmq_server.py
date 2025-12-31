@@ -479,11 +479,11 @@ class ZMQServer:
     def _run_simulation_thread(self) -> None:
         """Run the simulation in a background thread."""
         try:
-            # Create HydraMgr
+            # Create HydraMgr with proper logging configuration
             self.hydra_mgr = HydraMgr(
                 simulation_config=self.simulation_config,
                 network_config=NetworkConfig(),
-                logging_config=LoggingConfig(level="INFO")
+                logging_config=LoggingConfig(level=self.log_level)
             )
             
             # Run simulation

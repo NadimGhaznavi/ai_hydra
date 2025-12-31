@@ -100,10 +100,11 @@ class HeadlessServer:
         # Setup signal handlers
         self._setup_signal_handlers()
         
-        # Create and start ZeroMQ server
+        # Create and start ZeroMQ server with log level
         self.server = ZMQServer(
             bind_address=self.bind_address,
-            heartbeat_interval=self.heartbeat_interval
+            heartbeat_interval=self.heartbeat_interval,
+            log_level=self.log_level
         )
         
         try:
