@@ -464,6 +464,11 @@ Common Issues
     - Check that token usage information is available in the execution context
     - Review error logs for data collection issues
 
+**File Patterns Not Preserved**
+    - Use the debug script to test metadata collection: ``python debug_file_patterns.py``
+    - Check that hook context includes file_patterns field
+    - Verify MetadataCollector is handling context correctly
+
 **Performance Issues**
     - Consider reducing the maximum prompt length
     - Enable compression for large CSV files
@@ -473,6 +478,65 @@ Common Issues
     - Check for concurrent access issues
     - Verify CSV file integrity using validation tools
     - Restore from backup if available
+
+Debug and Validation Tools
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**File Patterns Debug Script**
+
+The project includes a specialized debug script for testing file patterns preservation:
+
+.. code-block:: bash
+
+    # Test file patterns preservation through the entire metadata collection chain
+    python debug_file_patterns.py
+
+This script tests three levels of the system:
+
+1. **MetadataCollector.get_hook_context()**: Direct hook context processing
+2. **MetadataCollector.collect_execution_metadata()**: Full metadata collection
+3. **TokenTracker integration**: End-to-end transaction recording
+
+**Expected output when working correctly:**
+
+.. code-block:: text
+
+    Testing file patterns preservation...
+    Input context: {'trigger_type': 'agentExecutionCompleted', 'hook_name': 'test-hook', 'file_patterns': ['*.py', '*.md', '*.txt']}
+
+    1. Testing MetadataCollector.get_hook_context()...
+    ✓ file_patterns found: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns match input
+
+    2. Testing MetadataCollector.collect_execution_metadata()...
+    ✓ file_patterns found in metadata: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns match input in full metadata
+
+    3. Testing TokenTracker integration...
+    ✓ file_patterns preserved in transaction
+
+    ✓ All tests passed!
+
+**Using the debug script for troubleshooting:**
+
+.. code-block:: bash
+
+    # Run debug script and capture output
+    python debug_file_patterns.py > debug_output.txt 2>&1
+    
+    # Check for specific issues
+    if python debug_file_patterns.py; then
+        echo "File patterns preservation working correctly"
+    else
+        echo "File patterns preservation has issues - check debug output"
+    fi
+
+**Integration with testing workflow:**
+
+.. code-block:: bash
+
+    # Include in test suite
+    pytest tests/ && python debug_file_patterns.py
 
 Diagnostic Commands
 ~~~~~~~~~~~~~~~~~~~

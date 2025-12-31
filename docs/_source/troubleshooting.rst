@@ -650,6 +650,67 @@ When reporting issues, collect this information:
     import json
     print(json.dumps(collect_debug_info(), indent=2))
 
+Debug and Diagnostic Scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The project includes specialized debug scripts for testing specific functionality:
+
+**Token Tracker File Patterns Debug Script**
+
+For issues related to token tracking metadata collection, use the file patterns debug script:
+
+.. code-block:: bash
+
+    # Test file patterns preservation in token tracking
+    python debug_file_patterns.py
+
+This script validates:
+
+* MetadataCollector hook context processing
+* Full metadata collection including file patterns
+* End-to-end transaction recording with file patterns
+
+**Expected successful output:**
+
+.. code-block:: text
+
+    Testing file patterns preservation...
+    
+    1. Testing MetadataCollector.get_hook_context()...
+    ✓ file_patterns found: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns match input
+    
+    2. Testing MetadataCollector.collect_execution_metadata()...
+    ✓ file_patterns found in metadata: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns match input in full metadata
+    
+    3. Testing TokenTracker integration...
+    ✓ file_patterns preserved in transaction
+    
+    ✓ All tests passed!
+
+**Troubleshooting with debug script:**
+
+.. code-block:: bash
+
+    # Run and capture output for analysis
+    python debug_file_patterns.py > token_debug.log 2>&1
+    
+    # Check exit code
+    if python debug_file_patterns.py; then
+        echo "Token tracking file patterns working correctly"
+    else
+        echo "Token tracking has issues - check token_debug.log"
+        cat token_debug.log
+    fi
+
+**Common debug script failure patterns:**
+
+* **"file_patterns not found in hook context"**: MetadataCollector.get_hook_context() not preserving file_patterns
+* **"file_patterns not found in full metadata"**: collect_execution_metadata() not including hook context properly
+* **"file_patterns not preserved in transaction"**: TokenTracker not storing metadata correctly
+* **"Transaction recording failed"**: CSV writing or validation issues
+
 Log Analysis
 ~~~~~~~~~~~~
 

@@ -196,6 +196,50 @@ Data Maintenance
           print(f'ERROR: CSV file validation failed: {e}')
       "
 
+4. **Test Token Tracking Components**
+
+   .. code-block:: bash
+
+      # Run comprehensive token tracking validation
+      python debug_file_patterns.py
+      
+      # Test specific components if needed
+      python -c "
+      from ai_hydra.token_tracker import TokenTracker
+      from ai_hydra.token_tracker.models import TrackerConfig
+      import tempfile
+      from pathlib import Path
+      
+      # Test with temporary file
+      with tempfile.TemporaryDirectory() as temp_dir:
+          config = TrackerConfig(csv_file_path=Path(temp_dir) / 'test.csv')
+          tracker = TokenTracker(config)
+          
+          # Test transaction recording
+          success = tracker.record_transaction(
+              prompt_text='Test transaction',
+              tokens_used=100,
+              elapsed_time=1.0,
+              context={'workspace_folder': 'test'}
+          )
+          
+          print(f'Token tracker test: {\"PASSED\" if success else \"FAILED\"}')
+      "
+      
+      # Validate Unicode handling
+      python -c "
+      from ai_hydra.token_tracker import TokenTracker
+      from ai_hydra.token_tracker.models import TrackerConfig
+      
+      config = TrackerConfig.create_for_testing()
+      tracker = TokenTracker(config)
+      
+      # Test Unicode compatibility
+      results = tracker.test_unicode_compatibility()
+      print(f'Unicode support: {\"PASSED\" if results[\"unicode_support_verified\"] else \"FAILED\"}')
+      print(f'Special chars: {\"PASSED\" if results[\"special_chars_handled\"] else \"FAILED\"}')
+      "
+
 Version Management
 ------------------
 
@@ -608,8 +652,42 @@ Common Issues and Solutions
    # Verify file permissions
    ls -la .kiro/
    
+   # Test file patterns preservation with debug script
+   python debug_file_patterns.py
+   
    # Check for error messages
    grep -i "token\|error" ~/.kiro/logs/kiro.log
+
+**File Patterns Not Being Preserved**
+
+.. code-block:: bash
+
+   # Run comprehensive file patterns debug test
+   python debug_file_patterns.py
+   
+   # If debug script fails, check specific components:
+   
+   # Test MetadataCollector directly
+   python -c "
+   from ai_hydra.token_tracker.metadata_collector import MetadataCollector
+   from ai_hydra.token_tracker.error_handler import TokenTrackerErrorHandler
+   
+   collector = MetadataCollector(TokenTrackerErrorHandler())
+   context = {'file_patterns': ['*.py', '*.md']}
+   result = collector.get_hook_context(context)
+   print(f'Hook context result: {result}')
+   "
+   
+   # Test full metadata collection
+   python -c "
+   from ai_hydra.token_tracker.metadata_collector import MetadataCollector
+   from ai_hydra.token_tracker.error_handler import TokenTrackerErrorHandler
+   
+   collector = MetadataCollector(TokenTrackerErrorHandler())
+   context = {'file_patterns': ['*.py'], 'trigger_type': 'test'}
+   metadata = collector.collect_execution_metadata(context)
+   print(f'Metadata file_patterns: {metadata.get(\"file_patterns\", \"NOT FOUND\")}')
+   "
 
 **Performance Issues**
 

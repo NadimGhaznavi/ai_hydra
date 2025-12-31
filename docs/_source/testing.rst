@@ -359,6 +359,62 @@ Documentation tests validate the integrity and accuracy of project documentation
 
 - **Documentation Test Suite** (``test_documentation.py``): Comprehensive documentation validation
 
+Debug and Diagnostic Scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The project includes specialized debug scripts for testing and validation:
+
+- **Token Tracker Debug Script** (``debug_file_patterns.py``): Tests file patterns preservation in metadata collection
+
+**Token Tracker Debug Script**
+
+The ``debug_file_patterns.py`` script provides comprehensive testing of the token tracking system's metadata collection chain:
+
+.. code-block:: bash
+
+    # Run the debug script
+    python debug_file_patterns.py
+
+**What it tests:**
+
+1. **MetadataCollector.get_hook_context()**: Verifies that file patterns are correctly extracted from hook context
+2. **MetadataCollector.collect_execution_metadata()**: Tests full metadata collection including file patterns
+3. **TokenTracker integration**: Validates end-to-end file patterns preservation through transaction recording
+
+**Example output:**
+
+.. code-block:: text
+
+    Testing file patterns preservation...
+    Input context: {'trigger_type': 'agentExecutionCompleted', 'hook_name': 'test-hook', 'file_patterns': ['*.py', '*.md', '*.txt']}
+
+    1. Testing MetadataCollector.get_hook_context()...
+    Hook context result: {'trigger_type': 'agentExecutionCompleted', 'hook_name': 'test-hook', 'file_patterns': ['*.py', '*.md', '*.txt']}
+    ✓ file_patterns found: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns match input
+
+    2. Testing MetadataCollector.collect_execution_metadata()...
+    Full metadata keys: ['timestamp', 'session_id', 'agent_execution_id', 'workspace_folder', 'hook_trigger_type', 'hook_name', 'file_patterns', ...]
+    ✓ file_patterns found in metadata: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns match input in full metadata
+
+    3. Testing TokenTracker integration...
+    Transaction recording result: True
+    Transaction file_patterns: ['*.py', '*.md', '*.txt']
+    ✓ file_patterns preserved in transaction
+
+    ✓ All tests passed!
+
+**Usage in development:**
+
+.. code-block:: bash
+
+    # Test file patterns preservation during development
+    python debug_file_patterns.py
+    
+    # Use in CI/CD pipeline for validation
+    python debug_file_patterns.py && echo "File patterns test passed"
+
 The documentation test suite provides automated validation of:
 
 **RST Syntax Validation**
