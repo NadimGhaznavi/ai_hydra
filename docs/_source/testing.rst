@@ -41,7 +41,10 @@ Tests are organized in the ``tests/`` directory with the following structure:
     tests/
     ├── __init__.py
     ├── property/                           # Property-based tests
-    │   └── test_efficiency_based_selection.py
+    │   ├── test_efficiency_based_selection.py
+    │   ├── test_token_tracker_data_validation.py
+    │   ├── test_token_tracker_error_recovery.py
+    │   └── test_token_tracker_special_characters.py
     ├── test_budget_controller.py           # Budget management tests
     ├── test_collision_avoidance_improvement.py  # AI improvement tests
     ├── test_deterministic_reproducibility.py    # Reproducibility tests
@@ -80,9 +83,47 @@ Property-Based Tests
 
 Property-based tests validate universal properties using generated test data:
 
+**Core System Properties:**
+
 - **Deterministic Reproducibility** (``test_deterministic_reproducibility.py``): Seed-based consistency
 - **GameBoard Cloning** (``test_game_board.py``): Perfect state copying and independence
 - **Efficiency-Based Selection** (``tests/property/test_efficiency_based_selection.py``): Optimal path selection
+
+**Token Tracking Properties:**
+
+- **Property 1: CSV Transaction Persistence** (``test_token_tracker_data_validation.py``): All valid transactions can be stored and retrieved correctly
+- **Property 2: Data Append Safety** (``test_token_tracker_data_validation.py``): Concurrent append operations preserve data integrity
+- **Property 5: Error Recovery Resilience** (``test_token_tracker_error_recovery.py``): System recovers gracefully from various error conditions
+- **Property 7: Special Character Handling** (``test_token_tracker_special_characters.py``): Unicode and CSV special characters are handled correctly
+- **Property 8: Data Validation Integrity** (``test_token_tracker_data_validation.py``): All data validation rules are enforced consistently
+
+**Token Tracking Property Test Examples:**
+
+.. code-block:: python
+
+    @given(
+        special_text=st.text(
+            alphabet=st.characters(
+                categories=("Lu", "Ll", "Nd", "Po", "Ps", "Pe"),
+                include_characters=["\n", "\r", "\t", '"', "'", ",", ";", "\\"]
+            ),
+            min_size=1,
+            max_size=500
+        ),
+        tokens_used=st.integers(min_value=1, max_value=10000),
+        elapsed_time=st.floats(min_value=0.001, max_value=60.0)
+    )
+    @settings(max_examples=100, deadline=3000)
+    def test_special_character_handling_property(self, special_text, tokens_used, elapsed_time):
+        """
+        **Feature: kiro-token-tracker, Property 7: Special Character Handling**
+        **Validates: Requirements 6.3, 6.4**
+
+        For any text containing special characters, newlines, or Unicode content,
+        the CSV encoding should preserve the text exactly and remain readable by
+        standard spreadsheet tools.
+        """
+        # Test implementation validates Unicode handling, CSV safety, and round-trip integrity
 
 Integration Tests
 ~~~~~~~~~~~~~~~~~
@@ -198,6 +239,117 @@ Performance Tests
 Performance tests validate system efficiency and resource usage:
 
 - **Collision Avoidance Improvement** (``test_collision_avoidance_improvement.py``): AI learning metrics
+
+Token Tracking Tests
+~~~~~~~~~~~~~~~~~~~~
+
+The token tracking system includes comprehensive testing for data integrity, error handling, and special character support:
+
+**Data Validation Tests:**
+
+.. code-block:: python
+
+    def test_transaction_validation():
+        """Test comprehensive transaction data validation."""
+        config = TrackerConfig.create_for_testing()
+        tracker = TokenTracker(config)
+        
+        # Test valid transaction
+        success = tracker.record_transaction(
+            prompt_text="Valid prompt text",
+            tokens_used=150,
+            elapsed_time=1.5,
+            context={"workspace_folder": "test_project"}
+        )
+        assert success
+        
+        # Test invalid data handling
+        success = tracker.record_transaction(
+            prompt_text="",  # Empty prompt should be rejected
+            tokens_used=-10,  # Negative tokens should be rejected
+            elapsed_time=-1.0,  # Negative time should be rejected
+            context={}
+        )
+        assert not success
+
+**CSV Integrity Tests:**
+
+.. code-block:: python
+
+    def test_csv_file_integrity():
+        """Test CSV file creation and validation."""
+        config = TrackerConfig.create_for_testing()
+        tracker = TokenTracker(config)
+        
+        # Record multiple transactions
+        for i in range(10):
+            tracker.record_transaction(
+                prompt_text=f"Test prompt {i}",
+                tokens_used=100 + i,
+                elapsed_time=1.0 + i * 0.1,
+                context={"workspace_folder": "test"}
+            )
+        
+        # Validate CSV integrity
+        integrity_results = tracker.validate_csv_integrity()
+        assert integrity_results["file_exists"]
+        assert integrity_results["header_valid"]
+        assert integrity_results["valid_rows"] == 10
+        assert integrity_results["invalid_rows"] == 0
+
+**Unicode and Special Character Tests:**
+
+.. code-block:: python
+
+    def test_unicode_compatibility():
+        """Test Unicode and special character handling."""
+        config = TrackerConfig.create_for_testing()
+        tracker = TokenTracker(config)
+        
+        # Test various Unicode and special characters
+        test_strings = [
+            "Hello, 世界! 🌍",  # Chinese and emoji
+            "Café résumé naïve",  # Accented characters
+            'Text with "quotes" and commas, semicolons;',  # CSV special chars
+            "Text with\nnewlines\rand\ttabs",  # Control characters
+            "Math symbols: ∑∏∫∆∇∂∞±≤≥≠≈",  # Mathematical symbols
+        ]
+        
+        unicode_results = tracker.test_unicode_compatibility()
+        assert unicode_results["unicode_support_verified"]
+        assert unicode_results["special_chars_handled"]
+        assert unicode_results["round_trip_successful"]
+
+**Error Recovery Tests:**
+
+.. code-block:: python
+
+    def test_error_recovery():
+        """Test system resilience to various error conditions."""
+        config = TrackerConfig.create_for_testing()
+        tracker = TokenTracker(config)
+        
+        # Test file permission errors
+        with mock.patch('builtins.open', side_effect=PermissionError("Access denied")):
+            success = tracker.record_transaction(
+                prompt_text="Test during permission error",
+                tokens_used=100,
+                elapsed_time=1.0,
+                context={}
+            )
+            # Should handle gracefully and continue operation
+            assert isinstance(success, bool)
+        
+        # Test disk space errors
+        with mock.patch('pathlib.Path.stat', side_effect=OSError("No space left")):
+            success = tracker.record_transaction(
+                prompt_text="Test during disk space error",
+                tokens_used=100,
+                elapsed_time=1.0,
+                context={}
+            )
+            # Should handle gracefully
+            assert isinstance(success, bool)
 - **Parallel NN Lifecycle** (``test_parallel_nn_lifecycle.py``): Resource management efficiency
 
 Documentation Tests

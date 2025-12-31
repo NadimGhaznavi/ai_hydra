@@ -3,6 +3,17 @@ Token Tracking System
 
 The Token Tracking System provides comprehensive monitoring and analysis of AI token usage within the Kiro IDE environment. This system automatically captures token consumption data from AI interactions and stores it in a structured format for analysis and optimization.
 
+.. note::
+   **Implementation Status**: Core functionality is complete and operational. The system includes:
+   
+   * ✅ Core data models (TokenTransaction, TrackerConfig)
+   * ✅ Thread-safe CSV operations with file locking
+   * ✅ Token tracker service with validation and error handling
+   * ✅ Special character and Unicode handling
+   * ✅ Comprehensive property-based testing
+   * 🔄 Metadata collection system (in progress)
+   * 🔄 Agent hook integration (in progress)
+
 Overview
 --------
 
@@ -17,51 +28,90 @@ The Token Tracking System consists of several key components:
 Key Features
 ------------
 
-* **Automatic Token Tracking**: Seamlessly captures token usage without manual intervention
-* **Comprehensive Metadata**: Records detailed context including workspace, hook triggers, and execution IDs
-* **CSV-Based Storage**: Standard format compatible with spreadsheet and analysis tools
-* **Concurrent Access Safety**: Thread-safe operations for multi-user environments
-* **Error Resilience**: Graceful error handling that doesn't interrupt normal workflows
-* **Configurable Operation**: Enable/disable tracking and customize behavior
+**Implemented Features:**
+
+* **Core Data Models**: Robust TokenTransaction and TrackerConfig classes with validation
+* **Thread-Safe CSV Operations**: Concurrent access protection with file locking mechanisms
+* **Transaction Persistence**: Reliable CSV-based storage with data integrity validation
+* **Special Character Handling**: Comprehensive Unicode and CSV special character support
+* **Error Resilience**: Graceful error handling with recovery mechanisms
+* **Configurable Operation**: Flexible configuration with validation and defaults
+* **Property-Based Testing**: Comprehensive test coverage with universal correctness properties
+
+**Planned Features:**
+
+* **Automatic Token Tracking**: Seamless capture via Kiro IDE agent hooks (in development)
+* **Comprehensive Metadata**: Detailed context from Kiro IDE environment (in development)
+* **Agent Hook Integration**: Automatic triggering system (in development)
+* **Concurrent Access Safety**: Advanced multi-process coordination (in development)
 
 Architecture
 ------------
 
-Token Transaction Flow
-~~~~~~~~~~~~~~~~~~~~~~~
+Current Implementation Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The implemented core system consists of:
+
+.. mermaid::
+
+   graph TD
+       A[TokenTransaction] --> B[TokenTracker Service]
+       B --> C[CSVWriter]
+       C --> D[CSV File Storage]
+       
+       E[TrackerConfig] --> B
+       F[ErrorHandler] --> B
+       F --> C
+       
+       G[Property Tests] --> A
+       G --> B
+       G --> C
+
+**Implemented Components:**
+
+**TokenTransaction Model**
+    Immutable data class representing a single token usage event with comprehensive validation and CSV serialization.
+
+**TokenTracker Service**
+    Core service that processes token transactions, validates data, and coordinates CSV operations with error handling.
+
+**CSVWriter Component**
+    Thread-safe CSV operations with file locking, transaction serialization, and Unicode/special character handling.
+
+**TrackerConfig**
+    Configuration management with validation, defaults, and environment-specific settings.
+
+**ErrorHandler**
+    Comprehensive error management with recovery mechanisms and graceful degradation.
+
+Planned Integration Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The complete system will include:
 
 .. mermaid::
 
    graph TD
        A[Kiro IDE Event] --> B[Agent Hook Trigger]
-       B --> C[Metadata Collector]
-       C --> D[Token Tracker Service]
-       D --> E[CSV Writer]
+       B --> C[MetadataCollector]
+       C --> D[TokenTracker Service]
+       D --> E[CSVWriter]
        E --> F[Transaction History]
        
-       G[Error Handler] --> D
+       G[ErrorHandler] --> D
        G --> E
        
        H[Configuration] --> B
        H --> D
 
-Component Responsibilities
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Planned Components:**
 
-**Token Tracker Service**
-    Core service responsible for processing token transactions, validating data, and coordinating with other components.
+**MetadataCollector** (In Development)
+    Gathers contextual information from the Kiro IDE environment including workspace details and execution metadata.
 
-**Agent Hook Integration**
+**Agent Hook Integration** (In Development)
     Monitors Kiro IDE events and automatically triggers token tracking when AI interactions occur.
-
-**CSV Writer**
-    Thread-safe component that handles writing transaction data to CSV files with proper locking mechanisms.
-
-**Metadata Collector**
-    Gathers contextual information from the Kiro IDE environment including workspace details, hook context, and execution metadata.
-
-**Error Handler**
-    Manages system failures and provides fallback mechanisms to ensure reliable operation.
 
 Data Model
 ----------
@@ -131,12 +181,13 @@ Configuration
 Token Tracker Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The token tracking system can be configured through the ``TrackerConfig`` class:
+The token tracking system is configured through the ``TrackerConfig`` class:
 
 .. code-block:: python
 
    from ai_hydra.token_tracker.models import TrackerConfig
    
+   # Basic configuration
    config = TrackerConfig(
        enabled=True,                           # Enable/disable tracking
        csv_file_path=".kiro/token_transactions.csv",  # CSV file location
@@ -144,13 +195,70 @@ The token tracking system can be configured through the ``TrackerConfig`` class:
        backup_enabled=True,                    # Enable automatic backups
        backup_interval_hours=24,               # Backup frequency
        compression_enabled=False,              # Compress archived files
-       retention_days=365                      # Data retention period
+       retention_days=365,                     # Data retention period
+       auto_create_directories=True,           # Create directories if needed
+       file_lock_timeout_seconds=5.0,          # File locking timeout
+       enable_validation=True,                 # Enable data validation
+       log_level="INFO"                        # Logging level
    )
+   
+   # Environment-specific configurations
+   
+   # Development configuration
+   dev_config = TrackerConfig.create_for_testing()
+   
+   # Production configuration
+   prod_config = TrackerConfig.create_for_production()
+   
+   # Validate configuration
+   issues = config.validate()
+   if issues:
+       print(f"Configuration issues: {issues}")
 
-Agent Hook Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~
+**Configuration Options:**
 
-The agent hook can be configured through a ``.kiro.hook`` file:
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Parameter
+     - Type
+     - Description
+   * - enabled
+     - bool
+     - Enable or disable token tracking
+   * - csv_file_path
+     - Path
+     - Location of the CSV file for storing transactions
+   * - max_prompt_length
+     - int
+     - Maximum length of prompt text to store (truncated if longer)
+   * - backup_enabled
+     - bool
+     - Whether to create automatic backups
+   * - backup_interval_hours
+     - int
+     - Hours between automatic backups
+   * - retention_days
+     - int
+     - Number of days to retain transaction data
+   * - auto_create_directories
+     - bool
+     - Automatically create directories if they don't exist
+   * - file_lock_timeout_seconds
+     - float
+     - Timeout for acquiring file locks
+   * - enable_validation
+     - bool
+     - Enable data validation before storing transactions
+   * - log_level
+     - str
+     - Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
+Agent Hook Configuration (Coming Soon)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The agent hook will be configured through a ``.kiro.hook`` file:
 
 .. code-block:: json
 
@@ -171,35 +279,10 @@ The agent hook can be configured through a ``.kiro.hook`` file:
 Usage
 -----
 
-Basic Usage
-~~~~~~~~~~~
+Current Usage (Core System)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The token tracking system operates automatically once configured. Here's how to set it up:
-
-1. **Install the Token Tracker**:
-
-   .. code-block:: bash
-
-      # The token tracker is included with ai_hydra
-      pip install -e .
-
-2. **Configure the Hook**:
-
-   Create a ``.kiro/hooks/token-tracking.kiro.hook`` file with the appropriate configuration.
-
-3. **Verify Operation**:
-
-   Check that the CSV file is being created and populated:
-
-   .. code-block:: bash
-
-      ls -la .kiro/token_transactions.csv
-      head .kiro/token_transactions.csv
-
-Programmatic Usage
-~~~~~~~~~~~~~~~~~~
-
-You can also use the token tracker programmatically:
+The core token tracking system can be used programmatically:
 
 .. code-block:: python
 
@@ -207,26 +290,93 @@ You can also use the token tracker programmatically:
    from ai_hydra.token_tracker.models import TokenTransaction, TrackerConfig
    from datetime import datetime
    
-   # Initialize tracker
-   config = TrackerConfig(csv_file_path="my_tokens.csv")
+   # Initialize tracker with configuration
+   config = TrackerConfig(
+       csv_file_path=".kiro/token_transactions.csv",
+       max_prompt_length=1000,
+       backup_enabled=True,
+       enable_validation=True
+   )
    tracker = TokenTracker(config)
    
-   # Record a transaction
-   transaction = TokenTransaction(
-       timestamp=datetime.now(),
-       prompt_text="Analyze this code",
+   # Record a transaction manually
+   success = tracker.record_transaction(
+       prompt_text="Analyze this code for improvements",
        tokens_used=150,
        elapsed_time=1.5,
-       session_id="session_123",
-       workspace_folder="my_project",
-       hook_trigger_type="manual",
-       agent_execution_id="exec_456",
-       hook_name="manual-tracking"
+       context={
+           "workspace_folder": "my_project",
+           "hook_trigger_type": "manual",
+           "session_id": "session_123"
+       }
    )
    
-   success = tracker.record_transaction(transaction)
    if success:
        print("Transaction recorded successfully")
+   
+   # Retrieve transaction history
+   history = tracker.get_transaction_history(limit=10)
+   for transaction in history:
+       print(f"Tokens: {transaction.tokens_used}, Time: {transaction.elapsed_time}s")
+   
+   # Get system statistics
+   stats = tracker.get_statistics()
+   print(f"Total transactions: {stats['transactions_recorded']}")
+   print(f"Total tokens tracked: {stats['total_tokens_tracked']}")
+
+**Special Character and Unicode Support:**
+
+.. code-block:: python
+
+   # The system handles Unicode and special characters automatically
+   success = tracker.record_transaction(
+       prompt_text="Analyze this: 中文, émojis 😀, and \"quotes\"",
+       tokens_used=75,
+       elapsed_time=0.8,
+       context={"workspace_folder": "unicode_test"}
+   )
+   
+   # Test Unicode compatibility
+   unicode_results = tracker.test_unicode_compatibility()
+   print(f"Unicode support verified: {unicode_results['unicode_support_verified']}")
+
+**CSV File Validation:**
+
+.. code-block:: python
+
+   # Validate CSV file integrity
+   integrity_results = tracker.validate_csv_integrity()
+   print(f"File exists: {integrity_results['file_exists']}")
+   print(f"Valid rows: {integrity_results['valid_rows']}")
+   print(f"Total rows: {integrity_results['total_rows']}")
+
+Planned Usage (Full System)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once the agent hook integration is complete, the system will operate automatically:
+
+1. **Install and Configure**:
+
+   .. code-block:: bash
+
+      # The token tracker is included with ai_hydra
+      pip install -e .
+
+2. **Configure the Hook** (Coming Soon):
+
+   Create a ``.kiro/hooks/token-tracking.kiro.hook`` file with the appropriate configuration.
+
+3. **Automatic Operation**:
+
+   The system will automatically track token usage from all AI interactions in the Kiro IDE.
+
+4. **Monitor and Analyze**:
+
+   .. code-block:: bash
+
+      # Check the CSV file
+      ls -la .kiro/token_transactions.csv
+      head .kiro/token_transactions.csv
 
 Data Analysis
 ~~~~~~~~~~~~~
@@ -374,14 +524,80 @@ Integration Best Practices
 API Reference
 -------------
 
-For detailed API documentation, see the :doc:`api_reference` section covering:
+The current implementation provides the following API components:
 
-* ``TokenTracker`` class methods and properties
-* ``TokenTransaction`` data model
-* ``TrackerConfig`` configuration options
-* ``MetadataCollector`` interface
-* ``ErrorHandler`` methods
-* ``CSVWriter`` functionality
+Core Classes
+~~~~~~~~~~~~
+
+**TokenTracker**
+    Main service class for recording and retrieving token transactions.
+    
+    Key methods:
+    
+    * ``record_transaction(prompt_text, tokens_used, elapsed_time, context=None) -> bool``
+    * ``get_transaction_history(filters=None, limit=None) -> List[TokenTransaction]``
+    * ``get_statistics() -> Dict[str, Any]``
+    * ``validate_csv_integrity() -> Dict[str, Any]``
+    * ``test_unicode_compatibility() -> Dict[str, Any]``
+    * ``create_backup() -> Optional[Path]``
+    * ``export_data(output_path, format='csv', filters=None) -> bool``
+
+**TokenTransaction**
+    Immutable data class representing a single token usage event.
+    
+    Key methods:
+    
+    * ``create_new(prompt_text, tokens_used, elapsed_time, workspace_folder, hook_trigger_type, **kwargs) -> TokenTransaction``
+    * ``to_csv_row() -> List[str]``
+    * ``from_csv_row(row: List[str]) -> TokenTransaction``
+    * ``get_summary() -> Dict[str, Any]``
+
+**TrackerConfig**
+    Configuration class with validation and environment-specific presets.
+    
+    Key methods:
+    
+    * ``create_default() -> TrackerConfig``
+    * ``create_for_testing() -> TrackerConfig``
+    * ``create_for_production() -> TrackerConfig``
+    * ``validate() -> List[str]``
+    * ``to_dict() -> Dict[str, Any]``
+    * ``from_dict(config_dict: Dict[str, Any]) -> TrackerConfig``
+
+**CSVWriter**
+    Thread-safe CSV operations with file locking and Unicode support.
+    
+    Key methods:
+    
+    * ``write_transaction(transaction: TokenTransaction) -> bool``
+    * ``write_transactions_batch(transactions: List[TokenTransaction]) -> int``
+    * ``read_transactions(limit: Optional[int] = None) -> List[TokenTransaction]``
+    * ``validate_csv_integrity() -> Dict[str, Any]``
+    * ``validate_unicode_handling(test_strings: List[str]) -> Dict[str, Any]``
+    * ``create_backup() -> Optional[Path]``
+
+**ErrorHandler**
+    Comprehensive error management with recovery mechanisms.
+    
+    Key methods:
+    
+    * ``handle_csv_write_error(error, file_path, transaction)``
+    * ``handle_csv_read_error(error, file_path)``
+    * ``handle_validation_error(issues, transaction)``
+    * ``get_error_statistics() -> Dict[str, Any]``
+
+Property-Based Testing
+~~~~~~~~~~~~~~~~~~~~~~
+
+The system includes comprehensive property-based tests that validate:
+
+* **Property 1: CSV Transaction Persistence** - All valid transactions can be stored and retrieved
+* **Property 2: Data Append Safety** - Concurrent append operations preserve data integrity  
+* **Property 5: Error Recovery Resilience** - System recovers gracefully from various error conditions
+* **Property 7: Special Character Handling** - Unicode and CSV special characters are handled correctly
+* **Property 8: Data Validation Integrity** - All data validation rules are enforced consistently
+
+For complete API documentation with detailed method signatures and examples, see the auto-generated API reference.
 
 See Also
 --------
