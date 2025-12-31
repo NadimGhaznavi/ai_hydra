@@ -166,3 +166,48 @@ Command Line Interface
    :members:
    :undoc-members:
    :show-inheritance:
+
+Token Tracking System
+---------------------
+
+The token tracking system provides comprehensive monitoring of AI token usage within the Kiro IDE environment.
+
+Core Token Tracker
+~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: ai_hydra.token_tracker.tracker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Data Models
+~~~~~~~~~~~
+
+.. automodule:: ai_hydra.token_tracker.models
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+CSV Writer
+~~~~~~~~~~
+
+.. automodule:: ai_hydra.token_tracker.csv_writer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Metadata Collection
+~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: ai_hydra.token_tracker.metadata_collector
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Error Handling
+~~~~~~~~~~~~~~
+
+.. automodule:: ai_hydra.token_tracker.error_handler
+   :members:
+   :undoc-members:
+   :show-inheritance:

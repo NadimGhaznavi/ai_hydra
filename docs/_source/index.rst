@@ -11,8 +11,10 @@ Welcome to the AI Hydra documentation. This system implements an AI agent that u
    architecture
    decision_flow
    zmq_protocol
+   token_tracking
    deployment
    testing
+   runbook
    version_update_procedure
    troubleshooting
    api_reference

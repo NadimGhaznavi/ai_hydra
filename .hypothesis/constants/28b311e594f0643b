@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/token_tracker/csv_writer.py
+# hypothesis_version: 6.148.8
+
+[0.1, 100, 3600, 'CSV file is empty', 'a', 'fallback_path', 'file_exists', 'file_readable', 'file_size_bytes', 'file_writable', 'header_valid', 'headers', 'invalid_rows', 'r', 'rb', 'total_rows', 'utf-8', 'valid_rows', 'validation_issues', 'w', 'wb']

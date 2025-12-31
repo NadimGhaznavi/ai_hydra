@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/token_tracker/models.py
+# hypothesis_version: 6.148.8
+
+[1.0, 5.0, 10.0, 365, 1000, 3650, 10000, '"', '""', '%Y%m%d_%H%M%S', ',', '...[truncated]', ';', 'CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'TokenTransaction', 'TrackerConfig', 'WARNING', '\\n', '\\r', 'a', 'agent_execution_id', 'backup_enabled', 'compression_enabled', 'csv_file_path', 'elapsed_time', 'enable_validation', 'enabled', 'error_message', 'error_occurred', 'false', 'file_patterns', 'file_patterns_count', 'has_error', 'hook_name', 'hook_trigger_type', 'hook_type', 'log_level', 'max_prompt_length', 'prompt_length', 'prompt_text', 'retention_days', 'session_id', 'timestamp', 'tokens_used', 'true', 'unknown', 'workspace', 'workspace_folder']
