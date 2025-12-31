@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Hook integration testing with real Kiro IDE event simulation
 
 ### Changed
+- **Documentation Dependencies**: Added myst-parser>=2.0.0 for Markdown support in Sphinx documentation
 - **Project Structure**: Complete reorganization following directory layout standards
   - Moved development tools from root directory to categorized `tools/` subdirectories
   - Reorganized 21 test files by type (unit, property-based, integration) for better test management
