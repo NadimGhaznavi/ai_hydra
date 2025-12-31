@@ -4,6 +4,8 @@
 
 Successfully implemented the epoch display feature for the AI Hydra TUI client as specified in Requirements 3.5 and 3.6. The epoch display shows the current game number (epoch) in the status widget, helping users track AI training progress across multiple games.
 
+**✅ Production Ready**: This implementation works with the production `ai-hydra-tui` command installed via `pip install ai-hydra`.
+
 ## Implementation Details
 
 ### 1. Core Implementation Changes
@@ -24,7 +26,15 @@ Successfully implemented the epoch display feature for the AI Hydra TUI client a
 - **Implemented epoch progression**: Epoch increments every 20 moves to demonstrate functionality
 - **Enhanced game simulation**: Shows realistic epoch progression during demo
 
-### 3. Comprehensive Test Suite
+### 3. Production Integration
+
+**File: `pyproject.toml`**
+
+- **CLI Entry Point**: `ai-hydra-tui = "ai_hydra.tui.client:main"`
+- **Dependencies**: Includes `textual>=0.41.0` and `rich>=13.0.0` in `[project.optional-dependencies.tui]`
+- **Installation**: Available via `pip install ai-hydra[tui]` or included in full installation
+
+### 4. Comprehensive Test Suite
 
 #### Unit Tests (`tests/unit/test_tui_status_display.py`)
 - Status display initialization with correct defaults
@@ -83,7 +93,24 @@ Successfully implemented the epoch display feature for the AI Hydra TUI client a
 
 ## Usage Instructions
 
-### Running the Demo
+### Production Usage (Recommended)
+```bash
+# Install AI Hydra with TUI support
+pip install ai-hydra[tui]
+
+# Start the headless server (in one terminal)
+ai-hydra-server
+
+# Start the TUI client (in another terminal)
+ai-hydra-tui --server tcp://localhost:5555
+```
+
+1. Click "Start" to begin simulation
+2. Watch the "Epoch" field in the status panel
+3. Epoch increments when new games start
+4. Click "Reset" to see epoch return to 0
+
+### Development/Demo Usage
 ```bash
 python demo_tui.py
 ```
@@ -162,9 +189,10 @@ Server Game State → process_status_update() → current_epoch reactive var →
 
 The epoch display feature has been successfully implemented with:
 - ✅ **Complete requirements compliance**
+- ✅ **Production integration** with `ai-hydra-tui` command
 - ✅ **Comprehensive test coverage** (unit, property-based, integration)
 - ✅ **Robust error handling**
 - ✅ **Clean architecture integration**
 - ✅ **Production-ready code quality**
 
-The feature is ready for production use and provides valuable insight into AI training progress by showing the current game number (epoch) in the TUI status display.
+The feature is ready for production use and provides valuable insight into AI training progress by showing the current game number (epoch) in the TUI status display. Users can access this feature immediately using the standard `ai-hydra-tui` command after installing or updating their AI Hydra installation.
