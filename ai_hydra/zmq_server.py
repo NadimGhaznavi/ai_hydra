@@ -654,8 +654,8 @@ async def main():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Create and start server
-    server = ZMQServer(bind_address=args.bind, heartbeat_interval=args.heartbeat)
+    # Create and start server with log level
+    server = ZMQServer(bind_address=args.bind, heartbeat_interval=args.heartbeat, log_level=args.log_level)
     
     try:
         await server.start()

@@ -36,29 +36,38 @@ class SimulationLogger:
     
     def _setup_logger(self) -> None:
         """Set up the logger with the specified configuration."""
-        # Clear any existing handlers
-        self.logger.handlers.clear()
+        # Use hierarchical logger name for proper inheritance
+        if not self.logger.name.startswith("ai_hydra."):
+            self.logger = logging.getLogger(f"ai_hydra.{self.logger.name}")
         
-        # Set log level
-        level = getattr(logging, self.config.level.upper())
-        self.logger.setLevel(level)
+        # Only set level if it's different from root logger to allow inheritance
+        root_logger = logging.getLogger()
+        desired_level = getattr(logging, self.config.level.upper())
         
-        # Create formatter
-        formatter = logging.Formatter(self.config.format)
+        # If root logger has a more restrictive level, use that instead
+        if root_logger.level > desired_level:
+            self.logger.setLevel(root_logger.level)
+        else:
+            self.logger.setLevel(desired_level)
         
-        # Console handler
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(formatter)
-        self.logger.addHandler(console_handler)
+        # Only add handlers if they don't already exist to avoid duplication
+        if not self.logger.handlers:
+            # Create formatter
+            formatter = logging.Formatter(self.config.format)
+            
+            # Console handler
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setFormatter(formatter)
+            self.logger.addHandler(console_handler)
+            
+            # File handler if specified
+            if self.config.log_file:
+                file_handler = logging.FileHandler(self.config.log_file)
+                file_handler.setFormatter(formatter)
+                self.logger.addHandler(file_handler)
         
-        # File handler if specified
-        if self.config.log_file:
-            file_handler = logging.FileHandler(self.config.log_file)
-            file_handler.setFormatter(formatter)
-            self.logger.addHandler(file_handler)
-        
-        # Prevent propagation to root logger
-        self.logger.propagate = False
+        # Allow propagation to root logger for proper hierarchy
+        self.logger.propagate = True
     
     def log_clone_step(self, clone_id: str, result: str, reward: int, score: int) -> None:
         """
