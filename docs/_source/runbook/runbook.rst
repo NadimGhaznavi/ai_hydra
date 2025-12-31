@@ -1,7 +1,31 @@
 Operations Runbook
 ==================
 
-This runbook provides operational procedures for managing the AI Hydra project lifecycle using Kiro IDE. It includes token tracking usage, version management, deployment procedures, and SDLC management tasks.
+This runbook provides operational procedures for managing the AI Hydra project lifecycle using Kiro IDE. It includes token tracking usage, version management, deployment procedures, and comprehensive SDLC management tasks.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Operational Procedures
+
+   token_tracking
+   version_update_procedure
+   sdlc_procedures
+   deployment_maintenance
+
+Quick Reference
+---------------
+
+**Essential Operations:**
+- :doc:`token_tracking` - Complete token tracking system usage guide
+- :doc:`version_update_procedure` - Version management and release procedures  
+- :doc:`sdlc_procedures` - Software development lifecycle management
+- :doc:`deployment_maintenance` - Production deployment and maintenance
+
+**Emergency Procedures:**
+- Service recovery and troubleshooting
+- Data backup and restoration
+- Performance optimization
+- Security incident response
 
 Token Tracking Operations
 -------------------------

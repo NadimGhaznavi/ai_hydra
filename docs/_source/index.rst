@@ -30,8 +30,10 @@ Quick Links
 ⚙️ **Operations Runbook**
    Procedures for project management and maintenance using Kiro IDE.
    
-   * :doc:`runbook/token_tracking` - Token usage monitoring
-   * :doc:`runbook/version_update_procedure` - Release procedures
+   * :doc:`runbook/token_tracking` - Complete token usage monitoring guide
+   * :doc:`runbook/version_update_procedure` - Version management and release procedures
+   * :doc:`runbook/sdlc_procedures` - Software development lifecycle management
+   * :doc:`runbook/deployment_maintenance` - Production deployment and maintenance
    * :doc:`runbook/deployment` - Deployment instructions
    * :doc:`runbook/testing` - Testing procedures and standards
    * :doc:`runbook/runbook` - General operational procedures
