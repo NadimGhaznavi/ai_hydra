@@ -229,17 +229,18 @@ fi
 
 echo ""
 print_success "Version update completed successfully!"
-print_status "Backup created in: $BACKUP_DIR"
 
 echo ""
 echo "📋 Next Steps:"
-echo "1. Review the changes: git diff"
+echo "1. Review all changes: git diff"
 echo "2. Review CHANGELOG.md to ensure release notes are complete"
 echo "3. Run tests: pytest tests/"
 echo "4. Build documentation: cd docs && make html"
 echo "5. Commit changes: git add . && git commit -m 'Release version $NEW_VERSION'"
 echo "6. Create tag: git tag -a v$NEW_VERSION -m 'Release version $NEW_VERSION'"
 echo "7. Push changes: git push origin main --tags"
+echo ""
+echo "💡 Tip: Use 'git checkout .' to revert all changes if needed"
 
 echo ""
 print_status "Version update process complete! 🎉"
