@@ -26,14 +26,28 @@ When an AI agent modifies files during development, the following automated git 
 [optional footer]
 ```
 
-**Types:**
-- `feat`: New feature implementation
-- `fix`: Bug fixes
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring without functionality changes
-- `test`: Adding or modifying tests
-- `chore`: Maintenance tasks, build changes, etc.
+**MANDATORY COMMIT CATEGORIES:**
+
+All commits MUST use one of the following standardized categories:
+
+| Category   | Description |
+|------------|-------------|
+| `feat`     | A new feature. |
+| `fix`      | A bug fix. |
+| `docs`     | Documentation only changes. |
+| `style`    | Formatting changes, not code changes. |
+| `refactor` | Code changes that neither fixes a bug nor adds a feature. |
+| `test`     | Adding or refactoring Tests. |
+| `chore`    | Build process or auxiliary tool changes. |
+
+**Category Selection Guidelines:**
+- Use `feat` for any new functionality, components, or capabilities
+- Use `fix` for bug fixes, error corrections, or issue resolutions
+- Use `docs` for documentation-only changes (README, comments, guides)
+- Use `style` for code formatting, whitespace, or style-only changes
+- Use `refactor` for code restructuring without changing functionality
+- Use `test` for adding, modifying, or fixing tests
+- Use `chore` for build scripts, dependencies, or maintenance tasks
 
 **Examples:**
 ```bash

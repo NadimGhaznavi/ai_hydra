@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Git Commit Category Validation",
+  "description": "Validates that all git commits use the mandatory commit categories (feat, fix, docs, style, refactor, test, chore) as defined in git-conventions.md",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before committing any changes, ensure that all git commits follow the mandatory commit categories defined in .kiro/steering/git-conventions.md:\n\n**MANDATORY COMMIT CATEGORIES:**\n- `feat`: A new feature\n- `fix`: A bug fix\n- `docs`: Documentation only changes\n- `style`: Formatting changes, not code changes\n- `refactor`: Code changes that neither fixes a bug nor adds a feature\n- `test`: Adding or refactoring Tests\n- `chore`: Build process or auxiliary tool changes\n\n**Required Format:**\n```\n<type>(<scope>): <description>\n\n[optional body]\n```\n\n**Examples:**\n- `feat(logging): add new log level propagation system`\n- `fix(server): resolve connection timeout issues`\n- `docs(api): update API documentation for new endpoints`\n- `test(integration): add comprehensive integration test suite`\n\nWhen staging and committing files, you MUST:\n1. Choose the appropriate category from the list above\n2. Use the format: `<category>(<scope>): <description>`\n3. Provide a clear, descriptive commit message\n4. Include detailed body if the change is complex\n\nDo NOT use generic commit messages or categories outside the approved list."
+  },
+  "workspaceFolderName": "ai_hydra",
+  "shortName": "git-commit-validation"
+}
