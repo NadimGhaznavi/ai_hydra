@@ -152,15 +152,15 @@ This implementation plan converts the token tracking system design into a series
     - Add deployment and maintenance procedures
     - _Requirements: 4.1, 4.3, 4.4_
 
-- [ ] 12. Update steering documentation
-  - [ ] 12.1 Create token tracking standards document
+- [x] 12. Update steering documentation
+  - [x] 12.1 Create token tracking standards document
     - Add token-tracking-standards.md to .kiro/steering/
     - Define CSV format specifications and standards
     - Include agent hook configuration guidelines
     - Add troubleshooting guidance and best practices
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 13. Implement backup and maintenance features
+- [-] 13. Implement backup and maintenance features
   - [ ] 13.1 Add CSV file rotation and backup functionality
     - Implement automatic file rotation when CSV becomes large
     - Add backup creation with configurable retention
