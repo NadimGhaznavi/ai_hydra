@@ -38,7 +38,8 @@ class MockHydraServer:
             "score": 0,
             "moves_count": 0,
             "grid_size": [20, 20],
-            "is_game_over": False
+            "is_game_over": False,
+            "epoch": 1
         }
         
         self.simulation_state = "idle"
@@ -111,7 +112,8 @@ class MockHydraServer:
                 "score": 0,
                 "moves_count": 0,
                 "grid_size": [20, 20],
-                "is_game_over": False
+                "is_game_over": False,
+                "epoch": 1
             }
             return {"success": True, "message": "Simulation reset"}
             
@@ -167,6 +169,18 @@ class MockHydraServer:
             
             move_count += 1
             self.game_state["moves_count"] = move_count
+            
+            # Simulate game over and epoch increment every 20 moves
+            if move_count % 20 == 0:
+                self.game_state["is_game_over"] = True
+                self.game_state["epoch"] += 1
+                # Reset for next epoch
+                self.game_state["snake_head"] = [10, 10]
+                self.game_state["snake_body"] = [[9, 10], [8, 10], [7, 10]]
+                self.game_state["score"] = 0
+                self.game_state["moves_count"] = 0
+                self.game_state["is_game_over"] = False
+                move_count = 0
             
             # Wait before next move
             await asyncio.sleep(0.5)  # Move every 500ms

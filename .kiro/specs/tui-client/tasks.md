@@ -110,13 +110,13 @@ This implementation plan creates a sophisticated Terminal User Interface (TUI) c
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6**
 
 - [ ] 7. Implement status and performance displays
-  - [ ] 7.1 Create StatusDisplayWidget for real-time information
+  - [x] 7.1 Create StatusDisplayWidget for real-time information
     - Add score, moves, snake length, runtime displays
     - Implement high score highlighting
     - Add automatic update mechanisms
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ] 7.2 Write property test for status display
+  - [x] 7.2 Write property test for status display
     - **Property 5: Status Information Display**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
 

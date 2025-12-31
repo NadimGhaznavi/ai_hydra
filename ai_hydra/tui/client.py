@@ -61,6 +61,7 @@ class HydraClient(App):
     snake_length = var(3)
     moves_count = var(0)
     runtime_seconds = var(0)
+    current_epoch = var(0)
     
     def __init__(self, server_address: str = "tcp://localhost:5555"):
         super().__init__()
@@ -144,6 +145,10 @@ class HydraClient(App):
             Horizontal(
                 Label("Snake Length:", classes="status_label"),
                 Label("3", id="snake_length", classes="status_value")
+            ),
+            Horizontal(
+                Label("Epoch:", classes="status_label"),
+                Label("0", id="current_epoch", classes="status_value")
             ),
             Horizontal(
                 Label("Runtime:", classes="status_label"),
@@ -251,6 +256,9 @@ class HydraClient(App):
                     
                     self.moves_count = game_state.get("moves_count", 0)
                     
+                    # Update epoch from game state
+                    self.current_epoch = game_state.get("epoch", 0)
+                    
                     # Update game board
                     if self.game_board:
                         await self.game_board.update_game_state(game_state)
@@ -340,6 +348,7 @@ class HydraClient(App):
             self.snake_length = 3
             self.moves_count = 0
             self.runtime_seconds = 0
+            self.current_epoch = 0
             
             # Clear game board
             if self.game_board:
@@ -448,6 +457,14 @@ class HydraClient(App):
         try:
             runtime_label = self.query_one("#runtime", Label)
             runtime_label.update(self.format_runtime(new_time))
+        except Exception:
+            pass
+    
+    def watch_current_epoch(self, old_epoch: int, new_epoch: int) -> None:
+        """React to epoch changes."""
+        try:
+            epoch_label = self.query_one("#current_epoch", Label)
+            epoch_label.update(str(new_epoch))
         except Exception:
             pass
     
