@@ -44,6 +44,8 @@ Tests are organized in the ``tests/`` directory with the following structure:
     │   ├── test_efficiency_based_selection.py
     │   ├── test_token_tracker_data_validation.py
     │   ├── test_token_tracker_error_recovery.py
+    │   ├── test_token_tracker_hook_integration.py
+    │   ├── test_token_tracker_configuration_management.py
     │   └── test_token_tracker_special_characters.py
     ├── test_budget_controller.py           # Budget management tests
     ├── test_collision_avoidance_improvement.py  # AI improvement tests
@@ -93,7 +95,9 @@ Property-based tests validate universal properties using generated test data:
 
 - **Property 1: CSV Transaction Persistence** (``test_token_tracker_data_validation.py``): All valid transactions can be stored and retrieved correctly
 - **Property 2: Data Append Safety** (``test_token_tracker_data_validation.py``): Concurrent append operations preserve data integrity
+- **Property 4: Hook-Tracker Integration** (``test_token_tracker_hook_integration.py``): Agent hook automatically triggers token tracking and records complete metadata
 - **Property 5: Error Recovery Resilience** (``test_token_tracker_error_recovery.py``): System recovers gracefully from various error conditions
+- **Property 6: Configuration State Management** (``test_token_tracker_configuration_management.py``): Hook maintains consistent configuration state and supports runtime updates
 - **Property 7: Special Character Handling** (``test_token_tracker_special_characters.py``): Unicode and CSV special characters are handled correctly
 - **Property 8: Data Validation Integrity** (``test_token_tracker_data_validation.py``): All data validation rules are enforced consistently
 
@@ -136,7 +140,7 @@ Integration tests validate component interactions:
 - **Headless Operation** (``test_headless_operation.py``): ZeroMQ server functionality
 
 Decision Flow Testing
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 The enhanced decision flow architecture with 9 distinct states requires comprehensive testing:
 
@@ -350,6 +354,98 @@ The token tracking system includes comprehensive testing for data integrity, err
             )
             # Should handle gracefully
             assert isinstance(success, bool)
+
+**Configuration Management Tests:**
+
+.. code-block:: python
+
+    @given(
+        enabled=st.booleans(),
+        max_prompt_length=st.integers(min_value=10, max_value=5000),
+        backup_enabled=st.booleans(),
+        log_level=st.sampled_from(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
+    )
+    @settings(max_examples=50, deadline=3000)
+    def test_configuration_state_consistency_property(
+        self, enabled, max_prompt_length, backup_enabled, log_level
+    ):
+        """
+        **Property 6: Configuration State Management**
+        **Validates: Requirements 2.5**
+        
+        For any valid configuration parameters, the hook should:
+        1. Accept the configuration update
+        2. Maintain consistent internal state
+        3. Reflect changes in subsequent operations
+        4. Preserve configuration across enable/disable cycles
+        """
+        hook = TokenTrackingHook()
+        
+        try:
+            # Create new configuration with test parameters
+            new_config = TrackerConfig(
+                enabled=enabled,
+                max_prompt_length=max_prompt_length,
+                backup_enabled=backup_enabled,
+                log_level=log_level,
+            )
+            
+            # Configuration update should succeed for valid parameters
+            update_success = hook.update_configuration(new_config)
+            assert update_success, f"Configuration update failed for valid parameters"
+            
+            # Hook state should reflect the new configuration
+            current_config = hook.get_configuration()
+            assert current_config["enabled"] == enabled
+            assert current_config["max_prompt_length"] == max_prompt_length
+            assert current_config["backup_enabled"] == backup_enabled
+            assert current_config["log_level"] == log_level
+            
+            # Hook enabled state should match configuration enabled state
+            assert hook.is_enabled == enabled
+            
+            # Configuration should be consistent across multiple reads
+            config_read_1 = hook.get_configuration()
+            config_read_2 = hook.get_configuration()
+            assert config_read_1 == config_read_2
+            
+            # Enable/disable operations should preserve other configuration
+            if enabled:
+                hook.disable()
+                assert not hook.is_enabled
+                disabled_config = hook.get_configuration()
+                # All other settings should remain the same
+                assert disabled_config["max_prompt_length"] == max_prompt_length
+                assert disabled_config["backup_enabled"] == backup_enabled
+                assert disabled_config["log_level"] == log_level
+                
+                hook.enable()
+                assert hook.is_enabled
+                enabled_config = hook.get_configuration()
+                # All other settings should still be preserved
+                assert enabled_config["max_prompt_length"] == max_prompt_length
+                assert enabled_config["backup_enabled"] == backup_enabled
+                assert enabled_config["log_level"] == log_level
+            
+            # Configuration validation should work correctly
+            validation_result = hook.validate_configuration()
+            assert isinstance(validation_result, dict)
+            assert "valid" in validation_result
+            assert "issues" in validation_result
+            assert isinstance(validation_result["issues"], list)
+            
+        finally:
+            hook.cleanup()
+
+The configuration management tests validate that the TokenTrackingHook can:
+
+* **Accept valid configuration updates** at runtime without requiring system restart
+* **Maintain consistent internal state** across all configuration operations
+* **Preserve configuration values** during enable/disable cycles
+* **Handle partial configuration changes** while preserving unchanged values
+* **Support file persistence** for configuration save/load operations
+* **Validate configuration** and provide meaningful error messages
+* **Handle invalid configurations** gracefully without corrupting system state
 - **Parallel NN Lifecycle** (``test_parallel_nn_lifecycle.py``): Resource management efficiency
 
 Documentation Tests

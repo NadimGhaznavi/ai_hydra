@@ -312,7 +312,7 @@ Requirement 15: Decision Flow Architecture
 15. THE system SHALL ensure that each decision cycle state is idempotent and can be safely retried in case of transient failures
 
 Requirement 16: Enhanced Budget Management with Round Completion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **User Story:** As a performance engineer, I want budget management that allows current rounds to complete even when budget is exhausted, so that all clones in a round receive fair exploration opportunity and prevent bias toward earlier clones.
 
@@ -343,7 +343,7 @@ Requirement 17: Neural Network Oracle Training System
 8. THE system SHALL track neural network learning progress and provide metrics on prediction improvement over time
 
 Requirement 18: Documentation Integrity and Validation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **User Story:** As a developer and maintainer, I want automated validation of project documentation to ensure accuracy, consistency, and build integrity, so that documentation remains reliable and up-to-date with the codebase.
 
@@ -379,7 +379,7 @@ Requirement 19: Router-Based Message Routing System
 10. THE HydraRouter SHALL log all routing activities including client connections, disconnections, and message routing statistics
 
 Requirement 20: MQClient Generic Communication Interface
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **User Story:** As a developer, I want a unified client interface for router communication that supports both client and server roles, so that all components can communicate through the router using a consistent API with automatic connection management.
 
@@ -397,7 +397,7 @@ Requirement 20: MQClient Generic Communication Interface
 10. THE MQClient SHALL provide comprehensive error handling with informative error messages and recovery guidance
 
 Requirement 21: Enhanced TUI Epoch Display Integration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **User Story:** As a user monitoring AI training progress, I want to see the current epoch number displayed in the TUI status widget, so that I can track training progress and understand the AI's learning state in real-time.
 
@@ -415,7 +415,7 @@ Requirement 21: Enhanced TUI Epoch Display Integration
 10. THE epoch display SHALL maintain consistency with the AI agent's actual epoch tracking
 
 Requirement 22: Comprehensive Router System Testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **User Story:** As a quality assurance engineer, I want comprehensive test coverage for the router system including unit tests, property-based tests, integration tests, and end-to-end tests, so that the router system is reliable, robust, and maintains high quality standards.
 
@@ -457,6 +457,11 @@ Requirement 24: Agent Hook Integration for Token Tracking
 3. THE Agent_Hook SHALL invoke the Token_Tracker to record the transaction
 4. THE Agent_Hook SHALL handle errors gracefully without interrupting normal workflow
 5. THE Agent_Hook SHALL be configurable to enable/disable automatic tracking
+6. THE Agent_Hook SHALL support runtime configuration updates without requiring system restart
+7. THE Agent_Hook SHALL maintain consistent configuration state across enable/disable operations
+8. THE Agent_Hook SHALL provide configuration validation with meaningful error messages
+9. THE Agent_Hook SHALL support partial configuration changes while preserving unchanged values
+10. THE Agent_Hook SHALL support configuration persistence to and from JSON files
 
 Requirement 25: Enhanced Token Metadata Capture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -524,7 +529,7 @@ Requirement 29: Documentation Runbook Creation
 5. THE Documentation_Runbook SHALL be easily maintainable and updatable
 
 Requirement 30: Steering Documentation Integration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **User Story:** As a developer, I want token tracking guidelines in the steering documentation, so that the system follows consistent practices.
 

@@ -1,8 +1,8 @@
 {
   "enabled": true,
   "name": "Auto Git Commit",
-  "description": "Automatically checks in modified files with git when any file is edited, using proper commit categories",
-  "version": "2",
+  "description": "Automatically checks in modified files with git when any file is edited, using proper commit categories, and updates CHANGELOG.md",
+  "version": "3",
   "when": {
     "type": "fileEdited",
     "patterns": [
@@ -11,7 +11,7 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Check in the modified files with git using the mandatory commit categories defined in .kiro/steering/git-conventions.md. You MUST use one of these categories:\n\n- `feat`: A new feature\n- `fix`: A bug fix\n- `docs`: Documentation only changes\n- `style`: Formatting changes, not code changes\n- `refactor`: Code changes that neither fixes a bug nor adds a feature\n- `test`: Adding or refactoring Tests\n- `chore`: Build process or auxiliary tool changes\n\nFormat: `<category>(<scope>): <description>`\n\nSteps:\n1. Use `git add .` to stage all changes\n2. Analyze the changes to determine the appropriate category\n3. Use `git commit -m \"<category>(<scope>): <description>\"` with proper categorization\n4. Include detailed body in commit message if changes are complex\n\nExample: `git commit -m \"fix(logging): resolve log level propagation issue\"`"
+    "prompt": "Check in the modified files with git using the mandatory commit categories defined in .kiro/steering/git-conventions.md. You MUST use one of these categories:\n\n- `feat`: A new feature\n- `fix`: A bug fix\n- `docs`: Documentation only changes\n- `style`: Formatting changes, not code changes\n- `refactor`: Code changes that neither fixes a bug nor adds a feature\n- `test`: Adding or refactoring Tests\n- `chore`: Build process or auxiliary tool changes\n\nFormat: `<category>(<scope>): <description>`\n\nSteps:\n1. Use `git add .` to stage all changes\n2. Analyze the changes to determine the appropriate category\n3. Use `git commit -m \"<category>(<scope>): <description>\"` with proper categorization\n4. Include detailed body in commit message if changes are complex\n5. **AFTER COMMITTING**: Update CHANGELOG.md by adding the commit information to the 'Unreleased' section:\n   - Add to ### Added section for `feat` and new `test` commits\n   - Add to ### Fixed section for `fix` commits\n   - Add to ### Changed section for `docs`, `style`, `refactor`, test updates, and `chore` commits\n   - Format as: **Component**: Brief description of the change\n   - Only add if the commit represents a significant user-facing change\n\nExample: `git commit -m \"fix(logging): resolve log level propagation issue\"`\n\nThe CHANGELOG update should be automatic as part of this process - no need to call a separate hook."
   },
   "workspaceFolderName": "ai_hydra",
   "shortName": "auto-git-commit"

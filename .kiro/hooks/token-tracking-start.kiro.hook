@@ -1,0 +1,31 @@
+{
+  "enabled": true,
+  "name": "Token Tracker Start Hook",
+  "description": "Tracks the start of AI agent executions to initialize token usage monitoring",
+  "version": "1.0.0",
+  "when": {
+    "type": "agentExecutionStarted",
+    "patterns": ["*"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "An AI agent execution is starting. Please initialize token usage tracking for this execution.\n\nSteps to perform:\n1. Import TokenTrackingHook from ai_hydra.token_tracker.hook\n2. Create or get existing hook instance with default configuration\n3. Extract execution context from the current execution start event\n4. Call on_agent_execution_start() method to initialize tracking\n5. Store execution context for later use when execution completes\n\n**Context to capture:**\n- execution_id: Unique identifier for this execution\n- trigger_type: 'agentExecutionStarted'\n- workspace_folder: Current workspace folder name\n- session_id: Current Kiro IDE session identifier\n- file_patterns: File patterns that triggered the execution (if applicable)\n- hook_name: Name of the hook that triggered this execution\n- user_message: User message if this was triggered by user input\n- timestamp: Execution start timestamp\n\n**Error Handling:**\n- Handle all errors gracefully without interrupting workflow\n- Log errors for troubleshooting\n- Continue operation even if tracking initialization fails\n- Use graceful degradation for non-critical failures\n\n**Performance Requirements:**\n- Complete within 1 second maximum\n- Don't block the main UI thread\n- Handle concurrent executions safely\n\nExample usage:\n```python\nfrom ai_hydra.token_tracker.hook import TokenTrackingHook\nfrom ai_hydra.token_tracker.models import TrackerConfig\n\n# Initialize hook\nconfig = TrackerConfig.create_default()\nhook = TokenTrackingHook(config)\n\n# Initialize tracking for execution start\ncontext = {\n    'execution_id': 'exec_123',\n    'trigger_type': 'agentExecutionStarted',\n    'workspace_folder': 'ai_hydra',\n    'session_id': 'sess_456',\n    'file_patterns': ['*.py'],\n    'hook_name': 'token-tracker-start'\n}\nhook.on_agent_execution_start(context)\n```\n\nThis operation should be completely transparent and prepare the system for token tracking when the execution completes."
+  },
+  "configuration": {
+    "enabled": true,
+    "track_execution_start": true,
+    "error_handling": "graceful",
+    "log_level": "INFO"
+  },
+  "error_handling": {
+    "on_initialization_error": "log_and_continue",
+    "on_context_error": "log_and_continue",
+    "on_unexpected_error": "log_and_continue"
+  },
+  "performance": {
+    "max_execution_time_seconds": 1.0,
+    "memory_limit_mb": 25
+  },
+  "workspaceFolderName": "ai_hydra",
+  "shortName": "token-tracker-start"
+}

@@ -357,7 +357,7 @@ class TrackerConfig:
     Configuration for the token tracking system.
 
     This class encapsulates all configuration options for the token tracker,
-    including file paths, limits, and behavior settings.
+    including file paths, limits, behavior settings, and concurrent access safety.
     """
 
     enabled: bool = True
@@ -372,6 +372,14 @@ class TrackerConfig:
     max_concurrent_writes: int = 10
     enable_validation: bool = True
     log_level: str = "INFO"
+
+    # Enhanced concurrent access safety options
+    enable_transaction_queuing: bool = True
+    queue_max_size: int = 100
+    deadlock_detection_enabled: bool = True
+    max_lock_wait_time_seconds: float = 10.0
+    error_backoff_enabled: bool = True
+    process_lock_enabled: bool = True
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -389,6 +397,12 @@ class TrackerConfig:
 
         if self.max_concurrent_writes < 1:
             raise ValueError("max_concurrent_writes must be at least 1")
+
+        if self.queue_max_size < 1:
+            raise ValueError("queue_max_size must be at least 1")
+
+        if self.max_lock_wait_time_seconds <= 0:
+            raise ValueError("max_lock_wait_time_seconds must be positive")
 
         # Convert string path to Path object
         if isinstance(self.csv_file_path, str):
@@ -424,6 +438,10 @@ class TrackerConfig:
             file_lock_timeout_seconds=1.0,
             max_concurrent_writes=5,
             log_level="DEBUG",
+            enable_transaction_queuing=False,  # Disable queuing for simpler testing
+            queue_max_size=10,
+            max_lock_wait_time_seconds=2.0,
+            error_backoff_enabled=False,  # Disable backoff for faster tests
         )
 
     @classmethod
@@ -443,6 +461,10 @@ class TrackerConfig:
             file_lock_timeout_seconds=10.0,
             max_concurrent_writes=20,
             log_level="INFO",
+            enable_transaction_queuing=True,
+            queue_max_size=200,
+            max_lock_wait_time_seconds=30.0,
+            error_backoff_enabled=True,
         )
 
     def get_csv_file_path(self) -> Path:
@@ -522,6 +544,14 @@ class TrackerConfig:
         if self.file_lock_timeout_seconds > 60:
             issues.append("file_lock_timeout_seconds is very large, may cause delays")
 
+        if self.max_lock_wait_time_seconds > 300:  # 5 minutes
+            issues.append(
+                "max_lock_wait_time_seconds is very large, may cause deadlocks"
+            )
+
+        if self.queue_max_size > 1000:
+            issues.append("queue_max_size is very large, may cause memory issues")
+
         return issues
 
     def to_dict(self) -> Dict[str, Any]:
@@ -544,6 +574,12 @@ class TrackerConfig:
             "max_concurrent_writes": self.max_concurrent_writes,
             "enable_validation": self.enable_validation,
             "log_level": self.log_level,
+            "enable_transaction_queuing": self.enable_transaction_queuing,
+            "queue_max_size": self.queue_max_size,
+            "deadlock_detection_enabled": self.deadlock_detection_enabled,
+            "max_lock_wait_time_seconds": self.max_lock_wait_time_seconds,
+            "error_backoff_enabled": self.error_backoff_enabled,
+            "process_lock_enabled": self.process_lock_enabled,
         }
 
     @classmethod

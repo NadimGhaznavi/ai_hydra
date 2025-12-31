@@ -1,0 +1,2 @@
+timestamp,prompt_text,tokens_used,elapsed_time,session_id,workspace_folder,hook_trigger_type,agent_execution_id,file_patterns,hook_name,error_occurred,error_message
+2025-12-31T08:47:41.969958,Test prompt for hook functionality,150,0.10986709594726562,664dfbcf-0cb7-499d-8dbe-45ddaae194cf,ai_hydra,manual_test,8a6bf279-d3b1-4350-8f0b-ddf5adeb0c4c,*.py,test_hook,false,

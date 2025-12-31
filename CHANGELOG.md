@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Token Tracker System**: Complete implementation of comprehensive token usage tracking system
+  - Core data models (TokenTransaction, TrackerConfig) with validation and CSV serialization
+  - Thread-safe CSV operations with file locking and concurrent access protection
+  - Token tracker service with validation, error handling, and transaction history
+  - Special character and Unicode handling for international text support
+  - Comprehensive property-based testing with universal correctness properties
+  - Metadata collection system for workspace and execution context gathering
+  - Agent hook integration with automatic token tracking on AI interactions
+  - Configuration management with runtime updates and state consistency
+  - Debug utilities for file patterns preservation testing
+
+### Changed
+- **Documentation**: Comprehensive updates for token tracking system
+  - Updated token tracking documentation with configuration management features
+  - Enhanced testing documentation with new property-based tests
+  - Updated requirements documentation with extended agent hook capabilities
+  - Added API reference documentation for TokenTrackingHook class
+
+### Fixed
+- **Token Tracker**: Enhanced error recovery and resilience mechanisms
+  - Graceful handling of file system errors and permission issues
+  - Robust CSV integrity validation and corruption prevention
+  - Improved metadata collection with fallback for missing context
+
 ## [Release 0.7.1] - 2025-12-30 23:37
 
 

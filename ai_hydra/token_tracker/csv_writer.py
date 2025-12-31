@@ -16,6 +16,12 @@ from contextlib import contextmanager
 import logging
 import datetime as dt
 from datetime import timedelta
+import queue
+import signal
+import tempfile
+import hashlib
+from concurrent.futures import ThreadPoolExecutor, Future
+import weakref
 
 from .models import TokenTransaction, TrackerConfig, CSVSchema
 from .error_handler import (
@@ -30,10 +36,11 @@ from .error_handler import (
 
 class CSVWriter:
     """
-    Thread-safe CSV writer for token transactions.
+    Thread-safe CSV writer for token transactions with enhanced concurrent access safety.
 
-    This class provides safe, concurrent access to CSV files with proper
-    locking, validation, and error handling mechanisms.
+    This class provides safe, concurrent access to CSV files with robust
+    locking, validation, error handling, and transaction queuing mechanisms
+    for high-concurrency scenarios.
     """
 
     def __init__(
@@ -43,7 +50,7 @@ class CSVWriter:
         logger: Optional[logging.Logger] = None,
     ):
         """
-        Initialize the CSV writer.
+        Initialize the CSV writer with enhanced concurrent access safety.
 
         Args:
             config: Tracker configuration
@@ -55,10 +62,35 @@ class CSVWriter:
         self.logger = logger or logging.getLogger(__name__)
         self.schema = CSVSchema()
 
-        # Thread safety - use RLock for reentrant locking
+        # Enhanced thread safety - use RLock for reentrant locking
         self._write_lock = threading.RLock()
         self._active_locks: Dict[str, threading.Lock] = {}
         self._lock_manager_lock = threading.Lock()  # Protects _active_locks dict
+
+        # Transaction queuing for high-concurrency scenarios
+        self._transaction_queue: queue.Queue = queue.Queue(
+            maxsize=config.queue_max_size
+        )
+        self._queue_processor_thread: Optional[threading.Thread] = None
+        self._queue_shutdown_event = threading.Event()
+        self._queue_enabled = config.enable_transaction_queuing
+
+        # Deadlock prevention
+        self._lock_acquisition_timeout = config.file_lock_timeout_seconds
+        self._max_lock_wait_time = config.max_lock_wait_time_seconds
+        self._lock_holders: Dict[str, threading.Thread] = {}
+        self._lock_acquisition_times: Dict[str, float] = {}
+        self._deadlock_detection_enabled = config.deadlock_detection_enabled
+
+        # Process-level locking with timeout handling
+        self._process_locks: Dict[str, Any] = {}
+        self._lock_files: Dict[str, Any] = {}
+        self._process_lock_enabled = config.process_lock_enabled
+
+        # Concurrent write protection
+        self._active_writers = 0
+        self._max_concurrent_writers = config.max_concurrent_writes
+        self._writer_semaphore = threading.Semaphore(self._max_concurrent_writers)
 
         # File management
         self._last_backup_time: Optional[dt.datetime] = None
@@ -67,14 +99,126 @@ class CSVWriter:
         # Transaction serialization/deserialization support
         self._serialization_lock = threading.Lock()
 
+        # Enhanced error tracking for concurrent operations
+        self._concurrent_error_count = 0
+        self._last_error_time: Optional[float] = None
+        self._error_backoff_time = 0.1
+        self._error_backoff_enabled = config.error_backoff_enabled
+
         # Initialize CSV file if needed
         self._initialize_csv_file()
 
-        self.logger.info(f"CSVWriter initialized for {self.config.get_csv_file_path()}")
+        # Start transaction queue processor if queuing is enabled
+        if self._queue_enabled:
+            self._start_queue_processor()
 
-    def write_transaction(self, transaction: TokenTransaction) -> bool:
+        self.logger.info(
+            f"Enhanced CSVWriter initialized for {self.config.get_csv_file_path()}"
+        )
+
+    def __del__(self):
+        """Cleanup resources when CSVWriter is destroyed."""
+        self._shutdown_queue_processor()
+
+    def _start_queue_processor(self) -> None:
+        """Start the background thread for processing queued transactions."""
+        if (
+            self._queue_processor_thread is None
+            or not self._queue_processor_thread.is_alive()
+        ):
+            self._queue_shutdown_event.clear()
+            self._queue_processor_thread = threading.Thread(
+                target=self._process_transaction_queue,
+                name="CSVWriter-QueueProcessor",
+                daemon=True,
+            )
+            self._queue_processor_thread.start()
+            self.logger.debug("Transaction queue processor started")
+
+    def _shutdown_queue_processor(self) -> None:
+        """Shutdown the background queue processor thread."""
+        if self._queue_processor_thread and self._queue_processor_thread.is_alive():
+            self._queue_shutdown_event.set()
+
+            # Add a sentinel value to wake up the processor
+            try:
+                self._transaction_queue.put(None, timeout=1.0)
+            except queue.Full:
+                pass
+
+            # Wait for thread to finish
+            self._queue_processor_thread.join(timeout=5.0)
+            if self._queue_processor_thread.is_alive():
+                self.logger.warning("Queue processor thread did not shutdown cleanly")
+            else:
+                self.logger.debug("Transaction queue processor shutdown")
+
+    def _process_transaction_queue(self) -> None:
+        """Background thread function to process queued transactions."""
+        self.logger.debug("Transaction queue processor started")
+
+        while not self._queue_shutdown_event.is_set():
+            try:
+                # Get transaction from queue with timeout
+                transaction = self._transaction_queue.get(timeout=1.0)
+
+                # Check for shutdown sentinel
+                if transaction is None:
+                    break
+
+                # Process the transaction
+                try:
+                    success = self._write_transaction_direct(transaction)
+                    if not success:
+                        self.logger.warning(
+                            f"Failed to process queued transaction: {transaction.get_summary()}"
+                        )
+                except Exception as e:
+                    self.logger.error(f"Error processing queued transaction: {e}")
+                finally:
+                    self._transaction_queue.task_done()
+
+            except queue.Empty:
+                # Timeout occurred, check shutdown event and continue
+                continue
+            except Exception as e:
+                self.logger.error(f"Unexpected error in queue processor: {e}")
+
+        self.logger.debug("Transaction queue processor finished")
+
+    def write_transaction_queued(self, transaction: TokenTransaction) -> bool:
         """
-        Write a single transaction to the CSV file.
+        Write a transaction using the queue for high-concurrency scenarios.
+
+        Args:
+            transaction: Transaction to write
+
+        Returns:
+            bool: True if transaction was queued successfully, False otherwise
+        """
+        if not self._queue_enabled:
+            return self.write_transaction(transaction)
+
+        try:
+            # Try to add to queue with timeout
+            self._transaction_queue.put(
+                transaction, timeout=self._lock_acquisition_timeout
+            )
+            self.logger.debug(f"Transaction queued: {transaction.get_summary()}")
+            return True
+
+        except queue.Full:
+            self.logger.warning(
+                "Transaction queue is full, falling back to direct write"
+            )
+            return self.write_transaction(transaction)
+        except Exception as e:
+            self.logger.error(f"Failed to queue transaction: {e}")
+            return False
+
+    def _write_transaction_direct(self, transaction: TokenTransaction) -> bool:
+        """
+        Write transaction directly without using the queue.
 
         Args:
             transaction: Transaction to write
@@ -82,26 +226,314 @@ class CSVWriter:
         Returns:
             bool: True if write was successful, False otherwise
         """
+        return self._write_transaction_with_concurrency_control(transaction)
+
+    def write_transaction(self, transaction: TokenTransaction) -> bool:
+        """
+        Write a single transaction to the CSV file with enhanced concurrent access safety.
+
+        Args:
+            transaction: Transaction to write
+
+        Returns:
+            bool: True if write was successful, False otherwise
+        """
+        return self._write_transaction_with_concurrency_control(transaction)
+
+    def _write_transaction_with_concurrency_control(
+        self, transaction: TokenTransaction
+    ) -> bool:
+        """
+        Write transaction with enhanced concurrency control and deadlock prevention.
+
+        Args:
+            transaction: Transaction to write
+
+        Returns:
+            bool: True if write was successful, False otherwise
+        """
+        # Acquire writer semaphore to limit concurrent writers
+        acquired = self._writer_semaphore.acquire(
+            timeout=self._lock_acquisition_timeout
+        )
+        if not acquired:
+            self.logger.warning(
+                "Failed to acquire writer semaphore, too many concurrent writers"
+            )
+            # Try queuing if available
+            if self._queue_enabled:
+                return self.write_transaction_queued(transaction)
+            return False
+
         try:
+            self._active_writers += 1
+
+            # Apply error backoff if we've had recent errors
+            if self._should_apply_error_backoff():
+                time.sleep(self._error_backoff_time)
+
             with self._write_lock:
-                return self._write_transaction_locked(transaction)
+                return self._write_transaction_locked_enhanced(transaction)
 
         except Exception as e:
-            recovery_result = self.error_handler.handle_csv_write_error(
-                e, self.config.get_csv_file_path(), transaction
+            self._handle_concurrent_write_error(e, transaction)
+            return False
+        finally:
+            self._active_writers -= 1
+            self._writer_semaphore.release()
+
+    def _write_transaction_locked_enhanced(self, transaction: TokenTransaction) -> bool:
+        """Write transaction with existing lock held and enhanced error handling."""
+        csv_path = self.config.get_csv_file_path()
+
+        try:
+            # Check disk space
+            self._check_disk_space(transaction)
+
+            # Create backup if needed
+            if self.config.should_create_backup(self._last_backup_time):
+                self.create_backup()
+
+            # Write transaction with enhanced file locking
+            with self._acquire_enhanced_file_lock(csv_path, "a"):
+                with open(csv_path, "a", newline="", encoding="utf-8") as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(transaction.to_csv_row())
+                    csvfile.flush()  # Ensure data is written immediately
+                    os.fsync(csvfile.fileno())  # Force OS to write to disk
+
+            self.logger.debug(f"Transaction written: {transaction.get_summary()}")
+            self._reset_error_backoff()
+            return True
+
+        except Exception as e:
+            self._increment_error_count()
+            self.logger.error(f"Failed to write transaction: {e}")
+            raise
+
+    def _should_apply_error_backoff(self) -> bool:
+        """Check if error backoff should be applied based on recent errors."""
+        if not self._error_backoff_enabled:
+            return False
+
+        if self._concurrent_error_count == 0:
+            return False
+
+        if self._last_error_time is None:
+            return False
+
+        # Apply backoff if we've had errors in the last 10 seconds
+        time_since_error = time.time() - self._last_error_time
+        return time_since_error < 10.0
+
+    def _increment_error_count(self) -> None:
+        """Increment error count and update backoff time."""
+        self._concurrent_error_count += 1
+        self._last_error_time = time.time()
+
+        # Exponential backoff up to 2 seconds
+        self._error_backoff_time = min(
+            0.1 * (2 ** min(self._concurrent_error_count - 1, 4)), 2.0
+        )
+
+    def _reset_error_backoff(self) -> None:
+        """Reset error backoff after successful operation."""
+        self._concurrent_error_count = 0
+        self._error_backoff_time = 0.1
+
+    def _handle_concurrent_write_error(
+        self, error: Exception, transaction: TokenTransaction
+    ) -> None:
+        """Handle errors that occur during concurrent write operations."""
+        self._increment_error_count()
+
+        recovery_result = self.error_handler.handle_csv_write_error(
+            error, self.config.get_csv_file_path(), transaction
+        )
+
+        if recovery_result.success and recovery_result.should_retry:
+            # Try again with recovered data or fallback path
+            try:
+                self._write_transaction_with_fallback(transaction, recovery_result)
+            except Exception as retry_error:
+                self.logger.error(f"Retry write failed: {retry_error}")
+
+    @contextmanager
+    def _acquire_enhanced_file_lock(self, file_path: Path, mode: str):
+        """
+        Acquire file lock with enhanced timeout handling and deadlock prevention.
+
+        This method provides thread-safe and process-safe file locking
+        with proper timeout handling, deadlock prevention, and resource cleanup.
+        """
+        lock_key = str(file_path)
+        current_thread = threading.current_thread()
+
+        # Thread-safe lock management with deadlock detection
+        with self._lock_manager_lock:
+            if lock_key not in self._active_locks:
+                self._active_locks[lock_key] = threading.Lock()
+            file_lock = self._active_locks[lock_key]
+
+            # Check for potential deadlock if detection is enabled
+            if self._deadlock_detection_enabled and lock_key in self._lock_holders:
+                holder = self._lock_holders[lock_key]
+                if holder != current_thread and holder.is_alive():
+                    # Check if lock has been held too long
+                    hold_time = time.time() - self._lock_acquisition_times.get(
+                        lock_key, 0
+                    )
+                    if hold_time > self._max_lock_wait_time:
+                        self.logger.warning(
+                            f"Potential deadlock detected for {file_path}, lock held for {hold_time:.2f}s"
+                        )
+                        raise FileLockError(
+                            f"Potential deadlock detected for {file_path}",
+                            file_path,
+                            hold_time,
+                        )
+
+        # Acquire thread lock with timeout
+        acquired = file_lock.acquire(timeout=self._lock_acquisition_timeout)
+        if not acquired:
+            raise FileLockError(
+                f"Failed to acquire thread lock for {file_path}",
+                file_path,
+                self._lock_acquisition_timeout,
             )
 
-            if recovery_result.success and recovery_result.should_retry:
-                # Try again with recovered data or fallback path
-                try:
-                    return self._write_transaction_with_fallback(
-                        transaction, recovery_result
-                    )
-                except Exception as retry_error:
-                    self.logger.error(f"Retry write failed: {retry_error}")
-                    return False
+        # Record lock acquisition
+        with self._lock_manager_lock:
+            self._lock_holders[lock_key] = current_thread
+            self._lock_acquisition_times[lock_key] = time.time()
 
-            return False
+        file_handle = None
+        lock_file_handle = None
+        try:
+            # Create lock file for process-level coordination if enabled
+            if self._process_lock_enabled:
+                lock_file_path = file_path.with_suffix(file_path.suffix + ".lock")
+
+                # Open lock file first
+                lock_file_handle = open(lock_file_path, "w")
+
+                # Try to acquire process-level lock with timeout and retry logic
+                start_time = time.time()
+                lock_acquired = False
+                retry_count = 0
+                max_retries = int(
+                    self._lock_acquisition_timeout * 10
+                )  # 10 retries per second
+
+                while (
+                    time.time() - start_time < self._lock_acquisition_timeout
+                    and retry_count < max_retries
+                ):
+                    try:
+                        fcntl.flock(
+                            lock_file_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB
+                        )
+                        lock_acquired = True
+                        break
+                    except BlockingIOError:
+                        # File is locked by another process, wait and retry
+                        retry_count += 1
+                        time.sleep(0.1)
+                    except OSError as e:
+                        # Handle other OS-level errors
+                        self.logger.warning(f"OS error during file locking: {e}")
+                        retry_count += 1
+                        time.sleep(0.1)
+
+                if not lock_acquired:
+                    raise FileLockError(
+                        f"Failed to acquire process lock for {file_path} after {retry_count} retries",
+                        file_path,
+                        self._lock_acquisition_timeout,
+                    )
+
+            # Now open the actual file
+            file_handle = open(file_path, mode, encoding="utf-8")
+
+            self.logger.debug(
+                f"Enhanced file lock acquired for {file_path} in mode {mode}"
+            )
+            yield file_handle
+
+        except Exception as e:
+            # Close file handles if we opened them but failed to lock
+            if file_handle:
+                try:
+                    file_handle.close()
+                except:
+                    pass
+            if lock_file_handle:
+                try:
+                    lock_file_handle.close()
+                except:
+                    pass
+            raise
+
+        finally:
+            # Release process-level lock and close files
+            if lock_file_handle:
+                try:
+                    fcntl.flock(lock_file_handle.fileno(), fcntl.LOCK_UN)
+                except:
+                    # Ignore errors during unlock - file will be unlocked when closed
+                    pass
+                try:
+                    lock_file_handle.close()
+                except:
+                    pass
+
+                # Clean up lock file if process locking was enabled
+                if self._process_lock_enabled:
+                    try:
+                        lock_file_path.unlink()
+                    except:
+                        pass
+
+            if file_handle:
+                try:
+                    file_handle.close()
+                except:
+                    pass
+
+            # Release thread lock and clean up tracking
+            with self._lock_manager_lock:
+                if lock_key in self._lock_holders:
+                    del self._lock_holders[lock_key]
+                if lock_key in self._lock_acquisition_times:
+                    del self._lock_acquisition_times[lock_key]
+
+            file_lock.release()
+            self.logger.debug(f"Enhanced file lock released for {file_path}")
+
+    def get_concurrent_access_stats(self) -> Dict[str, Any]:
+        """
+        Get statistics about concurrent access patterns and performance.
+
+        Returns:
+            Dict[str, Any]: Concurrent access statistics
+        """
+        queue_size = self._transaction_queue.qsize() if self._queue_enabled else 0
+
+        return {
+            "active_writers": self._active_writers,
+            "max_concurrent_writers": self._max_concurrent_writers,
+            "queue_enabled": self._queue_enabled,
+            "queue_size": queue_size,
+            "queue_processor_alive": (
+                self._queue_processor_thread.is_alive()
+                if self._queue_processor_thread
+                else False
+            ),
+            "concurrent_error_count": self._concurrent_error_count,
+            "error_backoff_time": self._error_backoff_time,
+            "active_locks": len(self._active_locks),
+            "lock_acquisition_timeout": self._lock_acquisition_timeout,
+        }
 
     def write_transactions_batch(self, transactions: List[TokenTransaction]) -> int:
         """
@@ -548,85 +980,12 @@ class CSVWriter:
     @contextmanager
     def _acquire_file_lock(self, file_path: Path, mode: str):
         """
-        Acquire file lock with timeout and enhanced error handling.
+        Legacy file lock method - delegates to enhanced version.
 
-        This method provides thread-safe and process-safe file locking
-        with proper timeout handling and resource cleanup.
+        This method is kept for backward compatibility.
         """
-        lock_key = str(file_path)
-
-        # Thread-safe lock management
-        with self._lock_manager_lock:
-            if lock_key not in self._active_locks:
-                self._active_locks[lock_key] = threading.Lock()
-            file_lock = self._active_locks[lock_key]
-
-        # Acquire thread lock with timeout
-        acquired = file_lock.acquire(timeout=self.config.file_lock_timeout_seconds)
-        if not acquired:
-            raise FileLockError(
-                f"Failed to acquire thread lock for {file_path}",
-                file_path,
-                self.config.file_lock_timeout_seconds,
-            )
-
-        file_handle = None
-        try:
-            # Open file and acquire file system lock
-            file_handle = open(file_path, mode, encoding="utf-8")
-
-            # Try to acquire file lock with timeout and retry logic
-            start_time = time.time()
-            lock_acquired = False
-
-            while time.time() - start_time < self.config.file_lock_timeout_seconds:
-                try:
-                    fcntl.flock(file_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    lock_acquired = True
-                    break
-                except BlockingIOError:
-                    # File is locked by another process, wait and retry
-                    time.sleep(0.1)
-                except OSError as e:
-                    # Handle other OS-level errors
-                    self.logger.warning(f"OS error during file locking: {e}")
-                    time.sleep(0.1)
-
-            if not lock_acquired:
-                raise FileLockError(
-                    f"Failed to acquire file system lock for {file_path}",
-                    file_path,
-                    self.config.file_lock_timeout_seconds,
-                )
-
-            self.logger.debug(f"File lock acquired for {file_path} in mode {mode}")
+        with self._acquire_enhanced_file_lock(file_path, mode) as file_handle:
             yield file_handle
-
-        except Exception as e:
-            # Close file handle if we opened it but failed to lock
-            if file_handle:
-                try:
-                    file_handle.close()
-                except:
-                    pass
-            raise
-
-        finally:
-            # Release file system lock and close file
-            if file_handle:
-                try:
-                    fcntl.flock(file_handle.fileno(), fcntl.LOCK_UN)
-                except:
-                    # Ignore errors during unlock - file will be unlocked when closed
-                    pass
-                try:
-                    file_handle.close()
-                except:
-                    pass
-
-            # Release thread lock
-            file_lock.release()
-            self.logger.debug(f"File lock released for {file_path}")
 
     def validate_unicode_handling(self, test_strings: List[str]) -> Dict[str, Any]:
         """
@@ -1156,6 +1515,9 @@ class CSVWriter:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - cleanup resources."""
+        # Shutdown queue processor
+        self._shutdown_queue_processor()
+
         # Close any open file handles
         for handle in self._file_handles.values():
             try:
@@ -1164,5 +1526,9 @@ class CSVWriter:
                 pass
         self._file_handles.clear()
 
-        # Clear locks
+        # Clear locks and tracking data
         self._active_locks.clear()
+        self._lock_holders.clear()
+        self._lock_acquisition_times.clear()
+        self._process_locks.clear()
+        self._lock_files.clear()

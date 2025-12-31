@@ -1,0 +1,74 @@
+{
+    "enabled": true,
+    "name": "Token Tracker Hook",
+    "description": "Automatically tracks AI token usage during agent executions and stores transaction data in CSV format for analysis and optimization",
+    "version": "1.0.0",
+    "when": {
+        "type": "agentExecutionCompleted",
+        "patterns": [
+            "*"
+        ]
+    },
+    "then": {
+        "type": "askAgent",
+        "prompt": "An AI agent execution event has occurred. Please track the token usage for this execution using the token tracking system.\n\nDetermine the execution phase and handle accordingly:\n\n**For Agent Execution Start:**\n1. Import TokenTrackingHook from ai_hydra.token_tracker.hook\n2. Create hook instance with default configuration if not exists\n3. Extract execution context (execution_id, trigger_type, workspace_folder, etc.)\n4. Call on_agent_execution_start() method to initialize tracking\n5. Store execution start time and context for later use\n\n**For Agent Execution Complete:**\n1. Use existing TokenTrackingHook instance\n2. Extract execution result including token usage data\n3. Call on_agent_execution_complete() method with context and result\n4. Record the complete transaction to CSV file\n\n**Token Tracking Requirements:**\n- Record prompt text, tokens used, elapsed time, and timestamp\n- Capture metadata: workspace folder, hook trigger type, execution ID, file patterns\n- Store transaction in CSV file at .kiro/token_transactions.csv\n- Handle concurrent access safely with file locking\n- Preserve existing data when appending new transactions\n\n**Error Handling (Requirements 2.4, 7.1-7.5):**\n- Continue operation if CSV write fails (graceful degradation)\n- Log errors for troubleshooting without exposing sensitive data\n- Implement retry logic for transient failures (max 3 attempts)\n- Use fallback mechanisms for critical failures\n- Provide meaningful error messages\n- Never interrupt normal Kiro IDE workflow\n\n**Configuration (Requirement 2.5):**\n- Use TrackerConfig.create_default() for initial setup\n- Enable/disable tracking based on configuration\n- Support runtime configuration changes\n- Auto-create directories if they don't exist\n- Set max prompt length to 1000 characters\n- Enable data validation before writing\n- Use INFO log level for normal operation\n\n**Performance Requirements:**\n- Complete within 5 seconds maximum\n- Handle concurrent executions safely\n- Limit memory usage to reasonable bounds\n- Don't block main UI thread\n\n**Data Format (Requirements 6.1-6.5, 8.1-8.5):**\n- CSV with headers: timestamp,prompt_text,tokens_used,elapsed_time,session_id,workspace_folder,hook_trigger_type,agent_execution_id,file_patterns,hook_name,error_occurred,error_message\n- Handle special characters and newlines properly\n- Maintain data integrity across concurrent writes\n- Ensure compatibility with standard spreadsheet tools\n\nExample usage:\n```python\nfrom ai_hydra.token_tracker.hook import TokenTrackingHook\nfrom ai_hydra.token_tracker.models import TrackerConfig\n\n# Initialize hook\nconfig = TrackerConfig.create_default()\nhook = TokenTrackingHook(config)\n\n# For execution start\ncontext = {\n    'execution_id': 'exec_123',\n    'trigger_type': 'agentExecutionCompleted',\n    'workspace_folder': 'ai_hydra',\n    'session_id': 'sess_456'\n}\nhook.on_agent_execution_start(context)\n\n# For execution complete\nresult = {\n    'execution_id': 'exec_123',\n    'token_usage': {'total_tokens': 150, 'prompt': 'test'},\n    'success': True\n}\nhook.on_agent_execution_complete(context, result)\n```\n\nThis operation should be completely transparent to the user and not interfere with their normal workflow."
+    },
+    "configuration": {
+        "enabled": true,
+        "track_tokens": true,
+        "include_metadata": true,
+        "error_handling": "graceful",
+        "max_prompt_length": 1000,
+        "csv_file_path": ".kiro/token_transactions.csv",
+        "backup_enabled": true,
+        "backup_interval_hours": 24,
+        "compression_enabled": false,
+        "retention_days": 365,
+        "auto_create_directories": true,
+        "file_lock_timeout_seconds": 5.0,
+        "max_concurrent_writes": 10,
+        "enable_validation": true,
+        "log_level": "INFO"
+    },
+    "error_handling": {
+        "on_file_error": "log_and_continue",
+        "on_validation_error": "log_and_skip",
+        "on_unexpected_error": "log_and_continue",
+        "retry_attempts": 3,
+        "retry_delay_seconds": 1.0,
+        "fallback_behavior": "graceful_degradation"
+    },
+    "triggers": [
+        {
+            "event": "agentExecutionCompleted",
+            "description": "Triggered when AI agent execution completes",
+            "required": true
+        },
+        {
+            "event": "agentExecutionStarted",
+            "description": "Triggered when AI agent execution begins",
+            "required": false
+        }
+    ],
+    "metadata": {
+        "author": "AI Hydra Token Tracking System",
+        "created": "2024-12-31",
+        "requirements": [
+            "2.1",
+            "2.4",
+            "2.5"
+        ],
+        "dependencies": [
+            "ai_hydra.token_tracker.hook",
+            "ai_hydra.token_tracker.tracker",
+            "ai_hydra.token_tracker.metadata_collector"
+        ]
+    },
+    "performance": {
+        "max_execution_time_seconds": 5.0,
+        "memory_limit_mb": 50,
+        "concurrent_execution_limit": 10
+    },
+    "workspaceFolderName": "ai_hydra",
+    "shortName": "token-tracker"
+}
