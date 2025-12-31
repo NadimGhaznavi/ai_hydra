@@ -8,13 +8,16 @@ token usage tracking, CSV operations, and metadata collection.
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
+from pathlib import Path
+from typing import Dict, Any, List, Optional, Union, Union
 import threading
 import time
 
 from .models import TokenTransaction, TrackerConfig
 from .csv_writer import CSVWriter
 from .metadata_collector import MetadataCollector
+from .maintenance import MaintenanceManager
+from .monitoring import SystemMonitor
 from .error_handler import (
     TokenTrackerErrorHandler,
     TokenTrackerError,
@@ -58,6 +61,12 @@ class TokenTracker:
         self.error_handler = TokenTrackerErrorHandler(self.logger)
         self.metadata_collector = MetadataCollector(self.error_handler, self.logger)
         self.csv_writer = CSVWriter(self.config, self.error_handler, self.logger)
+        self.maintenance_manager = MaintenanceManager(
+            self.config, self.error_handler, self.logger
+        )
+        self.system_monitor = SystemMonitor(
+            self.config, self.error_handler, self.logger
+        )
 
         # Thread safety
         self._operation_lock = threading.RLock()
@@ -660,6 +669,10 @@ class TokenTracker:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - cleanup resources."""
         try:
+            # Stop monitoring if active
+            if hasattr(self, "system_monitor"):
+                self.system_monitor.stop_monitoring()
+
             # Log final statistics
             final_stats = self.get_statistics()
             self.logger.info(f"TokenTracker session completed: {final_stats}")
@@ -670,3 +683,138 @@ class TokenTracker:
 
         except Exception as e:
             self.logger.error(f"Cleanup error: {e}")
+
+    def perform_maintenance(self, force_rotation: bool = False) -> Dict[str, Any]:
+        """
+        Perform maintenance operations including file rotation and cleanup.
+
+        Args:
+            force_rotation: Force file rotation regardless of size/row limits
+
+        Returns:
+            Dict[str, Any]: Maintenance operation results
+        """
+        try:
+            return self.maintenance_manager.perform_maintenance(force_rotation)
+        except Exception as e:
+            self.logger.error(f"Maintenance operation failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "maintenance_started": datetime.now().isoformat(),
+            }
+
+    def get_maintenance_recommendations(self) -> Dict[str, Any]:
+        """
+        Get maintenance recommendations based on current system state.
+
+        Returns:
+            Dict[str, Any]: Maintenance recommendations
+        """
+        try:
+            return self.maintenance_manager.get_maintenance_recommendations()
+        except Exception as e:
+            self.logger.error(f"Failed to get maintenance recommendations: {e}")
+            return {"error": str(e)}
+
+    def run_health_checks(self) -> Dict[str, Any]:
+        """
+        Run comprehensive health checks on the token tracking system.
+
+        Returns:
+            Dict[str, Any]: Health check results
+        """
+        try:
+            return self.system_monitor.run_health_checks()
+        except Exception as e:
+            self.logger.error(f"Health checks failed: {e}")
+            return {
+                "overall_status": "unknown",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
+
+    def start_monitoring(self, interval_seconds: int = 60) -> None:
+        """
+        Start continuous system monitoring.
+
+        Args:
+            interval_seconds: Monitoring interval in seconds
+        """
+        try:
+            self.system_monitor.start_monitoring(interval_seconds)
+            self.logger.info(
+                f"System monitoring started with {interval_seconds}s interval"
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to start monitoring: {e}")
+
+    def stop_monitoring(self) -> None:
+        """Stop continuous system monitoring."""
+        try:
+            self.system_monitor.stop_monitoring()
+            self.logger.info("System monitoring stopped")
+        except Exception as e:
+            self.logger.error(f"Failed to stop monitoring: {e}")
+
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        """
+        Get current performance metrics.
+
+        Returns:
+            Dict[str, Any]: Performance metrics
+        """
+        try:
+            metrics = self.system_monitor.collect_performance_metrics()
+            return metrics.to_dict()
+        except Exception as e:
+            self.logger.error(f"Failed to collect performance metrics: {e}")
+            return {"error": str(e)}
+
+    def get_performance_summary(self, hours: int = 24) -> Dict[str, Any]:
+        """
+        Get performance summary for the specified time period.
+
+        Args:
+            hours: Number of hours to include in summary
+
+        Returns:
+            Dict[str, Any]: Performance summary
+        """
+        try:
+            return self.system_monitor.get_performance_summary(hours)
+        except Exception as e:
+            self.logger.error(f"Failed to get performance summary: {e}")
+            return {"error": str(e)}
+
+    def register_alert_callback(self, callback) -> None:
+        """
+        Register a callback for system alerts.
+
+        Args:
+            callback: Function to call when alerts are triggered
+        """
+        try:
+            self.system_monitor.register_alert_callback(callback)
+            self.logger.debug("Alert callback registered")
+        except Exception as e:
+            self.logger.error(f"Failed to register alert callback: {e}")
+
+    def export_monitoring_data(
+        self, output_path: Union[str, Path], format: str = "json"
+    ) -> bool:
+        """
+        Export monitoring data to file.
+
+        Args:
+            output_path: Path to export file
+            format: Export format ('json' or 'csv')
+
+        Returns:
+            bool: True if export was successful
+        """
+        try:
+            return self.system_monitor.export_monitoring_data(output_path, format)
+        except Exception as e:
+            self.logger.error(f"Failed to export monitoring data: {e}")
+            return False
