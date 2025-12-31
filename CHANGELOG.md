@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.7.1] - 2025-12-30 23:37
+
+
 ### Changed
 - **Project Structure**: Complete cleanup of root directory removing legacy files
   - Removed `setup.py` (legacy packaging file, redundant with `pyproject.toml`)
