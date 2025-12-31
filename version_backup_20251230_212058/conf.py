@@ -33,8 +33,8 @@ copyright = '2024, AI Hydra Team'
 author = 'AI Hydra Team'
 
 # The full version, including alpha/beta/rc tags
-release = '0.6.2'
-version = '0.6.2'
+release = '0.6.1'
+version = '0.6.1'
 
 # -- General configuration ---------------------------------------------------
 
