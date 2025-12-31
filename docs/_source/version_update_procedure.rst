@@ -152,26 +152,6 @@ Primary Version Files
        release = '0.6.0'
        version = '0.6.0'
 
-Legacy Files (Update if Present)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-5. **setup.py** (Legacy Setup - Optional)
-   
-   **Location:** Line 15
-   
-   **Format:** ``version="X.Y.Z",``
-   
-   **Example:**
-   
-   .. code-block:: python
-   
-       setup(
-           name="ai-hydra",
-           version="0.6.0",
-           author="AI Hydra Team",
-           # ... rest of configuration
-       )
-
 Automated Update Script
 -----------------------
 
@@ -205,11 +185,6 @@ You can use this script to update all versions automatically:
     sed -i "s/release = '[0-9]\+\.[0-9]\+\.[0-9]\+'/release = '$NEW_VERSION'/" docs/_source/conf.py
     sed -i "s/version = '[0-9]\+\.[0-9]\+\.[0-9]\+'/version = '$NEW_VERSION'/" docs/_source/conf.py
     
-    # Update setup.py if it exists
-    if [ -f "setup.py" ]; then
-        sed -i "s/version=\"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version=\"$NEW_VERSION\"/" setup.py
-    fi
-    
     echo "Version update complete. Verifying..."
     
     # Verify updates
@@ -222,10 +197,6 @@ You can use this script to update all versions automatically:
     grep "__version__" ai_hydra/tui/__init__.py
     echo "docs/_source/conf.py:"
     grep -E "(release|version) = " docs/_source/conf.py
-    if [ -f "setup.py" ]; then
-        echo "setup.py:"
-        grep "version=" setup.py
-    fi
 
 **Usage:**
 
@@ -251,7 +222,6 @@ Use this template for manual updates:
     ☐ ai_hydra/__init__.py (line 9)
     ☐ ai_hydra/tui/__init__.py (line 7)
     ☐ docs/_source/conf.py (lines 37-38)
-    ☐ setup.py (line 15) - if present
     
     Verification:
     ☐ All files show consistent version
