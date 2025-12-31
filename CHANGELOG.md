@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Project Structure**: Complete cleanup of root directory removing legacy files
+  - Removed `setup.py` (legacy packaging file, redundant with `pyproject.toml`)
+  - Removed `qasync.sh`, `manual_test_server.py`, `test.log`, `accounting.txt`
+  - Moved test files from root to `tests/` directory for better organization
+- **Documentation**: Updated version update procedure to remove setup.py references
+  - Updated `docs/_source/version_update_procedure.rst` to reflect current packaging approach
+  - Removed all legacy setup file handling from documentation
+- **Version Scripts**: Enhanced `update_version.sh` to remove setup.py handling
+  - Added deprecation warnings if setup.py is found
+  - Focused script on modern `pyproject.toml` packaging approach
+- **Development Environment**: Enhanced `.gitignore` with comprehensive exclusions
+  - Added coverage reports, testing artifacts, build artifacts
+  - Added IDE files and OS generated files exclusions
+
 ## [Release 0.7.0] - 2025-12-30 23:04
 
 
