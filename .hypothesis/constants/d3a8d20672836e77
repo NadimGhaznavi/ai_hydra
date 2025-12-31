@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/router.py
+# hypothesis_version: 6.148.8
+
+[0.1, 5556, '--address', '--log-level', '--port', '-a', '-p', '0.0.0.0', 'DEBUG', 'ERROR', 'HydraRouter', 'INFO', 'WARNING', '__main__']

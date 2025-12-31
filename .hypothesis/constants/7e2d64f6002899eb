@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/logging_config.py
+# hypothesis_version: 6.148.8
+
+['INFO', 'NN_CORRECT', 'NN_WRONG', 'ai_hydra', 'ai_hydra.', 'simulation']

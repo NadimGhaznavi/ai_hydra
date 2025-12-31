@@ -92,6 +92,7 @@ tui = [
 ai-hydra = "ai_hydra.cli:simple_cli"
 ai-hydra-advanced = "ai_hydra.cli:run_simulation_cli"
 ai-hydra-server = "ai_hydra.headless_server:main"
+ai-hydra-router = "ai_hydra.router:main"
 ai-hydra-config = "ai_hydra.cli:create_config_file"
 ai-hydra-tui = "ai_hydra.tui.client:main"
 ai-hydra-simple = "ai_hydra.simple_client:main"

@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/mq_client.py
+# hypothesis_version: 6.148.8
+
+[5.0, 10.0, 1000, 9999, 'HEARTBEAT', 'HydraClient', 'client_id', 'data', 'message_type', 'request_id', 'sender', 'tcp://localhost:5556', 'timestamp']

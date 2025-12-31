@@ -35,6 +35,8 @@ except ImportError as e:
     sys.exit(1)
 
 from ai_hydra.tui.game_board import HydraGameBoard
+from ai_hydra.mq_client import MQClient
+from ai_hydra.router_constants import RouterConstants
 from ai_hydra.zmq_protocol import ZMQMessage, MessageType
 
 
@@ -74,13 +76,12 @@ class HydraClient(App):
     runtime_seconds = var(0)
     current_epoch = var(0)
     
-    def __init__(self, server_address: str = "tcp://localhost:5555"):
+    def __init__(self, router_address: str = "tcp://localhost:5556"):
         super().__init__()
-        self.server_address = server_address
+        self.router_address = router_address
         
-        # ZeroMQ setup - will be initialized in connect_to_server
-        self.context = None
-        self.socket = None
+        # MQ Client setup - will be initialized in connect_to_router
+        self.mq_client = None
         self.client_id = f"hydra-client-{uuid.uuid4().hex[:8]}"
         self.is_connected = False
         
@@ -102,8 +103,8 @@ class HydraClient(App):
         # Set initial state
         self.add_class("idle")
         
-        # Connect to server and start background tasks
-        await self.connect_to_server()
+        # Connect to router and start background tasks
+        await self.connect_to_router()
         
     def compose(self) -> ComposeResult:
         """Create the main UI layout."""
@@ -175,27 +176,28 @@ class HydraClient(App):
             id="log_panel"
         )
     
-    async def connect_to_server(self) -> bool:
-        """Establish connection to the AI Hydra server."""
+    async def connect_to_router(self) -> bool:
+        """Establish connection to the AI Hydra router."""
         try:
-            # Use async ZMQ context and socket
-            self.context = zmq.asyncio.Context()
-            self.socket = self.context.socket(zmq.REQ)
-            self.socket.connect(self.server_address)
+            # Create MQ client
+            self.mq_client = MQClient(
+                router_address=self.router_address,
+                client_type=RouterConstants.HYDRA_CLIENT,
+                heartbeat_interval=5.0,
+                client_id=self.client_id
+            )
             
-            # Test connection with get_status
-            response = await self.send_command(MessageType.GET_STATUS, {})
-            
-            if response:
+            # Connect to router
+            if await self.mq_client.connect():
                 self.is_connected = True
-                self.log_message(f"Connected to server at {self.server_address}")
+                self.log_message(f"Connected to router at {self.router_address}")
                 
                 # Start background status polling
                 self.status_poll_task = asyncio.create_task(self.poll_status())
                 
                 return True
             else:
-                self.log_message("Failed to get response from server", level="error")
+                self.log_message("Failed to connect to router", level="error")
                 return False
             
         except Exception as e:
@@ -203,33 +205,16 @@ class HydraClient(App):
             self.is_connected = False
             return False
     
-    async def send_command(self, message_type: MessageType, data: Dict[str, Any]) -> Optional[ZMQMessage]:
-        """Send a command to the server and wait for response."""
-        if not self.socket:
-            self.log_message("No socket available", level="error")
+    async def send_command(self, message_type: MessageType, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Send a command to the server via router and wait for response."""
+        if not self.mq_client:
+            self.log_message("No MQ client available", level="error")
             return None
             
         try:
-            # Create AI Hydra protocol message
-            request_id = str(uuid.uuid4())
-            message = ZMQMessage.create_command(
-                message_type=message_type,
-                client_id=self.client_id,
-                request_id=request_id,
-                data=data
-            )
-            
-            # Send message
-            await self.socket.send_string(message.to_json())
-            
-            # Wait for response with timeout
-            if await self.socket.poll(timeout=5000):  # 5 second timeout
-                response_data = await self.socket.recv_string()
-                response = ZMQMessage.from_json(response_data)
-                return response
-            else:
-                self.log_message(f"Timeout waiting for response to {message_type.value}", level="warning")
-                return None
+            # Use MQClient's send_command method
+            response = await self.mq_client.send_command(message_type, data)
+            return response
                 
         except Exception as e:
             self.log_message(f"Error sending command {message_type.value}: {e}", level="error")
@@ -240,8 +225,8 @@ class HydraClient(App):
         while self.is_connected:
             try:
                 response = await self.send_command(MessageType.GET_STATUS, {})
-                if response and response.data:
-                    await self.process_status_update(response.data)
+                if response and response.get("data"):
+                    await self.process_status_update(response["data"])
                 
                 await asyncio.sleep(1.0)  # Poll every second
                     
@@ -301,59 +286,59 @@ class HydraClient(App):
         config = self.get_simulation_config()
         response = await self.send_command(MessageType.START_SIMULATION, {"config": config})
         
-        if response and response.message_type == MessageType.SIMULATION_STARTED:
+        if response and response.get("message_type") == MessageType.SIMULATION_STARTED.value:
             self.simulation_state = "running"
             self.log_message("Simulation started")
         else:
             error_msg = "Unknown error"
-            if response and response.data:
-                error_msg = response.data.get("error_message", error_msg)
+            if response and response.get("data"):
+                error_msg = response["data"].get("error_message", error_msg)
             self.log_message(f"Failed to start simulation: {error_msg}", level="error")
     
     async def stop_simulation(self) -> None:
         """Stop the simulation."""
         response = await self.send_command(MessageType.STOP_SIMULATION, {})
         
-        if response and response.message_type == MessageType.SIMULATION_STOPPED:
+        if response and response.get("message_type") == MessageType.SIMULATION_STOPPED.value:
             self.simulation_state = "stopped"
             self.log_message("Simulation stopped")
         else:
             error_msg = "Unknown error"
-            if response and response.data:
-                error_msg = response.data.get("error_message", error_msg)
+            if response and response.get("data"):
+                error_msg = response["data"].get("error_message", error_msg)
             self.log_message(f"Failed to stop simulation: {error_msg}", level="error")
     
     async def pause_simulation(self) -> None:
         """Pause the simulation."""
         response = await self.send_command(MessageType.PAUSE_SIMULATION, {})
         
-        if response and response.message_type == MessageType.SIMULATION_PAUSED:
+        if response and response.get("message_type") == MessageType.SIMULATION_PAUSED.value:
             self.simulation_state = "paused"
             self.log_message("Simulation paused")
         else:
             error_msg = "Unknown error"
-            if response and response.data:
-                error_msg = response.data.get("error_message", error_msg)
+            if response and response.get("data"):
+                error_msg = response["data"].get("error_message", error_msg)
             self.log_message(f"Failed to pause simulation: {error_msg}", level="error")
     
     async def resume_simulation(self) -> None:
         """Resume the simulation."""
         response = await self.send_command(MessageType.RESUME_SIMULATION, {})
         
-        if response and response.message_type == MessageType.SIMULATION_RESUMED:
+        if response and response.get("message_type") == MessageType.SIMULATION_RESUMED.value:
             self.simulation_state = "running"
             self.log_message("Simulation resumed")
         else:
             error_msg = "Unknown error"
-            if response and response.data:
-                error_msg = response.data.get("error_message", error_msg)
+            if response and response.get("data"):
+                error_msg = response["data"].get("error_message", error_msg)
             self.log_message(f"Failed to resume simulation: {error_msg}", level="error")
     
     async def reset_simulation(self) -> None:
         """Reset the simulation."""
         response = await self.send_command(MessageType.RESET_SIMULATION, {})
         
-        if response and response.message_type == MessageType.SIMULATION_RESET:
+        if response and response.get("message_type") == MessageType.SIMULATION_RESET.value:
             self.simulation_state = "idle"
             self.game_score = 0
             self.snake_length = 3
@@ -372,8 +357,8 @@ class HydraClient(App):
             self.log_message("Simulation reset")
         else:
             error_msg = "Unknown error"
-            if response and response.data:
-                error_msg = response.data.get("error_message", error_msg)
+            if response and response.get("data"):
+                error_msg = response["data"].get("error_message", error_msg)
             self.log_message(f"Failed to reset simulation: {error_msg}", level="error")
     
     def get_simulation_config(self) -> Dict[str, Any]:
@@ -493,13 +478,9 @@ class HydraClient(App):
         if self.status_poll_task:
             self.status_poll_task.cancel()
         
-        # Close socket
-        if self.socket:
-            self.socket.close()
-        
-        # Close context
-        if self.context:
-            self.context.term()
+        # Disconnect MQ client
+        if self.mq_client:
+            await self.mq_client.disconnect()
         
         await super().action_quit()
 
@@ -508,9 +489,9 @@ def main():
     """Main entry point for the TUI client."""
     parser = argparse.ArgumentParser(description="AI Hydra TUI Client")
     parser.add_argument(
-        "--server", 
-        default="tcp://localhost:5555",
-        help="ZeroMQ server address (default: tcp://localhost:5555)"
+        "--router", 
+        default="tcp://localhost:5556",
+        help="AI Hydra router address (default: tcp://localhost:5556)"
     )
     parser.add_argument(
         "--verbose", 
@@ -527,12 +508,12 @@ def main():
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
     
-    print(f"Connecting to AI Hydra server at {args.server}")
+    print(f"Connecting to AI Hydra router at {args.router}")
     if args.verbose:
         print("Verbose logging enabled")
     
     # Create and run the app
-    app = HydraClient(server_address=args.server)
+    app = HydraClient(router_address=args.router)
     app.run()
 
 

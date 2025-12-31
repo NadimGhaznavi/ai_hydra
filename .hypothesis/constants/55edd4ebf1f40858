@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/config.py
+# hypothesis_version: 6.148.8
+
+[0.0005, 0.001, 0.002, 0.01, 100, 150, 200, 300, 999, 10000, 12345, 'CRITICAL', 'ConfigValidator', 'ConfigurationManager', 'DEBUG', 'ERROR', 'ExperimentConfig', 'INFO', 'LoggingConfig', 'NetworkConfig', 'SimulationConfig', 'WARNING', '_self_', 'batch', 'batch_experiment', 'config', 'debug', 'default', 'experiment', 'experiment.log', 'experimental', 'experiments', 'fast', 'flexible', 'get_default_config', 'grid_size', 'hidden_layers', 'hydra_zen_app', 'large', 'logging', 'minimal', 'network', 'performance', 'performance_test', 'r', 'reproducibility', 'seed_sequence', 'simulation', 'simulation_debug.log', 'single', 'single_run', 'small', 'snake_ai_experiment', 'strict', 'validate_all_configs', 'w']

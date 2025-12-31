@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/router_constants.py
+# hypothesis_version: 6.148.8
+
+[5555, 5556, 'Client disconnected', 'HydraClient', 'HydraRouter', 'HydraServer', 'Malformed message', 'Router error: %s', 'Router running on %s', 'Server disconnected', 'Unknown sender type', 'client_id', 'config_update', 'data', 'elem', 'error', 'game_state_update', 'get_config', 'get_status', 'heartbeat', 'message_type', 'ok', 'pause_simulation', 'performance_update', 'request_id', 'reset_simulation', 'resume_simulation', 'sender', 'set_config', 'simulation_paused', 'simulation_reset', 'simulation_resumed', 'simulation_started', 'simulation_stopped', 'start_simulation', 'status', 'status_update', 'stop_simulation', 'tcp', 'timestamp']

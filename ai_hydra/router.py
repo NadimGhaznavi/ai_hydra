@@ -57,8 +57,13 @@ class HydraRouter:
         # Lock for concurrent client dictionary access
         self.clients_lock = asyncio.Lock()
         
-        # Start background client pruning
-        asyncio.create_task(self.prune_dead_clients_bg())
+        # Background task reference (will be started in start_background_tasks)
+        self.prune_task = None
+
+    async def start_background_tasks(self) -> None:
+        """Start background tasks like client pruning."""
+        if self.prune_task is None:
+            self.prune_task = asyncio.create_task(self.prune_dead_clients_bg())
 
     async def broadcast_to_clients(self, elem: str, data: Any, sender_id: str) -> None:
         """Broadcast messages from server to all connected clients."""
@@ -244,6 +249,14 @@ class HydraRouter:
         """Gracefully shutdown the router."""
         self.logger.info("Shutting down router...")
         
+        # Cancel background tasks
+        if self.prune_task:
+            self.prune_task.cancel()
+            try:
+                await self.prune_task
+            except asyncio.CancelledError:
+                pass
+        
         # Close socket
         if self.socket:
             self.socket.close(linger=0)
@@ -260,6 +273,10 @@ async def main_async(router_address: str, router_port: int, log_level: str) -> N
     router = HydraRouter(router_address=router_address, router_port=router_port, log_level=log_level)
     
     try:
+        # Start background tasks
+        await router.start_background_tasks()
+        
+        # Start handling requests
         await router.handle_requests()
     except KeyboardInterrupt:
         pass
