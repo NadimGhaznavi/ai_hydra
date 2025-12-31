@@ -10,6 +10,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Project Organization**: Comprehensive directory structure reorganization and standardization
+  - Created standardized directory structure with `scripts/`, `tools/`, and organized `tests/` directories
+  - Established `tools/` directory with categorized development utilities:
+    - `debug/` - Debugging utilities (debug_file_patterns.py)
+    - `testing/` - Testing utilities (run_tests.py)
+    - `documentation/` - Documentation tools (test_documentation.py, validate_docs.py)
+    - `analysis/` - Analysis utilities (ready for future use)
+  - Reorganized test suite by type for better maintainability:
+    - `unit/` - Unit tests (6 existing + 6 moved files)
+    - `property/` - Property-based tests (10 moved files)
+    - `integration/` - Integration tests (4 existing + 5 moved files)
+    - `e2e/` - End-to-end tests (ready for future use)
+  - Created `scripts/` directory for build and maintenance scripts (update_version.sh)
+  - Added comprehensive file organization utility script (`scripts/organize_files.sh`)
+  - Updated file permissions for all executable scripts and tools
+  - Moved documentation files to appropriate locations (DOCUMENTATION_UPDATE_SUMMARY.md → docs/)
+  - Removed empty/unused files (debug_property_test.py)
+- **Directory Layout Standards**: Comprehensive project organization standards and guidelines
+  - Created directory-layout-standards.md in .kiro/steering/ with complete project structure definitions
+  - Established standard directory structure for ai_hydra/ main package and ai_snake_lab/ legacy code
+  - Defined testing organization with unit/, property/, integration/, and e2e/ test categories
+  - Documented file naming conventions for Python files, tests, documentation, and configuration
+  - Provided directory creation guidelines and migration procedures for reorganization
+  - Included automation tools for structure validation and import path checking
 - **Token Tracker System**: Complete implementation of comprehensive token usage tracking system
   - Core data models (TokenTransaction, TrackerConfig) with validation and CSV serialization
   - Thread-safe CSV operations with file locking and concurrent access protection
@@ -46,6 +70,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Hook integration testing with real Kiro IDE event simulation
 
 ### Changed
+- **Project Structure**: Complete reorganization following directory layout standards
+  - Moved development tools from root directory to categorized `tools/` subdirectories
+  - Reorganized 21 test files by type (unit, property-based, integration) for better test management
+  - Relocated build and maintenance scripts to dedicated `scripts/` directory
+  - Enhanced development workflow with standardized tool locations and clear categorization
+  - Improved discoverability and maintainability through consistent directory structure
+  - Updated all file permissions for executable scripts and development tools
 - **Documentation**: Comprehensive updates for token tracking system
   - Updated token tracking documentation with configuration management features
   - Enhanced testing documentation with new property-based tests
