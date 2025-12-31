@@ -17,11 +17,22 @@ from typing import Dict, Any, Optional
 
 import zmq
 import zmq.asyncio
-from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.reactive import var
-from textual.theme import Theme
-from textual.widgets import Button, Input, Label, Log, Static
+
+# Check for TUI dependencies and provide helpful error message
+try:
+    from textual.app import App, ComposeResult
+    from textual.containers import Horizontal, Vertical
+    from textual.reactive import var
+    from textual.theme import Theme
+    from textual.widgets import Button, Input, Label, Log, Static
+except ImportError as e:
+    print("❌ TUI dependencies not found!")
+    print("💡 Please install TUI dependencies:")
+    print("   pip install ai-hydra[tui]")
+    print("   # or")
+    print("   pip install textual rich")
+    print(f"\nOriginal error: {e}")
+    sys.exit(1)
 
 from ai_hydra.tui.game_board import HydraGameBoard
 from ai_hydra.zmq_protocol import ZMQMessage, MessageType
