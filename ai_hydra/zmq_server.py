@@ -45,16 +45,19 @@ class ZMQServer:
     """
     
     def __init__(self, bind_address: str = "tcp://*:5555",
-                 heartbeat_interval: float = 5.0):
+                 heartbeat_interval: float = 5.0,
+                 log_level: str = "INFO"):
         """
         Initialize the ZeroMQ server.
         
         Args:
             bind_address: ZeroMQ bind address (e.g., "tcp://*:5555")
             heartbeat_interval: Seconds between heartbeat broadcasts
+            log_level: Logging level to use for all components
         """
         self.bind_address = bind_address
         self.heartbeat_interval = heartbeat_interval
+        self.log_level = log_level
         
         # ZeroMQ context and sockets
         self.context = zmq.asyncio.Context()

@@ -44,7 +44,7 @@ class HeadlessServer:
         # Setup logging
         self._setup_logging()
         
-        self.logger = logging.getLogger("headless_server")
+        self.logger = logging.getLogger("ai_hydra.headless_server")
     
     def _setup_logging(self):
         """Configure logging for the headless server."""
