@@ -77,17 +77,6 @@ fi
 echo ""
 print_status "Starting version update process..."
 
-# Create backup of current state
-BACKUP_DIR="version_backup_$(date +%Y%m%d_%H%M%S)"
-print_status "Creating backup in $BACKUP_DIR..."
-mkdir -p "$BACKUP_DIR"
-cp pyproject.toml "$BACKUP_DIR/" 2>/dev/null || true
-cp ai_hydra/__init__.py "$BACKUP_DIR/" 2>/dev/null || true
-cp ai_hydra/tui/__init__.py "$BACKUP_DIR/" 2>/dev/null || true
-cp docs/_source/conf.py "$BACKUP_DIR/" 2>/dev/null || true
-cp setup.py "$BACKUP_DIR/" 2>/dev/null || true
-cp CHANGELOG.md "$BACKUP_DIR/" 2>/dev/null || true
-
 # Function to update version in a file
 update_file_version() {
     local file=$1
@@ -245,11 +234,12 @@ print_status "Backup created in: $BACKUP_DIR"
 echo ""
 echo "📋 Next Steps:"
 echo "1. Review the changes: git diff"
-echo "2. Run tests: pytest tests/"
-echo "3. Build documentation: cd docs && make html"
-echo "4. Commit changes: git add . && git commit -m 'Bump version to $NEW_VERSION'"
-echo "5. Create tag: git tag -a v$NEW_VERSION -m 'Release version $NEW_VERSION'"
-echo "6. Push changes: git push origin main --tags"
+echo "2. Review CHANGELOG.md to ensure release notes are complete"
+echo "3. Run tests: pytest tests/"
+echo "4. Build documentation: cd docs && make html"
+echo "5. Commit changes: git add . && git commit -m 'Release version $NEW_VERSION'"
+echo "6. Create tag: git tag -a v$NEW_VERSION -m 'Release version $NEW_VERSION'"
+echo "7. Push changes: git push origin main --tags"
 
 echo ""
 print_status "Version update process complete! 🎉"
