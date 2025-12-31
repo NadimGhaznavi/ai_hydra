@@ -2,8 +2,9 @@
 """
 Headless server entry point for AI Hydra.
 
-This script starts the ZeroMQ server in headless mode, making the AI agent
-completely controllable via ZeroMQ messages without any GUI dependencies.
+This script starts the AI Hydra server that connects to the router,
+making the AI agent completely controllable via ZeroMQ messages 
+without any GUI dependencies.
 """
 
 import asyncio
@@ -12,15 +13,18 @@ import signal
 import sys
 from pathlib import Path
 
+from .mq_client import MQClient
+from .router_constants import RouterConstants
+from .zmq_protocol import MessageType
 from .zmq_server import ZMQServer
 
 
 class HeadlessServer:
     """
-    Headless server wrapper that handles graceful shutdown and logging.
+    Headless server wrapper that connects to the AI Hydra router.
     """
     
-    def __init__(self, bind_address: str = "tcp://*:5555", 
+    def __init__(self, router_address: str = "tcp://localhost:5556", 
                  heartbeat_interval: float = 5.0,
                  log_level: str = "INFO",
                  log_file: str = None):
@@ -28,17 +32,18 @@ class HeadlessServer:
         Initialize the headless server.
         
         Args:
-            bind_address: ZeroMQ bind address
-            heartbeat_interval: Seconds between heartbeat broadcasts
+            router_address: Address of the AI Hydra router
+            heartbeat_interval: Seconds between heartbeat messages
             log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
             log_file: Optional log file path
         """
-        self.bind_address = bind_address
+        self.router_address = router_address
         self.heartbeat_interval = heartbeat_interval
         self.log_level = log_level
         self.log_file = log_file
         
-        self.server = None
+        self.mq_client = None
+        self.zmq_server = None
         self.shutdown_event = asyncio.Event()
         
         # Setup logging
@@ -91,7 +96,7 @@ class HeadlessServer:
     async def start(self):
         """Start the headless server."""
         self.logger.info("Starting AI Hydra Headless Server")
-        self.logger.info(f"Bind Address: {self.bind_address}")
+        self.logger.info(f"Router Address: {self.router_address}")
         self.logger.info(f"Heartbeat Interval: {self.heartbeat_interval}s")
         self.logger.info(f"Log Level: {self.log_level}")
         if self.log_file:
@@ -100,16 +105,30 @@ class HeadlessServer:
         # Setup signal handlers
         self._setup_signal_handlers()
         
-        # Create and start ZeroMQ server with log level
-        self.server = ZMQServer(
-            bind_address=self.bind_address,
+        # Create MQ client to connect to router
+        self.mq_client = MQClient(
+            router_address=self.router_address,
+            client_type=RouterConstants.HYDRA_SERVER,
+            heartbeat_interval=self.heartbeat_interval
+        )
+        
+        # Create ZMQ server for actual simulation logic
+        self.zmq_server = ZMQServer(
+            bind_address="tcp://127.0.0.1:0",  # Bind to random local port
             heartbeat_interval=self.heartbeat_interval,
             log_level=self.log_level
         )
         
         try:
-            # Start server in background
-            await self.server.start_background()
+            # Connect to router
+            if not await self.mq_client.connect():
+                raise RuntimeError("Failed to connect to router")
+            
+            # Start ZMQ server in background
+            await self.zmq_server.start_background()
+            
+            # Start message handling
+            message_task = asyncio.create_task(self.handle_router_messages())
             
             # Wait for shutdown signal
             self.logger.info("Server running. Press Ctrl+C to stop.")
@@ -117,9 +136,15 @@ class HeadlessServer:
             
             self.logger.info("Shutdown signal received, stopping server...")
             
-            # Stop the server gracefully
-            if self.server:
-                await self.server.stop()
+            # Cancel message handling
+            message_task.cancel()
+            
+            # Stop components
+            if self.zmq_server:
+                await self.zmq_server.stop()
+            
+            if self.mq_client:
+                await self.mq_client.disconnect()
             
         except Exception as e:
             # Only log as error if it's not a graceful shutdown
@@ -130,6 +155,79 @@ class HeadlessServer:
                 self.logger.info(f"Server stopped during shutdown: {e}")
         finally:
             self.logger.info("Headless server stopped")
+    
+    async def handle_router_messages(self):
+        """Handle messages from the router."""
+        while not self.shutdown_event.is_set():
+            try:
+                # Receive message from router
+                message = await self.mq_client.receive_message()
+                
+                if message:
+                    await self.process_router_message(message)
+                
+                await asyncio.sleep(0.1)  # Small delay to prevent busy waiting
+                
+            except Exception as e:
+                self.logger.error(f"Error handling router message: {e}")
+                await asyncio.sleep(1.0)
+    
+    async def process_router_message(self, message: dict):
+        """Process a message received from the router."""
+        try:
+            elem = message.get(RouterConstants.ELEM)
+            data = message.get(RouterConstants.DATA, {})
+            
+            self.logger.debug(f"Processing router message: {elem}")
+            
+            # Map router messages to ZMQ server calls
+            if elem == RouterConstants.START_SIMULATION:
+                # Forward to ZMQ server
+                response = await self.zmq_server.handle_start_simulation(data)
+                # Send response back through router
+                await self.send_router_response(RouterConstants.SIMULATION_STARTED, response)
+                
+            elif elem == RouterConstants.STOP_SIMULATION:
+                response = await self.zmq_server.handle_stop_simulation(data)
+                await self.send_router_response(RouterConstants.SIMULATION_STOPPED, response)
+                
+            elif elem == RouterConstants.PAUSE_SIMULATION:
+                response = await self.zmq_server.handle_pause_simulation(data)
+                await self.send_router_response(RouterConstants.SIMULATION_PAUSED, response)
+                
+            elif elem == RouterConstants.RESUME_SIMULATION:
+                response = await self.zmq_server.handle_resume_simulation(data)
+                await self.send_router_response(RouterConstants.SIMULATION_RESUMED, response)
+                
+            elif elem == RouterConstants.RESET_SIMULATION:
+                response = await self.zmq_server.handle_reset_simulation(data)
+                await self.send_router_response(RouterConstants.SIMULATION_RESET, response)
+                
+            elif elem == RouterConstants.GET_STATUS:
+                response = await self.zmq_server.handle_get_status(data)
+                await self.send_router_response(RouterConstants.STATUS_UPDATE, response)
+                
+            else:
+                self.logger.warning(f"Unknown router message: {elem}")
+                
+        except Exception as e:
+            self.logger.error(f"Error processing router message: {e}")
+    
+    async def send_router_response(self, elem: str, data: dict):
+        """Send a response back through the router."""
+        try:
+            from .zmq_protocol import ZMQMessage
+            
+            message = ZMQMessage.create_response(
+                message_type=getattr(MessageType, elem.upper(), MessageType.STATUS_UPDATE),
+                client_id=self.mq_client.client_id,
+                data=data
+            )
+            
+            await self.mq_client.send_message(message)
+            
+        except Exception as e:
+            self.logger.error(f"Error sending router response: {e}")
     
     async def stop(self):
         """Stop the headless server."""
