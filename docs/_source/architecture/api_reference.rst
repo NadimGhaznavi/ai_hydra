@@ -19,6 +19,26 @@ Configuration System
    :undoc-members:
    :show-inheritance:
 
+Router System
+-------------
+
+The Hydra Router system provides ZeroMQ-based message routing for distributed deployments.
+
+.. automodule:: ai_hydra.router
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: ai_hydra.mq_client
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: ai_hydra.router_constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Logging System
 --------------
 

@@ -1,22 +1,22 @@
 Hydra Router System Architecture
 ================================
 
-This document describes the comprehensive architecture of the Hydra Router system, a standalone ZeroMQ-based message routing system that provides reliable communication between multiple clients and servers.
+This document describes the comprehensive architecture of the Hydra Router system, a standalone ZeroMQ-based message routing system extracted from the AI Hydra project. It provides reliable communication between multiple clients and a single server through a centralized router pattern with automatic client discovery, heartbeat monitoring, message format standardization, and comprehensive error handling.
 
 System Overview
 ---------------
 
-The Hydra Router implements a centralized router pattern with automatic client discovery, heartbeat monitoring, message format standardization, and comprehensive error handling. The system supports multiple clients connecting to a single server, with extensibility planned for multiple servers in future versions. The system is designed to be reusable across different projects that need robust message routing capabilities.
+The Hydra Router implements a centralized router pattern that serves as a completely independent router system usable by any project. The system supports multiple clients connecting to zero or one server (extensible for future multi-server support) and includes automatic message format conversion between internal ZMQMessage and RouterConstants formats for transparent operation.
 
-**Key Features:**
+**Key Design Features:**
 
-* **Centralized Message Routing**: Single router manages multiple client connections and single server connection
-* **Automatic Client Discovery**: Heartbeat-based client registration and lifecycle management
-* **Message Format Standardization**: Automatic conversion between internal and router formats
-* **Comprehensive Error Handling**: Detailed validation and error reporting
+* **Standalone Component**: Completely independent router system that can be used by any project
+* **Generic MQClient Library**: Reusable client library configurable for different client types  
+* **Message Format Conversion**: Automatic conversion between internal ZMQMessage and RouterConstants formats
+* **Single Server Architecture**: Supports multiple clients with zero or one server (extensible for future multi-server support)
+* **Comprehensive Error Handling**: Detailed validation and error reporting for troubleshooting
 * **Scalable Architecture**: Support for hundreds of concurrent client connections
 * **Flexible Deployment**: Configurable for different environments and use cases
-* **Future Extensibility**: Designed to support multiple servers in future versions
 
 Architecture Components
 -----------------------
@@ -25,13 +25,13 @@ Core Router Components
 ~~~~~~~~~~~~~~~~~~~~~~
 
 **Hydra_Router**
-  The central message routing component that manages client connections and routes messages between multiple clients and a single server using ZeroMQ ROUTER socket pattern.
+  The central message routing component that accepts connections from multiple clients and zero or one server, routes messages between clients and server based on sender type, monitors client health through heartbeat tracking, validates message formats and provides detailed error logging, and handles graceful client disconnection and cleanup.
 
 **MQClient**
-  Generic ZeroMQ client library that connects to the Hydra Router and handles message format conversion, providing unified interface for both client and server applications.
+  Generic ZeroMQ client library that provides unified interface for both client and server applications, handles automatic message format conversion between ZMQMessage and RouterConstants, manages connection lifecycle including heartbeat sending, supports both synchronous and asynchronous communication patterns, and provides comprehensive error handling and validation.
 
 **RouterConstants**
-  Centralized constants and message format definitions for the router system, ensuring consistent communication protocols.
+  Centralized constants and message format definitions that define standardized message format constants, provide client/server type definitions, define message structure keys and system messages, and centralize network configuration constants.
 
 Message Processing Components
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
