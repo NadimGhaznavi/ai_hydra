@@ -565,3 +565,37 @@ The router provides built-in configuration validation:
 - Resource limit reasonableness
 
 This configuration guide provides comprehensive setup instructions for all deployment scenarios, from development to production environments.
+
+Router Demo Examples
+---------------------
+
+The AI Hydra project includes comprehensive examples demonstrating router functionality:
+
+**Complete Router Demo**
+  The ``examples/test_router_demo.py`` script provides a complete demonstration of the router system including:
+  
+  - Router startup and configuration
+  - Multiple client connections (demo-client-001, demo-client-002)
+  - Server connection (demo-server-001)
+  - Message routing between clients and server
+  - Heartbeat monitoring and client lifecycle
+  - Proper cleanup and shutdown procedures
+  
+  Run the demo with:
+  
+  .. code-block:: bash
+  
+     python examples/test_router_demo.py
+
+**Basic Router Testing**
+  For simpler router testing, use:
+  
+  .. code-block:: bash
+  
+     # Basic router functionality test
+     python examples/simple_router_test.py
+     
+     # Router debugging and validation
+     python examples/debug_test.py
+
+These examples demonstrate real-world usage patterns and serve as templates for building your own router-based applications.

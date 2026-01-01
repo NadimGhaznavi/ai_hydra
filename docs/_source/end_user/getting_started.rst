@@ -30,9 +30,27 @@ You should see a help message with available commands.
 Running Your First Simulation
 ------------------------------
 
-**Option 1: Terminal User Interface (Recommended)**
+**Option 1: Router Demo (Comprehensive Example)**
 
-The easiest way to get started is with the interactive TUI:
+The most complete way to see AI Hydra in action is with the router demonstration:
+
+.. code-block:: bash
+
+   # Run the comprehensive router demo
+   python examples/test_router_demo.py
+
+This demo shows:
+- Complete router system startup and configuration
+- Multiple clients connecting to a server through the router
+- Real-time message routing and communication
+- Heartbeat monitoring and client lifecycle management
+- Proper cleanup and shutdown procedures
+
+The demo provides detailed output showing each step of the process, making it perfect for understanding how all components work together.
+
+**Option 2: Terminal User Interface (Interactive)**
+
+The easiest way to interact with AI Hydra is with the TUI:
 
 .. code-block:: bash
 
@@ -52,7 +70,7 @@ This opens a beautiful terminal interface where you can:
 - Adjust settings (grid size, move budget)
 - View real-time messages and logs
 
-**Option 2: Simple Command Line**
+**Option 3: Simple Command Line**
 
 Run a basic simulation with default settings:
 
@@ -66,7 +84,7 @@ This will:
 - Show you the final score
 - Save results to a file
 
-**Option 3: Custom Settings**
+**Option 4: Custom Settings**
 
 Run with your own settings:
 

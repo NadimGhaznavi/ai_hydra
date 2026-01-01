@@ -47,6 +47,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained consistency between code implementation and architecture documentation
 
 ### Added
+- **Router Demo Examples**: Comprehensive router demonstration with multiple clients and server interaction
+  - Added `examples/test_router_demo.py` demonstrating complete router functionality with DemoServer and DemoClient classes
+  - Includes step-by-step demo scenario showing router startup, client/server connections, message routing, and heartbeat monitoring
+  - Demonstrates proper async/await patterns, error handling, and graceful shutdown procedures
+  - Provides practical example of HydraRouter, MQClient, ZMQMessage, and RouterConstants integration
+  - Shows real-world usage patterns for router system with comprehensive logging and status updates
+- **Documentation Updates**: Enhanced examples and user documentation for router demo integration
+  - Updated `examples/README.md` with comprehensive router demo documentation including expected output examples
+  - Enhanced `docs/_source/end_user/getting_started.rst` to feature router demo as primary example with detailed workflow explanation
+  - Added router demo examples section to `docs/_source/end_user/hydra_router_configuration.rst` with usage instructions
+  - Provided complete output examples showing router startup, client connections, message routing, and cleanup procedures
+  - Integrated router demo documentation with existing user guides and configuration documentation
 - **Exception Hierarchy**: Comprehensive router exception hierarchy with detailed context and debugging information
   - Implemented HydraRouterError base exception with context support for enhanced error debugging
   - Added MessageValidationError for message format validation failures with invalid message details
@@ -86,6 +98,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Message Format Conversion**: Enhanced MQClient with robust bidirectional conversion between ZMQMessage and RouterConstants formats with validation and error recovery
   - **Performance Optimization**: Optimized message processing, client tracking, and validation with efficient data structures and asynchronous processing
   - **Status**: ✅ **PHASES 1-2 COMPLETE** - Core infrastructure setup and message validation framework implemented and tested, ready for Phase 3 (MQClient Library Enhancement)
+- **Router Demo Examples**: Comprehensive router demonstration with multiple clients and server interaction
+  - Added `examples/test_router_demo.py` demonstrating complete router functionality with DemoServer and DemoClient classes
+  - Includes step-by-step demo scenario showing router startup, client/server connections, message routing, and heartbeat monitoring
+  - Demonstrates proper async/await patterns, error handling, and graceful shutdown procedures
+  - Provides practical example of HydraRouter, MQClient, ZMQMessage, and RouterConstants integration
+  - Shows real-world usage patterns for router system with comprehensive logging and status updates
 
 ### Changed
 - **Documentation Updates**: Updated documentation to reflect Hydra Router specification completion
