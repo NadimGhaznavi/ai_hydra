@@ -25,7 +25,7 @@ Quick Links
    * :doc:`architecture/api_reference` - Complete API documentation
    * :doc:`architecture/decision_flow` - Decision-making algorithms
    * :doc:`architecture/design` - Detailed system design
-   * :doc:`architecture/hydra_router_system` - Hydra Router system architecture
+   * :doc:`architecture/hydra_router_system` - Hydra Router system architecture (✅ Specification Complete)
    * :doc:`architecture/ai_documentation_manager` - AI Documentation Manager system architecture
    * :doc:`architecture/tui_architecture` - TUI system architecture
    * :doc:`architecture/zmq_protocol` - ZeroMQ communication protocol
