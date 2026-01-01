@@ -10,23 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **AI Documentation Manager Requirements**: Refined and consolidated requirements specification for improved clarity and focus
-  - Clarified user story language for better specificity and actionable outcomes
-  - Consolidated requirements by removing redundant Documentation Runbook System requirement
-  - Removed Multi-Audience Support requirement to focus on core functionality
-  - Renumbered requirements 2-7 for consistency after consolidation
-  - Updated acceptance criteria to be more focused and implementable
-  - Simplified integration requirements to essential functionality
-  - Enhanced requirement 1 to explicitly include ai_hydra folder artifact integration
+- **AI Documentation Manager Requirements**: Simplified and focused requirements specification for improved clarity and implementation
+  - Simplified introduction to focus on documentation organization extraction from token tracker spec
+  - Reduced glossary from 6 terms to 2 essential terms (Main_Documentation_Page, Project_Documentation)
+  - Consolidated 7 complex requirements into 2 focused requirements covering documentation structure organization and content migration
+  - Removed detailed acceptance criteria for build systems, quality assurance, steering integration, and automated maintenance
+  - Streamlined acceptance criteria to be more focused and implementable
+  - Enhanced clarity by removing redundant and overly complex requirements
 - **Documentation Updates**: Updated requirements specification and architecture documentation to reflect AI Doc Manager changes
-  - Updated `docs/_source/runbook/requirements.rst` with consolidated Requirements 36-42 covering AI Documentation Manager system
-  - Removed Requirements 37 (Documentation Runbook System) and 43 (Multi-Audience Support) to focus on core functionality
-  - Renumbered requirements 38-44 to 37-42 for consistency after consolidation
-  - Updated Build System requirement to specify ReadTheDocs compatibility instead of multiple output formats
-  - Enhanced `docs/_source/architecture/ai_documentation_manager.rst` with updated system responsibilities and main documentation page description
-  - Updated Documentation Manager key responsibilities to include AI Hydra folder artifact integration
-  - Modified Main Documentation Page description to reflect project-specific organization structure
-  - Updated Build System documentation to emphasize ReadTheDocs-compatible generation
+  - Updated `docs/_source/runbook/requirements.rst` with consolidated Requirements 36-37 covering AI Documentation Manager system
+  - Removed Requirements 38-42 (Build System, Quality Assurance, Steering Integration, Automated Maintenance, Integration/Extensibility) to focus on core functionality
+  - Renumbered requirements for consistency after consolidation
+  - Updated `docs/_source/architecture/ai_documentation_manager.rst` with simplified system architecture focusing on structure organization and content migration
+  - Removed complex automated systems (Content Organizer, Build System, Quality Assurance Engine) in favor of focused migration approach
+  - Updated system responsibilities to emphasize documentation structure organization and safe content migration
+  - Modified architecture to reflect project ecosystem organization with three-tier structure per project
 
 ### Added
 - **AI Documentation Manager Specification**: Comprehensive requirements document for automated documentation management system
@@ -36,11 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added comprehensive glossary of key terms and components for documentation management system
   - Provides foundation for implementing automated documentation organization and maintenance workflows
 - **Documentation Updates**: AI Documentation Manager requirements integration and architecture documentation
-  - Updated `docs/_source/runbook/requirements.rst` with Requirements 36-44 covering comprehensive documentation management system
-  - Added Requirements 36-44 covering Documentation Manager system, runbook creation, content organization, build validation, quality assurance, steering integration, automated maintenance, multi-audience support, and system integration
-  - Created `docs/_source/architecture/ai_documentation_manager.rst` with complete system architecture documentation
-  - Documented Documentation Manager, Content Organizer, Build System, Quality Assurance Engine, and Migration Tool components
-  - Added three-tier documentation structure (End User, Architecture & Code, Operations Runbook)
+  - Updated `docs/_source/runbook/requirements.rst` with Requirements 36-37 covering focused documentation management system
+  - Added Requirements 36-37 covering Documentation Structure Organization and Content Migration
+  - Created `docs/_source/architecture/ai_documentation_manager.rst` with simplified system architecture documentation
+  - Documented focused approach with Documentation Structure Organization, Main Documentation Page, and Content Migration System components
+  - Added three-tier documentation structure (End User, Developer, Operations) for project ecosystem organization
   - Included content management workflow, integration points, configuration management, and automated maintenance systems
   - Established performance and scalability considerations with plugin architecture for future extensibility
   - Integrated AI Doc Manager requirements with existing project requirements (Requirements 36-44)
