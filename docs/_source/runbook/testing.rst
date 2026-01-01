@@ -107,6 +107,13 @@ Property-based tests validate universal properties using generated test data:
 - **Property 7: Special Character Handling** (``test_token_tracker_special_characters.py``): Unicode and CSV special characters are handled correctly
 - **Property 8: Data Validation Integrity** (``test_token_tracker_data_validation.py``): All data validation rules are enforced consistently
 
+**Router System Properties:**
+
+- **Property 9: Message Format Compliance** (``test_router_properties.py``): All messages conform to RouterConstants format requirements
+- **Property 10: Client Connection Lifecycle** (``test_router_properties.py``): Client registration, heartbeat, and cleanup work correctly
+- **Property 11: Message Routing Integrity** (``test_router_properties.py``): Messages are routed correctly between clients and servers
+- **Property 12: Error Handling Resilience** (``test_router_properties.py``): Router handles malformed messages and connection failures gracefully
+
 **Token Tracking Property Test Examples:**
 
 .. code-block:: python

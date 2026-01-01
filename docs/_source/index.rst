@@ -16,6 +16,7 @@ Quick Links
    * :doc:`end_user/troubleshooting` - Common issues and solutions
    * :doc:`end_user/tui_getting_started` - Terminal user interface guide
    * :doc:`end_user/tui_controls` - TUI controls and navigation
+   * :doc:`end_user/hydra_router_configuration` - Hydra Router system configuration guide
 
 🏗️ **Architecture & Code Documentation**
    Technical documentation for developers and researchers.
@@ -24,6 +25,7 @@ Quick Links
    * :doc:`architecture/api_reference` - Complete API documentation
    * :doc:`architecture/decision_flow` - Decision-making algorithms
    * :doc:`architecture/design` - Detailed system design
+   * :doc:`architecture/hydra_router_system` - Hydra Router system architecture
    * :doc:`architecture/ai_documentation_manager` - AI Documentation Manager system architecture
    * :doc:`architecture/tui_architecture` - TUI system architecture
    * :doc:`architecture/zmq_protocol` - ZeroMQ communication protocol
