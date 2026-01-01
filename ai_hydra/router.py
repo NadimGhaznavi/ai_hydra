@@ -1,8 +1,9 @@
 """
 AI Hydra Router
 
-Pure MQ router between TUI clients and the AI Hydra server.
-Based on the ai_snake_lab SimRouter pattern.
+Enhanced ZeroMQ router between TUI clients and the AI Hydra server.
+Provides centralized message routing with comprehensive validation,
+client management, and error handling.
 """
 
 import asyncio
@@ -10,16 +11,397 @@ import logging
 import time
 import argparse
 from copy import deepcopy
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Set
 
 import zmq
 import zmq.asyncio
 
 from ai_hydra.router_constants import RouterConstants, RouterLabels
+from ai_hydra.validation import MessageValidator, validate_message
+from ai_hydra.exceptions import (
+    HydraRouterError,
+    MessageValidationError,
+    ConnectionError as RouterConnectionError,
+    ClientRegistrationError,
+    HeartbeatError,
+    RoutingError,
+)
+
+
+class ClientRegistry:
+    """Thread-safe client registry for tracking connected clients and servers."""
+
+    def __init__(self):
+        """Initialize client registry."""
+        self.clients: Dict[str, tuple] = (
+            {}
+        )  # client_id -> (client_type, last_heartbeat)
+        self.lock = asyncio.Lock()
+
+    async def register_client(self, client_id: str, client_type: str) -> None:
+        """
+        Register a new client.
+
+        Args:
+            client_id: Unique client identifier
+            client_type: Type of client (HydraClient, HydraServer, etc.)
+
+        Raises:
+            ClientRegistrationError: If registration fails
+        """
+        if not client_id or not isinstance(client_id, str):
+            raise ClientRegistrationError(
+                "Client ID must be non-empty string",
+                client_id=client_id,
+                operation="register",
+            )
+
+        if not client_type or client_type not in MessageValidator.VALID_SENDERS:
+            raise ClientRegistrationError(
+                f"Invalid client type: {client_type}",
+                client_id=client_id,
+                client_type=client_type,
+                operation="register",
+            )
+
+        async with self.lock:
+            self.clients[client_id] = (client_type, time.time())
+
+    async def update_heartbeat(self, client_id: str) -> None:
+        """
+        Update client heartbeat timestamp.
+
+        Args:
+            client_id: Client identifier
+
+        Raises:
+            ClientRegistrationError: If client not found
+        """
+        async with self.lock:
+            if client_id not in self.clients:
+                raise ClientRegistrationError(
+                    f"Client not registered: {client_id}",
+                    client_id=client_id,
+                    operation="update_heartbeat",
+                )
+
+            client_type, _ = self.clients[client_id]
+            self.clients[client_id] = (client_type, time.time())
+
+    async def remove_client(self, client_id: str) -> None:
+        """
+        Remove client from registry.
+
+        Args:
+            client_id: Client identifier
+        """
+        async with self.lock:
+            if client_id in self.clients:
+                del self.clients[client_id]
+
+    async def get_clients_by_type(self, client_type: str) -> List[str]:
+        """
+        Get all clients of specified type.
+
+        Args:
+            client_type: Type of clients to retrieve
+
+        Returns:
+            List of client IDs
+        """
+        async with self.lock:
+            return [
+                client_id
+                for client_id, (ctype, _) in self.clients.items()
+                if ctype == client_type
+            ]
+
+    async def prune_inactive_clients(self, timeout: float) -> List[str]:
+        """
+        Remove clients that haven't sent heartbeats within timeout.
+
+        Args:
+            timeout: Timeout threshold in seconds
+
+        Returns:
+            List of removed client IDs
+        """
+        now = time.time()
+        removed_clients = []
+
+        async with self.lock:
+            clients_to_remove = []
+            for client_id, (client_type, last_heartbeat) in self.clients.items():
+                if now - last_heartbeat > timeout:
+                    clients_to_remove.append(client_id)
+                    removed_clients.append(client_id)
+
+            for client_id in clients_to_remove:
+                del self.clients[client_id]
+
+        return removed_clients
+
+    async def get_client_count(self) -> Dict[str, int]:
+        """
+        Get count of clients by type.
+
+        Returns:
+            Dictionary mapping client type to count
+        """
+        async with self.lock:
+            counts = {}
+            for client_type, _ in self.clients.values():
+                counts[client_type] = counts.get(client_type, 0) + 1
+            return counts
+
+    async def get_all_clients(self) -> Dict[str, tuple]:
+        """
+        Get copy of all registered clients.
+
+        Returns:
+            Dictionary mapping client_id to (client_type, last_heartbeat)
+        """
+        async with self.lock:
+            return deepcopy(self.clients)
+
+
+class MessageRouter:
+    """Handles message routing logic between clients and servers."""
+
+    def __init__(self, client_registry: ClientRegistry, logger: logging.Logger):
+        """
+        Initialize message router.
+
+        Args:
+            client_registry: Client registry instance
+            logger: Logger instance
+        """
+        self.client_registry = client_registry
+        self.logger = logger
+
+    async def route_message(
+        self,
+        sender_id: str,
+        sender_type: str,
+        elem: str,
+        data: Any,
+        socket: zmq.asyncio.Socket,
+    ) -> None:
+        """
+        Route message based on sender type and routing rules.
+
+        Args:
+            sender_id: ID of message sender
+            sender_type: Type of sender (HydraClient, HydraServer, etc.)
+            elem: Message element/type
+            data: Message data
+            socket: ZMQ socket for sending responses
+
+        Raises:
+            RoutingError: If routing fails
+        """
+        try:
+            if sender_type == RouterConstants.HYDRA_CLIENT:
+                await self._route_client_message(sender_id, elem, data, socket)
+            elif sender_type == RouterConstants.HYDRA_SERVER:
+                await self._route_server_message(sender_id, elem, data, socket)
+            else:
+                raise RoutingError(
+                    f"Unknown sender type: {sender_type}",
+                    message_type=elem,
+                    sender_id=sender_id,
+                    routing_rule="sender_type_dispatch",
+                )
+        except Exception as e:
+            self.logger.error(f"Message routing failed: {e}")
+            raise RoutingError(
+                f"Failed to route message: {str(e)}",
+                message_type=elem,
+                sender_id=sender_id,
+            )
+
+    async def _route_client_message(
+        self, sender_id: str, elem: str, data: Any, socket: zmq.asyncio.Socket
+    ) -> None:
+        """Route message from client to server."""
+        # Get all connected servers
+        servers = await self.client_registry.get_clients_by_type(
+            RouterConstants.HYDRA_SERVER
+        )
+
+        if not servers:
+            # No server connected - inform the client
+            error_msg = {RouterConstants.ERROR: "No AI Hydra server connected"}
+            await socket.send_multipart(
+                [sender_id.encode(), zmq.utils.jsonapi.dumps(error_msg)]
+            )
+            self.logger.warning(
+                f"No server connected for client {sender_id} request: {elem}"
+            )
+            return
+
+        # Construct message for server
+        msg = {
+            RouterConstants.SENDER: RouterConstants.HYDRA_CLIENT,
+            RouterConstants.ELEM: elem,
+            RouterConstants.DATA: data,
+        }
+        msg_bytes = zmq.utils.jsonapi.dumps(msg)
+
+        # Send to all connected servers (usually just one)
+        for server_id in servers:
+            try:
+                await socket.send_multipart([server_id.encode(), msg_bytes])
+                self.logger.debug(
+                    f"Forwarded {elem} from client {sender_id} to server {server_id}"
+                )
+            except Exception as e:
+                self.logger.error(
+                    f"Failed to forward message to server {server_id}: {e}"
+                )
+
+        # Acknowledge the client
+        ack_msg = {RouterConstants.STATUS: RouterConstants.OK}
+        await socket.send_multipart(
+            [sender_id.encode(), zmq.utils.jsonapi.dumps(ack_msg)]
+        )
+
+    async def _route_server_message(
+        self, sender_id: str, elem: str, data: Any, socket: zmq.asyncio.Socket
+    ) -> None:
+        """Route message from server to clients."""
+        # Drop status/error messages (they're handled locally)
+        if elem in [RouterConstants.STATUS, RouterConstants.ERROR]:
+            return
+
+        # Get all connected clients
+        clients = await self.client_registry.get_clients_by_type(
+            RouterConstants.HYDRA_CLIENT
+        )
+
+        if not clients:
+            self.logger.debug(f"No clients connected to receive server message: {elem}")
+            return
+
+        # Construct message for clients
+        msg = {
+            RouterConstants.SENDER: RouterConstants.HYDRA_SERVER,
+            RouterConstants.ELEM: elem,
+            RouterConstants.DATA: data,
+        }
+        msg_bytes = zmq.utils.jsonapi.dumps(msg)
+
+        # Broadcast to all connected clients
+        for client_id in clients:
+            if client_id != sender_id:  # Don't send back to sender
+                try:
+                    await socket.send_multipart([client_id.encode(), msg_bytes])
+                    self.logger.debug(
+                        f"Broadcast {elem} from server {sender_id} to client {client_id}"
+                    )
+                except Exception as e:
+                    self.logger.error(
+                        f"Failed to send message to client {client_id}: {e}"
+                    )
+
+
+class BackgroundTaskManager:
+    """Manages background tasks for router operations."""
+
+    def __init__(self, client_registry: ClientRegistry, logger: logging.Logger):
+        """
+        Initialize background task manager.
+
+        Args:
+            client_registry: Client registry instance
+            logger: Logger instance
+        """
+        self.client_registry = client_registry
+        self.logger = logger
+        self.tasks: Set[asyncio.Task] = set()
+        self.shutdown_event = asyncio.Event()
+
+    async def start_tasks(self) -> None:
+        """Start all background tasks."""
+        # Client pruning task
+        prune_task = asyncio.create_task(self._client_pruning_task())
+        self.tasks.add(prune_task)
+
+        # Health monitoring task
+        health_task = asyncio.create_task(self._health_monitoring_task())
+        self.tasks.add(health_task)
+
+        self.logger.info(f"Started {len(self.tasks)} background tasks")
+
+    async def stop_tasks(self) -> None:
+        """Stop all background tasks."""
+        self.shutdown_event.set()
+
+        # Cancel all tasks
+        for task in self.tasks:
+            task.cancel()
+
+        # Wait for tasks to complete
+        if self.tasks:
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+
+        self.tasks.clear()
+        self.logger.info("Stopped all background tasks")
+
+    async def _client_pruning_task(self) -> None:
+        """Background task to prune inactive clients."""
+        while not self.shutdown_event.is_set():
+            try:
+                timeout = RouterConstants.HEARTBEAT_INTERVAL * 3
+                removed_clients = await self.client_registry.prune_inactive_clients(
+                    timeout
+                )
+
+                if removed_clients:
+                    self.logger.info(f"Pruned inactive clients: {removed_clients}")
+
+                # Wait for next pruning cycle
+                await asyncio.wait_for(
+                    self.shutdown_event.wait(),
+                    timeout=RouterConstants.HEARTBEAT_INTERVAL * 2,
+                )
+
+            except asyncio.TimeoutError:
+                continue  # Normal timeout, continue pruning
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                self.logger.error(f"Client pruning task error: {e}")
+                await asyncio.sleep(1)  # Brief pause before retry
+
+    async def _health_monitoring_task(self) -> None:
+        """Background task for health monitoring and metrics."""
+        while not self.shutdown_event.is_set():
+            try:
+                # Log client counts periodically
+                client_counts = await self.client_registry.get_client_count()
+                if client_counts:
+                    count_str = ", ".join(
+                        f"{ctype}: {count}" for ctype, count in client_counts.items()
+                    )
+                    self.logger.info(f"Connected clients - {count_str}")
+
+                # Wait for next monitoring cycle
+                await asyncio.wait_for(
+                    self.shutdown_event.wait(), timeout=30  # Monitor every 30 seconds
+                )
+
+            except asyncio.TimeoutError:
+                continue  # Normal timeout, continue monitoring
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                self.logger.error(f"Health monitoring task error: {e}")
+                await asyncio.sleep(1)  # Brief pause before retry
 
 
 class HydraRouter:
-    """Pure MQ router between TUI clients and the AI Hydra server."""
+    """Enhanced ZeroMQ router between TUI clients and the AI Hydra server."""
 
     def __init__(
         self,
@@ -28,7 +410,7 @@ class HydraRouter:
         log_level: str = "INFO",
     ):
         """
-        Initialize the AI Hydra router.
+        Initialize the AI Hydra router with enhanced capabilities.
 
         Args:
             router_address: Address to bind the router to
@@ -39,96 +421,144 @@ class HydraRouter:
         self.logger = logging.getLogger("HydraRouter")
         self.logger.setLevel(getattr(logging, log_level.upper()))
 
+        # Initialize components
+        self.validator = MessageValidator()
+        self.client_registry = ClientRegistry()
+        self.message_router = MessageRouter(self.client_registry, self.logger)
+        self.task_manager = BackgroundTaskManager(self.client_registry, self.logger)
+
         # Initialize ZMQ context
         self.ctx = zmq.asyncio.Context()
-
-        # Create a ROUTER socket to manage multiple clients
         self.socket = self.ctx.socket(zmq.ROUTER)
 
         # Bind to the router service
         router_service = f"tcp://{router_address}:{router_port}"
         try:
             self.socket.bind(router_service)
-            self.logger.info(f"Router started on {router_service}")
+            self.logger.info(f"Enhanced Hydra Router started on {router_service}")
         except zmq.error.ZMQError as e:
             self.logger.critical(f"Failed to bind router to {router_service}: {e}")
+            raise RouterConnectionError(
+                f"Failed to bind router to {router_service}",
+                address=router_address,
+                port=router_port,
+            ) from e
+
+        # Router state
+        self.is_running = False
+
+    async def start(self) -> None:
+        """Start the router and all background tasks."""
+        try:
+            self.is_running = True
+
+            # Start background tasks
+            await self.task_manager.start_tasks()
+
+            self.logger.info("Hydra Router fully initialized and running")
+
+        except Exception as e:
+            self.logger.error(f"Failed to start router: {e}")
+            await self.shutdown()
             raise
 
-        # Client tracking
-        self.clients: Dict[str, tuple] = (
-            {}
-        )  # client_id -> (client_type, last_heartbeat)
-        self.client_count = 0
-        self.server_count = 0
+    async def handle_requests(self) -> None:
+        """Continuously route messages between clients and servers with enhanced error handling."""
+        self.logger.info("Enhanced router message handling started")
 
-        # Lock for concurrent client dictionary access
-        self.clients_lock = asyncio.Lock()
+        while self.is_running:
+            try:
+                # ROUTER sockets prepend an identity frame
+                frames = await self.socket.recv_multipart()
 
-        # Background task reference (will be started in start_background_tasks)
-        self.prune_task = None
+                if len(frames) != 2:
+                    identity_str = frames[0].decode() if frames else "unknown"
+                    self._log_frame_error(frames, identity_str)
+                    continue
 
-    def _validate_message_format(self, message: Dict[str, Any]) -> tuple[bool, str]:
-        """
-        Validate message format compliance with RouterConstants format.
+                identity = frames[0]
+                identity_str = identity.decode()
+                msg_bytes = frames[1]
 
-        Args:
-            message: The message dictionary to validate
+                # Parse JSON message
+                try:
+                    msg = zmq.utils.jsonapi.loads(msg_bytes)
+                except (ValueError, TypeError) as e:
+                    self._log_json_parse_error(msg_bytes, e, identity_str)
+                    continue
 
-        Returns:
-            Tuple of (is_valid, error_message)
-        """
-        if not isinstance(message, dict):
-            return False, f"Message must be a dictionary, got {type(message).__name__}"
+                # Validate message format
+                is_valid, error_msg = self.validator.validate_router_message(msg)
+                if not is_valid:
+                    self._log_malformed_message(msg, error_msg, identity_str)
+                    continue
 
-        # Check required fields
-        required_fields = [RouterConstants.SENDER, RouterConstants.ELEM]
-        missing_fields = []
+                # Extract message components
+                sender_type = msg[RouterConstants.SENDER]
+                elem = msg[RouterConstants.ELEM]
+                data = msg.get(RouterConstants.DATA, {})
 
-        for field in required_fields:
-            if field not in message:
-                missing_fields.append(field)
-
-        if missing_fields:
-            return False, f"Missing required fields: {', '.join(missing_fields)}"
-
-        # Validate field types and values
-        sender = message.get(RouterConstants.SENDER)
-        elem = message.get(RouterConstants.ELEM)
-
-        if not isinstance(sender, str) or not sender.strip():
-            return (
-                False,
-                f"Field '{RouterConstants.SENDER}' must be a non-empty string, got: {repr(sender)}",
-            )
-
-        if not isinstance(elem, str) or not elem.strip():
-            return (
-                False,
-                f"Field '{RouterConstants.ELEM}' must be a non-empty string, got: {repr(elem)}",
-            )
-
-        # Validate sender type
-        valid_senders = [
-            RouterConstants.HYDRA_CLIENT,
-            RouterConstants.HYDRA_SERVER,
-            RouterConstants.HYDRA_ROUTER,
-        ]
-        if sender not in valid_senders:
-            return (
-                False,
-                f"Invalid sender type '{sender}', expected one of: {', '.join(valid_senders)}",
-            )
-
-        # Validate data field if present
-        if RouterConstants.DATA in message:
-            data = message[RouterConstants.DATA]
-            if not isinstance(data, (dict, type(None))):
-                return (
-                    False,
-                    f"Field '{RouterConstants.DATA}' must be a dictionary or None, got {type(data).__name__}",
+                # Debug logging
+                self.logger.debug(
+                    f"Valid message from {sender_type}({identity_str}): {elem}"
                 )
 
-        return True, ""
+                # Handle heartbeat messages
+                if elem == RouterConstants.HEARTBEAT:
+                    try:
+                        await self.client_registry.register_client(
+                            identity_str, sender_type
+                        )
+                        self.logger.debug(
+                            f"Heartbeat processed for {sender_type}({identity_str})"
+                        )
+                    except ClientRegistrationError as e:
+                        self.logger.error(f"Heartbeat registration failed: {e}")
+                    continue
+
+                # Log important commands
+                if elem in [
+                    RouterConstants.START_SIMULATION,
+                    RouterConstants.STOP_SIMULATION,
+                    RouterConstants.PAUSE_SIMULATION,
+                    RouterConstants.RESUME_SIMULATION,
+                    RouterConstants.RESET_SIMULATION,
+                ]:
+                    self.logger.info(
+                        f"Command {elem} from {sender_type}/{identity_str}"
+                    )
+
+                # Route message using enhanced router
+                try:
+                    await self.message_router.route_message(
+                        sender_id=identity_str,
+                        sender_type=sender_type,
+                        elem=elem,
+                        data=data,
+                        socket=self.socket,
+                    )
+                except RoutingError as e:
+                    self.logger.error(f"Message routing failed: {e}")
+                    # Send error response to sender
+                    error_msg = {RouterConstants.ERROR: f"Routing failed: {str(e)}"}
+                    await self.socket.send_multipart(
+                        [identity, zmq.utils.jsonapi.dumps(error_msg)]
+                    )
+
+            except asyncio.CancelledError:
+                self.logger.info("Router shutting down...")
+                break
+            except KeyboardInterrupt:
+                self.logger.info("Router shutdown requested")
+                break
+            except zmq.ZMQError as e:
+                self.logger.error(f"ZMQ error in router: {e}")
+                await asyncio.sleep(0.1)
+                continue
+            except Exception as e:
+                self.logger.error(f"Unexpected router error: {e}", exc_info=True)
+                await asyncio.sleep(0.1)
+                continue
 
     def _log_malformed_message(
         self, message: Dict[str, Any], error: str, client_identity: str = "unknown"
@@ -143,6 +573,10 @@ class HydraRouter:
         """
         # Log the main error
         self.logger.error(f"Malformed message from client {client_identity}: {error}")
+
+        # Get detailed validation error information
+        detailed_error = self.validator.get_validation_error_details(message)
+        self.logger.error(f"Validation details: {detailed_error}")
 
         # Log expected vs actual format
         expected_format = {
@@ -162,30 +596,6 @@ class HydraRouter:
             actual_message = actual_message[:500] + "... (truncated)"
 
         self.logger.error(f"Actual message received: {actual_message}")
-
-        # Log message analysis
-        if isinstance(message, dict):
-            present_fields = list(message.keys())
-            self.logger.error(f"Present fields: {present_fields}")
-
-            # Check for common issues
-            if (
-                RouterConstants.MESSAGE_TYPE in message
-                and RouterConstants.ELEM not in message
-            ):
-                self.logger.error(
-                    f"Detected ZMQMessage format: found '{RouterConstants.MESSAGE_TYPE}' field "
-                    f"but missing '{RouterConstants.ELEM}' field. "
-                    f"This suggests the client is sending ZMQMessage format instead of RouterConstants format."
-                )
-
-            # Log field types for debugging
-            field_types = {k: type(v).__name__ for k, v in message.items()}
-            self.logger.error(f"Field types: {field_types}")
-        else:
-            self.logger.error(
-                f"Message is not a dictionary: type={type(message).__name__}"
-            )
 
         # Log debugging hints
         self.logger.error(
@@ -269,262 +679,14 @@ class HydraRouter:
             "4. Check for truncated or corrupted messages."
         )
 
-    def _log_unknown_sender_error(
-        self, sender_type: str, elem: str, data: Any, client_identity: str = "unknown"
-    ) -> None:
-        """
-        Log detailed information about unknown sender type errors.
-
-        Args:
-            sender_type: The unknown sender type received
-            elem: The message element/type
-            data: The message data
-            client_identity: Identity of the client that sent the message
-        """
-        self.logger.error(
-            f"Unknown sender type from client {client_identity}: '{sender_type}'"
-        )
-
-        # Log expected vs actual sender types
-        valid_senders = [
-            RouterConstants.HYDRA_CLIENT,
-            RouterConstants.HYDRA_SERVER,
-            RouterConstants.HYDRA_ROUTER,
-        ]
-        self.logger.error(f"Expected sender types: {', '.join(valid_senders)}")
-        self.logger.error(
-            f"Actual sender type: '{sender_type}' (type: {type(sender_type).__name__})"
-        )
-
-        # Log additional message context
-        self.logger.error(f"Message element: '{elem}'")
-
-        # Log data summary (truncated for safety)
-        data_str = str(data)
-        if len(data_str) > 200:
-            data_str = data_str[:200] + "... (truncated)"
-        self.logger.error(f"Message data: {data_str}")
-
-        # Log debugging hints
-        self.logger.error(
-            "Debugging hints: "
-            "1. Check client configuration for correct sender type. "
-            "2. Verify MQClient is setting sender field correctly. "
-            "3. Check for typos in sender type string. "
-            f"4. Ensure sender is one of: {', '.join(valid_senders)}"
-        )
-
-    async def start_background_tasks(self) -> None:
-        """Start background tasks like client pruning."""
-        if self.prune_task is None:
-            self.prune_task = asyncio.create_task(self.prune_dead_clients_bg())
-
-    async def broadcast_to_clients(self, elem: str, data: Any, sender_id: str) -> None:
-        """Broadcast messages from server to all connected clients."""
-        client_ids = []
-        clients = deepcopy(self.clients)
-
-        for client_id in clients.keys():
-            if clients[client_id][0] == RouterConstants.HYDRA_CLIENT:
-                client_ids.append(client_id)
-
-        # Nothing to do if no clients
-        if not client_ids:
-            return
-
-        msg = {
-            RouterConstants.SENDER: RouterConstants.HYDRA_SERVER,
-            RouterConstants.ELEM: elem,
-            RouterConstants.DATA: data,
-        }
-        msg_bytes = zmq.utils.jsonapi.dumps(msg)
-
-        for client_id in client_ids:
-            if client_id != sender_id:
-                try:
-                    await self.socket.send_multipart([client_id.encode(), msg_bytes])
-                    self.logger.debug(
-                        f"Broadcast message to client {client_id}: {elem}"
-                    )
-                except Exception as e:
-                    self.logger.error(
-                        f"Failed to send message to client {client_id}: {e}"
-                    )
-
-    async def handle_requests(self) -> None:
-        """Continuously route messages between clients and servers."""
-        self.logger.info("Router message handling started")
-
-        while True:
-            try:
-                # ROUTER sockets prepend an identity frame
-                frames = await self.socket.recv_multipart()
-                identity = frames[0]
-                identity_str = identity.decode()
-                msg_bytes = frames[1]
-
-                if len(frames) != 2:
-                    self._log_frame_error(frames, identity_str)
-                    continue
-
-                try:
-                    msg = zmq.utils.jsonapi.loads(msg_bytes)
-                except (ValueError, TypeError) as e:
-                    self._log_json_parse_error(msg_bytes, e, identity_str)
-                    continue
-
-            except asyncio.CancelledError:
-                self.logger.info("Router shutting down...")
-                break
-            except KeyboardInterrupt:
-                self.logger.info("Router shutdown requested")
-                break
-            except zmq.ZMQError as e:
-                self.logger.error(f"ZMQ error in router: {e}")
-                await asyncio.sleep(0.1)
-                continue
-            except Exception as e:
-                self.logger.error(f"Router error: {e}")
-                continue
-
-            # Parse message
-            sender_type = msg.get(RouterConstants.SENDER)
-            elem = msg.get(RouterConstants.ELEM)
-            data = msg.get(RouterConstants.DATA, {})
-
-            # Debug logging
-            self.logger.debug(f"Message from {sender_type}({identity_str}): {elem}")
-
-            # Validate message format
-            validation_result = self._validate_message_format(msg)
-            if not validation_result[0]:
-                self._log_malformed_message(msg, validation_result[1], identity_str)
-                continue
-
-            # Handle heartbeat messages
-            if elem == RouterConstants.HEARTBEAT:
-                async with self.clients_lock:
-                    self.clients[identity_str] = (sender_type, time.time())
-                self.logger.debug(f"Heartbeat from {sender_type}({identity_str})")
-                continue
-
-            # Log important commands
-            if elem in [
-                RouterConstants.START_SIMULATION,
-                RouterConstants.STOP_SIMULATION,
-                RouterConstants.PAUSE_SIMULATION,
-                RouterConstants.RESUME_SIMULATION,
-                RouterConstants.RESET_SIMULATION,
-            ]:
-                self.logger.info(f"Command {elem} from {sender_type}/{identity_str}")
-
-            ### Routing Logic ###
-
-            # Forward client commands to server
-            if sender_type == RouterConstants.HYDRA_CLIENT:
-                await self.forward_to_server(elem=elem, data=data, sender=identity)
-
-            # Handle server messages
-            elif sender_type == RouterConstants.HYDRA_SERVER:
-                # Drop status/error messages (they're handled locally)
-                if elem in [RouterConstants.STATUS, RouterConstants.ERROR]:
-                    continue
-
-                # Broadcast all other messages to clients
-                await self.broadcast_to_clients(
-                    elem=elem, data=data, sender_id=identity_str
-                )
-
-            else:
-                self._log_unknown_sender_error(sender_type, elem, data, identity_str)
-
-    async def forward_to_server(self, elem: str, data: Any, sender: bytes) -> None:
-        """Forward client command to the AI Hydra server."""
-        # Find all connected servers
-        servers = []
-        clients = deepcopy(self.clients)
-
-        for identity in clients.keys():
-            if clients[identity][0] == RouterConstants.HYDRA_SERVER:
-                servers.append(identity)
-
-        # No server connected - inform the client
-        if not servers:
-            error_msg = {RouterConstants.ERROR: "No AI Hydra server connected"}
-            await self.socket.send_multipart(
-                [sender, zmq.utils.jsonapi.dumps(error_msg)]
-            )
-            self.logger.warning("No server connected for client request")
-            return
-
-        # Construct message
-        msg = {
-            RouterConstants.SENDER: RouterConstants.HYDRA_CLIENT,
-            RouterConstants.ELEM: elem,
-            RouterConstants.DATA: data,
-        }
-        msg_bytes = zmq.utils.jsonapi.dumps(msg)
-
-        # Send to all connected servers (usually just one)
-        for server_id in servers:
-            try:
-                await self.socket.send_multipart([server_id.encode(), msg_bytes])
-                self.logger.debug(f"Forwarded {elem} to server {server_id}")
-            except Exception as e:
-                self.logger.error(
-                    f"Failed to forward message to server {server_id}: {e}"
-                )
-
-        # Acknowledge the client
-        ack_msg = {RouterConstants.STATUS: RouterConstants.OK}
-        await self.socket.send_multipart([sender, zmq.utils.jsonapi.dumps(ack_msg)])
-
-    async def prune_dead_clients_bg(self) -> None:
-        """Background task to prune dead clients."""
-        while True:
-            await self.prune_dead_clients()
-            await asyncio.sleep(RouterConstants.HEARTBEAT_INTERVAL * 4)
-
-    async def prune_dead_clients(self) -> None:
-        """Remove clients that haven't sent heartbeats recently."""
-        async with self.clients_lock:
-            now = time.time()
-            client_count = 0
-            server_count = 0
-
-            clients_copy = deepcopy(self.clients)
-            for identity in clients_copy.keys():
-                sender_type, last_heartbeat = self.clients[identity]
-
-                # Remove clients that haven't sent heartbeat in 3x the interval
-                if now - last_heartbeat > (RouterConstants.HEARTBEAT_INTERVAL * 3):
-                    self.logger.info(f"Removing inactive client: {identity}")
-                    del self.clients[identity]
-                else:
-                    if sender_type == RouterConstants.HYDRA_SERVER:
-                        server_count += 1
-                    elif sender_type == RouterConstants.HYDRA_CLIENT:
-                        client_count += 1
-
-            # Update counts if changed
-            if client_count != self.client_count or server_count != self.server_count:
-                self.client_count = client_count
-                self.server_count = server_count
-                self.logger.info(
-                    f"Connected clients: {client_count}, servers: {server_count}"
-                )
-
     async def shutdown(self) -> None:
-        """Gracefully shutdown the router."""
-        self.logger.info("Shutting down router...")
+        """Gracefully shutdown the router and all components."""
+        self.logger.info("Shutting down Enhanced Hydra Router...")
 
-        # Cancel background tasks
-        if self.prune_task:
-            self.prune_task.cancel()
-            try:
-                await self.prune_task
-            except asyncio.CancelledError:
-                pass
+        self.is_running = False
+
+        # Stop background tasks
+        await self.task_manager.stop_tasks()
 
         # Close socket
         if self.socket:
@@ -534,23 +696,59 @@ class HydraRouter:
         if self.ctx:
             self.ctx.term()
 
-        self.logger.info("Router shutdown complete")
+        self.logger.info("Enhanced Hydra Router shutdown complete")
+
+    # Legacy methods for backward compatibility
+    def _validate_message_format(self, message: Dict[str, Any]) -> tuple[bool, str]:
+        """Legacy validation method for backward compatibility."""
+        return self.validator.validate_router_message(message)
+
+    async def start_background_tasks(self) -> None:
+        """Legacy method for backward compatibility."""
+        await self.task_manager.start_tasks()
+
+    async def broadcast_to_clients(self, elem: str, data: Any, sender_id: str) -> None:
+        """Legacy method for backward compatibility."""
+        await self.message_router._route_server_message(
+            sender_id, elem, data, self.socket
+        )
+
+    async def forward_to_server(self, elem: str, data: Any, sender: bytes) -> None:
+        """Legacy method for backward compatibility."""
+        sender_id = sender.decode()
+        await self.message_router._route_client_message(
+            sender_id, elem, data, self.socket
+        )
+
+    async def prune_dead_clients_bg(self) -> None:
+        """Legacy method - now handled by BackgroundTaskManager."""
+        pass
+
+    async def prune_dead_clients(self) -> None:
+        """Legacy method - now handled by BackgroundTaskManager."""
+        timeout = RouterConstants.HEARTBEAT_INTERVAL * 3
+        removed_clients = await self.client_registry.prune_inactive_clients(timeout)
+        if removed_clients:
+            self.logger.info(f"Pruned inactive clients: {removed_clients}")
 
 
 async def main_async(router_address: str, router_port: int, log_level: str) -> None:
-    """Main async function for the router."""
+    """Main async function for the enhanced router."""
     router = HydraRouter(
         router_address=router_address, router_port=router_port, log_level=log_level
     )
 
     try:
-        # Start background tasks
-        await router.start_background_tasks()
+        # Start the enhanced router
+        await router.start()
 
         # Start handling requests
         await router.handle_requests()
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        logging.getLogger("HydraRouter").error(f"Router failed: {e}", exc_info=True)
+        raise
     finally:
         await router.shutdown()
 

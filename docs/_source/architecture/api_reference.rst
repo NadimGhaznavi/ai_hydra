@@ -174,6 +174,27 @@ Simulation Pipeline
 Error Handling
 --------------
 
+The Hydra Router system provides comprehensive error handling with detailed context and debugging information.
+
+Exception Hierarchy
+~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: ai_hydra.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Message Validation
+~~~~~~~~~~~~~~~~~~
+
+.. automodule:: ai_hydra.validation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Error Handler
+~~~~~~~~~~~~~
+
 .. automodule:: ai_hydra.error_handler
    :members:
    :undoc-members:

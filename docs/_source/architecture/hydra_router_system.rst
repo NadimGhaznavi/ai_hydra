@@ -90,11 +90,11 @@ Core Router Components
 Message Processing Components
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**Message_Validator**
+  Component that validates RouterConstants message format compliance with comprehensive field validation, type checking, and detailed error reporting. Provides both lenient validation (returns boolean result) and strict validation (raises exceptions) modes for different use cases.
+
 **Message_Format_Adapter**
   Component within MQClient that converts between different message formats (ZMQMessage ↔ RouterConstants), enabling transparent communication.
-
-**Message_Validator**
-  Component that validates message format compliance and provides detailed error reporting for troubleshooting.
 
 **Protocol_Handler**
   Manages the structured JSON message protocol with sender identification, client ID tracking, and request correlation.
@@ -222,17 +222,46 @@ Configurable Routing Rules
 Error Handling and Recovery
 ---------------------------
 
+Exception Hierarchy
+~~~~~~~~~~~~~~~~~~~
+
+The Hydra Router system provides a comprehensive exception hierarchy with detailed context for debugging:
+
+**HydraRouterError (Base Exception)**
+  Base exception class that provides context support for enhanced error debugging and formatted error messages with contextual information.
+
+**MessageValidationError**
+  Raised when RouterConstants message format validation fails, includes invalid message details and expected format specification for troubleshooting.
+
+**ConnectionError**
+  Raised for network connection issues, provides context including network address, port, and client ID for connection debugging.
+
+**ClientRegistrationError**
+  Raised during client registration or management failures, includes client ID, client type, and operation context for tracking registration issues.
+
+**MessageFormatError**
+  Raised when message format conversion fails between ZMQMessage and RouterConstants formats, includes source/target format details and conversion stage information.
+
+**RouterConfigurationError**
+  Raised for invalid router configuration, provides configuration key, invalid value, and list of valid values for configuration debugging.
+
+**HeartbeatError**
+  Raised when heartbeat mechanism fails, includes client ID, last heartbeat timestamp, and timeout threshold for connectivity troubleshooting.
+
+**RoutingError**
+  Raised when message routing fails, provides message type, sender/target IDs, and routing rule context for routing debugging.
+
 Message Validation Errors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Format Validation:**
-  Comprehensive validation of RouterConstants format with specific error reporting for missing or incorrect fields.
+  Comprehensive validation of RouterConstants format with specific error reporting for missing or incorrect fields using the MessageValidator class.
 
 **Error Response:**
-  Detailed error messages including expected vs actual format, source component identification, and troubleshooting guidance.
+  Detailed error messages including expected vs actual format, source component identification, and troubleshooting guidance through structured exception context.
 
 **Recovery Mechanisms:**
-  Automatic retry logic for transient errors and graceful degradation for persistent failures.
+  Automatic retry logic for transient errors and graceful degradation for persistent failures with comprehensive error logging.
 
 Connection Management Errors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

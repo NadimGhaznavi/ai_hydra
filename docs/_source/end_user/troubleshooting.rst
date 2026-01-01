@@ -314,6 +314,245 @@ Test Failures
     # Run single test with debugging
     pytest -v -s tests/test_problematic.py::test_specific_function --pdb
 
+Hydra Router Error Handling
+---------------------------
+
+Exception Types and Solutions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Hydra Router system provides detailed exception information to help diagnose and resolve issues. All router exceptions inherit from ``HydraRouterError`` and include contextual information for debugging.
+
+**MessageValidationError**
+
+**Issue**: RouterConstants message format validation fails
+
+**Common Causes**:
+- Missing required fields (sender, elem, data, client_id, timestamp)
+- Invalid field types (non-string sender, non-dict data)
+- Invalid sender type (not HydraClient, HydraServer, or HydraRouter)
+- Invalid message element type
+
+**Example Error**:
+
+.. code-block:: python
+
+    MessageValidationError: Missing required fields: client_id, timestamp 
+    (Context: invalid_message={'sender': 'HydraClient', 'elem': 'HEARTBEAT'}, 
+     expected_format={'sender': 'string, one of: HydraClient, HydraServer, HydraRouter'})
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Wrong: Missing required fields
+    message = {
+        "sender": "HydraClient",
+        "elem": "HEARTBEAT"
+    }
+    
+    # Correct: All required fields
+    message = {
+        "sender": "HydraClient",
+        "elem": "HEARTBEAT", 
+        "data": {},
+        "client_id": "client_001",
+        "timestamp": time.time()
+    }
+
+**ConnectionError**
+
+**Issue**: Network connection problems between router and clients
+
+**Example Error**:
+
+.. code-block:: python
+
+    ConnectionError: Failed to connect to router 
+    (Context: address=tcp://localhost:5555, port=5555, client_id=client_001)
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Check router availability
+    def test_router_connection(address="tcp://localhost:5555"):
+        try:
+            context = zmq.Context()
+            socket = context.socket(zmq.DEALER)
+            socket.setsockopt(zmq.RCVTIMEO, 5000)
+            socket.connect(address)
+            return True
+        except Exception as e:
+            print(f"Router connection failed: {e}")
+            return False
+
+**ClientRegistrationError**
+
+**Issue**: Client registration or management failures
+
+**Example Error**:
+
+.. code-block:: python
+
+    ClientRegistrationError: Client registration failed 
+    (Context: client_id=client_001, client_type=HydraClient, operation=register)
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Ensure unique client IDs
+    import uuid
+    client_id = f"client_{uuid.uuid4().hex[:8]}"
+    
+    # Verify client type is valid
+    valid_types = ["HydraClient", "HydraServer", "HydraRouter"]
+    assert client_type in valid_types
+
+**MessageFormatError**
+
+**Issue**: Message format conversion between ZMQMessage and RouterConstants fails
+
+**Example Error**:
+
+.. code-block:: python
+
+    MessageFormatError: Format conversion failed 
+    (Context: source_format=ZMQMessage, target_format=RouterConstants, 
+     conversion_stage=field_mapping)
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Ensure ZMQMessage has all required fields
+    zmq_message = ZMQMessage(
+        message_type=MessageType.HEARTBEAT,
+        timestamp=time.time(),
+        data={},
+        client_id="client_001"
+    )
+
+**RouterConfigurationError**
+
+**Issue**: Invalid router configuration parameters
+
+**Example Error**:
+
+.. code-block:: python
+
+    RouterConfigurationError: Invalid heartbeat interval 
+    (Context: config_key=heartbeat_interval, config_value=-5, 
+     valid_values=[1, 2, 3, 4, 5, 10, 15, 30])
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Use valid configuration values
+    router_config = {
+        "heartbeat_interval": 5,  # Valid: positive integer
+        "client_timeout": 15,     # Valid: greater than heartbeat_interval
+        "max_clients": 100        # Valid: positive integer
+    }
+
+**HeartbeatError**
+
+**Issue**: Client heartbeat mechanism failures
+
+**Example Error**:
+
+.. code-block:: python
+
+    HeartbeatError: Client heartbeat timeout 
+    (Context: client_id=client_001, last_heartbeat=1234567890.123, 
+     timeout_threshold=15.0)
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Implement proper heartbeat sending
+    def send_heartbeat(socket, client_id):
+        heartbeat_msg = {
+            "sender": "HydraClient",
+            "elem": "HEARTBEAT",
+            "data": {},
+            "client_id": client_id,
+            "timestamp": time.time()
+        }
+        socket.send_json(heartbeat_msg)
+    
+    # Send heartbeats regularly
+    import threading
+    import time
+    
+    def heartbeat_loop(socket, client_id, interval=5):
+        while True:
+            send_heartbeat(socket, client_id)
+            time.sleep(interval)
+    
+    heartbeat_thread = threading.Thread(
+        target=heartbeat_loop, 
+        args=(socket, client_id)
+    )
+    heartbeat_thread.daemon = True
+    heartbeat_thread.start()
+
+**RoutingError**
+
+**Issue**: Message routing failures within the router
+
+**Example Error**:
+
+.. code-block:: python
+
+    RoutingError: No route found for message 
+    (Context: message_type=START_SIMULATION, sender_id=client_001, 
+     target_id=server_001, routing_rule=client_to_server)
+
+**Solutions**:
+
+.. code-block:: python
+
+    # Ensure server is connected before sending commands
+    def check_server_availability(router_status):
+        if not router_status.get("server_connected"):
+            raise RoutingError("No server available for command routing")
+    
+    # Use proper message routing
+    def send_command_to_server(socket, command):
+        message = {
+            "sender": "HydraClient",
+            "elem": command,
+            "data": {"target": "server"},
+            "client_id": "client_001",
+            "timestamp": time.time()
+        }
+        socket.send_json(message)
+
+**Debugging Router Exceptions**
+
+Use the exception context for detailed debugging:
+
+.. code-block:: python
+
+    try:
+        # Router operation that might fail
+        router.process_message(message)
+    except HydraRouterError as e:
+        print(f"Router error: {e}")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Context: {e.context}")
+        
+        # Handle specific error types
+        if isinstance(e, MessageValidationError):
+            print(f"Invalid message: {e.invalid_message}")
+            print(f"Expected format: {e.expected_format}")
+        elif isinstance(e, ConnectionError):
+            print(f"Connection details: {e.address}:{e.port}")
+            print(f"Client ID: {e.client_id}")
+
 ZeroMQ Communication Issues
 ---------------------------
 
