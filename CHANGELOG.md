@@ -28,9 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Defined bidirectional message format conversion and error handling requirements
   - Established message format migration and backward compatibility requirements
 - **Documentation**: Updated architecture documentation with message format adapter information
+- **Specifications**: Updated router message protocol fix task status to reflect active implementation progress
+  - Marked task 2 (heartbeat message format fix) as in-progress in router-message-protocol-fix spec
+  - Indicates ongoing work on MQClient _send_heartbeat() method RouterConstants format implementation
   - Enhanced MQClient description to include built-in message format conversion capabilities
   - Added Message Format Adapter component description with transparent operation details
   - Updated RouterConstants description to clarify router message format expectations
+  - **Implementation Status**: Task 2 heartbeat message format fix is currently being implemented in MQClient
 - **Specifications**: Added comprehensive requirements documentation for router message protocol fix
   - Created detailed requirements document with 5 main requirements covering message format standardization
   - Defined acceptance criteria for heartbeat protocol compliance and bidirectional message conversion

@@ -63,6 +63,8 @@ The central message routing component that:
 MQClient
 ~~~~~~~~
 
+**Status: Format conversion implemented, heartbeat message format fix in progress.**
+
 Generic client class for router communication that:
 
 * **Unified Interface**: Provides consistent API for both client and server roles
@@ -70,18 +72,20 @@ Generic client class for router communication that:
 * **Message Protocol**: Structured JSON message handling with timeout management
 * **Context Management**: Python context manager support for resource cleanup
 * **Error Recovery**: Graceful error handling and automatic cleanup
-* **Format Conversion**: Automatic conversion between ZMQMessage and RouterConstants formats
+* **Format Conversion**: ✅ **IMPLEMENTED** - Automatic conversion between ZMQMessage and RouterConstants formats
 
 Message Format Adapter
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+**Status: COMPLETED** - All format conversion functionality has been implemented and tested.
+
 The MQClient includes a built-in message format adapter that:
 
-* **Transparent Conversion**: Automatically converts between ZMQMessage and RouterConstants formats
-* **Bidirectional Support**: Handles both outgoing and incoming message conversion
-* **Validation**: Validates message format compliance before processing
-* **Error Handling**: Provides detailed error messages for format validation failures
-* **Backward Compatibility**: Maintains compatibility with existing internal components
+* **Transparent Conversion**: ✅ **IMPLEMENTED** - Automatically converts between ZMQMessage and RouterConstants formats
+* **Bidirectional Support**: ✅ **IMPLEMENTED** - Handles both outgoing and incoming message conversion
+* **Validation**: ✅ **IMPLEMENTED** - Validates message format compliance before processing
+* **Error Handling**: ✅ **IMPLEMENTED** - Provides detailed error messages for format validation failures
+* **Backward Compatibility**: ✅ **IMPLEMENTED** - Maintains compatibility with existing internal components
 
 **Conversion Process:**
 

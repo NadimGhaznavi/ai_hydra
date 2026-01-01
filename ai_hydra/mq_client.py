@@ -41,7 +41,7 @@ class MQClient:
         MessageType.STATUS_UPDATE.value: RouterConstants.STATUS_UPDATE,
         MessageType.GAME_STATE_UPDATE.value: RouterConstants.GAME_STATE_UPDATE,
         MessageType.DECISION_CYCLE_COMPLETE.value: RouterConstants.PERFORMANCE_UPDATE,
-        MessageType.GAME_OVER.value: RouterConstants.STATUS_UPDATE,
+        MessageType.GAME_OVER.value: RouterConstants.GAME_STATE_UPDATE,  # Map GAME_OVER to GAME_STATE_UPDATE
         MessageType.ERROR_OCCURRED.value: RouterConstants.ERROR,
         MessageType.CLIENT_CONNECTED.value: RouterConstants.STATUS,
         MessageType.CLIENT_DISCONNECTED.value: RouterConstants.STATUS,
@@ -99,9 +99,14 @@ class MQClient:
             Dict containing RouterConstants format message
 
         Raises:
-            ValueError: If message type is not supported
+            ValueError: If message type is not supported or validation fails
+            TypeError: If message has incorrect type
         """
         try:
+            # Validate input message type
+            if not isinstance(message, ZMQMessage):
+                raise TypeError(f"Expected ZMQMessage, got {type(message).__name__}")
+
             # Map message_type to elem
             elem = self._map_message_type_to_elem(message.message_type.value)
 
@@ -119,11 +124,23 @@ class MQClient:
             if not is_valid:
                 raise ValueError(f"Converted message validation failed: {error}")
 
+            self.logger.debug(
+                f"Successfully converted {message.message_type.value} to RouterConstants format"
+            )
             return router_message
 
+        except ValueError as e:
+            # Re-raise ValueError with additional context
+            self.logger.error(f"Message format conversion failed: {e}")
+            raise ValueError(
+                f"Message format conversion failed for {message.message_type.value}: {e}"
+            )
         except Exception as e:
-            self.logger.error(f"Message conversion failed: {e}")
-            raise
+            # Handle unexpected errors gracefully
+            self.logger.error(
+                f"Unexpected error during message conversion: {e}", exc_info=True
+            )
+            raise ValueError(f"Message conversion failed due to unexpected error: {e}")
 
     def _convert_from_router_format(self, router_message: Dict[str, Any]) -> ZMQMessage:
         """
@@ -137,8 +154,13 @@ class MQClient:
 
         Raises:
             ValueError: If router message format is invalid
+            TypeError: If router_message has incorrect type
         """
         try:
+            # Validate input type
+            if not isinstance(router_message, dict):
+                raise TypeError(f"Expected dict, got {type(router_message).__name__}")
+
             # Validate router message format
             is_valid, error = self._validate_router_message(router_message)
             if not is_valid:
@@ -148,7 +170,7 @@ class MQClient:
             elem = router_message.get(RouterConstants.ELEM)
             message_type = self._map_elem_to_message_type(elem)
 
-            return ZMQMessage(
+            zmq_message = ZMQMessage(
                 message_type=message_type,
                 timestamp=router_message.get(RouterConstants.TIMESTAMP, time.time()),
                 client_id=router_message.get(RouterConstants.CLIENT_ID),
@@ -156,9 +178,25 @@ class MQClient:
                 data=router_message.get(RouterConstants.DATA, {}),
             )
 
-        except Exception as e:
+            self.logger.debug(
+                f"Successfully converted RouterConstants {elem} to ZMQMessage format"
+            )
+            return zmq_message
+
+        except ValueError as e:
+            # Re-raise ValueError with additional context
             self.logger.error(f"Router message conversion failed: {e}")
-            raise
+            raise ValueError(
+                f"Router message conversion failed for elem '{router_message.get(RouterConstants.ELEM, 'unknown')}': {e}"
+            )
+        except Exception as e:
+            # Handle unexpected errors gracefully
+            self.logger.error(
+                f"Unexpected error during router message conversion: {e}", exc_info=True
+            )
+            raise ValueError(
+                f"Router message conversion failed due to unexpected error: {e}"
+            )
 
     def _map_message_type_to_elem(self, message_type: str) -> str:
         """
@@ -173,8 +211,17 @@ class MQClient:
         Raises:
             ValueError: If message type is not supported
         """
+        if not isinstance(message_type, str):
+            raise ValueError(
+                f"Message type must be string, got {type(message_type).__name__}"
+            )
+
         if message_type not in self.MESSAGE_TYPE_MAPPING:
-            raise ValueError(f"Unsupported message type: {message_type}")
+            supported_types = list(self.MESSAGE_TYPE_MAPPING.keys())
+            raise ValueError(
+                f"Unsupported message type: '{message_type}'. "
+                f"Supported types: {supported_types}"
+            )
 
         return self.MESSAGE_TYPE_MAPPING[message_type]
 
@@ -191,11 +238,20 @@ class MQClient:
         Raises:
             ValueError: If elem is not supported
         """
+        if not isinstance(elem, str):
+            raise ValueError(
+                f"RouterConstants elem must be string, got {type(elem).__name__}"
+            )
+
         # Create reverse mapping
         reverse_mapping = {v: k for k, v in self.MESSAGE_TYPE_MAPPING.items()}
 
         if elem not in reverse_mapping:
-            raise ValueError(f"Unsupported router element: {elem}")
+            supported_elems = list(reverse_mapping.keys())
+            raise ValueError(
+                f"Unsupported router element: '{elem}'. "
+                f"Supported elements: {supported_elems}"
+            )
 
         return MessageType(reverse_mapping[elem])
 
@@ -211,6 +267,9 @@ class MQClient:
         Returns:
             Tuple of (is_valid, error_message)
         """
+        if not isinstance(message, dict):
+            return False, f"Message must be dict, got {type(message).__name__}"
+
         required_fields = [
             RouterConstants.SENDER,
             RouterConstants.ELEM,
@@ -219,25 +278,46 @@ class MQClient:
             RouterConstants.TIMESTAMP,
         ]
 
+        # Check for missing required fields
+        missing_fields = []
         for field in required_fields:
             if field not in message:
-                return False, f"Missing required field: {field}"
+                missing_fields.append(field)
 
-        # Validate field types
-        if not isinstance(message[RouterConstants.SENDER], str):
-            return False, f"Field {RouterConstants.SENDER} must be string"
+        if missing_fields:
+            return False, f"Missing required fields: {', '.join(missing_fields)}"
 
-        if not isinstance(message[RouterConstants.ELEM], str):
-            return False, f"Field {RouterConstants.ELEM} must be string"
+        # Validate field types with detailed error messages
+        type_validations = [
+            (RouterConstants.SENDER, str, "sender must be string"),
+            (RouterConstants.ELEM, str, "elem must be string"),
+            (RouterConstants.DATA, dict, "data must be dict"),
+            (RouterConstants.CLIENT_ID, str, "client_id must be string"),
+            (RouterConstants.TIMESTAMP, (int, float), "timestamp must be number"),
+        ]
 
-        if not isinstance(message[RouterConstants.DATA], dict):
-            return False, f"Field {RouterConstants.DATA} must be dict"
+        for field, expected_type, error_msg in type_validations:
+            if not isinstance(message[field], expected_type):
+                actual_type = type(message[field]).__name__
+                return False, f"{error_msg}, got {actual_type}"
 
-        if not isinstance(message[RouterConstants.CLIENT_ID], str):
-            return False, f"Field {RouterConstants.CLIENT_ID} must be string"
+        # Validate field values
+        if not message[RouterConstants.SENDER]:
+            return False, "sender field cannot be empty"
 
-        if not isinstance(message[RouterConstants.TIMESTAMP], (int, float)):
-            return False, f"Field {RouterConstants.TIMESTAMP} must be number"
+        if not message[RouterConstants.ELEM]:
+            return False, "elem field cannot be empty"
+
+        if not message[RouterConstants.CLIENT_ID]:
+            return False, "client_id field cannot be empty"
+
+        # Validate timestamp is reasonable (not negative, reasonable range)
+        timestamp = message[RouterConstants.TIMESTAMP]
+        if timestamp < 0:
+            return False, "timestamp cannot be negative"
+        # Allow reasonable timestamp range (1970 to 2100)
+        if timestamp > 4102444800:  # Year 2100
+            return False, "timestamp is unreasonably far in the future"
 
         return True, None
 
@@ -297,9 +377,17 @@ class MQClient:
 
         Args:
             message: ZMQMessage to send
+
+        Raises:
+            ConnectionError: If not connected to router
+            ValueError: If message format conversion fails
+            TypeError: If message has incorrect type
         """
         if not self.is_connected:
             raise ConnectionError("Not connected to router")
+
+        if not isinstance(message, ZMQMessage):
+            raise TypeError(f"Expected ZMQMessage, got {type(message).__name__}")
 
         try:
             # Convert ZMQMessage to RouterConstants format
@@ -308,9 +396,30 @@ class MQClient:
             await self.socket.send_json(router_message)
             self.logger.debug(f"Sent message: {router_message[RouterConstants.ELEM]}")
 
-        except Exception as e:
-            self.logger.error(f"Failed to send message: {e}")
+        except ValueError as e:
+            # Log conversion errors with context
+            self.logger.error(
+                f"Failed to send message due to format conversion error: {e}. "
+                f"Message type: {message.message_type.value}, Client: {self.client_id}"
+            )
             raise
+        except TypeError as e:
+            # Log type errors with context
+            self.logger.error(
+                f"Failed to send message due to type error: {e}. "
+                f"Client: {self.client_id}"
+            )
+            raise
+        except Exception as e:
+            # Handle unexpected errors gracefully
+            self.logger.error(
+                f"Unexpected error sending message: {e}. "
+                f"Message type: {message.message_type.value}, Client: {self.client_id}",
+                exc_info=True,
+            )
+            raise ConnectionError(
+                f"Failed to send message due to unexpected error: {e}"
+            )
 
     async def receive_message(self) -> Optional[Dict[str, Any]]:
         """
@@ -326,14 +435,48 @@ class MQClient:
             # Non-blocking receive
             if await self.socket.poll(timeout=0):
                 message_dict = await self.socket.recv_json()
-                self.logger.debug(
-                    f"Received message: {message_dict.get('message_type', 'unknown')}"
-                )
+
+                # Validate received message format
+                if isinstance(message_dict, dict):
+                    # Check if it's a RouterConstants format message
+                    if RouterConstants.ELEM in message_dict:
+                        try:
+                            # Validate the router message format
+                            is_valid, error = self._validate_router_message(
+                                message_dict
+                            )
+                            if not is_valid:
+                                self.logger.warning(
+                                    f"Received invalid RouterConstants message: {error}. "
+                                    f"Message: {message_dict}"
+                                )
+                                return None
+
+                            self.logger.debug(
+                                f"Received RouterConstants message: {message_dict.get(RouterConstants.ELEM, 'unknown')}"
+                            )
+                        except Exception as e:
+                            self.logger.warning(
+                                f"Error validating received RouterConstants message: {e}. "
+                                f"Message: {message_dict}"
+                            )
+                            return None
+                    else:
+                        # Legacy format or other message type
+                        self.logger.debug(
+                            f"Received message: {message_dict.get('message_type', 'unknown')}"
+                        )
+                else:
+                    self.logger.warning(
+                        f"Received non-dict message: {type(message_dict).__name__}"
+                    )
+                    return None
+
                 return message_dict
             return None
 
         except Exception as e:
-            self.logger.error(f"Failed to receive message: {e}")
+            self.logger.error(f"Failed to receive message: {e}", exc_info=True)
             return None
 
     async def receive_message_blocking(
@@ -355,14 +498,48 @@ class MQClient:
             timeout_ms = int(timeout * 1000) if timeout else -1
             if await self.socket.poll(timeout=timeout_ms):
                 message_dict = await self.socket.recv_json()
-                self.logger.debug(
-                    f"Received message: {message_dict.get('message_type', 'unknown')}"
-                )
+
+                # Validate received message format
+                if isinstance(message_dict, dict):
+                    # Check if it's a RouterConstants format message
+                    if RouterConstants.ELEM in message_dict:
+                        try:
+                            # Validate the router message format
+                            is_valid, error = self._validate_router_message(
+                                message_dict
+                            )
+                            if not is_valid:
+                                self.logger.warning(
+                                    f"Received invalid RouterConstants message: {error}. "
+                                    f"Message: {message_dict}"
+                                )
+                                return None
+
+                            self.logger.debug(
+                                f"Received RouterConstants message: {message_dict.get(RouterConstants.ELEM, 'unknown')}"
+                            )
+                        except Exception as e:
+                            self.logger.warning(
+                                f"Error validating received RouterConstants message: {e}. "
+                                f"Message: {message_dict}"
+                            )
+                            return None
+                    else:
+                        # Legacy format or other message type
+                        self.logger.debug(
+                            f"Received message: {message_dict.get('message_type', 'unknown')}"
+                        )
+                else:
+                    self.logger.warning(
+                        f"Received non-dict message: {type(message_dict).__name__}"
+                    )
+                    return None
+
                 return message_dict
             return None
 
         except Exception as e:
-            self.logger.error(f"Failed to receive message: {e}")
+            self.logger.error(f"Failed to receive message: {e}", exc_info=True)
             return None
 
     async def send_command(
@@ -381,9 +558,23 @@ class MQClient:
 
         Returns:
             Response message dict, or None if timeout/error
+
+        Raises:
+            ConnectionError: If not connected to router
+            ValueError: If message format is invalid
+            TypeError: If parameters have incorrect types
         """
         if data is None:
             data = {}
+
+        if not isinstance(message_type, MessageType):
+            raise TypeError(f"Expected MessageType, got {type(message_type).__name__}")
+
+        if not isinstance(data, dict):
+            raise TypeError(f"Expected dict for data, got {type(data).__name__}")
+
+        if not isinstance(timeout, (int, float)) or timeout <= 0:
+            raise ValueError(f"Timeout must be positive number, got {timeout}")
 
         # Create message
         request_id = str(uuid.uuid4())
@@ -402,13 +593,30 @@ class MQClient:
             response = await self.receive_message_blocking(timeout=timeout)
 
             if response and response.get("request_id") == request_id:
+                self.logger.debug(f"Received response for {message_type.value}")
                 return response
             else:
-                self.logger.warning(f"No response received for {message_type.value}")
+                self.logger.warning(
+                    f"No matching response received for {message_type.value} "
+                    f"(request_id: {request_id}) within {timeout}s timeout"
+                )
                 return None
 
+        except (ValueError, TypeError) as e:
+            # Re-raise validation errors
+            self.logger.error(f"Command failed due to validation error: {e}")
+            raise
+        except ConnectionError as e:
+            # Re-raise connection errors
+            self.logger.error(f"Command failed due to connection error: {e}")
+            raise
         except Exception as e:
-            self.logger.error(f"Command failed: {e}")
+            # Handle unexpected errors gracefully
+            self.logger.error(
+                f"Unexpected error in send_command: {e}. "
+                f"Message type: {message_type.value}, Client: {self.client_id}",
+                exc_info=True,
+            )
             return None
 
     async def _send_heartbeat(self) -> None:
@@ -424,11 +632,21 @@ class MQClient:
                     RouterConstants.REQUEST_ID: str(uuid.uuid4()),
                 }
 
+                # Validate heartbeat message before sending
+                is_valid, error = self._validate_router_message(heartbeat_msg)
+                if not is_valid:
+                    self.logger.error(f"Invalid heartbeat message: {error}")
+                    # Try to continue with next heartbeat
+                    continue
+
                 await self.socket.send_json(heartbeat_msg)
                 self.logger.debug(f"Sent heartbeat from {self.client_id}")
 
             except Exception as e:
-                self.logger.error(f"Heartbeat failed: {e}")
+                self.logger.error(
+                    f"Heartbeat failed for client {self.client_id}: {e}", exc_info=True
+                )
+                # Continue trying to send heartbeats even if one fails
 
             try:
                 await asyncio.wait_for(

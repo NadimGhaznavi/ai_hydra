@@ -32,6 +32,72 @@ The fix implements a message format adapter within the MQClient that transparent
 * **Centralized Conversion**: All format conversion logic is contained within MQClient
 * **Error Resilience**: Comprehensive error handling and validation
 
+Current Implementation Status
+-----------------------------
+
+**Task Progress Summary:**
+
+.. list-table:: Implementation Progress
+   :header-rows: 1
+   :widths: 10 40 20 30
+
+   * - Task
+     - Description
+     - Status
+     - Notes
+   * - 1
+     - Update MQClient message format conversion
+     - ✅ COMPLETED
+     - Format conversion methods implemented
+   * - 1.1
+     - Property test for message format conversion
+     - ✅ COMPLETED
+     - Property 1: Message Format Round-Trip Conversion
+   * - 2
+     - Fix heartbeat message format in MQClient
+     - 🔄 IN PROGRESS
+     - ``_send_heartbeat()`` method implementation ongoing
+   * - 2.1
+     - Property test for heartbeat message processing
+     - ✅ COMPLETED
+     - Property 3: Heartbeat Message Processing
+   * - 3
+     - Add message validation and error handling
+     - ✅ COMPLETED
+     - Comprehensive validation implemented
+   * - 3.1
+     - Property test for format validation
+     - ✅ COMPLETED
+     - Property 2: RouterConstants Format Compliance
+   * - 3.2
+     - Property test for error handling
+     - ✅ COMPLETED
+     - Property 4: Format Validation Error Reporting
+
+**Completed Components:**
+
+* **Message Format Conversion**: Full bidirectional conversion between ZMQMessage and RouterConstants formats
+* **Message Type Mapping**: Complete mapping table for all supported message types
+* **Validation System**: Comprehensive message format validation with detailed error reporting
+* **Error Handling**: Graceful error handling with informative error messages
+* **Property-Based Testing**: Comprehensive test suite validating universal correctness properties
+
+**Current Work (Task 2):**
+
+The heartbeat message format fix is currently being implemented in the ``MQClient._send_heartbeat()`` method. This involves:
+
+* Updating heartbeat messages to use RouterConstants format directly
+* Ensuring all required fields (``sender``, ``elem``, ``data``, ``client_id``, ``timestamp``) are included
+* Validating heartbeat messages before sending to prevent "Malformed message" errors
+* Testing heartbeat message processing with the router
+
+**Next Steps:**
+
+1. Complete Task 2 implementation and testing
+2. Enhance router error logging (Task 4)
+3. Integration testing with router (Task 7)
+4. Final system validation (Task 8)
+
 Architecture
 ------------
 
@@ -145,6 +211,8 @@ Implementation Details
 Heartbeat Message Fix
 ~~~~~~~~~~~~~~~~~~~~~
 
+**Status: IN PROGRESS** - The heartbeat message format fix is currently being implemented in MQClient.
+
 The primary issue was with heartbeat messages not using the correct format:
 
 **Before (Incorrect):**
@@ -158,20 +226,24 @@ The primary issue was with heartbeat messages not using the correct format:
         "data": {"status": "active"}
     }
 
-**After (Correct):**
+**After (Correct - IMPLEMENTATION IN PROGRESS):**
 
 .. code-block:: python
 
+    # Current implementation in MQClient._send_heartbeat()
     heartbeat_message = {
-        "sender": self.client_type,   # Added sender field
-        "elem": "HEARTBEAT",          # Correct field name
-        "client_id": self.client_id,
-        "timestamp": time.time(),
-        "data": {"status": "active"}
+        RouterConstants.SENDER: self.client_type,   # Added sender field
+        RouterConstants.ELEM: RouterConstants.HEARTBEAT,  # Correct field name
+        RouterConstants.CLIENT_ID: self.client_id,
+        RouterConstants.TIMESTAMP: time.time(),
+        RouterConstants.DATA: {},
+        RouterConstants.REQUEST_ID: str(uuid.uuid4())
     }
 
 MQClient Integration
 ~~~~~~~~~~~~~~~~~~~~
+
+**Status: IMPLEMENTATION IN PROGRESS** - The format conversion is being integrated into MQClient's send and receive methods.
 
 The format conversion is integrated into MQClient's send and receive methods:
 

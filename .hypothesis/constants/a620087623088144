@@ -1,0 +1,4 @@
+# file: /opt/dev/ai_hydra/ai_hydra/mq_client.py
+# hypothesis_version: 6.148.8
+
+[5.0, 10.0, 1000, 3600, 9999, 'HydraClient', 'data must be dict', 'elem must be string', 'request_id', 'tcp://localhost:5556']
