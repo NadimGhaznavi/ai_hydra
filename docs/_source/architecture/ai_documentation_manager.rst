@@ -20,22 +20,18 @@ The core system that manages documentation structure, content, and workflows. It
 * Content structure management and navigation
 * Quality assurance and standards enforcement
 * Integration with development workflows
-* Multi-audience support and role-based access
+* AI Hydra folder artifact integration
 
 Main Documentation Page
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The primary entry point for all project documentation that provides:
 
-* Concise project summary and overview
-* Links to three distinct documentation categories:
-  
-  - **End User Documentation**: Installation guides, tutorials, troubleshooting
-  - **Architecture & Code Documentation**: Technical specifications, API references, design documents
-  - **Operations Runbook**: SDLC procedures, maintenance guides, operational workflows
-
+* Concise summary of the AI Hydra projects
+* Links to each AI Hydra project with End User, Developer and Operator categories
 * Consistent formatting and navigation structure
 * Quick access to frequently used documentation sections
+* Integration of all discovered document artifacts in the ai_hydra folder
 
 Content Organizer
 ~~~~~~~~~~~~~~~~~
@@ -62,7 +58,7 @@ Automated system for generating and validating documentation that provides:
 * **Source Processing**: Automatic generation from RST, Markdown, and docstring sources
 * **Syntax Validation**: RST syntax checking and structure validation
 * **Link Checking**: Broken link detection and cross-reference validation
-* **Multi-Format Output**: HTML, PDF, and other format generation
+* **Multi-Format Output**: ReadTheDocs-compatible generation and other format support
 * **CI/CD Integration**: Automated builds and validation in continuous integration workflows
 
 **Build Pipeline:**

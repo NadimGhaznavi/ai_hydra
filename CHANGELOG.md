@@ -9,11 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **AI Documentation Manager Requirements**: Refined and consolidated requirements specification for improved clarity and focus
+  - Clarified user story language for better specificity and actionable outcomes
+  - Consolidated requirements by removing redundant Documentation Runbook System requirement
+  - Removed Multi-Audience Support requirement to focus on core functionality
+  - Renumbered requirements 2-7 for consistency after consolidation
+  - Updated acceptance criteria to be more focused and implementable
+  - Simplified integration requirements to essential functionality
+  - Enhanced requirement 1 to explicitly include ai_hydra folder artifact integration
+- **Documentation Updates**: Updated requirements specification and architecture documentation to reflect AI Doc Manager changes
+  - Updated `docs/_source/runbook/requirements.rst` with consolidated Requirements 36-42 covering AI Documentation Manager system
+  - Removed Requirements 37 (Documentation Runbook System) and 43 (Multi-Audience Support) to focus on core functionality
+  - Renumbered requirements 38-44 to 37-42 for consistency after consolidation
+  - Updated Build System requirement to specify ReadTheDocs compatibility instead of multiple output formats
+  - Enhanced `docs/_source/architecture/ai_documentation_manager.rst` with updated system responsibilities and main documentation page description
+  - Updated Documentation Manager key responsibilities to include AI Hydra folder artifact integration
+  - Modified Main Documentation Page description to reflect project-specific organization structure
+  - Updated Build System documentation to emphasize ReadTheDocs-compatible generation
+
 ### Added
 - **AI Documentation Manager Specification**: Comprehensive requirements document for automated documentation management system
-  - Created detailed requirements document with 9 main requirements covering documentation structure, runbook system, and content organization
+  - Created detailed requirements document with 7 main requirements covering documentation structure, content organization, and system integration
   - Defined acceptance criteria for build system, quality assurance, and automated maintenance workflows
-  - Established multi-audience support and integration requirements with existing development tools
+  - Established integration requirements with existing development tools and version control systems
   - Added comprehensive glossary of key terms and components for documentation management system
   - Provides foundation for implementing automated documentation organization and maintenance workflows
 - **Documentation Updates**: AI Documentation Manager requirements integration and architecture documentation
@@ -57,6 +76,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Provided clear implementation progress visibility across all documentation
 
 ### Changed
+- **AI Documentation Manager Requirements**: Refined and consolidated requirements specification for improved clarity and focus
+  - Clarified user story language for better specificity and actionable outcomes
+  - Consolidated requirements by removing redundant Documentation Runbook System requirement
+  - Removed Multi-Audience Support requirement to focus on core functionality
+  - Renumbered requirements 2-7 for consistency after consolidation
+  - Updated acceptance criteria to be more focused and implementable
+  - Simplified integration requirements to essential functionality
+  - Enhanced requirement 1 to explicitly include ai_hydra folder artifact integration
 - **Documentation**: Updated ZeroMQ protocol documentation for message format standardization
   - Enhanced message structure documentation to include both RouterConstants and ZMQMessage formats
   - Added message format conversion section with automatic conversion details
