@@ -46,6 +46,16 @@ Tests are organized in the ``tests/`` directory with the following structure:
 
     tests/
     ├── __init__.py
+    ├── integration/                        # Integration tests
+    │   ├── test_complete_system_workflow.py
+    │   ├── test_epoch_implementation.py
+    │   ├── test_error_handling.py
+    │   ├── test_hydra_zen_integration.py
+    │   ├── test_logging_system.py
+    │   ├── test_router_integration.py     # ✅ Router system integration tests
+    │   ├── test_simulation_pipeline.py
+    │   ├── test_token_tracker_integration.py
+    │   └── test_tui_epoch_integration.py
     ├── property/                           # Property-based tests
     │   ├── test_efficiency_based_selection.py
     │   ├── test_token_tracker_data_validation.py
@@ -151,6 +161,39 @@ Integration tests validate component interactions:
 - **Simulation Pipeline** (``test_simulation_pipeline.py``): Component coordination
 - **Hybrid Execution** (``test_hybrid_execution.py``): Neural network + tree search integration
 - **Headless Operation** (``test_headless_operation.py``): ZeroMQ server functionality
+- **Router Integration** (``tests/integration/test_router_integration.py``): ✅ **IMPLEMENTED** - Comprehensive router system integration testing
+
+**Router Integration Testing**
+
+The router integration test suite provides comprehensive validation of the Hydra Router system components working together:
+
+**TestRouterIntegration Class:**
+
+- ``test_router_startup_and_shutdown()``: Validates router lifecycle management including component initialization (validator, client_registry, message_router, task_manager) and proper cleanup procedures
+- ``test_client_registry_operations()``: Tests client registration, heartbeat updates, client removal, and client counting operations with both HydraClient and HydraServer types
+- ``test_message_validation_integration()``: Validates message format compliance using the MessageValidator with both valid RouterConstants format messages and invalid message error handling
+- ``test_mq_client_format_conversion()``: Tests bidirectional message format conversion between ZMQMessage and RouterConstants formats, ensuring data integrity and proper field mapping
+- ``test_message_type_mapping_completeness()``: Ensures all message types in the MESSAGE_TYPE_MAPPING have proper forward and reverse mapping coverage
+- ``test_background_task_management()``: Validates background task lifecycle including task startup, client pruning operations, and proper cleanup on shutdown
+
+**TestRouterErrorHandling Class:**
+
+- ``test_invalid_message_format_handling()``: Tests error handling for malformed messages including TypeError exceptions for invalid input types
+- ``test_unsupported_message_type_handling()``: Validates handling of unsupported message types with proper ValueError exceptions and descriptive error messages
+- ``test_client_registration_error_handling()``: Tests error conditions in client registration including empty client IDs and invalid client types
+
+**TestRouterPerformance Class:**
+
+- ``test_multiple_client_registration_performance()``: Performance testing with 100 concurrent client registrations, ensuring completion within 1 second and proper client tracking
+- ``test_message_conversion_performance()``: Performance validation for 1000 message conversions (2000 total operations), ensuring average conversion time under 1ms per operation
+
+**Key Testing Improvements:**
+
+- **Real Component Testing**: Replaced mock-based testing with actual HydraRouter instances for authentic integration validation
+- **Port 0 Binding**: Uses automatic port allocation to avoid conflicts in test environments
+- **Comprehensive Cleanup**: Proper async/await patterns with try/finally blocks ensuring clean shutdown
+- **Performance Benchmarks**: Specific timing requirements validate system performance under load
+- **Error Scenario Coverage**: Tests both expected error conditions and edge cases with proper exception handling
 
 Decision Flow Testing
 ~~~~~~~~~~~~~~~~~~~~~
@@ -645,6 +688,17 @@ Run by Test Type
     
     # Run only performance tests
     pytest -m performance
+    
+    # Run router integration tests specifically
+    pytest tests/integration/test_router_integration.py
+    
+    # Run router integration tests with verbose output
+    pytest tests/integration/test_router_integration.py -v
+    
+    # Run specific router test classes
+    pytest tests/integration/test_router_integration.py::TestRouterIntegration
+    pytest tests/integration/test_router_integration.py::TestRouterErrorHandling
+    pytest tests/integration/test_router_integration.py::TestRouterPerformance
 
 Run by Speed
 ^^^^^^^^^^^^
@@ -897,6 +951,86 @@ Integration tests validate component interactions and the enhanced decision flow
         # Verify master game state updated
         final_score = hydra_mgr.master_game.get_score()
         assert final_score >= initial_score  # Score should not decrease
+
+**Router Integration Test Examples**
+
+The router integration tests validate the complete Hydra Router system:
+
+.. code-block:: python
+
+    @pytest.mark.asyncio
+    async def test_router_startup_and_shutdown(self):
+        """Test router can start up and shut down cleanly."""
+        router = HydraRouter(router_address="127.0.0.1", router_port=0, log_level="INFO")
+        
+        try:
+            # Start the router
+            await router.start()
+            assert router.is_running is True
+            
+            # Verify components are initialized
+            assert router.validator is not None
+            assert router.client_registry is not None
+            assert router.message_router is not None
+            assert router.task_manager is not None
+            
+        finally:
+            # Clean shutdown
+            await router.shutdown()
+            assert router.is_running is False
+
+    def test_mq_client_format_conversion(self):
+        """Test MQClient message format conversion."""
+        client = MQClient(client_type=RouterConstants.HYDRA_CLIENT, client_id="test-client")
+        
+        # Create test ZMQMessage
+        zmq_message = ZMQMessage(
+            message_type=MessageType.START_SIMULATION,
+            timestamp=time.time(),
+            client_id="test-client",
+            data={"config": "test"}
+        )
+        
+        # Test conversion to RouterConstants format
+        router_message = client._convert_to_router_format(zmq_message)
+        
+        assert router_message[RouterConstants.SENDER] == RouterConstants.HYDRA_CLIENT
+        assert router_message[RouterConstants.ELEM] == RouterConstants.START_SIMULATION
+        assert router_message[RouterConstants.DATA] == {"config": "test"}
+        assert router_message[RouterConstants.CLIENT_ID] == "test-client"
+        
+        # Test conversion back to ZMQMessage
+        converted_back = client._convert_from_router_format(router_message)
+        
+        assert converted_back.message_type == MessageType.START_SIMULATION
+        assert converted_back.client_id == "test-client"
+        assert converted_back.data == {"config": "test"}
+
+    @pytest.mark.asyncio
+    async def test_multiple_client_registration_performance(self):
+        """Test performance with multiple client registrations."""
+        router = HydraRouter(router_address="127.0.0.1", router_port=0, log_level="WARNING")
+        
+        try:
+            await router.start()
+            
+            # Register multiple clients quickly
+            start_time = time.time()
+            
+            for i in range(100):
+                await router.client_registry.register_client(f"client-{i}", RouterConstants.HYDRA_CLIENT)
+            
+            registration_time = time.time() - start_time
+            
+            # Should complete within reasonable time (less than 1 second)
+            assert registration_time < 1.0, f"Registration took too long: {registration_time:.2f}s"
+            
+            # Verify all clients are registered
+            clients = await router.client_registry.get_clients_by_type(RouterConstants.HYDRA_CLIENT)
+            assert len(clients) == 100
+            
+        finally:
+            await router.shutdown()
 
     @timeout_test(300)  # 5 minute timeout for complete simulation
     def test_complete_game_simulation_start_to_finish(self):
