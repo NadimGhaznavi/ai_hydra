@@ -304,6 +304,8 @@ clients: Dict[str, Tuple[str, float]] = {}
 
 ### Message Validation Pipeline
 
+Based on the router-message-protocol-fix improvements, the HydraRouter implements comprehensive message validation:
+
 ```python
 def _validate_message_format(self, message: Dict[str, Any]) -> Tuple[bool, str]:
     """Comprehensive message validation with detailed error reporting."""
@@ -323,15 +325,27 @@ def _validate_message_format(self, message: Dict[str, Any]) -> Tuple[bool, str]:
     if not isinstance(sender, str) or not sender.strip():
         return False, f"Field 'sender' must be non-empty string, got: {repr(sender)}"
     
+    elem = message.get(RouterConstants.ELEM)
+    if not isinstance(elem, str) or not elem.strip():
+        return False, f"Field 'elem' must be non-empty string, got: {repr(elem)}"
+    
     # 4. Sender type validation
     valid_senders = [RouterConstants.HYDRA_CLIENT, RouterConstants.HYDRA_SERVER, RouterConstants.HYDRA_ROUTER]
     if sender not in valid_senders:
         return False, f"Invalid sender type '{sender}', expected: {', '.join(valid_senders)}"
     
+    # 5. Optional field validation
+    if RouterConstants.DATA in message:
+        data = message[RouterConstants.DATA]
+        if not isinstance(data, (dict, type(None))):
+            return False, f"Field 'data' must be dict or None, got {type(data).__name__}"
+    
     return True, ""
 ```
 
-### Comprehensive Error Logging
+### Enhanced Error Logging
+
+Leveraging the detailed error logging from the existing HydraRouter implementation:
 
 ```python
 def _log_malformed_message(self, message: Dict[str, Any], error: str, client_identity: str) -> None:
@@ -344,25 +358,65 @@ def _log_malformed_message(self, message: Dict[str, Any], error: str, client_ide
     expected_format = {
         RouterConstants.SENDER: "string (HydraClient|HydraServer|CustomApp)",
         RouterConstants.ELEM: "string (message type)",
-        RouterConstants.DATA: "dict (optional)"
+        RouterConstants.DATA: "dict (optional)",
+        RouterConstants.CLIENT_ID: "string (optional)",
+        RouterConstants.TIMESTAMP: "float (optional)",
+        RouterConstants.REQUEST_ID: "string (optional)"
     }
     self.logger.error(f"Expected format: {expected_format}")
     
     # Log actual message (truncated for safety)
-    actual_message = str(message)[:500]
+    actual_message = str(message)
+    if len(actual_message) > 500:
+        actual_message = actual_message[:500] + "... (truncated)"
     self.logger.error(f"Actual message: {actual_message}")
     
     # Provide debugging hints
     if RouterConstants.MESSAGE_TYPE in message and RouterConstants.ELEM not in message:
         self.logger.error("Detected ZMQMessage format instead of RouterConstants format")
+        self.logger.error("This suggests the client is sending ZMQMessage format instead of RouterConstants format")
+    
+    # Log field analysis
+    if isinstance(message, dict):
+        present_fields = list(message.keys())
+        self.logger.error(f"Present fields: {present_fields}")
+        field_types = {k: type(v).__name__ for k, v in message.items()}
+        self.logger.error(f"Field types: {field_types}")
     
     self.logger.error("Debugging hints: Check MQClient format conversion is working correctly")
+
+def _log_frame_error(self, frames: List[bytes], client_identity: str) -> None:
+    """Log detailed information about malformed ZMQ frames."""
+    self.logger.error(f"Malformed ZMQ frames from client {client_identity}: incorrect frame count")
+    self.logger.error("Expected frame structure: [identity_frame, message_frame] (2 frames total)")
+    self.logger.error(f"Actual frame count: {len(frames)}")
+    
+    for i, frame in enumerate(frames):
+        frame_str = str(frame)
+        if len(frame_str) > 200:
+            frame_str = frame_str[:200] + "... (truncated)"
+        self.logger.error(f"Frame {i}: {frame_str}")
+
+def _log_json_parse_error(self, msg_bytes: bytes, error: Exception, client_identity: str) -> None:
+    """Log detailed information about JSON parsing errors."""
+    self.logger.error(f"JSON parsing error from client {client_identity}: {error}")
+    
+    try:
+        msg_str = msg_bytes.decode("utf-8", errors="replace")
+    except Exception:
+        msg_str = str(msg_bytes)
+    
+    if len(msg_str) > 300:
+        msg_str = msg_str[:300] + "... (truncated)"
+    
+    self.logger.error(f"Actual message bytes: {msg_str}")
+    self.logger.error(f"Message length: {len(msg_bytes)} bytes")
 ```
 
 ### Error Recovery Mechanisms
 
 ```python
-# In MQClient - graceful error handling
+# In MQClient - graceful error handling with format conversion
 async def send_message(self, message: ZMQMessage) -> None:
     try:
         router_message = self._convert_to_router_format(message)
@@ -378,8 +432,30 @@ async def send_message(self, message: ZMQMessage) -> None:
 async def handle_requests(self) -> None:
     while True:
         try:
-            # Process message
-            pass
+            frames = await self.socket.recv_multipart()
+            identity = frames[0]
+            identity_str = identity.decode()
+            msg_bytes = frames[1]
+
+            if len(frames) != 2:
+                self._log_frame_error(frames, identity_str)
+                continue
+
+            try:
+                msg = zmq.utils.jsonapi.loads(msg_bytes)
+            except (ValueError, TypeError) as e:
+                self._log_json_parse_error(msg_bytes, e, identity_str)
+                continue
+
+            # Validate message format
+            validation_result = self._validate_message_format(msg)
+            if not validation_result[0]:
+                self._log_malformed_message(msg, validation_result[1], identity_str)
+                continue
+
+            # Process valid message
+            await self._process_message(msg, identity)
+
         except Exception as e:
             self.logger.error(f"Router error: {e}")
             continue  # Continue processing other messages
@@ -446,6 +522,50 @@ server = MQClient(
                     └─────────────────────────┘
 ```
 
+## Correctness Properties
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+### Property 1: Message Format Round-Trip Conversion
+*For any* valid ZMQMessage, converting to RouterConstants format and back should preserve all essential message content including type, data, timestamps, and identifiers
+**Validates: Requirements 3.1, 3.2, 3.3, 3.5**
+
+### Property 2: RouterConstants Format Compliance  
+*For any* message sent by MQClient to the router, the message should have the required RouterConstants format with `sender`, `elem`, `data`, `client_id`, and `timestamp` fields
+**Validates: Requirements 1.1, 1.2, 2.1, 2.2**
+
+### Property 3: Heartbeat Message Processing
+*For any* valid heartbeat message in RouterConstants format, the router should process it without errors and update client tracking information
+**Validates: Requirements 4.1, 4.2, 4.3, 4.4**
+
+### Property 4: Format Validation Error Reporting
+*For any* invalid message format, the Message_Validator should provide specific error details identifying missing or incorrect fields and source component information
+**Validates: Requirements 5.1, 5.2, 5.5**
+
+### Property 5: Client Connection Management
+*For any* client connection lifecycle (connect, heartbeat, disconnect), the router should maintain accurate client registry state and handle connection events properly
+**Validates: Requirements 4.4, 7.1, 7.2, 7.3**
+
+### Property 6: Message Routing Correctness
+*For any* valid message routing scenario (client-to-server, server-to-clients), the router should forward messages to the correct destinations based on sender type and routing rules
+**Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5**
+
+### Property 7: Error Resilience and Recovery
+*For any* format conversion failure or validation error, the system should handle it gracefully without crashing components and provide appropriate error responses
+**Validates: Requirements 5.3, 5.4**
+
+### Property 8: Concurrent Connection Handling
+*For any* number of concurrent client connections (up to system limits), the router should handle all connections efficiently without performance degradation or data corruption
+**Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5**
+
+### Property 9: Configuration Flexibility
+*For any* valid configuration parameters (addresses, ports, timeouts), the system should initialize correctly and operate according to the specified settings
+**Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
+
+### Property 10: Message Broadcasting Integrity
+*For any* server message that should be broadcast to clients, all connected clients (except the sender) should receive the message without corruption or loss
+**Validates: Requirements 6.2, 6.3**
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -453,24 +573,108 @@ server = MQClient(
 - Test validation logic for RouterConstants format
 - Test error handling for malformed messages
 - Test client registry management in HydraRouter
+- Test heartbeat processing and client pruning
+- Test message routing logic for different sender types
 
 ### Property-Based Tests
-- Generate random ZMQMessages and test round-trip conversion
-- Generate random RouterConstants messages and test validation
-- Test heartbeat message processing with various client types
-- Test error handling with malformed messages
+Using Hypothesis framework with the following configuration:
+- **Minimum iterations**: 100 per property test
+- **Timeout protection**: All tests include timeout decorators
+- **Smart generators**: Custom generators for valid message formats and client scenarios
+
+**Example Property Test Structure:**
+```python
+@given(
+    message=valid_zmq_messages(),
+    client_type=st.sampled_from(["HydraClient", "HydraServer", "CustomApp"])
+)
+@settings(max_examples=100, deadline=2000)
+@pytest.mark.timeout(60)
+def test_message_format_round_trip_conversion(message, client_type):
+    """
+    Property 1: Message Format Round-Trip Conversion
+    For any valid ZMQMessage, converting to RouterConstants format and back 
+    should preserve all essential message content.
+    """
+    client = MQClient(client_type=client_type)
+    
+    # Convert to router format
+    router_message = client._convert_to_router_format(message)
+    
+    # Convert back to ZMQ format
+    converted_back = client._convert_from_router_format(router_message)
+    
+    # Verify essential content is preserved
+    assert converted_back.message_type == message.message_type
+    assert converted_back.data == message.data
+    assert converted_back.timestamp == message.timestamp
+    assert converted_back.client_id == message.client_id
+```
+
+**Smart Generators:**
+```python
+@st.composite
+def valid_zmq_messages(draw):
+    """Generate valid ZMQMessage instances for testing."""
+    message_type = draw(st.sampled_from(list(MessageType)))
+    timestamp = draw(st.floats(min_value=0, max_value=2**31))
+    client_id = draw(st.text(min_size=1, max_size=50, alphabet=st.characters(whitelist_categories=('Lu', 'Ll', 'Nd'))))
+    data = draw(st.dictionaries(st.text(), st.one_of(st.text(), st.integers(), st.floats())))
+    
+    return ZMQMessage(
+        message_type=message_type,
+        timestamp=timestamp,
+        client_id=client_id,
+        data=data
+    )
+
+@st.composite
+def router_constants_messages(draw):
+    """Generate valid RouterConstants format messages."""
+    sender = draw(st.sampled_from([RouterConstants.HYDRA_CLIENT, RouterConstants.HYDRA_SERVER]))
+    elem = draw(st.sampled_from([RouterConstants.HEARTBEAT, RouterConstants.START_SIMULATION, RouterConstants.STATUS]))
+    data = draw(st.dictionaries(st.text(), st.one_of(st.text(), st.integers())))
+    client_id = draw(st.text(min_size=1, max_size=50))
+    timestamp = draw(st.floats(min_value=0, max_value=2**31))
+    
+    return {
+        RouterConstants.SENDER: sender,
+        RouterConstants.ELEM: elem,
+        RouterConstants.DATA: data,
+        RouterConstants.CLIENT_ID: client_id,
+        RouterConstants.TIMESTAMP: timestamp
+    }
+```
 
 ### Integration Tests
 - Test complete message flow between MQClient and HydraRouter
 - Test multiple client connections and message broadcasting
 - Test server connection/disconnection scenarios
 - Test heartbeat monitoring and client pruning
+- Test error recovery and retry mechanisms
+- Test configuration changes and system adaptation
 
 ### Performance Tests
-- Test router performance with many concurrent clients
-- Measure message conversion overhead
+- Test router performance with many concurrent clients (target: 100+ clients)
+- Measure message conversion overhead in MQClient
 - Test memory usage under sustained load
 - Validate heartbeat processing efficiency
+- Test message throughput and latency under load
+- Measure resource usage during client connection/disconnection cycles
+
+### End-to-End Tests
+- Test complete deployment scenarios with router and multiple clients
+- Test system behavior during network interruptions
+- Test graceful shutdown and restart procedures
+- Test configuration file loading and validation
+- Test command-line interface functionality
+
+**Performance Benchmarks:**
+- **Response Time**: Message routing should complete within 10ms for normal operations
+- **Throughput**: System should handle 1000+ messages per minute
+- **Scalability**: Support 100+ concurrent client connections
+- **Memory Usage**: Router should use less than 100MB under normal load
+- **CPU Usage**: Should not exceed 50% CPU usage under normal load
 
 ## Future Extensibility
 
@@ -519,3 +723,120 @@ MessageType.CUSTOM_STATUS.value: RouterConstants.CUSTOM_STATUS,
 ```
 
 This design provides a solid foundation for the current single-server architecture while maintaining extensibility for future enhancements.
+
+## Command-Line Interface
+
+The hydra-router will be available as a command within the ai-hydra package:
+
+```bash
+# Basic usage
+ai-hydra-router
+
+# Custom configuration
+ai-hydra-router --address 0.0.0.0 --port 5556 --log-level INFO
+
+# Production deployment
+ai-hydra-router --address 192.168.1.100 --port 5556 --log-level WARNING
+
+# Help and usage information
+ai-hydra-router --help
+```
+
+**Command-Line Arguments:**
+- `--address, -a`: IP address to bind router to (default: 0.0.0.0)
+- `--port, -p`: Port to bind router to (default: 5556)
+- `--log-level`: Logging level (DEBUG, INFO, WARNING, ERROR, default: INFO)
+- `--help, -h`: Show help message and exit
+
+## Package Integration
+
+The hydra-router will be integrated into the existing ai-hydra PyPI package structure:
+
+```
+ai_hydra/
+├── __init__.py
+├── router.py              # HydraRouter implementation
+├── mq_client.py           # MQClient implementation  
+├── router_constants.py    # RouterConstants definitions
+├── __main__.py           # Entry point for ai-hydra-router command
+└── ...                   # Other ai-hydra components
+```
+
+**Entry Point Configuration (pyproject.toml):**
+```toml
+[project.scripts]
+ai-hydra-router = "ai_hydra.router:main"
+```
+
+This allows users to install the ai-hydra package and immediately have access to the router functionality through the `ai-hydra-router` command.
+
+## Deployment Examples
+
+### Local Development
+```bash
+# Terminal 1: Start the router
+ai-hydra-router --log-level DEBUG
+
+# Terminal 2: Start a server application
+python my_server.py --router tcp://localhost:5556
+
+# Terminal 3: Start client applications
+python my_client1.py --router tcp://localhost:5556
+python my_client2.py --router tcp://localhost:5556
+```
+
+### Production Environment
+```bash
+# Start router on production server
+ai-hydra-router --address 0.0.0.0 --port 5556 --log-level WARNING
+
+# Connect clients from different machines
+python client_app.py --router tcp://production-server:5556
+```
+
+### Docker Deployment
+```dockerfile
+FROM python:3.11-slim
+
+RUN pip install ai-hydra
+
+EXPOSE 5556
+
+CMD ["ai-hydra-router", "--address", "0.0.0.0", "--port", "5556"]
+```
+
+## Migration Path
+
+For projects currently using the ai-hydra router functionality:
+
+1. **Install Updated Package**: `pip install --upgrade ai-hydra`
+2. **Replace Router Usage**: Change from internal imports to command-line usage
+3. **Update Client Code**: Ensure clients use MQClient with proper configuration
+4. **Test Integration**: Verify message routing works with new format conversion
+5. **Deploy**: Roll out updated router and clients
+
+**Before (Internal Usage):**
+```python
+from ai_hydra.router import HydraRouter
+router = HydraRouter()
+# Manual setup and management
+```
+
+**After (Standalone Usage):**
+```bash
+# Simple command-line usage
+ai-hydra-router --port 5556
+```
+
+**Client Code (Minimal Changes):**
+```python
+from ai_hydra.mq_client import MQClient
+
+# Same interface, enhanced functionality
+client = MQClient(
+    router_address="tcp://localhost:5556",
+    client_type="MyCustomClient"
+)
+```
+
+This design ensures that the hydra-router becomes a reusable, standalone component while maintaining the proven architecture and reliability of the existing ai-hydra router system.

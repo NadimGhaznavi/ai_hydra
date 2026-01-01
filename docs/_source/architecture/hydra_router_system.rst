@@ -1,20 +1,21 @@
 Hydra Router System Architecture
 ================================
 
-This document describes the comprehensive architecture of the Hydra Router system, a standalone ZeroMQ-based message routing system extracted from the AI Hydra project. It provides reliable communication between multiple clients and a single server through a centralized router pattern with automatic client discovery, heartbeat monitoring, message format standardization, and comprehensive error handling.
+This document describes the comprehensive architecture of the Hydra Router system, a reusable ZeroMQ-based message routing system that is part of the AI Hydra PyPI package. It extracts and enhances the existing router functionality from the AI Hydra project, making it available as a standalone component that can be used by any project. The system provides reliable communication between multiple clients and a single server through a centralized router pattern with automatic client discovery, heartbeat monitoring, message format standardization, and comprehensive error handling.
 
 System Overview
 ---------------
 
-The Hydra Router implements a centralized router pattern that serves as a completely independent router system usable by any project. The system supports multiple clients connecting to zero or one server (extensible for future multi-server support) and includes automatic message format conversion between internal ZMQMessage and RouterConstants formats for transparent operation.
+The Hydra Router implements a centralized router pattern that serves as a reusable component within the AI Hydra package while being usable by any project needing message routing. The system supports multiple clients connecting to zero or one server (extensible for future multi-server support) and includes automatic message format conversion between internal ZMQMessage and RouterConstants formats for transparent operation.
 
 **Key Design Features:**
 
-* **Standalone Component**: Completely independent router system that can be used by any project
-* **Generic MQClient Library**: Reusable client library configurable for different client types  
+* **Part of AI Hydra Package**: Integrated into the existing ai-hydra PyPI package with `ai-hydra-router` command
+* **Reusable Component**: Generic router system that can be used by any project needing message routing
+* **Leverages Existing Design**: Built upon the proven HydraRouter, MQClient, and RouterConstants from AI Hydra
 * **Message Format Conversion**: Automatic conversion between internal ZMQMessage and RouterConstants formats
 * **Single Server Architecture**: Supports multiple clients with zero or one server (extensible for future multi-server support)
-* **Comprehensive Error Handling**: Detailed validation and error reporting for troubleshooting
+* **Enhanced Error Handling**: Improved validation and error reporting based on router-message-protocol-fix
 * **Scalable Architecture**: Support for hundreds of concurrent client connections
 * **Flexible Deployment**: Configurable for different environments and use cases
 
