@@ -547,7 +547,54 @@ Common Configuration Issues
 **Log File Permissions:**
   Ensure the router process has write access to log directories.
 
-Configuration Validation
+Message Validation and Error Handling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Hydra Router system includes comprehensive message validation with detailed error reporting and debugging support.
+
+**Message Validation Framework**
+
+The router uses the MessageValidator class to ensure all messages comply with RouterConstants format:
+
+.. code-block:: python
+
+    from hydra_router.validation import validate_message, validate_message_strict
+    
+    # Lenient validation (returns boolean)
+    is_valid, error_msg = validate_message(message)
+    if not is_valid:
+        print(f"Validation failed: {error_msg}")
+    
+    # Strict validation (raises exception)
+    try:
+        validate_message_strict(message)
+        print("Message is valid")
+    except MessageValidationError as e:
+        print(f"Validation error: {e}")
+        print(f"Expected format: {e.expected_format}")
+
+**Validation Features**
+
+* **Required Field Validation**: Ensures presence of sender, elem, data, client_id, timestamp
+* **Type Validation**: Validates correct data types for all fields
+* **Sender Type Validation**: Checks sender against allowed types (HydraClient, HydraServer, HydraRouter)
+* **Message Element Validation**: Validates elem against supported message types
+* **Timestamp Validation**: Ensures reasonable timestamp values
+* **Format Detection**: Detects common format mismatches (ZMQMessage vs RouterConstants)
+
+**Error Debugging**
+
+The validation system provides detailed debugging information:
+
+.. code-block:: python
+
+    from hydra_router.validation import get_validator
+    
+    validator = get_validator()
+    error_details = validator.get_validation_error_details(invalid_message)
+    print(f"Validation details: {error_details}")
+
+**Configuration Validation**
 -------------------------
 
 The router provides built-in configuration validation:

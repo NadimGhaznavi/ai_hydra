@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Message Validation System**: Comprehensive message validation framework for RouterConstants format compliance
+  - Added MessageValidator class with detailed error reporting and field validation in `hydra-router/src/hydra_router/validation.py`
+  - Implemented validation utilities with strict and lenient validation modes
+  - Created singleton validator pattern for performance optimization with validation caching
+  - Added comprehensive field type validation and timestamp validation with reasonable bounds checking
+  - Support for ZMQMessage format detection and conversion guidance
+  - Provides detailed validation error information for debugging and troubleshooting
+  - Integrated exception hierarchy with validation system for enhanced error context
+  - Added comprehensive field validation including required fields (sender, elem, data, client_id, timestamp) and optional fields (request_id)
+  - Implemented sender type validation against allowed values (HydraClient, HydraServer, HydraRouter)
+  - Added message element validation against comprehensive list of supported message types
+  - Created validation error context with expected format specification for comparison
+- **Documentation Updates**: Enhanced documentation for message validation framework integration
+  - Updated `docs/_source/architecture/api_reference.rst` with comprehensive MessageValidator documentation
+  - Enhanced `docs/_source/architecture/hydra_router_system.rst` Message_Validator component description with detailed feature list
+  - Expanded message validation error handling section with comprehensive validation features and error reporting details
+  - Updated `docs/_source/end_user/hydra_router_configuration.rst` with message validation framework section including validation features and error debugging
+  - Enhanced `docs/_source/end_user/troubleshooting.rst` MessageValidationError section with detailed debugging information, validation utilities, and comprehensive error examples
+  - Added validation debugging examples and utilities documentation for troubleshooting message format issues
+  - Documented validation modes (lenient vs strict) and performance optimization features
+  - Included comprehensive error handling examples and validation best practices
+
 ### Changed
 - **Router Integration Tests**: Comprehensive refactoring of router integration tests for enhanced validation
   - Completely rewrote router integration tests to use actual components instead of mocks
@@ -47,6 +70,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained consistency between code implementation and architecture documentation
 
 ### Added
+- **Message Validation System**: Comprehensive message validation framework for RouterConstants format compliance
+  - Added MessageValidator class with detailed error reporting and field validation
+  - Implemented validation utilities with strict and lenient validation modes
+  - Created singleton validator pattern for performance optimization
+  - Integrated exception hierarchy with validation system for enhanced error context
+  - Added comprehensive field type validation and timestamp validation
+  - Support for ZMQMessage format detection and conversion guidance
+  - Provides detailed validation error information for debugging and troubleshooting
 - **Router Demo Examples**: Comprehensive router demonstration with multiple clients and server interaction
   - Added `examples/test_router_demo.py` demonstrating complete router functionality with DemoServer and DemoClient classes
   - Includes step-by-step demo scenario showing router startup, client/server connections, message routing, and heartbeat monitoring

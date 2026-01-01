@@ -331,6 +331,9 @@ The Hydra Router system provides detailed exception information to help diagnose
 - Invalid field types (non-string sender, non-dict data)
 - Invalid sender type (not HydraClient, HydraServer, or HydraRouter)
 - Invalid message element type
+- Empty string values for required fields
+- Invalid timestamp values (negative, too far in future)
+- ZMQMessage format used instead of RouterConstants format
 
 **Example Error**:
 
@@ -339,6 +342,23 @@ The Hydra Router system provides detailed exception information to help diagnose
     MessageValidationError: Missing required fields: client_id, timestamp 
     (Context: invalid_message={'sender': 'HydraClient', 'elem': 'HEARTBEAT'}, 
      expected_format={'sender': 'string, one of: HydraClient, HydraServer, HydraRouter'})
+
+**Detailed Validation Debugging**:
+
+.. code-block:: python
+
+    from hydra_router.validation import get_validator
+    
+    validator = get_validator()
+    
+    # Get detailed validation information
+    error_details = validator.get_validation_error_details(message)
+    print(f"Validation details: {error_details}")
+    
+    # Check specific validation aspects
+    is_valid, error = validator.validate_router_message(message)
+    if not is_valid:
+        print(f"Validation failed: {error}")
 
 **Solutions**:
 
@@ -350,14 +370,43 @@ The Hydra Router system provides detailed exception information to help diagnose
         "elem": "HEARTBEAT"
     }
     
-    # Correct: All required fields
+    # Wrong: Invalid field types
+    message = {
+        "sender": 123,  # Should be string
+        "elem": "HEARTBEAT",
+        "data": "invalid",  # Should be dict
+        "client_id": "",  # Should not be empty
+        "timestamp": "invalid"  # Should be number
+    }
+    
+    # Correct: All required fields with proper types
     message = {
         "sender": "HydraClient",
         "elem": "HEARTBEAT", 
         "data": {},
         "client_id": "client_001",
-        "timestamp": time.time()
+        "timestamp": time.time(),
+        "request_id": "req_001"  # Optional field
     }
+
+**Validation Utilities**:
+
+.. code-block:: python
+
+    from hydra_router.validation import validate_message, validate_message_strict
+    
+    # Lenient validation (returns boolean)
+    is_valid, error_msg = validate_message(message)
+    if not is_valid:
+        print(f"Message invalid: {error_msg}")
+    
+    # Strict validation (raises exception)
+    try:
+        validate_message_strict(message)
+    except MessageValidationError as e:
+        print(f"Validation error: {e}")
+        print(f"Invalid message: {e.invalid_message}")
+        print(f"Expected format: {e.expected_format}")
 
 **ConnectionError**
 

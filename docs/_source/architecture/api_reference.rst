@@ -187,7 +187,14 @@ Exception Hierarchy
 Message Validation
 ~~~~~~~~~~~~~~~~~~
 
+The Hydra Router message validation system provides comprehensive RouterConstants format compliance checking with detailed error reporting and debugging support.
+
 .. automodule:: ai_hydra.validation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: hydra_router.validation
    :members:
    :undoc-members:
    :show-inheritance:

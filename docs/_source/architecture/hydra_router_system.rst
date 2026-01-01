@@ -91,7 +91,16 @@ Message Processing Components
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Message_Validator**
-  Component that validates RouterConstants message format compliance with comprehensive field validation, type checking, and detailed error reporting. Provides both lenient validation (returns boolean result) and strict validation (raises exceptions) modes for different use cases.
+  Comprehensive message validation component that validates RouterConstants message format compliance with detailed field validation, type checking, and error reporting. The MessageValidator class provides both lenient validation (returns boolean result) and strict validation (raises exceptions) modes for different use cases. Features include:
+  
+  * **Format Compliance**: Validates all required fields (sender, elem, data, client_id, timestamp) and optional fields (request_id)
+  * **Type Validation**: Ensures correct data types for all message fields with detailed error messages
+  * **Sender Validation**: Validates sender types against allowed values (HydraClient, HydraServer, HydraRouter)
+  * **Element Validation**: Validates message elements against comprehensive list of supported message types
+  * **Timestamp Validation**: Validates timestamp ranges and formats with reasonable bounds checking
+  * **Error Context**: Provides detailed validation error information for debugging and troubleshooting
+  * **Performance Optimization**: Includes validation caching and singleton pattern for efficient operation
+  * **Format Detection**: Detects common format issues like ZMQMessage vs RouterConstants format mismatches
 
 **Message_Format_Adapter**
   Component within MQClient that converts between different message formats (ZMQMessage ↔ RouterConstants), enabling transparent communication.
@@ -254,11 +263,31 @@ The Hydra Router system provides a comprehensive exception hierarchy with detail
 Message Validation Errors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Format Validation:**
-  Comprehensive validation of RouterConstants format with specific error reporting for missing or incorrect fields using the MessageValidator class.
+**Comprehensive Format Validation:**
+  The MessageValidator class provides detailed validation of RouterConstants format with specific error reporting for missing or incorrect fields. The validation system includes:
 
-**Error Response:**
-  Detailed error messages including expected vs actual format, source component identification, and troubleshooting guidance through structured exception context.
+  * **Required Field Validation**: Checks for presence of sender, elem, data, client_id, and timestamp fields
+  * **Type Validation**: Ensures correct data types (string, dict, number) for all message fields
+  * **Value Validation**: Validates that string fields are not empty and data field is a valid dictionary
+  * **Sender Type Validation**: Validates sender against allowed types (HydraClient, HydraServer, HydraRouter)
+  * **Message Element Validation**: Validates elem field against comprehensive list of supported message types
+  * **Timestamp Validation**: Validates timestamp ranges (not negative, not unreasonably far in future)
+
+**Detailed Error Reporting:**
+  The validation system provides comprehensive error context including expected vs actual format, source component identification, and troubleshooting guidance through structured exception context. Error messages include:
+
+  * **Field-Level Errors**: Specific information about which fields are missing or have incorrect types
+  * **Format Detection**: Automatic detection of common format issues like ZMQMessage vs RouterConstants mismatches
+  * **Debugging Context**: Detailed field type information and validation state for troubleshooting
+  * **Expected Format Specification**: Complete specification of expected message format for comparison
+
+**Validation Modes:**
+  The system supports multiple validation approaches:
+
+  * **Lenient Validation**: Returns boolean result with error message for conditional processing
+  * **Strict Validation**: Raises MessageValidationError with full context for immediate error handling
+  * **Singleton Pattern**: Uses global validator instance for performance optimization
+  * **Caching Support**: Includes validation caching for improved performance in high-throughput scenarios
 
 **Recovery Mechanisms:**
   Automatic retry logic for transient errors and graceful degradation for persistent failures with comprehensive error logging.
