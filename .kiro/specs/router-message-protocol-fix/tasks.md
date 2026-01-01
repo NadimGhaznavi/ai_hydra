@@ -56,7 +56,7 @@ This implementation plan fixes the message format mismatch between the AI Hydra 
   - **Property 5: Backward Compatibility Preservation**
   - **Validates: Requirements 1.5, 5.1, 5.4**
 
-- [x] 5.2 Write property test for error resilience
+- [ ] 5.2 Write property test for error resilience
   - **Property 6: Error Resilience**
   - **Validates: Requirements 4.3, 4.4**
 
