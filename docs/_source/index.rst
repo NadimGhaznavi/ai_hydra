@@ -24,6 +24,7 @@ Quick Links
    * :doc:`architecture/api_reference` - Complete API documentation
    * :doc:`architecture/decision_flow` - Decision-making algorithms
    * :doc:`architecture/design` - Detailed system design
+   * :doc:`architecture/ai_documentation_manager` - AI Documentation Manager system architecture
    * :doc:`architecture/tui_architecture` - TUI system architecture
    * :doc:`architecture/zmq_protocol` - ZeroMQ communication protocol
    * :doc:`architecture/router_message_protocol_fix` - Router message format standardization

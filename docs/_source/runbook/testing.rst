@@ -3,17 +3,18 @@ Testing Guide
 
 This document provides comprehensive information about the AI Hydra testing framework, including test organization, execution instructions, and coverage details.
 
-For complete development standards including directory layout and file organization, see :doc:`development_standards`.
+For complete development standards including directory layout and file organization, see :doc:`development_standards`. For documentation testing requirements, see :doc:`../architecture/ai_documentation_manager`.
 
 Overview
 --------
 
-The AI Hydra project uses a **dual testing approach** combining unit tests and property-based tests to ensure comprehensive validation:
+The AI Hydra project uses a **comprehensive testing approach** combining multiple test types to ensure thorough validation:
 
 - **Unit Tests**: Validate specific examples, edge cases, and error conditions
 - **Property-Based Tests**: Validate universal properties across all inputs using Hypothesis
 - **Integration Tests**: Validate component interactions and end-to-end flows
 - **Performance Tests**: Validate system performance and resource usage
+- **Documentation Tests**: Validate documentation integrity, accuracy, and build process (Requirements 18, 39)
 
 Testing Framework
 -----------------
@@ -25,6 +26,8 @@ The project uses the following testing tools:
 - **pytest-cov**: Code coverage reporting
 - **pytest-timeout**: Timeout protection for long-running tests (critical for decision cycles)
 - **pytest-asyncio**: Support for async/await testing patterns (ZeroMQ components)
+- **docutils**: RST syntax validation for documentation testing
+- **Sphinx**: Documentation build integrity testing
 
 **Timeout Requirements**: All tests must include timeout decorators to prevent hanging during decision cycle testing. The enhanced decision flow with 9 distinct states requires careful timeout management:
 
@@ -32,6 +35,7 @@ The project uses the following testing tools:
 - Property-based tests: 60 seconds maximum  
 - Integration tests: 2-5 minutes maximum
 - End-to-end tests: 5-10 minutes maximum
+- Documentation tests: 2 minutes maximum (Requirement 18.10)
 
 Test Organization
 -----------------

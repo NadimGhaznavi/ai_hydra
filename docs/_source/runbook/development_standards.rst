@@ -3,6 +3,8 @@ Development Standards and Guidelines
 
 This document defines the comprehensive development standards for the AI Hydra project, including directory layout, code organization, file naming conventions, and project structure guidelines. These standards ensure consistency, maintainability, and scalability across the entire codebase.
 
+This document works in conjunction with the :doc:`../architecture/ai_documentation_manager` system to provide automated documentation organization and quality assurance.
+
 Overview
 --------
 
@@ -13,8 +15,9 @@ The AI Hydra project follows structured development standards that promote:
 - **Scalability**: Architecture that grows with project complexity
 - **Discoverability**: Intuitive organization for new developers
 - **Automation**: Standards that support tooling and automation
+- **Documentation Integration**: Seamless integration with the AI Documentation Manager system
 
-These standards work in conjunction with the :doc:`sdlc_procedures` to provide a complete development framework.
+These standards work in conjunction with the :doc:`sdlc_procedures` and the :doc:`../architecture/ai_documentation_manager` to provide a complete development framework with automated documentation management.
 
 Directory Layout Standards
 --------------------------
