@@ -1,251 +1,323 @@
 """
-Integration tests for AI Hydra Router system.
+Integration tests for Hydra Router system.
+
+Tests the integration between HydraRouter, MQClient, and message validation
+components to ensure they work together correctly.
 """
 
 import asyncio
 import pytest
 import time
-from unittest.mock import patch
+from typing import Dict, Any
 
 from ai_hydra.router import HydraRouter
 from ai_hydra.mq_client import MQClient
+from ai_hydra.zmq_protocol import ZMQMessage, MessageType
 from ai_hydra.router_constants import RouterConstants
-from ai_hydra.zmq_protocol import MessageType
 
 
 class TestRouterIntegration:
-    """Integration tests for router and MQClient interaction."""
+    """Integration tests for router system components."""
 
     @pytest.mark.asyncio
-    async def test_client_server_communication_through_router(self):
-        """Test complete communication flow through router."""
-        # This test would require actual ZMQ sockets, so we'll mock the key parts
+    async def test_router_startup_and_shutdown(self):
+        """Test router can start up and shut down cleanly."""
+        router = HydraRouter(
+            router_address="127.0.0.1", router_port=0, log_level="INFO"
+        )
 
-        with patch("zmq.asyncio.Context") as mock_context:
-            # Mock router setup
-            mock_router_socket = MockAsyncSocket()
-            mock_context.return_value.socket.return_value = mock_router_socket
+        try:
+            # Start the router
+            await router.start()
+            assert router.is_running is True
 
-            router = HydraRouter(
-                router_address="127.0.0.1", router_port=5556, log_level="DEBUG"
-            )
+            # Verify components are initialized
+            assert router.validator is not None
+            assert router.client_registry is not None
+            assert router.message_router is not None
+            assert router.task_manager is not None
 
-            # Mock client setup
-            mock_client_socket = MockAsyncSocket()
-
-            client = MQClient(
-                router_address="tcp://127.0.0.1:5556",
-                client_type=RouterConstants.HYDRA_CLIENT,
-                client_id="test-client",
-            )
-
-            # Replace client socket with mock
-            client.socket = mock_client_socket
-            client.context = mock_context.return_value
-
-            # Test connection
-            client.is_connected = True  # Simulate successful connection
-
-            # Test message sending
-            from ai_hydra.zmq_protocol import ZMQMessage
-
-            message = ZMQMessage.create_command(
-                message_type=MessageType.GET_STATUS,
-                client_id="test-client",
-                request_id="test-request",
-                data={"test": "data"},
-            )
-
-            await client.send_message(message)
-
-            # Verify message was formatted correctly
-            assert mock_client_socket.sent_messages
-            sent_data = mock_client_socket.sent_messages[0]
-            assert sent_data["sender"] == RouterConstants.HYDRA_CLIENT
-            assert sent_data["client_id"] == "test-client"
+        finally:
+            # Clean shutdown
+            await router.shutdown()
+            assert router.is_running is False
 
     @pytest.mark.asyncio
-    async def test_heartbeat_flow(self):
-        """Test heartbeat message flow."""
-        with patch("zmq.asyncio.Context") as mock_context:
-            mock_socket = MockAsyncSocket()
-            mock_context.return_value.socket.return_value = mock_socket
+    async def test_client_registry_operations(self):
+        """Test client registry operations."""
+        router = HydraRouter(
+            router_address="127.0.0.1", router_port=0, log_level="INFO"
+        )
 
-            client = MQClient(
-                router_address="tcp://127.0.0.1:5556",
-                client_type=RouterConstants.HYDRA_CLIENT,
-                client_id="test-client",
-                heartbeat_interval=0.1,  # Fast heartbeat for testing
+        try:
+            await router.start()
+
+            # Test client registration
+            await router.client_registry.register_client(
+                "test-client-1", RouterConstants.HYDRA_CLIENT
+            )
+            await router.client_registry.register_client(
+                "test-server-1", RouterConstants.HYDRA_SERVER
             )
 
-            # Replace socket with mock
-            client.socket = mock_socket
-            client.context = mock_context.return_value
-            client.is_connected = True
+            # Test getting clients by type
+            clients = await router.client_registry.get_clients_by_type(
+                RouterConstants.HYDRA_CLIENT
+            )
+            assert "test-client-1" in clients
 
-            # Start heartbeat
-            heartbeat_task = asyncio.create_task(client._send_heartbeat())
+            servers = await router.client_registry.get_clients_by_type(
+                RouterConstants.HYDRA_SERVER
+            )
+            assert "test-server-1" in servers
 
-            # Wait for heartbeats
-            await asyncio.sleep(0.3)
+            # Test client counts
+            counts = await router.client_registry.get_client_count()
+            assert counts.get(RouterConstants.HYDRA_CLIENT, 0) == 1
+            assert counts.get(RouterConstants.HYDRA_SERVER, 0) == 1
 
-            # Stop heartbeat
-            client.stop_event.set()
-            await heartbeat_task
+            # Test heartbeat update
+            await router.client_registry.update_heartbeat("test-client-1")
 
-            # Check that heartbeats were sent
-            heartbeat_messages = [
-                msg
-                for msg in mock_socket.sent_messages
-                if msg.get("elem") == RouterConstants.HEARTBEAT
-            ]
-            assert len(heartbeat_messages) >= 2  # Should have sent multiple heartbeats
+            # Test client removal
+            await router.client_registry.remove_client("test-client-1")
+            clients = await router.client_registry.get_clients_by_type(
+                RouterConstants.HYDRA_CLIENT
+            )
+            assert "test-client-1" not in clients
+
+        finally:
+            await router.shutdown()
 
     @pytest.mark.asyncio
-    async def test_router_client_registration(self):
-        """Test client registration with router."""
-        with patch("zmq.asyncio.Context") as mock_context:
-            mock_socket = MockAsyncSocket()
-            mock_context.return_value.socket.return_value = mock_socket
+    async def test_message_validation_integration(self):
+        """Test message validation integration with router."""
+        router = HydraRouter(
+            router_address="127.0.0.1", router_port=0, log_level="INFO"
+        )
 
-            router = HydraRouter(
-                router_address="127.0.0.1", router_port=5556, log_level="DEBUG"
-            )
+        try:
+            await router.start()
 
-            # Simulate receiving heartbeat from client
-            current_time = time.time()
-
-            # Manually add client (simulating heartbeat processing)
-            async with router.clients_lock:
-                router.clients["test-client"] = (
-                    RouterConstants.HYDRA_CLIENT,
-                    current_time,
-                )
-
-            # Test client pruning doesn't remove active client
-            await router.prune_dead_clients()
-
-            assert "test-client" in router.clients
-            assert router.client_count == 1
-
-    @pytest.mark.asyncio
-    async def test_message_routing_logic(self):
-        """Test router message routing logic."""
-        with patch("zmq.asyncio.Context") as mock_context:
-            mock_socket = MockAsyncSocket()
-            mock_context.return_value.socket.return_value = mock_socket
-
-            router = HydraRouter(
-                router_address="127.0.0.1", router_port=5556, log_level="DEBUG"
-            )
-
-            # Add test clients and server
-            router.clients = {
-                "client1": (RouterConstants.HYDRA_CLIENT, time.time()),
-                "client2": (RouterConstants.HYDRA_CLIENT, time.time()),
-                "server1": (RouterConstants.HYDRA_SERVER, time.time()),
+            # Test valid message validation
+            valid_message = {
+                RouterConstants.SENDER: RouterConstants.HYDRA_CLIENT,
+                RouterConstants.ELEM: RouterConstants.HEARTBEAT,
+                RouterConstants.DATA: {},
+                RouterConstants.CLIENT_ID: "test-client",
+                RouterConstants.TIMESTAMP: time.time(),
             }
 
-            # Test client to server forwarding
-            await router.forward_to_server(
-                elem=RouterConstants.START_SIMULATION,
-                data={"config": "test"},
-                sender=b"client1",
+            is_valid, error_msg = router.validator.validate_router_message(
+                valid_message
             )
+            assert is_valid is True
+            assert error_msg == ""
 
-            # Should send to server and acknowledge client
-            assert len(mock_socket.sent_multiparts) == 2
-
-            # Test server to clients broadcasting
-            await router.broadcast_to_clients(
-                elem=RouterConstants.STATUS_UPDATE,
-                data={"status": "running"},
-                sender_id="server1",
+            # Test invalid message validation
+            invalid_message = {"invalid": "message"}
+            is_valid, error_msg = router.validator.validate_router_message(
+                invalid_message
             )
+            assert is_valid is False
+            assert "Missing required fields" in error_msg
 
-            # Should broadcast to both clients
-            broadcast_calls = len(
-                [
-                    call
-                    for call in mock_socket.sent_multiparts
-                    if call[0] in [b"client1", b"client2"]
-                ]
-            )
-            assert broadcast_calls == 2
+        finally:
+            await router.shutdown()
+
+    def test_mq_client_format_conversion(self):
+        """Test MQClient message format conversion."""
+        client = MQClient(
+            client_type=RouterConstants.HYDRA_CLIENT, client_id="test-client"
+        )
+
+        # Create test ZMQMessage
+        zmq_message = ZMQMessage(
+            message_type=MessageType.START_SIMULATION,
+            timestamp=time.time(),
+            client_id="test-client",
+            data={"config": "test"},
+        )
+
+        # Test conversion to RouterConstants format
+        router_message = client._convert_to_router_format(zmq_message)
+
+        assert router_message[RouterConstants.SENDER] == RouterConstants.HYDRA_CLIENT
+        assert router_message[RouterConstants.ELEM] == RouterConstants.START_SIMULATION
+        assert router_message[RouterConstants.DATA] == {"config": "test"}
+        assert router_message[RouterConstants.CLIENT_ID] == "test-client"
+
+        # Test conversion back to ZMQMessage
+        converted_back = client._convert_from_router_format(router_message)
+
+        assert converted_back.message_type == MessageType.START_SIMULATION
+        assert converted_back.client_id == "test-client"
+        assert converted_back.data == {"config": "test"}
+
+    def test_message_type_mapping_completeness(self):
+        """Test that all message types have proper mapping."""
+        client = MQClient(client_type=RouterConstants.HYDRA_CLIENT)
+
+        # Test all message types in the mapping
+        for zmq_type, router_elem in client.MESSAGE_TYPE_MAPPING.items():
+            # Test forward mapping
+            mapped_elem = client._map_message_type_to_elem(zmq_type)
+            assert mapped_elem == router_elem
+
+            # Test reverse mapping
+            mapped_type = client._map_elem_to_message_type(router_elem)
+            assert mapped_type.value == zmq_type
 
     @pytest.mark.asyncio
-    async def test_error_handling_no_server(self):
-        """Test error handling when no server is available."""
-        with patch("zmq.asyncio.Context") as mock_context:
-            mock_socket = MockAsyncSocket()
-            mock_context.return_value.socket.return_value = mock_socket
+    async def test_background_task_management(self):
+        """Test background task management."""
+        router = HydraRouter(
+            router_address="127.0.0.1", router_port=0, log_level="INFO"
+        )
 
-            router = HydraRouter(
-                router_address="127.0.0.1", router_port=5556, log_level="DEBUG"
+        try:
+            await router.start()
+
+            # Verify background tasks are running
+            assert len(router.task_manager.tasks) > 0
+
+            # Register a client and wait briefly
+            await router.client_registry.register_client(
+                "test-client", RouterConstants.HYDRA_CLIENT
             )
 
-            # Only clients, no server
-            router.clients = {"client1": (RouterConstants.HYDRA_CLIENT, time.time())}
+            # Wait a short time for background tasks to process
+            await asyncio.sleep(0.1)
 
-            await router.forward_to_server(
-                elem=RouterConstants.START_SIMULATION,
-                data={"config": "test"},
-                sender=b"client1",
+            # Verify client is still registered (not pruned immediately)
+            clients = await router.client_registry.get_clients_by_type(
+                RouterConstants.HYDRA_CLIENT
             )
+            assert "test-client" in clients
 
-            # Should send error message to client
-            assert len(mock_socket.sent_multiparts) == 1
+        finally:
+            await router.shutdown()
 
-            # Check error message content
-            error_call = mock_socket.sent_multiparts[0]
-            assert error_call[0] == b"client1"  # Sent to requesting client
+            # Verify tasks are cleaned up
+            assert len(router.task_manager.tasks) == 0
 
 
-class MockAsyncSocket:
-    """Mock async socket for testing."""
+class TestRouterErrorHandling:
+    """Test error handling in router integration."""
 
-    def __init__(self):
-        self.sent_messages = []
-        self.sent_multiparts = []
-        self.bound_addresses = []
-        self.connected_addresses = []
+    def test_invalid_message_format_handling(self):
+        """Test handling of invalid message formats."""
+        client = MQClient(client_type=RouterConstants.HYDRA_CLIENT)
 
-    def bind(self, address):
-        """Mock bind method."""
-        self.bound_addresses.append(address)
+        # Test invalid ZMQMessage type
+        with pytest.raises(TypeError):
+            client._convert_to_router_format("not a ZMQMessage")
 
-    def connect(self, address):
-        """Mock connect method."""
-        self.connected_addresses.append(address)
+        # Test invalid router message type
+        with pytest.raises(TypeError):
+            client._convert_from_router_format("not a dict")
 
-    def setsockopt(self, option, value):
-        """Mock setsockopt method."""
-        pass
+    def test_unsupported_message_type_handling(self):
+        """Test handling of unsupported message types."""
+        client = MQClient(client_type=RouterConstants.HYDRA_CLIENT)
 
-    async def send_json(self, data):
-        """Mock send_json method."""
-        self.sent_messages.append(data)
+        # Test unsupported message type
+        with pytest.raises(ValueError, match="Unsupported message type"):
+            client._map_message_type_to_elem("unsupported_type")
 
-    async def send_multipart(self, parts):
-        """Mock send_multipart method."""
-        self.sent_multiparts.append(parts)
+        # Test unsupported router element
+        with pytest.raises(ValueError, match="Unsupported router element"):
+            client._map_elem_to_message_type("unsupported_element")
 
-    async def recv_json(self):
-        """Mock recv_json method."""
-        return {"test": "response"}
+    @pytest.mark.asyncio
+    async def test_client_registration_error_handling(self):
+        """Test client registration error handling."""
+        router = HydraRouter(
+            router_address="127.0.0.1", router_port=0, log_level="INFO"
+        )
 
-    async def recv_multipart(self):
-        """Mock recv_multipart method."""
-        return [b"test_identity", b'{"test": "message"}']
+        try:
+            await router.start()
 
-    async def poll(self, timeout=None):
-        """Mock poll method."""
-        return True
+            # Test invalid client ID
+            with pytest.raises(Exception):  # Should raise ClientRegistrationError
+                await router.client_registry.register_client(
+                    "", RouterConstants.HYDRA_CLIENT
+                )
 
-    def close(self, linger=None):
-        """Mock close method."""
-        pass
+            # Test invalid client type
+            with pytest.raises(Exception):  # Should raise ClientRegistrationError
+                await router.client_registry.register_client(
+                    "test-client", "InvalidType"
+                )
 
-    def disconnect(self, address):
-        """Mock disconnect method."""
-        pass
+        finally:
+            await router.shutdown()
+
+
+class TestRouterPerformance:
+    """Basic performance tests for router system."""
+
+    @pytest.mark.asyncio
+    async def test_multiple_client_registration_performance(self):
+        """Test performance with multiple client registrations."""
+        router = HydraRouter(
+            router_address="127.0.0.1", router_port=0, log_level="WARNING"
+        )  # Reduce logging
+
+        try:
+            await router.start()
+
+            # Register multiple clients quickly
+            start_time = time.time()
+
+            for i in range(100):
+                await router.client_registry.register_client(
+                    f"client-{i}", RouterConstants.HYDRA_CLIENT
+                )
+
+            registration_time = time.time() - start_time
+
+            # Should complete within reasonable time (less than 1 second)
+            assert (
+                registration_time < 1.0
+            ), f"Registration took too long: {registration_time:.2f}s"
+
+            # Verify all clients are registered
+            clients = await router.client_registry.get_clients_by_type(
+                RouterConstants.HYDRA_CLIENT
+            )
+            assert len(clients) == 100
+
+        finally:
+            await router.shutdown()
+
+    def test_message_conversion_performance(self):
+        """Test message conversion performance."""
+        client = MQClient(client_type=RouterConstants.HYDRA_CLIENT)
+
+        # Create test message
+        zmq_message = ZMQMessage(
+            message_type=MessageType.HEARTBEAT,
+            timestamp=time.time(),
+            client_id="test-client",
+            data={"test": "data"},
+        )
+
+        # Test conversion performance
+        start_time = time.time()
+
+        for _ in range(1000):
+            router_message = client._convert_to_router_format(zmq_message)
+            converted_back = client._convert_from_router_format(router_message)
+
+        conversion_time = time.time() - start_time
+
+        # Should complete within reasonable time (less than 1 second for 1000 conversions)
+        assert (
+            conversion_time < 1.0
+        ), f"Conversion took too long: {conversion_time:.2f}s"
+
+        # Average time per conversion should be very fast
+        avg_time = conversion_time / 2000  # 2000 total conversions (to and from)
+        assert avg_time < 0.001, f"Average conversion time too slow: {avg_time:.4f}s"

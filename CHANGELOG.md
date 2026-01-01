@@ -10,18 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Hydra Router Design**: Clarified design as integrated AI Hydra component
-  - Updated overview to emphasize integration with existing ai-hydra PyPI package rather than standalone system
-  - Clarified router as reusable component that leverages existing proven components (HydraRouter, MQClient, RouterConstants)
-  - Updated key design features to reflect package integration while maintaining reusability focus
-  - Referenced router-message-protocol-fix enhancements in error handling improvements
-  - Maintained emphasis on generic router system usable by any project needing message routing
-- **Architecture Documentation**: Updated Hydra Router system architecture documentation for design consistency
-  - Updated `docs/_source/architecture/hydra_router_system.rst` to align with design document changes
-  - Enhanced system overview to emphasize AI Hydra package integration and component reusability
-  - Updated key design features to reflect leveraging of existing proven components
-  - Refined component descriptions to match design specifications for enhanced error handling
-  - Maintained consistency between specification documents and architecture documentation
+- **Router Startup Process**: Enhanced router startup process and error handling
+  - Updated main_async to use new router.start() method instead of start_background_tasks()
+  - Added comprehensive exception handling with logging for router failures
+  - Updated docstring to reflect enhanced router functionality
+  - Improved error reporting with stack traces for debugging
+- **Architecture Documentation**: Updated Hydra Router system architecture documentation for enhanced startup process
+  - Updated `docs/_source/architecture/hydra_router_system.rst` startup sequence section
+  - Enhanced operational procedures to reflect new router.start() method
+  - Documented improved initialization control and error reporting capabilities
+  - Maintained consistency between code implementation and architecture documentation
 
 ### Added
 - **Exception Hierarchy**: Comprehensive router exception hierarchy with detailed context and debugging information

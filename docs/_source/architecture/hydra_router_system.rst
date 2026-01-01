@@ -411,7 +411,7 @@ Operational Procedures
 ~~~~~~~~~~~~~~~~~~~~~~
 
 **Startup Sequence:**
-  Proper initialization order for router and client components.
+  Enhanced router initialization with comprehensive error handling and background task management. The router uses a new `start()` method that provides better initialization control and error reporting compared to the legacy `start_background_tasks()` approach.
 
 **Shutdown Procedures:**
   Graceful shutdown with client notification and resource cleanup.
