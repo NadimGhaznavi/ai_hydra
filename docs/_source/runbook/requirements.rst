@@ -637,15 +637,15 @@ The following requirements define the comprehensive Hydra Router system that pro
 Requirement 38: Centralized Message Routing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**User Story:** As a system architect, I want a centralized router that manages communication between multiple clients and servers, so that I can build scalable distributed systems with reliable message delivery.
+**User Story:** As a system architect, I want a centralized router that manages communication between multiple clients and a single server, so that I can build scalable distributed systems with reliable message delivery.
 
 **Acceptance Criteria:**
 
-1. THE Hydra_Router SHALL accept connections from multiple clients and servers simultaneously using ZeroMQ ROUTER socket
-2. THE Hydra_Router SHALL route messages between clients and servers based on sender type and message content
-3. THE Hydra_Router SHALL forward client commands to connected servers and broadcast server responses to relevant clients
-4. THE Hydra_Router SHALL maintain connection state for all connected clients and servers
-5. THE Hydra_Router SHALL provide automatic message acknowledgment for successful routing operations
+1. THE Hydra_Router SHALL accept connections from multiple clients and zero or one server using ZeroMQ ROUTER socket
+2. THE Hydra_Router SHALL route messages between clients and the server based on sender type and message content
+3. THE Hydra_Router SHALL forward client commands to the connected server when available
+4. THE Hydra_Router SHALL broadcast server responses and status updates to all connected clients
+5. WHEN no server is connected, THE Hydra_Router SHALL respond to client commands with "No server connected" error messages
 
 Requirement 39: Generic MQClient Library
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -681,10 +681,10 @@ Requirement 41: Heartbeat Monitoring and Client Tracking
 **Acceptance Criteria:**
 
 1. THE MQClient SHALL send periodic heartbeat messages to the router using RouterConstants format
-2. THE Heartbeat_Monitor SHALL track the last heartbeat timestamp for each connected client
+2. THE Heartbeat_Monitor SHALL track the last heartbeat timestamp for each connected client and the server
 3. THE Heartbeat_Monitor SHALL automatically remove clients that haven't sent heartbeats within the configured timeout period
-4. THE Client_Registry SHALL maintain real-time counts of connected clients and servers
-5. THE router SHALL log client connection and disconnection events for monitoring and debugging
+4. THE Client_Registry SHALL maintain real-time counts of connected clients and server connection status
+5. THE router SHALL log client and server connection and disconnection events for monitoring and debugging
 
 Requirement 42: Comprehensive Message Validation and Error Handling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -702,15 +702,15 @@ Requirement 42: Comprehensive Message Validation and Error Handling
 Requirement 43: Flexible Routing Rules and Message Broadcasting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**User Story:** As a system designer, I want configurable message routing rules, so that I can implement different communication patterns between clients and servers.
+**User Story:** As a system designer, I want configurable message routing rules, so that I can implement different communication patterns between clients and the server.
 
 **Acceptance Criteria:**
 
-1. THE Hydra_Router SHALL forward client commands to all connected servers by default
+1. THE Hydra_Router SHALL forward client commands to the connected server when available
 2. THE Hydra_Router SHALL broadcast server responses and status updates to all connected clients
 3. THE Hydra_Router SHALL support message filtering based on client type and message content
-4. THE Hydra_Router SHALL handle server-to-server and client-to-client communication when configured
-5. THE routing rules SHALL be configurable without requiring code changes to the core router
+4. THE Hydra_Router SHALL handle client-to-client communication when configured
+5. THE routing rules SHALL be extensible to support multiple servers in future versions
 
 Requirement 44: Scalable Connection Management
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

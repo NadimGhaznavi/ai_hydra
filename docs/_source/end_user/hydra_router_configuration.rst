@@ -6,7 +6,7 @@ This guide provides comprehensive configuration instructions for the Hydra Route
 Overview
 --------
 
-The Hydra Router system provides flexible configuration options for different deployment scenarios, from local development to distributed production environments. Configuration is managed through command-line arguments, configuration files, and environment variables.
+The Hydra Router system provides flexible configuration options for different deployment scenarios, from local development to distributed production environments. The system supports multiple clients connecting to a single server through the centralized router, with configuration managed through command-line arguments, configuration files, and environment variables.
 
 Router Configuration
 --------------------
@@ -54,7 +54,7 @@ Router configuration can be specified using JSON or YAML files:
     
     routing:
       enable_client_to_client: false
-      enable_server_to_server: false
+      enable_server_to_server: false  # Reserved for future multiple server support
       message_queue_size: 1000
     
     monitoring:
@@ -80,7 +80,7 @@ Router configuration can be specified using JSON or YAML files:
 
 **Routing Configuration:**
   - ``enable_client_to_client``: Allow direct client-to-client communication
-  - ``enable_server_to_server``: Allow direct server-to-server communication
+  - ``enable_server_to_server``: Reserved for future multiple server support
   - ``message_queue_size``: Maximum queued messages per client
 
 **Monitoring Configuration:**

@@ -6,16 +6,17 @@ This document describes the comprehensive architecture of the Hydra Router syste
 System Overview
 ---------------
 
-The Hydra Router implements a centralized router pattern with automatic client discovery, heartbeat monitoring, message format standardization, and comprehensive error handling. The system is designed to be reusable across different projects that need robust message routing capabilities.
+The Hydra Router implements a centralized router pattern with automatic client discovery, heartbeat monitoring, message format standardization, and comprehensive error handling. The system supports multiple clients connecting to a single server, with extensibility planned for multiple servers in future versions. The system is designed to be reusable across different projects that need robust message routing capabilities.
 
 **Key Features:**
 
-* **Centralized Message Routing**: Single router manages multiple client/server connections
+* **Centralized Message Routing**: Single router manages multiple client connections and single server connection
 * **Automatic Client Discovery**: Heartbeat-based client registration and lifecycle management
 * **Message Format Standardization**: Automatic conversion between internal and router formats
 * **Comprehensive Error Handling**: Detailed validation and error reporting
-* **Scalable Architecture**: Support for hundreds of concurrent connections
+* **Scalable Architecture**: Support for hundreds of concurrent client connections
 * **Flexible Deployment**: Configurable for different environments and use cases
+* **Future Extensibility**: Designed to support multiple servers in future versions
 
 Architecture Components
 -----------------------
@@ -24,7 +25,7 @@ Core Router Components
 ~~~~~~~~~~~~~~~~~~~~~~
 
 **Hydra_Router**
-  The central message routing component that manages client/server connections and routes messages between them using ZeroMQ ROUTER socket pattern.
+  The central message routing component that manages client connections and routes messages between multiple clients and a single server using ZeroMQ ROUTER socket pattern.
 
 **MQClient**
   Generic ZeroMQ client library that connects to the Hydra Router and handles message format conversion, providing unified interface for both client and server applications.
@@ -51,7 +52,7 @@ Client Management Components
   Component that tracks client connectivity through periodic heartbeat messages and manages client lifecycle.
 
 **Client_Registry**
-  Component that maintains active client/server connections and their metadata, providing real-time connection tracking.
+  Component that maintains active client connections and server connection metadata, providing real-time connection tracking for the single server and multiple clients.
 
 **Connection_Manager**
   Handles client connection establishment, reconnection logic, and graceful disconnection procedures.
@@ -144,7 +145,7 @@ Default Routing Behavior
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Client-to-Server Routing:**
-  Client commands are forwarded to all connected servers by default, enabling broadcast command distribution.
+  Client commands are forwarded to the connected server, enabling centralized command processing.
 
 **Server-to-Client Routing:**
   Server responses and status updates are broadcast to all connected clients, providing comprehensive status visibility.

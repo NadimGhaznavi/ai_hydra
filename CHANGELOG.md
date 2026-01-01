@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Hydra Router Requirements**: Clarified single server architecture and future extensibility
+  - Updated introduction to specify support for multiple clients and single server architecture
+  - Added clarification about zero or one server support with multiple clients
+  - Noted extensibility for multiple servers in future versions
+  - Improved accuracy of system architecture description in requirements document
+- **Architecture Documentation**: Updated Hydra Router system architecture documentation for consistency
+  - Modified system overview to reflect single server with multiple clients architecture
+  - Updated key features to specify single server connection with future extensibility
+  - Clarified Hydra_Router component description for accurate client/server relationship
+  - Updated Client_Registry description to reflect single server connection tracking
+  - Modified routing rules to reflect client-to-server forwarding for single server
+- **Configuration Documentation**: Updated Hydra Router configuration guide for single server architecture
+  - Modified overview to clarify multiple clients connecting to single server through router
+  - Updated routing configuration section to note server-to-server as reserved for future use
+  - Added comments in configuration examples to clarify future multiple server support
+- **Requirements Documentation**: Updated requirements specification for single server architecture
+  - Modified Requirement 38 acceptance criteria to specify zero or one server support
+  - Updated Requirement 41 to include server connection status tracking alongside clients
+  - Revised Requirement 43 to reflect client-to-server routing and future extensibility
+  - Enhanced requirements to accurately reflect current single server limitations
+
 ### Added
 - **Hydra Router System Documentation**: Comprehensive documentation for the ZeroMQ-based message routing system
   - Created detailed requirements document (`.kiro/specs/hydra-router/requirements.md`) with 10 main requirements covering centralized message routing, MQClient library, message format standardization, heartbeat monitoring, error handling, routing rules, scalability, configuration, backward compatibility, and monitoring
@@ -53,6 +75,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added Hydra Router system architecture to architecture documentation section
   - Integrated router documentation with existing documentation structure
   - Maintained consistent navigation and organization
+
+### Changed
+- **Hydra Router Requirements**: Clarified single server architecture and future extensibility
+  - Updated introduction to specify support for multiple clients and single server architecture
+  - Added clarification about zero or one server support with multiple clients
+  - Noted extensibility for multiple servers in future versions
+  - Improved accuracy of system architecture description in requirements document
 
 ### Added
 - **Hydra Router Specifications**: Comprehensive requirements document for ZeroMQ-based message routing system
