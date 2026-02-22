@@ -10,6 +10,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Hydra Router Examples**: Basic client-server example demonstrating router communication patterns
+  - Added `hydra-router/examples/basic_client_server.py` with comprehensive client-server communication example
+  - Demonstrates server responding to client messages through router with proper async/await patterns
+  - Shows ZMQMessage usage, router integration, and proper error handling
+  - Includes clear setup instructions and user feedback with emoji indicators
+  - Provides practical template for building router-based applications
+- **Documentation Updates**: Enhanced Hydra Router documentation with new example integration
+  - Updated `hydra-router/README.md` with basic example section and improved quick start guide
+  - Enhanced `docs/_source/end_user/hydra_router_configuration.rst` with basic client-server example documentation
+  - Added examples section to development workflow with clear usage instructions
+  - Integrated new example with existing router demo examples for comprehensive coverage
+  - Improved client usage examples with proper async patterns and error handling
+- **Standalone Hydra Router Package**: Complete extraction of router functionality as independent PyPI package
+  - Created `hydra-router/` directory with standalone package structure following PyPI standards
+  - Implemented `pyproject.toml` with proper package metadata, dependencies, and `ai-hydra-router` console script entry point
+  - Extracted and enhanced all router components without ai-hydra dependencies:
+    - `hydra_router/zmq_protocol.py`: Standalone ZMQMessage and MessageType implementation
+    - `hydra_router/router_constants.py`: RouterConstants and RouterLabels for message format definitions
+    - `hydra_router/exceptions.py`: Complete custom exception hierarchy with detailed context
+    - `hydra_router/validation.py`: Comprehensive message validation framework with detailed error reporting
+    - `hydra_router/mq_client.py`: Generic MQClient library with automatic format conversion between ZMQMessage and RouterConstants
+    - `hydra_router/router.py`: Enhanced HydraRouter with client registry, message routing, and background task management
+    - `hydra_router/cli.py`: Command-line interface with argument parsing, logging setup, and user-friendly output
+  - Created comprehensive package documentation:
+    - `README.md`: Installation instructions, quick start guide, architecture overview, and usage examples
+    - `LICENSE`: MIT license for open source distribution
+    - `.gitignore`: Python project gitignore with comprehensive exclusions
+  - Implemented test infrastructure:
+    - `tests/conftest.py`: Shared test fixtures and configuration for pytest
+    - `tests/unit/test_router_constants.py`: Unit tests for RouterConstants module
+    - `tests/unit/test_zmq_protocol.py`: Unit tests for ZMQMessage and MessageType functionality
+  - Created usage examples:
+    - `examples/basic_client_server.py`: Complete client-server communication example with multiple clients
+    - `examples/simple_heartbeat_test.py`: Heartbeat mechanism demonstration with single and multiple clients
+  - Package provides `ai-hydra-router` command for standalone router deployment
+  - All components are fully independent with no ai-hydra dependencies, enabling use in any Python project
+  - Maintains backward compatibility with existing ai-hydra router usage patterns
+- **Hydra Router Examples**: Basic client-server example demonstrating router communication patterns
+  - Added `hydra-router/examples/basic_client_server.py` with comprehensive client-server communication example
+  - Demonstrates server responding to client messages through router with proper async/await patterns
+  - Shows ZMQMessage usage, router integration, and proper error handling
+  - Includes clear setup instructions and user feedback with emoji indicators
+  - Provides practical template for building router-based applications
 - **Message Validation System**: Comprehensive message validation framework for RouterConstants format compliance
   - Added MessageValidator class with detailed error reporting and field validation in `hydra-router/src/hydra_router/validation.py`
   - Implemented validation utilities with strict and lenient validation modes

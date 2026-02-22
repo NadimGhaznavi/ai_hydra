@@ -618,6 +618,26 @@ Router Demo Examples
 
 The AI Hydra project includes comprehensive examples demonstrating router functionality:
 
+**Basic Client-Server Example**
+  The ``hydra-router/examples/basic_client_server.py`` script provides a fundamental demonstration of router communication including:
+  
+  - Server responding to client messages through router
+  - Multiple client connections (client-001, client-002)
+  - ZMQMessage usage with proper async/await patterns
+  - Router integration and proper error handling
+  - Clear setup instructions and user feedback with emoji indicators
+  - Practical template for building router-based applications
+  
+  Run the example with:
+  
+  .. code-block:: bash
+  
+     # Terminal 1: Start the router
+     ai-hydra-router --log-level INFO
+     
+     # Terminal 2: Run the example
+     python hydra-router/examples/basic_client_server.py
+
 **Complete Router Demo**
   The ``examples/test_router_demo.py`` script provides a complete demonstration of the router system including:
   

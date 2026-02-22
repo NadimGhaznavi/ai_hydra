@@ -33,6 +33,18 @@ ai-hydra-router
 ai-hydra-router --address 0.0.0.0 --port 5556 --log-level INFO
 ```
 
+### Basic Example
+
+Run the basic client-server example:
+
+```bash
+# Terminal 1: Start the router
+ai-hydra-router --log-level INFO
+
+# Terminal 2: Run the example
+python examples/basic_client_server.py
+```
+
 ### Client Usage
 
 ```python
@@ -52,14 +64,15 @@ async def main():
     
     # Send a message
     message = ZMQMessage.create_command(
-        message_type=MessageType.HEARTBEAT,
+        message_type=MessageType.GET_STATUS,
         client_id="client-001",
-        request_id="req-001"
+        request_id="req-001",
+        data={"request": "status"}
     )
     await client.send_message(message)
     
     # Receive messages
-    response = await client.receive_message()
+    response = await client.receive_message_blocking(timeout=5.0)
     print(f"Received: {response}")
     
     # Cleanup
@@ -133,6 +146,26 @@ The router uses a standardized message format:
 git clone https://github.com/ai-hydra/hydra-router.git
 cd hydra-router
 pip install -e ".[dev]"
+```
+
+### Examples
+
+The `examples/` directory contains practical demonstrations:
+
+- **`basic_client_server.py`**: Complete client-server communication example
+- **`simple_heartbeat_test.py`**: Heartbeat mechanism demonstration
+
+Run examples:
+
+```bash
+# Start router first
+ai-hydra-router --log-level INFO
+
+# Run basic client-server example
+python examples/basic_client_server.py
+
+# Run heartbeat test
+python examples/simple_heartbeat_test.py
 ```
 
 ### Run Tests

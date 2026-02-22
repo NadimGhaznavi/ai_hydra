@@ -44,7 +44,7 @@ dependencies = [
     
     # ZeroMQ for headless server communication
     "pyzmq>=25.0.0",
-    
+
     # System monitoring and utilities
     "psutil>=5.9.0",
     
