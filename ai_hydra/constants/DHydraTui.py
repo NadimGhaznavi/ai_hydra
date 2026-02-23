@@ -46,6 +46,7 @@ class DLabel:
     CLIENTS: Final[str] = "Clients"
     CONFIG: Final[str] = "Configuration"
     CONNECTED: Final[str] = "Connected"
+    DEBUG: Final[str] = "DEBUG"
     DISCONNECTED: Final[str] = "Disonnected"
     ERROR: Final[str] = "ERROR"
     LISTEN_PORT: Final[str] = "Listening Port"

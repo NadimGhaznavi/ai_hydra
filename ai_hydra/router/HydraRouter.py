@@ -87,8 +87,8 @@ class HydraRouter(App):
                             timeout=DHydra.NETWORK_TIMEOUT,
                         )
 
-                        routing_id, message_data, route = self._split_router_frames(
-                            frames
+                        routing_id, message_data, route = (
+                            self._split_router_frames(frames)
                         )
                         self._clients[routing_id] = time.time()
 
@@ -106,7 +106,9 @@ class HydraRouter(App):
                     raise RuntimeError("Socket is not initialized")
 
         except Exception as e:
-            self.query_one(f"#{DField.CONSOLE_SCREEN}", Log).write_line(f"ERROR: {e}")
+            self.query_one(f"#{DField.CONSOLE_SCREEN}", Log).write_line(
+                f"ERROR: {e}"
+            )
             exit(1)
 
     @work(group="main", exclusive=True)
@@ -119,11 +121,12 @@ class HydraRouter(App):
                 if self.socket is not None:
                     try:
                         frames = await asyncio.wait_for(
-                            self.socket.recv_multipart(), timeout=DHydra.NETWORK_TIMEOUT
+                            self.socket.recv_multipart(),
+                            timeout=DHydra.NETWORK_TIMEOUT,
                         )
 
-                        routing_id, message_data, route = self._split_router_frames(
-                            frames
+                        routing_id, message_data, route = (
+                            self._split_router_frames(frames)
                         )
                         self._clients[routing_id] = time.time()
 
@@ -141,7 +144,9 @@ class HydraRouter(App):
                     raise RuntimeError("Socket is not initialized")
 
         except Exception as e:
-            self.query_one(f"#{DField.CONSOLE_SCREEN}", Log).write_line(f"ERROR: {e}")
+            self.query_one(f"#{DField.CONSOLE_SCREEN}", Log).write_line(
+                f"ERROR: {e}"
+            )
             exit(1)
 
     def compose(self) -> ComposeResult:
@@ -151,7 +156,9 @@ class HydraRouter(App):
         yield Label(DLabel.ROUTER_TITLE, id=DField.TITLE)
 
         # Configuration
-        yield Vertical(Label(f"{DLabel.LISTEN_PORT}: {self._port}"), id=DField.CONFIG)
+        yield Vertical(
+            Label(f"{DLabel.LISTEN_PORT}: {self._port}"), id=DField.CONFIG
+        )
 
         # Buttons
         yield Horizontal(
@@ -163,7 +170,10 @@ class HydraRouter(App):
 
         # Console
         yield Vertical(
-            Label(f"[b]   # {'Sender':>12s} > {'Target':>12s} : {'Method':<10s}[/]"),
+            Label(
+                f"[b]   # {'Sender':>12s} > {'Target':>12s} : "
+                f"{'Method':<10s}[/]"
+            ),
             Log(highlight=True, auto_scroll=True, id=DField.CONSOLE_SCREEN),
             id=DField.CONSOLE,
         )
@@ -175,7 +185,7 @@ class HydraRouter(App):
             id=DField.CLIENTS,
         )
 
-    def console_msg(self, msg: HydraMsg):
+    def console_msg(self, msg: HydraMsg) -> None:
         self._num_msgs += 1
         line = (
             f"{self._num_msgs:>4d} {msg.sender:>12s} > {msg.target:>12s} : "
@@ -250,14 +260,18 @@ class HydraRouter(App):
         elif button_id == DField.QUIT:
             await self.on_quit()
 
-    def on_mount(self):
+    def on_mount(self) -> None:
         self.query_one(f"#{DField.TITLE}", Label).border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
-        self.query_one(f"#{DField.CONFIG}", Vertical).border_subtitle = DLabel.CONFIG
-        self.query_one(f"#{DField.CLIENTS}", Vertical).border_subtitle = DLabel.CLIENTS
+        self.query_one(f"#{DField.CONFIG}", Vertical).border_subtitle = (
+            DLabel.CONFIG
+        )
+        self.query_one(f"#{DField.CLIENTS}", Vertical).border_subtitle = (
+            DLabel.CLIENTS
+        )
 
-    async def on_quit(self):
+    async def on_quit(self) -> None:
         sys.exit(0)
 
     def _split_router_frames(
@@ -296,7 +310,7 @@ class HydraRouter(App):
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL + 1)
 
 
-def main():
+def main() -> None:
     router = HydraRouter()
     router.run()
 

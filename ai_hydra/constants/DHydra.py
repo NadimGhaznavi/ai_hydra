@@ -7,9 +7,9 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-from typing import Final, Mapping
-from enum import StrEnum
 import logging
+from enum import StrEnum
+from typing import Final, Mapping
 
 
 class DHydra:

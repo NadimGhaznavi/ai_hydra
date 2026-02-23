@@ -176,7 +176,8 @@ class HydraMsg:
             String showing message structure
         """
         return (
-            f"HydraMsg:{self._sender}->{self._target}:{self._method}({self._payload})"
+            f"HydraMsg:{self._sender}->{self._target}:{self._method}"
+            f"({self._payload})"
         )
 
     def __str__(self) -> str:

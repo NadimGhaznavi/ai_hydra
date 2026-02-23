@@ -40,7 +40,9 @@ class HydraClientTui(App):
     CSS_PATH = DFile.CLIENT_CSS_PATH
 
     def __init__(
-        self, address: str = DHydraRouterDef.HOSTNAME, port: int = DHydraRouterDef.PORT
+        self,
+        address: str = DHydraRouterDef.HOSTNAME,
+        port: int = DHydraRouterDef.PORT,
     ) -> None:
         """Constructor"""
         super().__init__()
@@ -66,14 +68,19 @@ class HydraClientTui(App):
 
         # Runtime status
         yield Vertical(
-            Label(f"{self._connected_msg}", id=DField.CONNECTED), id=DField.STATUS
+            Label(f"{self._connected_msg}", id=DField.CONNECTED),
+            id=DField.STATUS,
         )
 
         # Buttons
         yield Horizontal(
-            Button(label=DLabel.PING_ROUTER, id=DMethod.PING_ROUTER, compact=True),
+            Button(
+                label=DLabel.PING_ROUTER, id=DMethod.PING_ROUTER, compact=True
+            ),
             Label(" "),
-            Button(label=DLabel.PING_SERVER, id=DMethod.PING_SERVER, compact=True),
+            Button(
+                label=DLabel.PING_SERVER, id=DMethod.PING_SERVER, compact=True
+            ),
             Label(" "),
             Button(label="Quit", id="quit", compact=True),
             id="buttons",
@@ -94,11 +101,13 @@ class HydraClientTui(App):
             else:
                 self._connected_msg = DStatus.BAD + " " + DLabel.DISCONNECTED
 
-            self.query_one(f"#{DField.CONNECTED}", Label).update(self._connected_msg)
+            self.query_one(f"#{DField.CONNECTED}", Label).update(
+                self._connected_msg
+            )
 
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL + 1)
 
-    def console_msg(self, msg: str):
+    def console_msg(self, msg: str) -> None:
         self.query_one(Log).write_line(msg)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -145,7 +154,7 @@ class HydraClientTui(App):
         elif button_id == "quit":
             await self.on_quit()
 
-    def on_mount(self):
+    def on_mount(self) -> None:
         self.mq = HydraMQ(
             router_address=self._address,
             router_port=self._port,
@@ -158,13 +167,15 @@ class HydraClientTui(App):
         )
         self.query_one(f"#{DField.CONFIG}").border_subtitle = DLabel.CONFIG
         self.query_one(f"#{DField.STATUS}").border_subtitle = DLabel.STATUS
-        self.query_one(f"#{DField.CONSOLE}", Log).write_line("Initialization complete")
+        self.query_one(f"#{DField.CONSOLE}", Log).write_line(
+            "Initialization complete"
+        )
 
-    async def on_quit(self):
+    async def on_quit(self) -> None:
         sys.exit(0)
 
 
-def main():
+def main() -> None:
     router = HydraClientTui()
     router.run()
 

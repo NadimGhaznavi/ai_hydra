@@ -95,7 +95,9 @@ class HydraLog:
         logging.shutdown()  # Flush all handler
 
     # Basic log message handling, wraps Python's logging object
-    def info(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def info(
+        self, message: str, extra: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Log an informational message.
 
@@ -108,7 +110,9 @@ class HydraLog:
         """
         self._logger.info(message, extra=extra)
 
-    def debug(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def debug(
+        self, message: str, extra: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Log a debug message.
 
@@ -121,7 +125,9 @@ class HydraLog:
         """
         self._logger.debug(message, extra=extra)
 
-    def warning(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def warning(
+        self, message: str, extra: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Log a warning message.
 
@@ -134,7 +140,9 @@ class HydraLog:
         """
         self._logger.warning(message, extra=extra)
 
-    def error(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def error(
+        self, message: str, extra: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Log an error message.
 
@@ -147,7 +155,9 @@ class HydraLog:
         """
         self._logger.error(message, extra=extra)
 
-    def critical(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def critical(
+        self, message: str, extra: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Log a critical error message.
 

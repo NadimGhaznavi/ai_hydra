@@ -9,7 +9,6 @@
 #
 
 import asyncio
-import sys
 import time
 from collections.abc import Awaitable, Callable
 
@@ -20,7 +19,6 @@ from zmq.sugar.frame import Frame
 from ai_hydra.constants.DHydra import (
     DHydra,
     DHydraRouterDef,
-    DHydraServerDef,
     DMethod,
     DModule,
 )
@@ -114,6 +112,7 @@ class HydraMQ:
         # Asyncio control events
         self.stop_event = asyncio.Event()
         self.heartbeat_stop_event = asyncio.Event()
+        self._stopped = False
 
         # Connect to router
         self.socket.connect(self.router_addr)
@@ -127,7 +126,8 @@ class HydraMQ:
             self.srv_stop_event = asyncio.Event()
             self.srv_pause_event = asyncio.Event()
 
-        # A float holding time.time() for when the last heartbeat reply was received
+        # A float holding time.time() for when the last heartbeat reply was
+        # received
         self._last_heartbeat: float = 0.0
 
         # Flag to determine if start() has been called
@@ -143,7 +143,8 @@ class HydraMQ:
 
                 try:
                     message_data = await asyncio.wait_for(
-                        self.socket.recv(copy=True), timeout=DHydra.NETWORK_TIMEOUT
+                        self.socket.recv(copy=True),
+                        timeout=DHydra.NETWORK_TIMEOUT,
                     )
                     hydra_msg = HydraMsg.from_json(_ensure_bytes(message_data))
                     method = hydra_msg.method
@@ -161,9 +162,13 @@ class HydraMQ:
                 except Exception as e:
                     print(f"{DLabel.ERROR}: {e}")
 
+        except asyncio.CancelledError:
+            # normal during shutdown
+            raise
         except Exception as e:
             print(f"{DLabel.ERROR}: {e}")
-            sys.exit(1)
+            # let the task end; caller can decide what to do
+            return
 
     def connected(self) -> bool:
         if self._last_heartbeat == 0:
@@ -175,6 +180,15 @@ class HydraMQ:
 
         return True
 
+    def _ignore_zmq_teardown(
+        self, action: Callable[[], None], what: str
+    ) -> None:
+        try:
+            action()
+        except zmq.ZMQError as e:
+            # expected during shutdown races / already-closed sockets
+            print(f"{DLabel.DEBUG}: ignoring {what} during shutdown: {e}")
+
     async def quit(self) -> None:
         """
         Cleanly shutdown the HydraMQ client.
@@ -185,18 +199,23 @@ class HydraMQ:
         Returns:
             None
         """
+        if self._stopped:
+            return
+        self._stopped = True
+
         # Stop heartbeat task
         if self.heartbeat_task is not None:
             self.heartbeat_stop_event.set()
-            await asyncio.sleep(0.1)  # Give task time to exit
             self.heartbeat_task.cancel()
             try:
                 await self.heartbeat_task
             except asyncio.CancelledError:
                 pass
+            finally:
+                self.heartbeat_task = None
+
         if self.srv_task is not None:
             self.srv_stop_event.set()
-            await asyncio.sleep(0.1)
             self.srv_task.cancel()
             try:
                 await self.srv_task
@@ -204,13 +223,32 @@ class HydraMQ:
                 pass
 
         # Disconnect and cleanup
+        # Disconnect and cleanup (guarded: ignore errors during teardown)
+        # Disconnect and cleanup
         try:
-            self.socket.disconnect(self.router_addr)
-            self.socket.close(linger=0)
-            self.hb_socket.disconnect(self.router_hb_addr)
-            self.hb_socket.close(linger=0)
+            self._ignore_zmq_teardown(
+                lambda: self.socket.disconnect(self.router_addr),
+                f"socket.disconnect({self.router_addr})",
+            )
+            self._ignore_zmq_teardown(
+                lambda: self.socket.close(linger=0),
+                "socket.close(linger=0)",
+            )
+            self._ignore_zmq_teardown(
+                lambda: self.hb_socket.disconnect(self.router_hb_addr),
+                f"hb_socket.disconnect({self.router_hb_addr})",
+            )
+            self._ignore_zmq_teardown(
+                lambda: self.hb_socket.close(linger=0),
+                "hb_socket.close(linger=0)",
+            )
         finally:
-            self.ctx.term()
+            try:
+                self.ctx.term()
+            except zmq.ZMQError as e:
+                print(
+                    f"{DLabel.DEBUG}: ignoring ctx.term() during shutdown: {e}"
+                )
 
     async def recv(self) -> HydraMsg:
         """
@@ -276,17 +314,25 @@ class HydraMQ:
         else:
             return sender, frames[-1], [sender]
 
-    def start(self):
+    def start(self) -> None:
         if self._started:
             return
         if self.srv_methods and self.srv_task is None:
-            self.srv_task = asyncio.create_task(self.bg_listen())
+            self.srv_task = asyncio.create_task(
+                self.bg_listen(), name="hydra-mq-listen"
+            )
         # Start heartbeat task
-        self.heartbeat_task = asyncio.create_task(self.start_heartbeat_bg())
+        self.heartbeat_task = asyncio.create_task(
+            self.start_heartbeat_bg(), name="hydra-mq-heartbeat"
+        )
         self._started = True
 
     def started(self) -> bool:
         return self._started
+
+    async def stop(self) -> None:
+        """Alias for quit(), but safe to call multiple times."""
+        await self.quit()
 
     async def start_heartbeat_bg(self) -> None:
         """
@@ -308,7 +354,8 @@ class HydraMQ:
 
             try:
                 message_data = await asyncio.wait_for(
-                    self.hb_socket.recv(copy=True), timeout=DHydra.NETWORK_TIMEOUT
+                    self.hb_socket.recv(copy=True),
+                    timeout=DHydra.NETWORK_TIMEOUT,
                 )
                 reply = HydraMsg.from_json(_ensure_bytes(message_data))
 
