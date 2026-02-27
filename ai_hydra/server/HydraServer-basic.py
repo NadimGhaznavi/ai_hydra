@@ -1,6 +1,6 @@
 # ai_hydra/server/HydraServer.py
 #
-#    AI Hydra
+#   Hydra Router
 #    Author: Nadim-Daniel Ghaznavi
 #    Copyright: (c) 2025-2026 Nadim-Daniel Ghaznavi
 #    GitHub: https://github.com/NadimGhaznavi/ai_hydra
@@ -22,7 +22,6 @@ from ai_hydra.constants.DHydra import (
 )
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.utils.HydraMQ import HydraMQ, HydraMsg
-from ai_hydra.game.GameBoard import GameBoard
 
 
 class HydraServer:
@@ -63,10 +62,7 @@ class HydraServer:
             str(DMethod.PING): self.ping,
         }
 
-        # Messaging stub
         self.mq: Optional[HydraMQ] = None
-
-        # Structured console logs
         self.log = HydraLog(
             client_id=self.identity, log_level=log_level, to_console=True
         )
