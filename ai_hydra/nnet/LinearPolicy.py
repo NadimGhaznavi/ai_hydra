@@ -22,6 +22,8 @@ class LinearModel(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(DNetDef.INPUT_SIZE, DLinear.HIDDEN_SIZE),
             nn.ReLU(),
+            nn.Linear(DLinear.HIDDEN_SIZE, DLinear.HIDDEN_SIZE),
+            nn.ReLU(),
             nn.Linear(DLinear.HIDDEN_SIZE, DLinear.OUTPUT_SIZE),
         )
 

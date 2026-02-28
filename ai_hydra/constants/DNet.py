@@ -48,6 +48,7 @@ class DNetField:
 
     ACTION: Final[str] = DGameField.ACTION
     DONE: Final[str] = DGameField.DONE
+    CUR_EPSILON: Final[str] = "cur_epsilon"
     NEXT_STATE: Final[str] = "next_state"
     REWARD: Final[str] = DGameField.REWARD
     STATE: Final[str] = "state"
@@ -58,6 +59,6 @@ class DLinear:
     Constants for the Linear neural network
     """
 
-    HIDDEN_SIZE: Final[int] = 128
+    HIDDEN_SIZE: Final[int] = 192
     DROPOUT_P: Final[float] = 0.0
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right

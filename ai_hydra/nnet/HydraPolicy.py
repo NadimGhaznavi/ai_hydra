@@ -20,3 +20,12 @@ class HydraPolicy(ABC):
         (LEFT, STRAIGHT, RIGHT)
         """
         pass
+
+
+class HydraTrainPolicy(HydraPolicy):
+    @abstractmethod
+    def played_game(self) -> None:
+        """
+        Called exactly once at the end of each episode (epsilon decay).
+        """
+        pass

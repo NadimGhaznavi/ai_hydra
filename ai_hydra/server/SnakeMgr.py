@@ -28,14 +28,16 @@ class SnakeSession:
     Pure domain session state for one client identity.
     """
 
+    board: Any  # GameBoard, but keep Any here to avoid import cycles if needed
     seed: int
     rng: random.Random
-    board: Any  # GameBoard, but keep Any here to avoid import cycles if needed
     done: bool = False
+    episode_id: int = 0
+    epoch: int = 0
+    highscore: int = 0
     step_n: int = 0
     score: int = 0
-    episode_id: int = 0
-    reward_total: int = 0
+    reward_total: float = 0.0
 
 
 class SnakeMgr:
@@ -112,6 +114,10 @@ class SnakeMgr:
     ) -> SnakeSession:
         from ai_hydra.game.GameBoard import GameBoard
 
+        prev = self.sessions.get(client_id)
+        prev_high = getattr(prev, "highscore", 0)
+        prev_epoch = getattr(prev, "epoch", 0)
+
         session_seed, rng = self.new_rng(seed)
         episode_id = rng.getrandbits(32)
 
@@ -129,6 +135,9 @@ class SnakeMgr:
             step_n=0,
             score=0,
             episode_id=episode_id,
+            # carry-over stats
+            highscore=prev_high,
+            epoch=prev_epoch,
         )
         self.sessions[client_id] = sess
         return sess
@@ -165,6 +174,7 @@ class SnakeMgr:
             DGameField.SCORE: sess.score,
             DGameField.EPISODE_ID: sess.episode_id,
             DGameField.SEED: sess.seed,
+            DGameField.HIGHSCORE: sess.highscore,
             DNetField.STATE: state,
         }
 
@@ -182,8 +192,10 @@ class SnakeMgr:
                 DGameField.ERROR: DGameField.EPISODE_DONE,
                 DGameField.INFO: {
                     DGameField.EPISODE_ID: sess.episode_id,
-                    DGameField.STEP_N: sess.step_n,
+                    DGameField.EPOCH: sess.epoch,
+                    DGameField.HIGHSCORE: sess.highscore,
                     DGameField.SCORE: sess.score,
+                    DGameField.STEP_N: sess.step_n,
                     DGameField.REWARD_TOTAL: sess.reward_total,
                 },
             }
@@ -202,6 +214,7 @@ class SnakeMgr:
         # Score delta (Phase 1): +1 on FOOD, else 0
         score_delta = 1 if outcome == DGameField.FOOD else 0
         sess.score += score_delta
+        sess.highscore = max(sess.highscore, sess.score)
         sess.done = done
         sess.reward_total += reward
 
@@ -223,6 +236,8 @@ class SnakeMgr:
             DGameField.SNAPSHOT: self.snapshot(client_id),
             DGameField.INFO: {
                 DGameField.EPISODE_ID: sess.episode_id,
+                DGameField.EPOCH: sess.epoch,
+                DGameField.HIGHSCORE: sess.highscore,
                 DGameField.STEP_N: sess.step_n,
                 DGameField.SCORE: sess.score,
                 DGameField.REWARD_TOTAL: sess.reward_total,

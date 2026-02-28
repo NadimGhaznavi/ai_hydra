@@ -121,11 +121,6 @@ class TrainMgr:
 
             steps += 1
 
-        # Episode hook (epsilon decay), if supported
-        played_game = getattr(self.policy, "played_game", None)
-        if callable(played_game):
-            played_game()
-
         return EpisodeStats(
             episode_id=episode_id,
             steps=steps,

@@ -24,6 +24,8 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DHydraServerDef,
 )
+from ai_hydra.constants.DNet import DNetField
+from ai_hydra.nnet.Transition import Transition
 
 
 class HydraMgr(HydraServer):
@@ -159,18 +161,55 @@ class HydraMgr(HydraServer):
         """
         try:
             sess = self.snake.get_session(client_id)
-            tm = self._ensure_train_mgr()
+            train_mgr = self._ensure_train_mgr()
+
+            train_start = 1_000
+            train_every = 4
+            grad_steps = 1
+            batch_size = 64
 
             while True:
                 # If episode is done, reset automatically (viewer stays continuous)
                 if sess.done:
                     self.snake.reset_session(client_id, seed=None)
                     sess = self.snake.get_session(client_id)
+                    sess.epoch += 1
 
                 # Choose action (server-side)
                 state = sess.board.get_state()
-                action = tm.policy.select_action(state)
+                action = train_mgr.policy.select_action(state)
+
                 payload = self.snake.step(client_id, action)
+
+                # Game over...
+                if payload[DGameField.DONE]:
+                    # Currently policy is EpsilonPolicy which calls EpsilonAlgo...
+                    train_mgr.policy.played_game()
+                    payload.setdefault(DGameField.INFO, {})[
+                        DNetField.CUR_EPSILON
+                    ] = train_mgr.policy.epsilon()
+
+                # Build/store transition
+                t = Transition(
+                    state=payload[DNetField.STATE],
+                    action=action,
+                    reward=payload[DGameField.REWARD],
+                    next_state=payload[DNetField.NEXT_STATE],
+                    done=payload[DGameField.DONE],
+                )
+                train_mgr.replay.add(t)
+
+                # Train periodically once replay is "warm"
+                loss = None
+                if len(train_mgr.replay) >= train_start and (
+                    sess.step_n % train_every == 0
+                ):
+                    for _ in range(grad_steps):
+                        loss = await asyncio.to_thread(
+                            train_mgr.trainer.train_step, batch_size
+                        )
+
+                # TODO: Attach training stats to telemetry
 
                 if self.mq is not None:
                     await self.mq.publish("snake.trainer.snapshot", payload)

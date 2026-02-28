@@ -53,6 +53,8 @@ class DLabel:
     DEBUG: Final[str] = "DEBUG"
     DISCONNECTED: Final[str] = "Disonnected"
     ERROR: Final[str] = "ERROR"
+    GAME: Final[str] = "Game"
+    HIGHSCORE: Final[str] = "Highscore"
     LEFT: Final[str] = "Left"
     LISTEN_PORT: Final[str] = "Listening Port"
     PING_ROUTER: Final[str] = "Ping Router"
