@@ -1,4 +1,4 @@
-# ai_hydra/client/HydraDebugClient.py
+# ai_hydra/client/HydraClient.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi
@@ -15,14 +15,15 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
 from textual.widgets import Button, Label, Log
+from textual.message import Message
 
 from ai_hydra.utils.HydraMQ import HydraMQ
 from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.client.ClientGameBoard import ClientGameBoard
+
 from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
-from ai_hydra.constants.DGame import DGameField
-from ai_hydra.game.GameBoard import MoveAction
-from ai_hydra.client.ClientGameBoard import ClientGameBoard
+from ai_hydra.constants.DGame import DGameField, DGameMethod
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
@@ -44,11 +45,12 @@ HYDRA_THEME = Theme(
     },
 )
 
-MOVE_MAP = {
-    DMethod.ACTION_LEFT: 0,
-    DMethod.ACTION_STRAIGHT: 1,
-    DMethod.ACTION_RIGHT: 2,
-}
+
+class TelemetryReceived(Message):
+    def __init__(self, topic: str, payload: dict) -> None:
+        super().__init__()
+        self.topic = topic
+        self.payload = payload
 
 
 class HydraClientTui(App):
@@ -70,6 +72,7 @@ class HydraClientTui(App):
         self._identity = DModule.HYDRA_CLIENT
         self._connected_msg = DStatus.BAD + " " + DLabel.DISCONNECTED
         self.mq: HydraMQ | None = None
+        self._telemetry_prefix = "telemetry.snake.trainer"
 
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
 
@@ -111,45 +114,30 @@ class HydraClientTui(App):
         )
 
         # Buttons
-        yield Vertical(
-            Horizontal(
-                Button(
-                    label=DLabel.PING_ROUTER,
-                    id=DMethod.PING_ROUTER,
-                    compact=True,
-                ),
-                Label(" "),
-                Button(label="Quit", id="quit", compact=True),
+        yield Horizontal(
+            Button(
+                label=DLabel.PING_ROUTER,
+                id=DMethod.PING_ROUTER,
+                compact=True,
             ),
-            Horizontal(
-                Button(
-                    label=DLabel.RESET, id=DMethod.RESET_GAME, compact=True
-                ),
-                Label(" "),
-                Button(
-                    label=DLabel.LEFT, id=DMethod.ACTION_LEFT, compact=True
-                ),
-                Label(" "),
-                Button(
-                    label=DLabel.STRAIGHT,
-                    id=DMethod.ACTION_STRAIGHT,
-                    compact=True,
-                ),
-                Label(" "),
-                Button(
-                    label=DLabel.RIGHT, id=DMethod.ACTION_RIGHT, compact=True
-                ),
+            Label(" "),
+            Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
+            Label(" "),
+            Button(label=DLabel.START, id=DGameMethod.START_RUN, compact=True),
+            Label(" "),
+            Button(label=DLabel.STOP, id=DGameMethod.STOP_RUN, compact=True),
+            Label(" "),
+            Button(
+                label=DLabel.RESET, id=DGameMethod.RESET_GAME, compact=True
             ),
-            id="buttons",
+            id=DField.BUTTONS,
         )
 
         # Console
         yield Log(highlight=True, auto_scroll=True, id=DField.CONSOLE)
 
         # The Snake Game
-        yield Vertical(
-            self.game_board,
-        )
+        yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
     def console_msg(self, msg: str) -> None:
         console = self.query_one(Log)
@@ -183,50 +171,62 @@ class HydraClientTui(App):
             except asyncio.TimeoutError:
                 self.console_msg("Ping timed out.")
 
-        elif button_id == DMethod.PING_SERVER:
+        elif button_id == DGameMethod.RESET_GAME:
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
-                method=DMethod.PING,
-            )
-            self.console_msg("Sending ping to Hydra manager")
-            await mq.send(msg)
-
-            try:
-                reply = await mq.recv()
-                if reply.method == DMethod.PONG:
-                    self.console_msg("Received pong")
-            except asyncio.TimeoutError:
-                self.console_msg("Ping timed out...")
-
-        elif button_id == DMethod.RESET_GAME:
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_MGR,
-                method=DMethod.RESET_GAME,
+                method=DGameMethod.RESET_GAME,
             )
             await mq.send(msg)
 
             try:
                 reply = await mq.recv()
                 self.console_msg(reply)
-                self.game_board.apply_snapshot(reply.payload)
 
             except asyncio.TimeoutError:
                 self.console_msg("Reset timed out.")
 
-        elif button_id == DMethod.ACTION_LEFT:
-            await self.send_action(DMethod.ACTION_LEFT)
-        elif button_id == DMethod.ACTION_STRAIGHT:
-            await self.send_action(DMethod.ACTION_STRAIGHT)
-        elif button_id == DMethod.ACTION_RIGHT:
-            await self.send_action(DMethod.ACTION_RIGHT)
+        elif button_id == DGameMethod.START_RUN:
+            msg = HydraMsg(
+                sender=DModule.HYDRA_CLIENT,
+                target=DModule.HYDRA_MGR,
+                method=DGameMethod.START_RUN,
+            )
+            await mq.send(msg)
+
+            try:
+                reply = await mq.recv()
+                self.console_msg(reply)
+
+            except asyncio.TimeoutError:
+                self.console_msg("Start run timed out.")
+
+        elif button_id == DGameMethod.STOP_RUN:
+            msg = HydraMsg(
+                sender=DModule.HYDRA_CLIENT,
+                target=DModule.HYDRA_MGR,
+                method=DGameMethod.STOP_RUN,
+            )
+            await mq.send(msg)
+
+            try:
+                reply = await mq.recv()
+                self.console_msg(reply)
+
+            except asyncio.TimeoutError:
+                self.console_msg("Stop run timed out.")
 
     def on_mount(self) -> None:
         self.mq = HydraMQ(
             router_address=self._address,
             router_port=self._port,
             identity=self._identity,
+            # --- Telemetry SUB ---
+            srv_host=self._address,
+            cli_sub_prefixes=[self._telemetry_prefix],
+            cli_sub_methods={
+                self._telemetry_prefix: self._on_telemetry,
+            },
         )
         self.mq.start()
         self.check_connection_bg()
@@ -239,26 +239,28 @@ class HydraClientTui(App):
             "Initialization complete"
         )
 
+    def on_telemetry_received(self, msg: TelemetryReceived) -> None:
+        payload = msg.payload
+
+        snap = payload.get(DGameField.SNAPSHOT, {})
+        board = snap.get(DGameField.BOARD)
+
+        if board is not None:
+            self.game_board.apply_snapshot(snap)
+
+        info = payload.get(DGameField.INFO, {})
+        score = info.get(DGameField.SCORE)
+        steps = info.get(DGameField.STEP_N)
+        if score is not None and steps is not None:
+            self.query_one(
+                f"#{DField.BOARD_BOX}", Vertical
+            ).border_subtitle = f"{DLabel.SCORE}: {score}"
+
+    def _on_telemetry(self, topic: str, payload: dict) -> None:
+        self.post_message(TelemetryReceived(topic, payload))
+
     async def on_quit(self) -> None:
         sys.exit(0)
-
-    async def send_action(self, action: DMethod):
-        self.console_msg(f"Sending action: {action} > {MOVE_MAP[action]}")
-        msg = HydraMsg(
-            sender=DModule.HYDRA_CLIENT,
-            target=DModule.HYDRA_MGR,
-            method=DMethod.GAME_STEP,
-            payload={DGameField.ACTION: str(MOVE_MAP[action])},
-        )
-        await self.mq.send(msg)
-        try:
-            reply = await self.mq.recv()
-            self.console_msg(reply)
-            self.game_board.apply_snapshot(
-                reply.payload.get(DGameField.SNAPSHOT)
-            )
-        except asyncio.TimeoutError:
-            self.console_msg("Action timed out.")
 
 
 def main() -> None:

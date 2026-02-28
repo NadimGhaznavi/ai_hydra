@@ -51,6 +51,7 @@ class DGameField:
     SCORE: Final[str] = "score"
     SCORE_DELTA: Final[str] = "score_delta"
     SEED: Final[str] = "seed"
+    SESSION_ID: Final[str] = "session_id"
     SNAKE: Final[str] = "snake"
     SNAKE_BODY: Final[str] = "snake_body"
     SNAKE_HEAD: Final[str] = "snake_head"
@@ -68,8 +69,8 @@ class DGameLabel:
 
 
 class DGameMethod:
-    RESET: Final[str] = "reset_game"
-    START: Final[str] = "start_run"
-    STEP: Final[str] = "game_step"
-    STOP: Final[str] = "stop_run"
+    RESET_GAME: Final[str] = "reset_game"
+    START_RUN: Final[str] = "start_run"
+    GAME_STEP: Final[str] = "game_step"
+    STOP_RUN: Final[str] = "stop_run"
     UPDATE: Final[str] = "update"

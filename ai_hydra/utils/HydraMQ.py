@@ -8,9 +8,11 @@
 #    License: GPL 3.0
 #
 
+from collections.abc import Awaitable, Callable
+
 import asyncio
 import time
-from collections.abc import Awaitable, Callable
+import json
 
 import zmq
 import zmq.asyncio
@@ -19,6 +21,7 @@ from zmq.sugar.frame import Frame
 from ai_hydra.constants.DHydra import (
     DHydra,
     DHydraRouterDef,
+    DHydraServerDef,
     DMethod,
     DModule,
 )
@@ -33,36 +36,6 @@ def _ensure_bytes(data: bytes | Frame) -> bytes:
 class HydraMQ:
     """
     Async ZeroMQ client for HydraRouter communication.
-
-    HydraMQ provides an async DEALER socket client that connects to a
-    HydraRouter instance. It handles message serialization, heartbeats,
-    and connection lifecycle.
-
-    The client uses a DEALER socket which allows asynchronous bidirectional
-    communication through a ROUTER-based message broker.
-
-    Example:
-        mq = HydraMQ(
-            router_address="localhost",
-            router_port=5757,
-            id="my-service"
-        )
-
-        # Send message
-        msg = HydraMsg(
-            sender=mq.identity,
-            target="other-service",
-            method="ping",
-            payload={"data": "test"}
-        )
-        await mq.send(msg)
-
-        # Receive message
-        response = await mq.recv()
-        print(response.payload)
-
-        # Cleanup
-        await mq.quit()
     """
 
     def __init__(
@@ -73,6 +46,16 @@ class HydraMQ:
         identity: str = DModule.HYDRA_MQ,
         srv_methods: (
             dict[str, Callable[[HydraMsg], object | Awaitable[object]]] | None
+        ) = None,
+        *,
+        # ---- Telemetry PUB/SUB ----
+        srv_host: str = DHydraServerDef.HOSTNAME,
+        srv_pub_port: int | None = DHydraServerDef.PUB_PORT,
+        cli_sub_port: int | None = DHydraServerDef.PUB_PORT,
+        topic_prefix: str = DHydraServerDef.TOPIC_PREFIX,
+        cli_sub_prefixes: list[str] | None = None,
+        cli_sub_methods: (
+            dict[str, Callable[[str, dict], object | Awaitable[object]]] | None
         ) = None,
     ) -> None:
         """
@@ -122,9 +105,8 @@ class HydraMQ:
         self.heartbeat_task: asyncio.Task[None] | None = None
         self.srv_task: asyncio.Task[None] | None = None
 
-        if self.srv_methods:
-            self.srv_stop_event = asyncio.Event()
-            self.srv_pause_event = asyncio.Event()
+        self.srv_stop_event = asyncio.Event()
+        self.srv_pause_event = asyncio.Event()
 
         # A float holding time.time() for when the last heartbeat reply was
         # received
@@ -132,6 +114,54 @@ class HydraMQ:
 
         # Flag to determine if start() has been called
         self._started = False
+
+        # Telemtry PUB/SUB sockets
+        # ------------------------
+        self.srv_host = srv_host
+        self.srv_pub_port = srv_pub_port
+        self.cli_sub_port = cli_sub_port
+        self.topic_prefix = topic_prefix
+        self.cli_sub_prefixes = cli_sub_prefixes or []
+        self.cli_sub_methods = cli_sub_methods or {}
+
+        self.pub_socket: zmq.asyncio.Socket | None = None
+        self.sub_socket: zmq.asyncio.Socket | None = None
+        self.sub_task: asyncio.Task[None] | None = None
+
+        # Server publishes telemetry if srv_methods was provided
+        self.is_server = bool(self.srv_methods)
+
+        if self.is_server and self.srv_pub_port is not None:
+            # PUB binds on all interfaces so remote clients can subscribe
+            self.pub_addr = f"tcp://*:{int(self.srv_pub_port)}"
+            self.pub_socket = self.ctx.socket(zmq.PUB)
+            self.pub_socket.bind(self.pub_addr)
+
+        # Client subscribes to telemetry if cli_sub_methods was provided
+        if (
+            (not self.is_server)
+            and self.cli_sub_methods
+            and self.cli_sub_port is not None
+        ):
+            self.sub_addr = f"tcp://{self.srv_host}:{int(self.cli_sub_port)}"
+            self.sub_socket = self.ctx.socket(zmq.SUB)
+
+            # Subscribe to prefixes. If none provided, subscribe to the whole
+            # topic namespace
+            if not self.cli_sub_prefixes:
+                self.sub_socket.setsockopt(
+                    zmq.SUBSCRIBE, f"{self.topic_prefix}.".encode("utf-8")
+                )
+            else:
+                for p in self.cli_sub_prefixes:
+                    self.sub_socket.setsockopt(
+                        zmq.SUBSCRIBE, p.encode("utf-8")
+                    )
+
+            self.sub_socket.connect(self.sub_addr)
+
+            self.sub_stop_event = asyncio.Event()
+            self.sub_pause_event = asyncio.Event()
 
     async def bg_listen(self) -> None:
         try:
@@ -170,6 +200,70 @@ class HydraMQ:
             # let the task end; caller can decide what to do
             return
 
+    async def bg_sub_listen(self) -> None:
+        """
+        Background subscriber loop for telemetry.
+
+        Receives multipart [topic, payload_json] and dispatches to sub_methods.
+        """
+        if self.sub_socket is None:
+            return
+
+        try:
+            while not self.sub_stop_event.is_set():
+                if self.sub_pause_event.is_set():
+                    await asyncio.sleep(0.1)
+                    continue
+
+                try:
+                    frames = await asyncio.wait_for(
+                        self.sub_socket.recv_multipart(copy=True),
+                        timeout=DHydra.NETWORK_TIMEOUT,
+                    )
+
+                    if len(frames) != 2:
+                        print(
+                            f"{DLabel.ERROR}: telemetry expected 2 frames, got {len(frames)}"
+                        )
+                        continue
+
+                    topic = _ensure_bytes(frames[0]).decode(
+                        "utf-8", errors="replace"
+                    )
+                    payload_bytes = _ensure_bytes(frames[1])
+
+                    try:
+                        payload = json.loads(payload_bytes.decode("utf-8"))
+                    except Exception as e:
+                        print(f"{DLabel.ERROR}: SUB JSON decode error: {e}")
+                        continue
+
+                    # Prefix dispatch (longest prefix wins), with "*" fallback.
+                    handler = None
+                    best_len = -1
+                    for k, v in self.cli_sub_methods.items():
+                        if k == "*":
+                            continue
+                        if topic.startswith(k) and len(k) > best_len:
+                            handler = v
+                            best_len = len(k)
+
+                    if handler is None:
+                        handler = self.cli_sub_methods.get("*")
+
+                    if handler is not None:
+                        result = handler(topic, payload)
+                        if asyncio.iscoroutine(result):
+                            await result
+
+                except asyncio.TimeoutError:
+                    pass
+                except Exception as e:
+                    print(f"{DLabel.ERROR}: telemetry listen error: {e}")
+
+        except asyncio.CancelledError:
+            raise
+
     def connected(self) -> bool:
         if self._last_heartbeat == 0:
             return False
@@ -188,6 +282,18 @@ class HydraMQ:
         except zmq.ZMQError as e:
             # expected during shutdown races / already-closed sockets
             print(f"{DLabel.DEBUG}: ignoring {what} during shutdown: {e}")
+
+    async def publish(self, topic_suffix: str, payload: dict) -> None:
+        """
+        Publish telemetry as multipart [topic, json_bytes].
+        Topic is f"{topic_prefix}.{topic_suffix}"
+        """
+        if self.pub_socket is None:
+            raise RuntimeError("publish() called but PUB not configured")
+
+        topic = f"{self.topic_prefix}.{topic_suffix}".encode("utf-8")
+        data = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+        await self.pub_socket.send_multipart([topic, data])
 
     async def quit(self) -> None:
         """
@@ -222,26 +328,49 @@ class HydraMQ:
             except asyncio.CancelledError:
                 pass
 
-        # Disconnect and cleanup
-        # Disconnect and cleanup (guarded: ignore errors during teardown)
-        # Disconnect and cleanup
+        if self.sub_task is not None:
+            self.sub_stop_event.set()
+            self.sub_task.cancel()
+            try:
+                await self.sub_task
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self.sub_task = None
+
         try:
             self._ignore_zmq_teardown(
                 lambda: self.socket.disconnect(self.router_addr),
                 f"socket.disconnect({self.router_addr})",
             )
+
             self._ignore_zmq_teardown(
                 lambda: self.socket.close(linger=0),
                 "socket.close(linger=0)",
             )
+
             self._ignore_zmq_teardown(
                 lambda: self.hb_socket.disconnect(self.router_hb_addr),
                 f"hb_socket.disconnect({self.router_hb_addr})",
             )
+
             self._ignore_zmq_teardown(
                 lambda: self.hb_socket.close(linger=0),
                 "hb_socket.close(linger=0)",
             )
+
+            if self.pub_socket is not None:
+                self._ignore_zmq_teardown(
+                    lambda: self.pub_socket.close(linger=0),
+                    "pub_socket.close(linger=0)",
+                )
+
+            if self.sub_socket is not None:
+                self._ignore_zmq_teardown(
+                    lambda: self.sub_socket.close(linger=0),
+                    "sub_socket.close(linger=0)",
+                )
+
         finally:
             try:
                 self.ctx.term()
@@ -317,11 +446,17 @@ class HydraMQ:
     def start(self) -> None:
         if self._started:
             return
+
         if self.srv_methods and self.srv_task is None:
             self.srv_task = asyncio.create_task(
                 self.bg_listen(), name="hydra-mq-listen"
             )
-        # Start heartbeat task
+
+        if self.sub_socket is not None and self.sub_task is None:
+            self.sub_task = asyncio.create_task(
+                self.bg_sub_listen(), name="hydra-mq-sub"
+            )
+
         self.heartbeat_task = asyncio.create_task(
             self.start_heartbeat_bg(), name="hydra-mq-heartbeat"
         )

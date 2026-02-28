@@ -51,13 +51,15 @@ class HydraMgr(HydraServer):
         self._train_mgr = None
         self._methods.update(
             {
-                DGameMethod.RESET: self.reset_game,
-                DGameMethod.START: self.start_run,
-                DGameMethod.STOP: self.stop_run,
+                DGameMethod.RESET_GAME: self.reset_game,
+                DGameMethod.START_RUN: self.start_run,
+                DGameMethod.STOP_RUN: self.stop_run,
             }
         )
         if self.debug:
-            self._methods[DGameMethod.STEP] = self.game_step
+            self._methods[DGameMethod.GAME_STEP] = self.game_step
+
+        self._runs: dict[str, asyncio.Task[None]] = {}
 
     def _ensure_train_mgr(self):
         """
@@ -145,13 +147,59 @@ class HydraMgr(HydraServer):
         reply = HydraMsg(
             sender=self.identity,
             target=msg.sender,
-            method=DGameMethod.RESET,
+            method=DGameMethod.RESET_GAME,
             payload=payload,
         )
         if self.mq is not None:
             await self.mq.send(reply)
 
+    async def _run_loop(self, client_id: str) -> None:
+        """
+        Runs as fast as possible.
+        """
+        try:
+            sess = self.snake.get_session(client_id)
+            tm = self._ensure_train_mgr()
+
+            while True:
+                # If episode is done, reset automatically (viewer stays continuous)
+                if sess.done:
+                    self.snake.reset_session(client_id, seed=None)
+                    sess = self.snake.get_session(client_id)
+
+                # Choose action (server-side)
+                state = sess.board.get_state()
+                action = tm.policy.select_action(state)
+                payload = self.snake.step(client_id, action)
+
+                if self.mq is not None:
+                    await self.mq.publish("snake.trainer.snapshot", payload)
+
+                # Yield to event loop so MQ IO stays healthy
+                await asyncio.sleep(0.01)
+
+                sess = self.snake.get_session(client_id)
+
+        except asyncio.CancelledError:
+            # Normal stop
+            return
+        except Exception as e:
+            # Send one error update, then stop
+            err = HydraMsg(
+                sender=self.identity,
+                target=client_id,
+                method=DGameMethod.UPDATE,
+                payload={
+                    DGameField.OK: False,
+                    DGameField.ERROR: "run_loop_failed",
+                    DGameField.INFO: {DGameField.REASON: str(e)},
+                },
+            )
+            if self.mq is not None:
+                await self.mq.send(err)
+
     async def start_run(self, msg: HydraMsg) -> None:
+        self._ensure_train_mgr()
         client_id = msg.sender
 
         # already running?
@@ -174,7 +222,7 @@ class HydraMgr(HydraServer):
         reply = HydraMsg(
             sender=self.identity,
             target=client_id,
-            method=DGameMethod.START,
+            method=DGameMethod.START_RUN,
             payload=payload,
         )
         if self.mq is not None:
@@ -199,7 +247,7 @@ class HydraMgr(HydraServer):
         reply = HydraMsg(
             sender=self.identity,
             target=client_id,
-            method=DGameMethod.STOP,
+            method=DGameMethod.STOP_RUN,
             payload=payload,
         )
         if self.mq is not None:

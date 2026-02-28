@@ -22,7 +22,6 @@ from ai_hydra.constants.DHydra import (
 )
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.utils.HydraMQ import HydraMQ, HydraMsg
-from ai_hydra.game.GameBoard import GameBoard
 
 
 class HydraServer:

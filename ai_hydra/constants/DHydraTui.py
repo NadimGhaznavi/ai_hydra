@@ -15,6 +15,7 @@ class DField:
     Machine readable field names.
     """
 
+    BOARD_BOX: Final[str] = "board_box"
     BUTTONS: Final[str] = "buttons"
     CLIENTS: Final[str] = "clients"
     CLIENTS_SCREEN: Final[str] = "clients_screen"
@@ -23,8 +24,11 @@ class DField:
     CONSOLE: Final[str] = "console"
     CONSOLE_SCREEN: Final[str] = "console_screen"
     QUIT: Final[str] = "quit"
+    RESET: Final[str] = "reset"
     RUNNING: Final[str] = "running"
     STATUS: Final[str] = "status"
+    START: Final[str] = "start"
+    STOP: Final[str] = "stop"
     TITLE: Final[str] = "title"
 
 
@@ -57,8 +61,11 @@ class DLabel:
     RESET: Final[str] = "Reset"
     RIGHT: Final[str] = "Right"
     ROUTER_TITLE: Final[str] = "Hydra Router"
+    SCORE: Final[str] = "Score"
     SPACE: Final[str] = " "
     START: Final[str] = "Start"
+    STEPS: Final[str] = "Steps"
+    STOP: Final[str] = "Stop"
     STATUS: Final[str] = "Status"
     STRAIGHT: Final[str] = "Straight"
     TARGET_HOST: Final[str] = "Target Host"

@@ -8,7 +8,7 @@
 #    License: GPL 3.0
 
 import json
-from typing import Any
+from typing import Any, Optional
 
 from ai_hydra.constants.DHydra import DHydra, DHydraMsg
 
@@ -34,8 +34,8 @@ class HydraMsg:
     def __init__(
         self,
         sender: str,
-        target: str,
         method: str,
+        target: Optional[str] | None = None,
         payload: dict[str, Any] | None = None,
     ) -> None:
         """

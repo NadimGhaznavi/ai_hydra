@@ -1,4 +1,4 @@
-# ai_hydra/constants/DHydraTui.py
+# ai_hydra/constants/DHydra.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi
@@ -76,6 +76,8 @@ class DHydraServerDef:
 
     HOSTNAME: Final[str] = "localhost"
     PORT: Final[int] = 5759
+    PUB_PORT: Final[int] = 5760
+    TOPIC_PREFIX: Final[str] = "telemetry"
 
 
 class DMethod(StrEnum):
@@ -97,7 +99,6 @@ class DMethod(StrEnum):
     PING_SERVER = "ping_server"
     PONG = "pong"
     QUIT = "quit"
-    RESET_GAME = "reset_game"
     START = "start"
     STOP = "stop"
 
