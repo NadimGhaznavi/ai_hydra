@@ -23,9 +23,10 @@ class DGameDef:
 
 
 class DGameField:
+    ACTION: Final[str] = "action"
     BOARD: Final[str] = "board"
-    DONE: Final[str] = "done"
     DIRECTION: Final[str] = "direction"
+    DONE: Final[str] = "done"
     DX: Final[str] = "dx"
     DY: Final[str] = "dy"
     EMPTY: Final[str] = "empty"
@@ -37,12 +38,15 @@ class DGameField:
     GRID_SIZE: Final[str] = "grid_size"
     H: Final[str] = "h"
     INFO: Final[str] = "info"
+    INVALID_ACTION: Final[str] = "invalid_action"
     LEFT_TURN: Final[str] = "left_turn"
     MAX_MOVES: Final[str] = "max_moves"
+    MISSING_ACTION: Final[str] = "missing_action"
     MOVE_COUNT: Final[str] = "move_count"
     OK: Final[str] = "ok"
     REASON: Final[str] = "reason"
     REWARD: Final[str] = "reward"
+    REWARD_TOTAL: Final[str] = "reward_total"
     RIGHT_TURN: Final[str] = "right_turn"
     SCORE: Final[str] = "score"
     SCORE_DELTA: Final[str] = "score_delta"
@@ -65,4 +69,7 @@ class DGameLabel:
 
 class DGameMethod:
     RESET: Final[str] = "reset_game"
+    START: Final[str] = "start_run"
     STEP: Final[str] = "game_step"
+    STOP: Final[str] = "stop_run"
+    UPDATE: Final[str] = "update"

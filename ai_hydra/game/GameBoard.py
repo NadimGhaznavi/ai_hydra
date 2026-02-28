@@ -1,4 +1,11 @@
 # ai_hydra/game_board/GameBoard.py
+#
+#    AI Hydra
+#    Author: Nadim-Daniel Ghaznavi
+#    Copyright: (c) 2025-2026 Nadim-Daniel Ghaznavi
+#    GitHub: https://github.com/NadimGhaznavi/ai_hydra
+#    Website: https://ai-hydra.readthedocs.io/en/latest
+#    License: GPL 3.0
 
 import random
 from dataclasses import dataclass
@@ -7,6 +14,7 @@ from typing import List, Optional, Tuple
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameDef, DGameLabel, DGameField
+from ai_hydra.constants.DNet import DNetDef
 
 
 class MoveAction(Enum):
@@ -89,6 +97,7 @@ class GameBoard:
     grid_size: Tuple[int, int]
     seed: int
     episode_id: int
+    STATE_LENGTH_BITS = DNetDef.STATE_LENGTH_BITS  # int(7)
 
     def clone(self) -> "GameBoard":
         # With immutability, "clone" is basically identity, but keep it explicit.
@@ -104,11 +113,8 @@ class GameBoard:
             episode_id=self.episode_id,
         )
 
-    def get_snake_head(self) -> Position:
-        return self.snake_head
-
-    def get_snake_body(self) -> List[Position]:
-        return list(self.snake_body)
+    def get_all_snake_positions(self) -> List[Position]:
+        return [self.snake_head] + list(self.snake_body)
 
     def get_direction(self) -> Direction:
         return self.direction
@@ -116,20 +122,103 @@ class GameBoard:
     def get_food_position(self) -> Position:
         return self.food_position
 
-    def get_score(self) -> int:
-        return self.score
+    def get_grid_size(self) -> Tuple[int, int]:
+        return self.grid_size
 
     def get_move_count(self) -> int:
         return self.move_count
 
+    def get_snake_head(self) -> Position:
+        return self.snake_head
+
+    def get_state(self) -> list[float]:
+        head = self.snake_head
+        width, height = self.grid_size
+
+        # Adjacent absolute positions
+        point_l = Position(head.x - 1, head.y)
+        point_r = Position(head.x + 1, head.y)
+        point_u = Position(head.x, head.y - 1)
+        point_d = Position(head.x, head.y + 1)
+
+        # Direction flag (Direction is a dx/dy vector)
+        dir_l = (self.direction.dx, self.direction.dy) == (-1, 0)
+        dir_r = (self.direction.dx, self.direction.dy) == (1, 0)
+        dir_u = (self.direction.dx, self.direction.dy) == (0, -1)
+        dir_d = (self.direction.dx, self.direction.dy) == (0, 1)
+
+        def danger_at(p: Position) -> bool:
+            return self._is_wall_collision(p) or self._is_snake_collision(p)
+
+        # Relative danger probes (straight, right, left)
+        if dir_r:
+            danger_straight = danger_at(point_r)
+            danger_right = danger_at(point_d)
+            danger_left = danger_at(point_u)
+        elif dir_l:
+            danger_straight = danger_at(point_l)
+            danger_right = danger_at(point_u)
+            danger_left = danger_at(point_d)
+        elif dir_u:
+            danger_straight = danger_at(point_u)
+            danger_right = danger_at(point_r)
+            danger_left = danger_at(point_l)
+        else:  # dir_d
+            danger_straight = danger_at(point_d)
+            danger_right = danger_at(point_l)
+            danger_left = danger_at(point_r)
+
+        # Food relative direction (normalized -[-1, 1])
+        dx = self.food_position.x - head.x
+        dy = self.food_position.y - head.y
+        food_dx = dx / max(1, width)
+        food_dy = dy / max(1, height)
+
+        # Length bits (use snake length, not just body length)
+        length_bits = self._int_to_bits(
+            self.STATE_LENGTH_BITS, self.get_snake_length()
+        )
+
+        state = [
+            # 1 - 3 danger (relative)
+            danger_left,
+            danger_straight,
+            danger_right,
+            # 4 - 7 direction, one-hot
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+            # 8 - 9 food delta (normalized
+            food_dx,
+            food_dy,
+            # 10.. length bits
+            *length_bits,
+        ]
+        # Make sure size of the state map matches what we use in the NN
+        assert len(state) == DNetDef.INPUT_SIZE
+        return [float(x) for x in state]
+
+    def get_score(self) -> int:
+        return self.score
+
+    def get_snake_body(self) -> List[Position]:
+        return list(self.snake_body)
+
     def get_snake_length(self) -> int:
         return 1 + len(self.snake_body)
 
-    def get_grid_size(self) -> Tuple[int, int]:
-        return self.grid_size
-
-    def get_all_snake_positions(self) -> List[Position]:
-        return [self.snake_head] + list(self.snake_body)
+    @staticmethod
+    def _int_to_bits(n_bits: int, value: int) -> list[int]:
+        """
+        Encode `value` as big-endian bits, fixed width.
+        Example: n_bits=4, value=3 -> [0, 0, 1, 1]
+        """
+        value = max(0, int(value))
+        out = []
+        for i in range(n_bits - 1, -1, -1):
+            out.append((value >> i) & 1)
+        return out
 
     def is_position_occupied_by_snake(self, position: Position) -> bool:
         return position in self.get_all_snake_positions()
@@ -137,6 +226,12 @@ class GameBoard:
     def is_position_within_bounds(self, position: Position) -> bool:
         width, height = self.grid_size
         return 0 <= position.x < width and 0 <= position.y < height
+
+    def _is_snake_collision(self, position: Position) -> bool:
+        return self.is_position_occupied_by_snake(position)
+
+    def _is_wall_collision(self, position: Position) -> bool:
+        return not self.is_position_within_bounds(position)
 
     def to_dict(self) -> dict:
         return {

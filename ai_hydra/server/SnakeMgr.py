@@ -15,6 +15,11 @@ from typing import Any, Optional
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameField
+from ai_hydra.constants.DNet import DNetField
+
+from ai_hydra.game.GameLogic import GameLogic
+from ai_hydra.nnet.HydraPolicy import HydraPolicy
+from ai_hydra.nnet.Transition import Transition
 
 
 @dataclass
@@ -30,6 +35,7 @@ class SnakeSession:
     step_n: int = 0
     score: int = 0
     episode_id: int = 0
+    reward_total: int = 0
 
 
 class SnakeMgr:
@@ -50,6 +56,7 @@ class SnakeMgr:
         self.master_seed = int(master_seed)
         self.seed_rng = random.Random(self.master_seed)
         self.sessions: dict[str, SnakeSession] = {}
+        self.policy: Optional[HydraPolicy] = None
 
     # -------------------------
     # RNG API (Pattern B)
@@ -96,21 +103,23 @@ class SnakeMgr:
     def has_session(self, client_id: str) -> bool:
         return client_id in self.sessions
 
+    # -------------------------
+    # Game operations (Phase 1)
+    # -------------------------
+
     def reset_session(
         self, client_id: str, seed: Optional[int] = None
     ) -> SnakeSession:
-        """
-        Create or reset a client's session with an optional seed override.
-        """
-        # Lazy imports to keep SnakeMgr light and avoid circular deps
         from ai_hydra.game.GameBoard import GameBoard
 
         session_seed, rng = self.new_rng(seed)
-
-        # You may need to adjust this constructor depending on your GameBoard API
-        board = GameBoard.new(rng=rng)
-
         episode_id = rng.getrandbits(32)
+
+        board = GameBoard.new_game(
+            rng=rng,
+            seed=session_seed,
+            episode_id=episode_id,
+        )
 
         sess = SnakeSession(
             seed=session_seed,
@@ -133,62 +142,6 @@ class SnakeMgr:
             sess = self.reset_session(client_id, seed=None)
         return sess
 
-    # -------------------------
-    # Game operations (Phase 1)
-    # -------------------------
-
-    def step(self, client_id: str, action: int) -> dict[str, Any]:
-        """
-        Step the client's session forward by one action.
-
-        Returns a JSON-friendly dict suitable for putting into HydraMsg.payload.
-        """
-        sess = self.get_session(client_id)
-
-        if sess.done:
-            return {
-                DGameField.OK: False,
-                DGameField.ERROR: DGameField.EPISODE_DONE,
-                DGameField.INFO: {
-                    DGameField.EPISODE_ID: sess.episode_id,
-                    DGameField.STEP_N: sess.step_n,
-                    DGameField.SCORE: sess.score,
-                },
-            }
-
-        # Lazy import: GameLogic can evolve without tangling SnakeMgr import time
-        from ai_hydra.game.GameLogic import GameLogic
-
-        # Contract we’re standardizing on:
-        #   new_board, result = GameLogic.step(board, action, rng)
-        new_board, result = GameLogic.step(sess.board, int(action), sess.rng)
-
-        sess.board = new_board
-        sess.step_n += 1
-
-        # These fields depend on your MoveResult; keep it defensive
-        reward = float(getattr(result, DGameField.SCORE, 0.0))
-        done = bool(getattr(result, DGameField.DONE, False))
-        reason = getattr(result, DGameField.REASON, None)
-        score_delta = int(getattr(result, DGameField.SCORE_DELTA, 0))
-
-        sess.score += score_delta
-        sess.done = done
-
-        return {
-            DGameField.OK: True,
-            DGameField.REWARD: reward,
-            DGameField.DONE: sess.done,
-            DGameField.SNAPSHOT: self.snapshot(client_id),
-            DGameField.INFO: {
-                DGameField.EPISODE_ID: sess.episode_id,
-                DGameField.STEP_N: sess.step_n,
-                DGameField.SCORE: sess.score,
-                DGameField.REASON: reason,
-                DGameField.SEED: sess.seed,
-            },
-        }
-
     def snapshot(self, client_id: str) -> dict[str, Any]:
         """
         Return a JSON-friendly snapshot of session state.
@@ -202,6 +155,9 @@ class SnakeMgr:
             else {"repr": repr(sess.board)}
         )
 
+        # NN ready state vector
+        state = sess.board.get_state()
+
         return {
             DGameField.BOARD: board_dict,
             DGameField.DONE: sess.done,
@@ -209,6 +165,70 @@ class SnakeMgr:
             DGameField.SCORE: sess.score,
             DGameField.EPISODE_ID: sess.episode_id,
             DGameField.SEED: sess.seed,
+            DNetField.STATE: state,
+        }
+
+    def step(self, client_id: str, action: int) -> dict[str, Any]:
+        """
+        Step the client's session forward by one action.
+
+        Returns a JSON-friendly dict suitable for HydraMsg.payload.
+        """
+        sess = self.get_session(client_id)
+
+        if sess.done:
+            return {
+                DGameField.OK: False,
+                DGameField.ERROR: DGameField.EPISODE_DONE,
+                DGameField.INFO: {
+                    DGameField.EPISODE_ID: sess.episode_id,
+                    DGameField.STEP_N: sess.step_n,
+                    DGameField.SCORE: sess.score,
+                    DGameField.REWARD_TOTAL: sess.reward_total,
+                },
+            }
+
+        state = sess.board.get_state()
+
+        result = GameLogic.step(sess.board, int(action), sess.rng)
+
+        sess.board = result.new_board
+        sess.step_n += 1
+
+        reward = int(result.reward)
+        done = bool(result.is_terminal)
+        outcome = result.outcome  # use as "reason" for now
+
+        # Score delta (Phase 1): +1 on FOOD, else 0
+        score_delta = 1 if outcome == DGameField.FOOD else 0
+        sess.score += score_delta
+        sess.done = done
+        sess.reward_total += reward
+
+        next_state = sess.board.get_state()
+
+        transition = Transition(
+            state=state,
+            action=int(action),
+            reward=reward,
+            next_state=next_state,
+            done=done,
+        )
+        return {
+            DGameField.OK: True,
+            DGameField.REWARD: reward,
+            DNetField.STATE: state,
+            DNetField.NEXT_STATE: next_state,
+            DGameField.DONE: sess.done,
+            DGameField.SNAPSHOT: self.snapshot(client_id),
+            DGameField.INFO: {
+                DGameField.EPISODE_ID: sess.episode_id,
+                DGameField.STEP_N: sess.step_n,
+                DGameField.SCORE: sess.score,
+                DGameField.REWARD_TOTAL: sess.reward_total,
+                DGameField.REASON: outcome,
+                DGameField.SEED: sess.seed,
+            },
         }
 
     def reset(

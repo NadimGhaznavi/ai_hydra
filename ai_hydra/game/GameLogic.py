@@ -29,7 +29,6 @@ from ai_hydra.game.GameBoard import (
     MoveAction,
     Position,
 )
-
 from ai_hydra.game.MoveResult import MoveResult
 
 
@@ -57,15 +56,18 @@ class GameLogic:
         """
 
         # Normalize action
+        if isinstance(action, str):
+            action = int(action)
+
         if isinstance(action, int):
-            # Map int -> MoveAction (define your encoding once and keep it stable)
-            # 0=LEFT, 1=STRAIGHT, 2=RIGHT
             if action == 0:
                 action = MoveAction.LEFT_TURN
+            elif action == 1:
+                action = MoveAction.STRAIGHT
             elif action == 2:
                 action = MoveAction.RIGHT_TURN
             else:
-                action = MoveAction.STRAIGHT
+                raise ValueError(f"Invalid action index: {action}")
 
         # Build the move (fixes the undefined 'move' bug)
         move = GameLogic.create_move(board.direction, action)
@@ -85,6 +87,8 @@ class GameLogic:
                 score=board.score,
                 move_count=new_move_count,
                 grid_size=board.grid_size,
+                seed=board.seed,
+                episode_id=board.episode_id,
             )
             return MoveResult(
                 new_board=max_moves_board,
@@ -109,6 +113,8 @@ class GameLogic:
                 score=board.score,
                 move_count=new_move_count,
                 grid_size=board.grid_size,
+                seed=board.seed,
+                episode_id=board.episode_id,
             )
             return MoveResult(
                 new_board=collision_board,
@@ -127,6 +133,8 @@ class GameLogic:
                 score=board.score,
                 move_count=new_move_count,
                 grid_size=board.grid_size,
+                seed=board.seed,
+                episode_id=board.episode_id,
             )
             return MoveResult(
                 new_board=collision_board,
@@ -158,6 +166,8 @@ class GameLogic:
                 score=new_score,
                 move_count=new_move_count,
                 grid_size=board.grid_size,
+                seed=board.seed,
+                episode_id=board.episode_id,
             )
 
             outcome = DGameField.FOOD
@@ -179,6 +189,8 @@ class GameLogic:
             score=board.score,
             move_count=new_move_count,
             grid_size=board.grid_size,
+            seed=board.seed,
+            episode_id=board.episode_id,
         )
 
         outcome = DGameField.EMPTY

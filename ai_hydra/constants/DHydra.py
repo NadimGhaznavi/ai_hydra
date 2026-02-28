@@ -86,12 +86,18 @@ class DMethod(StrEnum):
     modules, used in logging and component identification.
     """
 
+    ACTION_LEFT = "action_left"
+    ACTION_STRAIGHT = "action_straight"
+    ACTION_RIGHT = "action_right"
+    GAME_STEP = "game_step"
     HEARTBEAT = "heartbeat"
     HEARTBEAT_REPLY = "heartbeat_reply"
     PING = "ping"
     PING_ROUTER = "ping_router"
     PING_SERVER = "ping_server"
     PONG = "pong"
+    QUIT = "quit"
+    RESET_GAME = "reset_game"
     START = "start"
     STOP = "stop"
 
@@ -105,6 +111,7 @@ class DModule(StrEnum):
     """
 
     HYDRA_CLIENT = "HydraClient"
+    HYDRA_MGR = "HydraMgr"
     HYDRA_MQ = "HydraMQ"
     HYDRA_ROUTER = "HydraRouter"
     HYDRA_SERVER = "HydraServer"

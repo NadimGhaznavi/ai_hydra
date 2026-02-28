@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 1 5;
-    grid-rows: 3 4 3 3 12;
+    grid-size: 1 6;
+    grid-rows: 3 4 3 4 12 22;
     grid-columns: 80;
 }
 
@@ -9,6 +9,16 @@ Button {
     background: #3b7735ff;
     padding: 0 1;
     border: none;
+}
+
+#board {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #5fc442;
+    color: #5fc442;
+    text-style: bold;
+    width: 100%;
+    padding: 0 1;
 }
 
 #buttons {
