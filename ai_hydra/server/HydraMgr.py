@@ -12,6 +12,8 @@
 from __future__ import annotations
 from typing import Any
 import asyncio
+import argparse
+import traceback
 
 from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
@@ -298,3 +300,37 @@ class HydraMgr(HydraServer):
         """
         tm = self._ensure_train_mgr()
         return tm.train_n_episodes(n_episodes=n_episodes, **kwargs)
+
+
+async def amain() -> None:
+    p = argparse.ArgumentParser(description="AI Hydra Manager")
+    p.add_argument("--address", default="*", help="Bind address")
+    p.add_argument("--port", type=int, default=DHydraServerDef.PORT)
+    p.add_argument("--router-address", default=DHydraRouterDef.HOSTNAME)
+    p.add_argument("--router-port", type=int, default=DHydraRouterDef.PORT)
+    p.add_argument("--identity", default=DModule.HYDRA_MGR)
+    p.add_argument("--log-level", default=DHydraLogDef.DEFAULT_LOG_LEVEL)
+    args = p.parse_args()
+
+    server = HydraMgr(
+        address=args.address,
+        port=args.port,
+        router_address=args.router_address,
+        router_port=args.router_port,
+        identity=args.identity,
+        log_level=args.log_level,
+    )
+
+    await server.run()
+
+
+def main() -> None:
+    try:
+        asyncio.run(amain())
+    except BaseException:
+        traceback.print_exc()
+        raise
+
+
+if __name__ == "__main__":
+    main()
