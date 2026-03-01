@@ -20,7 +20,7 @@ class DHydra:
     HEARTBEAT_INTERVAL: Final[float] = 5.0
     NETWORK_TIMEOUT: Final[float] = 2.0
     PROTOCOL_VERSION: Final[int] = 1
-    RANDOM_SEED: Final[int] = 1970
+    RANDOM_SEED: Final[int] = 129
     VERSION: Final[str] = "0.9.2"
 
 

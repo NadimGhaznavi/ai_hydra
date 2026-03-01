@@ -64,6 +64,7 @@ class DLabel:
     LEFT: Final[str] = "Left"
     LISTEN_PORT: Final[str] = "Listening Port"
     LOOKAHEAD_ENABLED: Final[str] = "Look Ahead Enabled"
+    LOOKAHEAD_P_VAL: Final[str] = "Look Ahead P-Value"
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
     PING_ROUTER: Final[str] = "Ping Router"
     PING_SERVER: Final[str] = "Ping Server"

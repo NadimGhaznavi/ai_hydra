@@ -143,13 +143,18 @@ class HydraClientTui(App):
         yield Horizontal(
             Vertical(self.game_board, id=DField.BOARD_BOX),
             Vertical(
-                Label(f"{DLabel.INITIAL_EPSILON}: {DEpsilonDef.INITIAL}"),
-                Label(f"{DLabel.MIN_EPSILON}: {DEpsilonDef.MINIMUM}"),
-                Label(f"{DLabel.EPSILON_DECAY}: {DEpsilonDef.DECAY_RATE}"),
-                Label(f"{DLabel.CUR_EPSILON}:", id=DField.CUR_EPSILON),
+                Label(f"{DLabel.INITIAL_EPSILON:>15s}: {DEpsilonDef.INITIAL}"),
+                Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
+                Label(
+                    f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"
+                ),
+                Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
                 Label(""),
                 Label(
-                    f"{DLabel.LOOKAHEAD_ENABLED}: {DLookahead.UNKNOWN}",
+                    f"{DLabel.LOOKAHEAD_P_VAL:>18}: {DLookaheadDef.PROBABILITY}"
+                ),
+                Label(
+                    f"{DLabel.LOOKAHEAD_ENABLED:>18}: {DLookahead.UNKNOWN}",
                     id=DField.LOOKAHEAD_ENABLED,
                 ),
                 id=DField.RUNTIME_VALUES,
@@ -287,7 +292,7 @@ class HydraClientTui(App):
         epsilon = info.get(DNetField.CUR_EPSILON)
         if epsilon:
             self.query_one(f"#{DField.CUR_EPSILON}", Label).update(
-                f"{DLabel.CUR_EPSILON}: {epsilon}"
+                f"{DLabel.CUR_EPSILON:>15s}: {round(epsilon, 5)}"
             )
 
         # Lookahead status
@@ -297,7 +302,7 @@ class HydraClientTui(App):
             else:
                 cur_lookahead = DLookahead.OFF
             self.query_one(f"#{DField.LOOKAHEAD_ENABLED}", Label).update(
-                f"{DLabel.LOOKAHEAD_ENABLED}: {cur_lookahead}"
+                f"{DLabel.LOOKAHEAD_ENABLED:>18}: {cur_lookahead}"
             )
 
     def _on_telemetry(self, topic: str, payload: dict) -> None:
