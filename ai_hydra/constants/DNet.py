@@ -14,12 +14,22 @@ from ai_hydra.constants.DGame import DGameField
 
 class DEpsilonDef:
     """
-    Epsilon-greedy constants.
+    Epsilon-greedy defaults.
     """
 
     INITIAL: Final[float] = 0.99
     MINIMUM: Final[float] = 0.1
-    DECAY_RATE: Final[float] = 0.95
+    DECAY_RATE: Final[float] = 0.98
+
+
+class DEpsilonField:
+    """
+    Epsilon-greedy fields.
+    """
+
+    INITIAL: Final[str] = "initial"
+    MINIMUM: Final[str] = "minimum"
+    DECAY_RATE: Final[str] = "decay"
 
 
 class DNetDef:

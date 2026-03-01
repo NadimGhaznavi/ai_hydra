@@ -12,7 +12,7 @@ from __future__ import annotations
 import random
 from typing import Optional
 
-from ai_hydra.constants.DNet import DEpsilonDef  # assuming you have this
+from ai_hydra.constants.DNet import DEpsilonDef, DEpsilonField
 
 
 class EpsilonAlgo:
@@ -33,51 +33,60 @@ class EpsilonAlgo:
         self._epsilon_min = float(DEpsilonDef.MINIMUM)
         self._epsilon_decay = float(DEpsilonDef.DECAY_RATE)
 
-        self._epsilon = self._initial_epsilon
+        self._cur_epsilon = self._initial_epsilon
         self._injected = 0
         self._depleted = False
+
+    def cur_epsilon(self) -> float:
+        return self._cur_epsilon
+
+    def get_params(self) -> dict[str, float]:
+        return {
+            DEpsilonField.INITIAL: self._initial_epsilon,
+            DEpsilonField.MINIMUM: self._epsilon_min,
+            DEpsilonField.DECAY_RATE: self._epsilon_decay,
+        }
+
+    def injected(self) -> int:
+        return self._injected
 
     def maybe_random_action(self) -> Optional[int]:
         """
         Returns:
             int action in {0,1,2} if we inject randomness, else None.
         """
-        if self._rng.random() < self._epsilon:
+        if self._rng.random() < self._cur_epsilon:
             self._injected += 1
             return self._rng.randrange(3)
         return None
-
-    def epsilon(self) -> float:
-        return self._epsilon
 
     def played_game(self) -> None:
         """
         Decay epsilon at the end of an episode.
         """
-        self._epsilon = max(
-            self._epsilon_min, self._epsilon * self._epsilon_decay
+        self._cur_epsilon = max(
+            self._epsilon_min, self._cur_epsilon * self._epsilon_decay
         )
-        self._depleted = self._epsilon <= self._epsilon_min
+        self._depleted = self._cur_epsilon <= self._epsilon_min
+        self.reset_injected()
+
+    def reset(self) -> None:
+        """
+        Start a fresh schedule (called at START_RUN or RESET)
+        """
+        self._cur_epsilon = self._initial_epsilon
+        self._depleted = self.cur_epsilon <= self._epsilon_min
         self.reset_injected()
 
     def reset_injected(self) -> None:
+        """
+        Reset the "injected random moves" count.
+        """
         self._injected = 0
 
-    def injected(self) -> int:
-        return self._injected
-
-    # Optional knobs (keep your existing style)
-    def epsilon_decay(self, epsilon_decay: float | None = None) -> float:
-        if epsilon_decay is not None:
-            self._epsilon_decay = float(epsilon_decay)
-        return self._epsilon_decay
-
-    def epsilon_min(self, epsilon_min: float | None = None) -> float:
-        if epsilon_min is not None:
-            self._epsilon_min = float(epsilon_min)
-        return self._epsilon_min
-
-    def initial_epsilon(self, initial_epsilon: float | None = None) -> float:
-        if initial_epsilon is not None:
-            self._initial_epsilon = float(initial_epsilon)
-        return self._initial_epsilon
+    def set_params(
+        self, *, initial: float, minimum: float, decay: float
+    ) -> None:
+        self._initial_epsilon = float(initial)
+        self._epsilon_min = float(minimum)
+        self._epsilon_decay = float(decay)

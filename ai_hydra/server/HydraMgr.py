@@ -98,13 +98,15 @@ class HydraMgr(HydraServer):
         trainer = Trainer(model, replay, device=device, gamma=0.9)
 
         # Policy stack
-        greedy = LinearPolicy(model=model, device=device)
-        eps = EpsilonAlgo(rng=policy_rng)
-        policy = EpsilonPolicy(policy=greedy, epsilon=eps)
+        nnet_policy = LinearPolicy(model=model, device=device)
+        epsilon_schedule = EpsilonAlgo(rng=policy_rng)
+        behaviour_policy = EpsilonPolicy(
+            base_policy=nnet_policy, epsilon=epsilon_schedule
+        )
 
         self._train_mgr = TrainMgr(
             snake_mgr=self.snake,
-            policy=policy,
+            policy=behaviour_policy,
             trainer=trainer,
             replay=replay,
             client_id="trainer",
@@ -164,11 +166,12 @@ class HydraMgr(HydraServer):
         try:
             sess = self.snake.get_session(client_id)
             train_mgr = self._ensure_train_mgr()
-
+            # Training vars: Should be moved out of this loop
             train_start = 1_000
             train_every = 4
             grad_steps = 1
             batch_size = 64
+            count = 0
 
             while True:
                 # If episode is done, reset automatically (viewer stays continuous)
@@ -185,11 +188,14 @@ class HydraMgr(HydraServer):
 
                 # Game over...
                 if payload[DGameField.DONE]:
+                    count += 1
                     # Currently policy is EpsilonPolicy which calls EpsilonAlgo...
                     train_mgr.policy.played_game()
                     payload.setdefault(DGameField.INFO, {})[
                         DNetField.CUR_EPSILON
-                    ] = train_mgr.policy.epsilon()
+                    ] = train_mgr.policy.cur_epsilon()
+                    if count % 50 == 0:
+                        self.log.info(f"Epoch: {count}")
 
                 # Build/store transition
                 t = Transition(
