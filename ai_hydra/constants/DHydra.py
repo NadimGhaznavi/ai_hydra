@@ -21,7 +21,7 @@ class DHydra:
     NETWORK_TIMEOUT: Final[float] = 2.0
     PROTOCOL_VERSION: Final[int] = 1
     RANDOM_SEED: Final[int] = 1970
-    VERSION: Final[str] = "0.9.0"
+    VERSION: Final[str] = "0.9.2"
 
 
 class DHydraLog(StrEnum):
