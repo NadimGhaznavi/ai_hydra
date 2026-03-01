@@ -24,7 +24,12 @@ from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
-from ai_hydra.constants.DNet import DNetField, DEpsilonDef
+from ai_hydra.constants.DNet import (
+    DNetField,
+    DEpsilonDef,
+    DLookahead,
+    DLookaheadDef,
+)
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
@@ -141,7 +146,12 @@ class HydraClientTui(App):
                 Label(f"{DLabel.INITIAL_EPSILON}: {DEpsilonDef.INITIAL}"),
                 Label(f"{DLabel.MIN_EPSILON}: {DEpsilonDef.MINIMUM}"),
                 Label(f"{DLabel.EPSILON_DECAY}: {DEpsilonDef.DECAY_RATE}"),
-                Label("", id=DField.CUR_EPSILON),
+                Label(f"{DLabel.CUR_EPSILON}:", id=DField.CUR_EPSILON),
+                Label(""),
+                Label(
+                    f"{DLabel.LOOKAHEAD_ENABLED}: {DLookahead.UNKNOWN}",
+                    id=DField.LOOKAHEAD_ENABLED,
+                ),
                 id=DField.RUNTIME_VALUES,
             ),
         )
@@ -278,6 +288,16 @@ class HydraClientTui(App):
         if epsilon:
             self.query_one(f"#{DField.CUR_EPSILON}", Label).update(
                 f"{DLabel.CUR_EPSILON}: {epsilon}"
+            )
+
+        # Lookahead status
+        if DNetField.LOOKAHEAD_ON in info:
+            if info[DNetField.LOOKAHEAD_ON]:
+                cur_lookahead = DLookahead.ON
+            else:
+                cur_lookahead = DLookahead.OFF
+            self.query_one(f"#{DField.LOOKAHEAD_ENABLED}", Label).update(
+                f"{DLabel.LOOKAHEAD_ENABLED}: {cur_lookahead}"
             )
 
     def _on_telemetry(self, topic: str, payload: dict) -> None:

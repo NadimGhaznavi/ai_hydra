@@ -15,9 +15,6 @@ import asyncio
 import argparse
 import traceback
 
-from ai_hydra.server.HydraServer import HydraServer
-from ai_hydra.server.SnakeMgr import SnakeMgr
-from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.constants.DGame import DGameMethod, DGameField
 from ai_hydra.constants.DHydra import (
     DHydraLog,
@@ -26,8 +23,13 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DHydraServerDef,
 )
-from ai_hydra.constants.DNet import DNetField
+from ai_hydra.constants.DNet import DNetField, DLookaheadDef
+
+from ai_hydra.server.HydraServer import HydraServer
+from ai_hydra.server.SnakeMgr import SnakeMgr
+from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
+from ai_hydra.nnet.LookaheadPolicy import LookaheadPolicy
 
 
 class HydraMgr(HydraServer):
@@ -103,10 +105,11 @@ class HydraMgr(HydraServer):
         behaviour_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_schedule
         )
+        policy = LookaheadPolicy(base_policy=behaviour_policy)
 
         self._train_mgr = TrainMgr(
             snake_mgr=self.snake,
-            policy=behaviour_policy,
+            policy=policy,
             trainer=trainer,
             replay=replay,
             client_id="trainer",
@@ -166,6 +169,7 @@ class HydraMgr(HydraServer):
         try:
             sess = self.snake.get_session(client_id)
             train_mgr = self._ensure_train_mgr()
+
             # Training vars: Should be moved out of this loop
             train_start = 1_000
             train_every = 4
@@ -173,29 +177,50 @@ class HydraMgr(HydraServer):
             batch_size = 64
             count = 0
 
+            # Lookahead setting
+            lookahead_p = DLookaheadDef.PROBABILITY
+            sess.lookahead_on = sess.rng.random() < lookahead_p
+            self.log.debug(sess.lookahead_on)
+
             while True:
                 # If episode is done, reset automatically (viewer stays continuous)
                 if sess.done:
                     self.snake.reset_session(client_id, seed=None)
                     sess = self.snake.get_session(client_id)
-                    sess.epoch += 1
 
                 # Choose action (server-side)
                 state = sess.board.get_state()
-                action = train_mgr.policy.select_action(state)
+                action = train_mgr.policy.select_action(
+                    state,
+                    board=sess.board,
+                    lookahead_on=sess.lookahead_on,
+                )
 
                 payload = self.snake.step(client_id, action)
 
                 # Game over...
                 if payload[DGameField.DONE]:
+                    sess.epoch += 1
                     count += 1
-                    # Currently policy is EpsilonPolicy which calls EpsilonAlgo...
+                    # Epsilon
                     train_mgr.policy.played_game()
                     payload.setdefault(DGameField.INFO, {})[
                         DNetField.CUR_EPSILON
                     ] = train_mgr.policy.cur_epsilon()
+
+                    # Print some stuff to the console (alive indicator)
                     if count % 50 == 0:
-                        self.log.info(f"Epoch: {count}")
+                        self.log.info(
+                            f"Epoch: {count} - Highscore: {sess.highscore}"
+                        )
+
+                    # Lookahead
+                    if sess.epoch % 10 == 0:
+                        sess.lookahead_on = sess.rng.random() < lookahead_p
+
+                    payload.setdefault(DGameField.INFO, {})[
+                        DNetField.LOOKAHEAD_ON
+                    ] = sess.lookahead_on
 
                 # Build/store transition
                 t = Transition(
@@ -244,6 +269,7 @@ class HydraMgr(HydraServer):
             )
             if self.mq is not None:
                 await self.mq.send(err)
+            self.log.critical(f"ERROR: {e}")
 
     async def start_run(self, msg: HydraMsg) -> None:
         self._ensure_train_mgr()

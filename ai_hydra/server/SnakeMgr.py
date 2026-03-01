@@ -31,13 +31,15 @@ class SnakeSession:
     board: Any  # GameBoard, but keep Any here to avoid import cycles if needed
     seed: int
     rng: random.Random
+    # Attribs with defaults
     done: bool = False
     episode_id: int = 0
     epoch: int = 0
     highscore: int = 0
-    step_n: int = 0
-    score: int = 0
+    lookahead_on: bool = False
     reward_total: float = 0.0
+    score: int = 0
+    step_n: int = 0
 
 
 class SnakeMgr:
@@ -117,6 +119,7 @@ class SnakeMgr:
         prev = self.sessions.get(client_id)
         prev_high = getattr(prev, "highscore", 0)
         prev_epoch = getattr(prev, "epoch", 0)
+        prev_lookahead_on = getattr(prev, "lookahead_on", False)
 
         session_seed, rng = self.new_rng(seed)
         episode_id = rng.getrandbits(32)
@@ -138,6 +141,7 @@ class SnakeMgr:
             # carry-over stats
             highscore=prev_high,
             epoch=prev_epoch,
+            lookahead_on=prev_lookahead_on,
         )
         self.sessions[client_id] = sess
         return sess

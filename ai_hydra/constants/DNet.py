@@ -32,6 +32,24 @@ class DEpsilonField:
     DECAY_RATE: Final[str] = "decay"
 
 
+class DLookahead:
+    """
+    Lookahead constants.
+    """
+
+    ON: Final[str] = "🟢"
+    OFF: Final[str] = "🔴"
+    UNKNOWN: Final[str] = "⚪"
+
+
+class DLookaheadDef:
+    """
+    Lookahead defaults.
+    """
+
+    PROBABILITY: Final[float] = 0.50
+
+
 class DNetDef:
     """
     Neural network constants.
@@ -59,6 +77,7 @@ class DNetField:
     ACTION: Final[str] = DGameField.ACTION
     DONE: Final[str] = DGameField.DONE
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    LOOKAHEAD_ON: Final[str] = "lookahead_on"
     NEXT_STATE: Final[str] = "next_state"
     REWARD: Final[str] = DGameField.REWARD
     STATE: Final[str] = "state"
