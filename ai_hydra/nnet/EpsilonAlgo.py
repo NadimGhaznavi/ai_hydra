@@ -29,9 +29,9 @@ class EpsilonAlgo:
     def __init__(self, rng: random.Random):
         self._rng = rng
 
-        self._initial_epsilon = float(DEpsilonDef.EPSILON_INITIAL)
-        self._epsilon_min = float(DEpsilonDef.EPSILON_MIN)
-        self._epsilon_decay = float(DEpsilonDef.EPSILON_DECAY)
+        self._initial_epsilon = float(DEpsilonDef.INITIAL)
+        self._epsilon_min = float(DEpsilonDef.MINIMUM)
+        self._epsilon_decay = float(DEpsilonDef.DECAY_RATE)
 
         self._epsilon = self._initial_epsilon
         self._injected = 0

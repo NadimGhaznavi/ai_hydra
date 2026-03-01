@@ -24,6 +24,7 @@ from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
+from ai_hydra.constants.DNet import DNetField, DEpsilonDef
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
@@ -134,7 +135,16 @@ class HydraClientTui(App):
         )
 
         # The Snake Game
-        yield Vertical(self.game_board, id=DField.BOARD_BOX)
+        yield Horizontal(
+            Vertical(self.game_board, id=DField.BOARD_BOX),
+            Vertical(
+                Label(f"{DLabel.INITIAL_EPSILON}: {DEpsilonDef.INITIAL}"),
+                Label(f"{DLabel.MIN_EPSILON}: {DEpsilonDef.MINIMUM}"),
+                Label(f"{DLabel.EPSILON_DECAY}: {DEpsilonDef.DECAY_RATE}"),
+                Label("", id=DField.CUR_EPSILON),
+                id=DField.RUNTIME_VALUES,
+            ),
+        )
 
         # Console
         # yield Log(highlight=True, auto_scroll=True, id=DField.CONSOLE)
@@ -262,6 +272,13 @@ class HydraClientTui(App):
         board_box.border_subtitle = (
             f"{DLabel.HIGHSCORE}: {highscore}  {DLabel.SCORE}: {score}"
         )
+
+        # Current epsilon value
+        epsilon = info.get(DNetField.CUR_EPSILON)
+        if epsilon:
+            self.query_one(f"#{DField.CUR_EPSILON}", Label).update(
+                f"{DLabel.CUR_EPSILON}: {epsilon}"
+            )
 
     def _on_telemetry(self, topic: str, payload: dict) -> None:
         self.post_message(TelemetryReceived(topic, payload))

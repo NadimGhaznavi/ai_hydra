@@ -47,6 +47,14 @@ Button {
     background: black;
 }
 
+#runtime_values {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #8dc97dff;
+    color: #8dc97dff;
+    text-style: bold;
+}
+
 #status {
     background: black;
     border: round #0c323e;

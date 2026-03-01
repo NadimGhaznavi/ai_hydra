@@ -17,9 +17,9 @@ class DEpsilonDef:
     Epsilon-greedy constants.
     """
 
-    EPSILON_INITIAL: Final[float] = 0.99
-    EPSILON_MIN: Final[float] = 0.1
-    EPSILON_DECAY: Final[float] = 0.995
+    INITIAL: Final[float] = 0.99
+    MINIMUM: Final[float] = 0.1
+    DECAY_RATE: Final[float] = 0.95
 
 
 class DNetDef:
