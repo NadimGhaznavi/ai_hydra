@@ -123,12 +123,6 @@ class HydraClientTui(App):
 
         # Buttons
         yield Horizontal(
-            Button(
-                label=DLabel.PING_ROUTER,
-                id=DMethod.PING_ROUTER,
-                compact=True,
-            ),
-            Label(" "),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
             Label(" "),
             Button(label=DLabel.START, id=DGameMethod.START_RUN, compact=True),
@@ -169,25 +163,11 @@ class HydraClientTui(App):
 
         if button_id == DMethod.QUIT:
             await self.on_quit()
+            return
 
         mq = self.mq
         if mq is None:
             raise TypeError("self.mq is None!!!")
-
-        if button_id == DMethod.PING_ROUTER:
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_ROUTER,
-                method=DMethod.PING,
-            )
-            await mq.send(msg)
-
-            try:
-                reply = await mq.recv()
-                if reply.method == DMethod.PONG:
-                    pass
-            except asyncio.TimeoutError:
-                pass
 
         elif button_id == DGameMethod.RESET_GAME:
             msg = HydraMsg(
@@ -253,6 +233,11 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RUNTIME_VALUES}").border_subtitle = (
             DLabel.RUNTIME_VALS
         )
+
+    async def on_shutdown_request(self) -> None:
+        if self.mq is not None:
+            await self.mq.quit()
+            self.mq = None
 
     def on_telemetry_received(self, msg: TelemetryReceived) -> None:
         payload = msg.payload
@@ -322,7 +307,12 @@ class HydraClientTui(App):
         self.post_message(TelemetryReceived(topic, payload))
 
     async def on_quit(self) -> None:
-        sys.exit(0)
+        # Stop background tasks and close ZMQ sockets cleanly
+        if self.mq is not None:
+            await self.mq.quit()
+            self.mq = None
+
+        self.exit()
 
 
 def main() -> None:
