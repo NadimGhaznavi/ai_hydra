@@ -49,18 +49,21 @@ Startup
 Start the *HydraClient* in the first terminal:
 
 .. code-block:: shell
+
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-client
 
 Start the *HydraRouter* in a second terminal:
 
 .. code-block:: shell
+
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-router
 
 Finally, start the *HydraMgr* in a third terminal:
 
 .. code-block:: shell
+    
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-mgr
 
