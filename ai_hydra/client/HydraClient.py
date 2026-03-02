@@ -273,7 +273,7 @@ class HydraClientTui(App):
         board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
         board_box.border_title = f"{DLabel.GAME}: {epoch}"
         board_box.border_subtitle = (
-            f"{DLabel.HIGHSCORE}: {highscore}  {DLabel.SCORE}: {score}"
+            f"{DLabel.HIGHSCORE}: {highscore}  {DLabel.SCORE}: {score:<2}"
         )
 
         # Highscore event
