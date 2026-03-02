@@ -14,6 +14,7 @@ from typing import Any
 import asyncio
 import argparse
 import traceback
+from datetime import datetime
 
 from ai_hydra.constants.DGame import DGameMethod, DGameField
 from ai_hydra.constants.DHydra import (
@@ -170,6 +171,9 @@ class HydraMgr(HydraServer):
             sess = self.snake.get_session(client_id)
             train_mgr = self._ensure_train_mgr()
 
+            # Pass the simulation starting time to the SnakeMgr
+            self.snake.start_time(datetime.now())
+
             # Training vars: Should be moved out of this loop
             train_start = 1_000
             train_every = 4
@@ -196,17 +200,13 @@ class HydraMgr(HydraServer):
                     lookahead_on=sess.lookahead_on,
                 )
 
+                # Build the payload starting with board telemetry
                 payload = self.snake.step(client_id, action)
 
                 # Game over...
                 if payload[DGameField.DONE]:
                     sess.epoch += 1
                     count += 1
-                    # Epsilon
-                    train_mgr.policy.played_game()
-                    payload.setdefault(DGameField.INFO, {})[
-                        DNetField.CUR_EPSILON
-                    ] = train_mgr.policy.cur_epsilon()
 
                     # Print some stuff to the console (alive indicator)
                     if count % 50 == 0:
@@ -214,10 +214,15 @@ class HydraMgr(HydraServer):
                             f"Epoch: {count} - Highscore: {sess.highscore}"
                         )
 
+                    # Epsilon
+                    train_mgr.policy.played_game()
+                    payload.setdefault(DGameField.INFO, {})[
+                        DNetField.CUR_EPSILON
+                    ] = train_mgr.policy.cur_epsilon()
+
                     # Lookahead
                     if sess.epoch % 10 == 0:
                         sess.lookahead_on = sess.rng.random() < lookahead_p
-
                     payload.setdefault(DGameField.INFO, {})[
                         DNetField.LOOKAHEAD_ON
                     ] = sess.lookahead_on

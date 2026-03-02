@@ -11,9 +11,9 @@ ai_snake_lab/ui/AISim.tcss
 
 Screen {
     layout: grid;
-    grid-size: 3 5;
+    grid-size: 1 6;
     grid-rows: 3 11 9 4 24;
-    grid-columns: 32 46 36;
+    grid-columns: 32 46;
 }
 
 #title {

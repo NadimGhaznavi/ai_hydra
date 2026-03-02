@@ -12,6 +12,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 from typing import Any, Optional
+from datetime import datetime
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameField
@@ -36,6 +37,7 @@ class SnakeSession:
     episode_id: int = 0
     epoch: int = 0
     highscore: int = 0
+    highscore_lh: int = 0
     lookahead_on: bool = False
     reward_total: float = 0.0
     score: int = 0
@@ -61,6 +63,7 @@ class SnakeMgr:
         self.seed_rng = random.Random(self.master_seed)
         self.sessions: dict[str, SnakeSession] = {}
         self.policy: Optional[HydraPolicy] = None
+        self._start_time = None
 
     # -------------------------
     # RNG API (Pattern B)
@@ -117,7 +120,8 @@ class SnakeMgr:
         from ai_hydra.game.GameBoard import GameBoard
 
         prev = self.sessions.get(client_id)
-        prev_high = getattr(prev, "highscore", 0)
+        prev_highscore = getattr(prev, "highscore", 0)
+        prev_highscore_lh = getattr(prev, "highscore_lh", 0)
         prev_epoch = getattr(prev, "epoch", 0)
         prev_lookahead_on = getattr(prev, "lookahead_on", False)
 
@@ -139,7 +143,8 @@ class SnakeMgr:
             score=0,
             episode_id=episode_id,
             # carry-over stats
-            highscore=prev_high,
+            highscore=prev_highscore,
+            highscore_lh=prev_highscore_lh,
             epoch=prev_epoch,
             lookahead_on=prev_lookahead_on,
         )
@@ -182,6 +187,11 @@ class SnakeMgr:
             DNetField.STATE: state,
         }
 
+    def start_time(self, start_time=None):
+        if start_time is not None:
+            self._start_time = start_time
+        return self._start_time
+
     def step(self, client_id: str, action: int) -> dict[str, Any]:
         """
         Step the client's session forward by one action.
@@ -218,19 +228,20 @@ class SnakeMgr:
         # Score delta (Phase 1): +1 on FOOD, else 0
         score_delta = 1 if outcome == DGameField.FOOD else 0
         sess.score += score_delta
-        sess.highscore = max(sess.highscore, sess.score)
+        elapsed_str = elapsed_str_lh = 0
+        if sess.score > sess.highscore and not sess.lookahead_on:
+            sess.highscore = sess.score
+            elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
+            elapsed_str = minutes_to_uptime(elapsed_secs)
+        if sess.score > sess.highscore_lh and sess.lookahead_on:
+            sess.highscore_lh = sess.score
+            elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
+            elapsed_str_lh = minutes_to_uptime(elapsed_secs)
         sess.done = done
         sess.reward_total += reward
 
         next_state = sess.board.get_state()
 
-        transition = Transition(
-            state=state,
-            action=int(action),
-            reward=reward,
-            next_state=next_state,
-            done=done,
-        )
         return {
             DGameField.OK: True,
             DGameField.REWARD: reward,
@@ -242,6 +253,17 @@ class SnakeMgr:
                 DGameField.EPISODE_ID: sess.episode_id,
                 DGameField.EPOCH: sess.epoch,
                 DGameField.HIGHSCORE: sess.highscore,
+                DGameField.HIGHSCORE_LH: sess.highscore_lh,
+                DGameField.HIGHSCORE_EVENT: [
+                    sess.epoch,
+                    sess.highscore,
+                    elapsed_str,
+                ],
+                DGameField.HIGHSCORE_EVENT_LH: [
+                    sess.epoch,
+                    sess.highscore_lh,
+                    elapsed_str_lh,
+                ],
                 DGameField.STEP_N: sess.step_n,
                 DGameField.SCORE: sess.score,
                 DGameField.REWARD_TOTAL: sess.reward_total,
@@ -258,3 +280,40 @@ class SnakeMgr:
         """
         self.reset_session(client_id, seed=seed)
         return self.snapshot(client_id)
+
+
+# Helper function
+def minutes_to_uptime(seconds: int):
+    # Return a string like:
+    # 45s
+    # 7h 23m
+    # 1d 7h 32m
+    days, minutes = divmod(int(seconds), 86400)
+    hours, minutes = divmod(minutes, 3600)
+    minutes, seconds = divmod(minutes, 60)
+
+    if days > 0:
+        if seconds < 10:
+            seconds = f" {seconds}"
+        if minutes < 10:
+            minutes = f" {minutes}"
+        if hours < 10:
+            hours = f" {hours}"
+        return f"{days}d {hours}h {minutes}m"
+
+    elif hours > 0:
+        if seconds < 10:
+            seconds = f" {seconds}"
+        if minutes < 10:
+            minutes = f" {minutes}"
+        return f"{hours}h {minutes}m"
+
+    elif minutes > 0:
+        if seconds < 10:
+            seconds = f" {seconds}"
+        if minutes < 10:
+            return f" {minutes}m {seconds}s"
+        return f"{minutes}m {seconds}s"
+
+    else:
+        return f"{seconds}s"

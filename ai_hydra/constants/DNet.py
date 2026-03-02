@@ -47,7 +47,7 @@ class DLookaheadDef:
     Lookahead defaults.
     """
 
-    PROBABILITY: Final[float] = 0.50
+    PROBABILITY: Final[float] = 0.2
 
 
 class DNetDef:

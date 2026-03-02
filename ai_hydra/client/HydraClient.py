@@ -14,12 +14,13 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label, Log
+from textual.widgets import Button, Label, Log, Static
 from textual.message import Message
 
 from ai_hydra.utils.HydraMQ import HydraMQ
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
+from ai_hydra.client.TabbedScores import TabbedScores
 
 from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
@@ -81,6 +82,7 @@ class HydraClientTui(App):
         self._telemetry_prefix = "telemetry.snake.trainer"
 
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
+        self._cur_lookahead = None
 
     @work(exclusive=True)
     async def check_connection_bg(self) -> None:
@@ -140,35 +142,27 @@ class HydraClientTui(App):
         )
 
         # The Snake Game
-        yield Horizontal(
-            Vertical(self.game_board, id=DField.BOARD_BOX),
-            Vertical(
-                Label(f"{DLabel.INITIAL_EPSILON:>15s}: {DEpsilonDef.INITIAL}"),
-                Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
-                Label(
-                    f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"
-                ),
-                Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
-                Label(""),
-                Label(
-                    f"{DLabel.LOOKAHEAD_P_VAL:>18}: {DLookaheadDef.PROBABILITY}"
-                ),
-                Label(
-                    f"{DLabel.LOOKAHEAD_ENABLED:>18}: {DLookahead.UNKNOWN}",
-                    id=DField.LOOKAHEAD_ENABLED,
-                ),
-                id=DField.RUNTIME_VALUES,
+        yield Vertical(self.game_board, id=DField.BOARD_BOX)
+
+        # Runtime Settings
+        yield Vertical(
+            Label(f"{DLabel.INITIAL_EPSILON:>15s}: {DEpsilonDef.INITIAL}"),
+            Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
+            Label(f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"),
+            Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
+            Label(""),
+            Label(
+                f"{DLabel.LOOKAHEAD_P_VAL:>18}: {DLookaheadDef.PROBABILITY}"
             ),
+            Label(
+                f"{DLabel.LOOKAHEAD_ENABLED:>18}: {DLookahead.UNKNOWN}",
+                id=DField.LOOKAHEAD_ENABLED,
+            ),
+            id=DField.RUNTIME_VALUES,
         )
 
-        # Console
-        # yield Log(highlight=True, auto_scroll=True, id=DField.CONSOLE)
-
-    def console_msg(self, msg: str) -> None:
-        console = self.query_one(Log)
-        console.write_line(str(msg))
-        if isinstance(msg, HydraMsg):
-            console.write_line(str(msg.payload))
+        # Highscores
+        yield TabbedScores(id=DField.TABBED_SCORES)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
@@ -186,17 +180,14 @@ class HydraClientTui(App):
                 target=DModule.HYDRA_ROUTER,
                 method=DMethod.PING,
             )
-            # self.console_msg("Sending ping to router...")
             await mq.send(msg)
 
             try:
                 reply = await mq.recv()
                 if reply.method == DMethod.PONG:
                     pass
-                    # self.console_msg("Received pong")
             except asyncio.TimeoutError:
                 pass
-                # self.console_msg("Ping timed out.")
 
         elif button_id == DGameMethod.RESET_GAME:
             msg = HydraMsg(
@@ -208,10 +199,9 @@ class HydraClientTui(App):
 
             try:
                 reply = await mq.recv()
-                self.console_msg(reply)
 
             except asyncio.TimeoutError:
-                self.console_msg("Reset timed out.")
+                pass
 
         elif button_id == DGameMethod.START_RUN:
             msg = HydraMsg(
@@ -223,11 +213,9 @@ class HydraClientTui(App):
 
             try:
                 reply = await mq.recv()
-                # self.console_msg(reply)
 
             except asyncio.TimeoutError:
                 pass
-                # self.console_msg("Start run timed out.")
 
         elif button_id == DGameMethod.STOP_RUN:
             msg = HydraMsg(
@@ -239,11 +227,9 @@ class HydraClientTui(App):
 
             try:
                 reply = await mq.recv()
-                # self.console_msg(reply)
 
             except asyncio.TimeoutError:
                 pass
-                # self.console_msg("Stop run timed out.")
 
     def on_mount(self) -> None:
         self.mq = HydraMQ(
@@ -264,9 +250,9 @@ class HydraClientTui(App):
         )
         self.query_one(f"#{DField.CONFIG}").border_subtitle = DLabel.CONFIG
         self.query_one(f"#{DField.STATUS}").border_subtitle = DLabel.STATUS
-        # self.query_one(f"#{DField.CONSOLE}", Log).write_line(
-        #    "Initialization complete"
-        # )
+        self.query_one(f"#{DField.RUNTIME_VALUES}").border_subtitle = (
+            DLabel.RUNTIME_VALS
+        )
 
     def on_telemetry_received(self, msg: TelemetryReceived) -> None:
         payload = msg.payload
@@ -278,6 +264,8 @@ class HydraClientTui(App):
             self.game_board.apply_snapshot(snap)
 
         info = payload.get(DGameField.INFO, {})
+
+        # Current game score and highscore
         score = info.get(DGameField.SCORE)
         highscore = info.get(DGameField.HIGHSCORE)
         epoch = info.get(DGameField.EPOCH)
@@ -287,6 +275,30 @@ class HydraClientTui(App):
         board_box.border_subtitle = (
             f"{DLabel.HIGHSCORE}: {highscore}  {DLabel.SCORE}: {score}"
         )
+
+        # Highscore event
+        if DGameField.HIGHSCORE_EVENT in info:
+            highscore_event = info[DGameField.HIGHSCORE_EVENT]
+            if highscore_event[2]:
+                self.query_one(
+                    f"#{DField.TABBED_SCORES}", TabbedScores
+                ).add_highscore(
+                    epoch=highscore_event[0],
+                    highscore=highscore_event[1],
+                    event_time=highscore_event[2],
+                )
+
+        # Lookahead Highscore event
+        if DGameField.HIGHSCORE_EVENT_LH in info:
+            highscore_event_lh = info[DGameField.HIGHSCORE_EVENT_LH]
+            if highscore_event_lh[2]:
+                self.query_one(
+                    f"#{DField.TABBED_SCORES}", TabbedScores
+                ).add_highscore_lh(
+                    epoch=highscore_event_lh[0],
+                    highscore=highscore_event_lh[1],
+                    event_time=highscore_event_lh[2],
+                )
 
         # Current epsilon value
         epsilon = info.get(DNetField.CUR_EPSILON)
@@ -301,6 +313,7 @@ class HydraClientTui(App):
                 cur_lookahead = DLookahead.ON
             else:
                 cur_lookahead = DLookahead.OFF
+            self._cur_lookahead = cur_lookahead
             self.query_one(f"#{DField.LOOKAHEAD_ENABLED}", Label).update(
                 f"{DLabel.LOOKAHEAD_ENABLED:>18}: {cur_lookahead}"
             )

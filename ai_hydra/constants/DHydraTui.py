@@ -16,6 +16,7 @@ class DField:
     """
 
     BOARD_BOX: Final[str] = "board_box"
+    BOTH: Final[str] = "both"
     BUTTONS: Final[str] = "buttons"
     CLIENTS: Final[str] = "clients"
     CLIENTS_SCREEN: Final[str] = "clients_screen"
@@ -24,6 +25,9 @@ class DField:
     CONSOLE: Final[str] = "console"
     CONSOLE_SCREEN: Final[str] = "console_screen"
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    HIGHSCORES: Final[str] = "highscores"
+    HIGHSCORES_BOX: Final[str] = "highscores_box"
+    HIGHSCORES_LH: Final[str] = "highscores_lh"
     LOOKAHEAD_ENABLED: Final[str] = "lookahead_enabled"
     QUIT: Final[str] = "quit"
     RESET: Final[str] = "reset"
@@ -32,6 +36,7 @@ class DField:
     STATUS: Final[str] = "status"
     START: Final[str] = "start"
     STOP: Final[str] = "stop"
+    TABBED_SCORES: Final[str] = "tabbed_scores"
     TITLE: Final[str] = "title"
 
 
@@ -49,6 +54,7 @@ class DLabel:
     Human readable text.
     """
 
+    BOTH: Final[str] = "Both"
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
     CONFIG: Final[str] = "Configuration"
@@ -60,9 +66,13 @@ class DLabel:
     ERROR: Final[str] = "ERROR"
     GAME: Final[str] = "Game"
     HIGHSCORE: Final[str] = "Highscore"
+    HIGHSCORES: Final[str] = "Highscores"
+    HIGHSCORES_LH: Final[str] = "Look Ahead"
     INITIAL_EPSILON: Final[str] = "Initial Epsilon"
     LEFT: Final[str] = "Left"
+    LH: Final[str] = "LA"
     LISTEN_PORT: Final[str] = "Listening Port"
+    LOOKAHEAD: Final[str] = "Look Ahead"
     LOOKAHEAD_ENABLED: Final[str] = "Look Ahead Enabled"
     LOOKAHEAD_P_VAL: Final[str] = "Look Ahead P-Value"
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
@@ -72,6 +82,7 @@ class DLabel:
     RESET: Final[str] = "Reset"
     RIGHT: Final[str] = "Right"
     ROUTER_TITLE: Final[str] = "Hydra Router"
+    RUNTIME_VALS: Final[str] = "Runtime Values"
     SCORE: Final[str] = "Score"
     SPACE: Final[str] = " "
     START: Final[str] = "Start"
@@ -81,6 +92,7 @@ class DLabel:
     STRAIGHT: Final[str] = "Straight"
     TARGET_HOST: Final[str] = "Target Host"
     TARGET_PORT: Final[str] = "Target Port"
+    TIME: Final[str] = "Time"
     VERSION: Final[str] = "Version"
 
 

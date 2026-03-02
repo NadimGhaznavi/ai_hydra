@@ -1,8 +1,8 @@
 Screen {
     layout: grid;
-    grid-size: 1 5;
-    grid-rows: 3 4 3 3 22;
-    grid-columns: 88;
+    grid-size: 2 6;
+    grid-rows: 3 4 3 3 9 13;
+    grid-columns: 44 44;
 }
 
 Button {
@@ -11,7 +11,18 @@ Button {
     border: none;
 }
 
+TabbedScores {
+    background: black;
+    border: round #0c323e;
+
+}
+
+#both {
+    background: black;
+}
+
 #board_box {
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -23,6 +34,7 @@ Button {
 }
 
 #buttons {
+    column-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -34,6 +46,7 @@ Button {
 
 
 #config {
+    column-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #acac59ff;
@@ -42,20 +55,29 @@ Button {
     width: 100%;
 }
 
-#console {
-    border: round #0c323e;
+#highscores {
+    background: black;
+}
+
+#highscores_lh {
+    background: black;
+}
+
+.highscores_box {
     background: black;
 }
 
 #runtime_values {
     background: black;
     border: round #0c323e;
-    border-subtitle-color: #8dc97dff;
+    border-subtitle-color: #5fc442;
     color: #8dc97dff;
     text-style: bold;
+    height: 9;
 }
 
 #status {
+    column-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #8dc97dff;
@@ -65,12 +87,18 @@ Button {
 }
 
 #title {
+    column-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
     color: #5fc442;
     text-style: bold;
     width: 100%;
+}
+
+#static_1 {
+    height: 100%;
+    background: #ff0000;
 }
 
 
