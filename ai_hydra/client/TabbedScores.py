@@ -45,7 +45,7 @@ class TabbedScores(Widget):
                 classes=DField.HIGHSCORES_BOX,
             )
 
-    def add_highscore(self, epoch, highscore, event_time):
+    def add_highscore_nlh(self, epoch, highscore, event_time):
         self.query_one(f"#{DField.HIGHSCORES}", Log).write_line(
             f"{epoch:7d}{highscore:7d}{event_time:>13s}"
         )

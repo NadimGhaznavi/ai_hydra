@@ -36,8 +36,9 @@ class SnakeSession:
     done: bool = False
     episode_id: int = 0
     epoch: int = 0
-    highscore: int = 0
-    highscore_lh: int = 0
+    highscore: int = 0  # Actual highscore
+    highscore_lh: int = 0  # Lookahead highscore
+    highscore_nlh: int = 0  # No lookahead highscore
     lookahead_on: bool = False
     reward_total: float = 0.0
     score: int = 0
@@ -121,6 +122,7 @@ class SnakeMgr:
 
         prev = self.sessions.get(client_id)
         prev_highscore = getattr(prev, "highscore", 0)
+        prev_highscore_nlh = getattr(prev, "highscore_nlh", 0)
         prev_highscore_lh = getattr(prev, "highscore_lh", 0)
         prev_epoch = getattr(prev, "epoch", 0)
         prev_lookahead_on = getattr(prev, "lookahead_on", False)
@@ -144,6 +146,7 @@ class SnakeMgr:
             episode_id=episode_id,
             # carry-over stats
             highscore=prev_highscore,
+            highscore_nlh=prev_highscore_nlh,
             highscore_lh=prev_highscore_lh,
             epoch=prev_epoch,
             lookahead_on=prev_lookahead_on,
@@ -228,21 +231,13 @@ class SnakeMgr:
         # Score delta (Phase 1): +1 on FOOD, else 0
         score_delta = 1 if outcome == DGameField.FOOD else 0
         sess.score += score_delta
-        elapsed_str = elapsed_str_lh = 0
-        if sess.score > sess.highscore and not sess.lookahead_on:
-            sess.highscore = sess.score
-            elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
-            elapsed_str = minutes_to_uptime(elapsed_secs)
-        if sess.score > sess.highscore_lh and sess.lookahead_on:
-            sess.highscore_lh = sess.score
-            elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
-            elapsed_str_lh = minutes_to_uptime(elapsed_secs)
+        elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
+        elapsed_str = minutes_to_uptime(elapsed_secs)
         sess.done = done
         sess.reward_total += reward
-
         next_state = sess.board.get_state()
 
-        return {
+        ret_value = {
             DGameField.OK: True,
             DGameField.REWARD: reward,
             DNetField.STATE: state,
@@ -253,17 +248,6 @@ class SnakeMgr:
                 DGameField.EPISODE_ID: sess.episode_id,
                 DGameField.EPOCH: sess.epoch,
                 DGameField.HIGHSCORE: sess.highscore,
-                DGameField.HIGHSCORE_LH: sess.highscore_lh,
-                DGameField.HIGHSCORE_EVENT: [
-                    sess.epoch,
-                    sess.highscore,
-                    elapsed_str,
-                ],
-                DGameField.HIGHSCORE_EVENT_LH: [
-                    sess.epoch,
-                    sess.highscore_lh,
-                    elapsed_str_lh,
-                ],
                 DGameField.STEP_N: sess.step_n,
                 DGameField.SCORE: sess.score,
                 DGameField.REWARD_TOTAL: sess.reward_total,
@@ -271,6 +255,24 @@ class SnakeMgr:
                 DGameField.SEED: sess.seed,
             },
         }
+
+        if sess.score > sess.highscore:
+            sess.highscore = sess.score
+        if sess.score > sess.highscore_nlh and not sess.lookahead_on:
+            sess.highscore_nlh = sess.score
+            ret_value[DGameField.INFO][DGameField.HIGHSCORE_EVENT_NLH] = [
+                sess.epoch,
+                sess.highscore_nlh,
+                elapsed_str,
+            ]
+        if sess.score > sess.highscore_lh and sess.lookahead_on:
+            sess.highscore_lh = sess.score
+            ret_value[DGameField.INFO][DGameField.HIGHSCORE_EVENT_LH] = [
+                sess.epoch,
+                sess.highscore_lh,
+                elapsed_str,
+            ]
+        return ret_value
 
     def reset(
         self, client_id: str, seed: Optional[int] = None

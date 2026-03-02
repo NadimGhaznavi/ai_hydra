@@ -277,12 +277,12 @@ class HydraClientTui(App):
         )
 
         # Highscore event
-        if DGameField.HIGHSCORE_EVENT in info:
-            highscore_event = info[DGameField.HIGHSCORE_EVENT]
+        if DGameField.HIGHSCORE_EVENT_NLH in info:
+            highscore_event = info[DGameField.HIGHSCORE_EVENT_NLH]
             if highscore_event[2]:
                 self.query_one(
                     f"#{DField.TABBED_SCORES}", TabbedScores
-                ).add_highscore(
+                ).add_highscore_nlh(
                     epoch=highscore_event[0],
                     highscore=highscore_event[1],
                     event_time=highscore_event[2],
