@@ -90,8 +90,8 @@ tui = [
 
 [project.scripts]
 ai-hydra-mgr = "ai_hydra.server.HydraMgr:main"
-ai-hydra-router = "ai_hydra.router:HydraRouter:main"
-ai-hydra-config = "ai_hydra.client:HydraClient:main"
+ai-hydra-router = "ai_hydra.router.HydraRouter:main"
+ai-hydra-config = "ai_hydra.client.HydraClient:main"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/NadimGhaznavi/ai-hydra/issues"
