@@ -95,7 +95,7 @@ ai-hydra-config = "ai_hydra.client.HydraClient:main"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/NadimGhaznavi/ai-hydra/issues"
-"Documentation" = "https://aihydra.osoyalce.com/"
+"Documentation" = "https://ai-hydra.readthedocs.io/en/latest/"
 "Source" = "https://github.com/NadimGhaznavi/ai-hydra"
 
 [build-system]

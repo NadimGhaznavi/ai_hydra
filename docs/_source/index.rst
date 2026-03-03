@@ -70,9 +70,9 @@ Finally, start the *HydraMgr* in a third terminal:
 
 Click the `Start` button in the *HydraRouter* to start the routing functions.
 
-Click the `Start` button in the *HydraClient*. This causes a `START_FUN` 
+Click the `Start` button in the *HydraClient*. This causes a `START_RUN` 
 ZeroMQ message to be sent through the *HydraRouter* to the *HydraMgr*. The
-*HydraMgr* continues to listen for `STOP` or `RESET` messages. The *HydraMgr*
+*HydraMgr* continues to listen for `STOP_RUN` or `RESET_GAME` messages. The *HydraMgr*
 starts the simulation, and publishes game telemetry information on a ZeroMQ
 **PUB** socket. The *HydraClient* connects directly to the *HydraMgr* and subscribes 
 to the appropriate topics. The *HydraClient* displays the game state.

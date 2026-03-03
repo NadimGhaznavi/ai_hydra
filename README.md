@@ -1,447 +1,71 @@
-# AI Hydra
-
-A sophisticated **parallel neural network exploration system** for Snake Game AI that achieves mastery over basic collision avoidance through exhaustive concurrent NN exploration.
+# AI Hydra: Hybrid Neural Network + Tree Search System
 
 ## Overview
 
-The AI Hydra addresses the fundamental problem where legacy AI regularly scores below 10 by implementing a "deep thinking" architecture that explores multiple NN learning trajectories simultaneously before making each move.
+AI Hydra is a distributed application that includes a Textual TUI client, a 
+simple router, and a headless server. Communication is over ZeroMQ. The basic
+functionality is that the Client sends control messages (start, stop, reset)
+to the router which forwards them to the server. When the server is running
+it publishes board and other telemetry information a ZeroMQ PUB/SUB socket.
+The client subscribes to the server's PUB socket and displays the game state.
 
-**Core Architecture**: Every decision spawns multiple concurrent NN instances that explore different learning paths through a budget-constrained tree search. The system exhausts its move budget analyzing alternatives before making a single move in the master game, prioritizing decision quality over speed.
+The headless server uses a neural network and a policy stack to play the game.
+The policy stack includes an implementation of the traditional Epsilon-Greedy
+algorithm to encourage exploration at the beginning of a simulation run. 
 
-## Key Features
+The server also includes a *lookahead* policy where the server checks to see if
+the move suggested by the neural network will result in a collision. If so,
+then it "looks ahead" at alternative moves. If a *look-ahead* move results
+in finding food, then that move is selected. If a move does **not** result in
+a collision, then that move is selected.
 
-- **🧠 Parallel Neural Network Exploration**: Spawn multiple NN instances for each decision
-- **🌳 Budget-Constrained Tree Search**: Efficient exploration within computational limits  
-- **🎯 Collision Avoidance Mastery**: Achieve consistent scores > 10 through deep thinking
-- **🔄 Deterministic Reproducibility**: Seed-controlled randomness for reliable experiments
-- **📡 ZeroMQ Headless Operation**: Complete message-based control without GUI dependencies
-- **🖥️ Terminal User Interface**: Real-time visualization and control via Textual TUI
-- **⚙️ Hydra Zen Configuration**: Flexible parameter management for concurrent systems
-- **🧪 Comprehensive Testing**: Property-based tests with timeout protection
+The *look-ahead* policy is only enabled for a configurable probability of the
+time. The training of the neural network includes the moves and game state
+information that was executed. So when the *look-ahead* policy is used the
+training data is enhanced. This leads to better neural network performance.
 
-## Quick Start
-
-### Installation
-
-```bash
-git clone <repository-url>
-cd ai-hydra
-pip install -r requirements.txt
-pip install -e .
-```
-
-### TUI Client (Recommended)
-
-For interactive visualization and control, use the Terminal User Interface:
-
-```bash
-# Install TUI dependencies
-pip install -e .[tui]
-
-# Start the headless server (in one terminal)
-ai-hydra-server
-
-# Start the TUI client (in another terminal)
-ai-hydra-tui --server tcp://localhost:5555
-```
-
-The TUI provides:
-- **Real-time game visualization** with colorful Snake game display
-- **Interactive controls** for start, stop, pause, resume, reset
-- **Live status monitoring** showing score, moves, snake length, runtime
-- **Configuration interface** for grid size and move budget
-- **Message logging** with real-time updates and error handling
-
-### Basic Usage
-
-```python
-from ai_hydra import HydraMgr
-from ai_hydra.config import SimulationConfig, NetworkConfig
-
-# Create configuration for parallel NN exploration
-sim_config = SimulationConfig(
-    grid_size=(10, 10),
-    move_budget=100,  # Budget for parallel exploration
-    nn_enabled=True,
-    random_seed=42
-)
-
-net_config = NetworkConfig(
-    input_features=19,
-    hidden_layers=(200, 200),
-    output_actions=3,
-    learning_rate=0.001
-)
-
-# Initialize the parallel NN system
-hydra_mgr = HydraMgr(sim_config, net_config)
-
-# Run simulation with concurrent NN exploration
-result = hydra_mgr.run_simulation()
-print(f"Final score: {result.final_score}")
-print(f"Collision avoidance achieved: {result.final_score > 10}")
-```
-
-### Headless Operation
-
-For production deployments or programmatic control:
-
-```python
-from ai_hydra.headless_server import HeadlessServer
-
-# Start headless AI agent
-server = HeadlessServer(port=5555)
-server.start()
-
-print("Headless AI agent running on port 5555")
-print("Control via ZeroMQ messages or TUI client")
-```
-
-Control via TUI client (recommended):
-
-```bash
-# Start TUI for interactive control
-ai-hydra-tui --server tcp://localhost:5555
-```
-
-Or control programmatically via ZeroMQ client:
-
-```python
-from ai_hydra.zmq_client_example import ZMQClient
-
-# Connect to headless server
-client = ZMQClient("tcp://localhost:5555")
-
-# Start simulation
-response = client.send_command("START_SIMULATION", {
-    "grid_size": [8, 8],
-    "move_budget": 30,
-    "nn_enabled": True
-})
-
-# Monitor progress
-status = client.send_command("GET_STATUS")
-print(f"Current score: {status['current_score']}")
-```
-
-## Terminal User Interface (TUI)
-
-AI Hydra includes a sophisticated terminal-based user interface built with [Textual](https://textual.textualize.io/) for real-time visualization and control.
-
-### TUI Features
-
-- **🎮 Real-time Game Visualization**: Watch the Snake game play with colorful terminal graphics
-- **🎛️ Interactive Controls**: Start, stop, pause, resume, and reset simulations with buttons
-- **📊 Live Status Monitoring**: Real-time display of score, moves, snake length, and runtime
-- **⚙️ Configuration Interface**: Adjust grid size, move budget, and other parameters
-- **📝 Message Logging**: Color-coded real-time messages and error handling
-- **🎨 Themed Interface**: Beautiful AI Hydra color scheme adapted from proven TUI patterns
-
-### TUI Usage
-
-```bash
-# Install TUI dependencies
-pip install -e .[tui]
-
-# Start the TUI client
-ai-hydra-tui --server tcp://localhost:5555
-
-# With custom server address
-ai-hydra-tui --server tcp://192.168.1.100:5555
-
-# Enable verbose logging
-ai-hydra-tui --verbose
-```
-
-### TUI Interface Layout
+## Installation
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    AI Hydra - Snake Game AI Monitor         │
-├─────────────────┬───────────────────────────┬───────────────┤
-│   Control       │                           │    Status     │
-│   Panel         │        Game Board         │    Panel      │
-│                 │                           │               │
-│ [Start] [Stop]  │    ████████████████       │ State: Running│
-│ [Pause][Resume] │    █▓▓▓▓▓▓▓▓▓▓▓▓▓█       │ Score: 42     │
-│ [Reset]         │    █▓░░░●░░░░░░░░▓█       │ Moves: 156    │
-│                 │    █▓░░░░░░░░░░░▓█       │ Length: 8     │
-│ Grid: 20,20     │    █▓░░░░░░░░░░░▓█       │ Runtime: 2:34 │
-│ Budget: 100     │    █▓░░░░░░░░░░░▓█       │               │
-│                 │    █▓▓▓▓▓▓▓▓▓▓▓▓▓█       │               │
-│                 │    ████████████████       │               │
-├─────────────────┴───────────────────────────┴───────────────┤
-│                        Messages                             │
-│ [12:34:56] Connected to server at tcp://localhost:5555     │
-│ [12:34:57] Simulation started                              │
-│ [12:34:58] Score increased to 42                           │
-└─────────────────────────────────────────────────────────────┘
+   $ python3 -m venv hydra-venv
+   $ . hydra-venv/bin/activate
+   hydra-venv> pip install ai-hydra
 ```
 
-### TUI Controls
+## Distributed Architecture
 
-- **Keyboard**: `Tab` to navigate, `Enter` to activate, `Ctrl+C` to quit
-- **Start**: Begin simulation with current configuration
-- **Stop**: Stop current simulation
-- **Pause/Resume**: Pause and resume running simulations
-- **Reset**: Reset simulation and clear all data
-- **Configuration**: Adjust grid size (format: "width,height") and move budget
+The *HydraClient*, *HydraRouter*, and *HydraMgr* are run in three different
+terminals. The project supports running the client, router, and server on
+different machines, but at this early stage in the project, it's recommended
+that all three be run on the same machine.
 
-For complete TUI documentation, see [`ai_hydra/tui/README.md`](ai_hydra/tui/README.md).
+## Startup
 
-## Architecture
+Start the *HydraClient* in the first terminal:
 
-The system consists of several key components:
-
-- **HydraMgr**: Main orchestration system managing parallel NN instances and exploration
-- **GameBoard**: Immutable game state representation with perfect cloning
-- **GameLogic**: Pure functions for game mechanics and move execution
-- **Neural Network**: PyTorch-based move prediction with concurrent spawning
-- **Tree Search**: Budget-constrained exploration with parallel NN evaluation
-- **Oracle Trainer**: Learning system that improves NN from tree search results
-- **ZeroMQ Server**: Headless communication layer for remote control
-- **TUI Client**: Terminal user interface for real-time visualization and control
-
-### Decision Flow
-
-1. **Neural Network Prediction**: NN predicts optimal move from current state
-2. **Tree Search Exploration**: Budget-constrained exploration starting from NN prediction
-3. **Path Evaluation**: Select path with highest cumulative reward
-4. **Oracle Training**: Compare NN prediction with tree search result
-5. **Master Game Update**: Apply selected move and reset for next cycle
-
-## Performance Expectations
-
-- **Decision Quality over Speed**: System prioritizes thorough analysis over fast moves
-- **Collision Avoidance**: Consistent scores > 10 through exhaustive exploration
-- **Resource Intensive**: Expects slow execution due to parallel NN exploration
-- **Scalable Budget**: Computational cost scales with move budget allocation
-
-## Configuration
-
-### Parallel NN Exploration
-
-```python
-config = SimulationConfig(
-    grid_size=(8, 8),            # Smaller grid for faster exploration
-    move_budget=100,             # Budget for parallel NN spawning
-    nn_enabled=True,             # Enable concurrent NN instances
-    collision_penalty=-20,       # Higher penalty for better learning
-    random_seed=123
-)
+```
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-client
 ```
 
-### Neural Network Architecture
+Start the *HydraRouter* in a second terminal:
 
-```python
-net_config = NetworkConfig(
-    input_features=19,           # Standard feature vector size
-    hidden_layers=(200, 200),    # Deep network for complex decisions
-    output_actions=3,            # Left, Straight, Right
-    learning_rate=0.001,         # Conservative learning rate
-    batch_size=32                # Batch size for training
-)
+```
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-router
 ```
 
-### Performance Tuning
+Finally, start the *HydraMgr* in a third terminal:
 
-```python
-# For faster development testing
-config = SimulationConfig(
-    grid_size=(6, 6),            # Smaller grid
-    move_budget=20,              # Reduced budget
-    nn_enabled=True
-)
-
-net_config = NetworkConfig(
-    hidden_layers=(50, 50),      # Smaller network
-    learning_rate=0.01           # Faster learning
-)
+```
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-mgr
 ```
 
-## ZeroMQ Communication Protocol
-
-The system provides a comprehensive ZeroMQ-based protocol for headless operation:
-
-### Command Messages
-- `START_SIMULATION`: Initialize and start a new simulation
-- `STOP_SIMULATION`: Stop current simulation
-- `PAUSE_SIMULATION`: Pause execution while maintaining state
-- `RESUME_SIMULATION`: Resume paused simulation
-- `GET_STATUS`: Query current status and metrics
-
-### Broadcast Messages
-- `STATUS_UPDATE`: Real-time game state and performance metrics
-- `DECISION_CYCLE_COMPLETE`: Results of each decision cycle
-- `GAME_OVER`: Final simulation results
-- `ERROR_OCCURRED`: Error notifications with recovery information
-
-### Example Client
-
-```python
-import zmq
-import json
-import time
-
-class ZMQClient:
-    def __init__(self, server_address="tcp://localhost:5555"):
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect(server_address)
-    
-    def send_command(self, message_type, data=None):
-        message = {
-            "message_type": message_type,
-            "timestamp": time.time(),
-            "client_id": "example_client",
-            "request_id": f"req_{int(time.time())}",
-            "data": data or {}
-        }
-        
-        self.socket.send_string(json.dumps(message))
-        response = self.socket.recv_string()
-        return json.loads(response)
-```
-
-## Testing
-
-The system includes comprehensive testing with both unit tests and property-based tests:
-
-```bash
-# Run all tests
-pytest
-
-# Run with timeout protection
-pytest --timeout=600
-
-# Run specific test categories
-pytest -m "unit"          # Unit tests only
-pytest -m "property"      # Property-based tests only
-pytest -m "integration"   # Integration tests only
-
-# Run with coverage
-pytest --cov=ai_hydra --cov-report=html
-```
-
-### Property-Based Testing
-
-The system uses Hypothesis for property-based testing to validate universal properties:
-
-```python
-@given(
-    config=simulation_configs(),
-    budget=st.integers(min_value=10, max_value=1000)
-)
-@settings(max_examples=10, deadline=5000)
-@pytest.mark.timeout(120)
-def test_budget_lifecycle_management(config, budget):
-    """Property 5: Budget Lifecycle Management"""
-    # Test implementation validates budget invariants
-```
-
-## Documentation
-
-Comprehensive documentation is available:
-
-- **Getting Started**: Installation and basic usage
-- **Architecture**: System design and component interaction
-- **ZeroMQ Protocol**: Complete communication protocol reference
-- **Deployment**: Production deployment scenarios
-- **Troubleshooting**: Common issues and solutions
-- **API Reference**: Complete API documentation
-
-Build documentation locally:
-
-```bash
-cd docs
-make html
-# Open _build/html/index.html in browser
-```
-
-## Deployment
-
-### Local Development
-
-```bash
-# Start headless server
-python -m ai_hydra.headless_server
-
-# Option 1: Connect with TUI client (recommended)
-ai-hydra-tui --server tcp://localhost:5555
-
-# Option 2: Connect with example client
-python -m ai_hydra.zmq_client_example --mode interactive
-```
-
-### Production Deployment
-
-```bash
-# Run as daemon with logging
-python -m ai_hydra.headless_server \
-    --bind "0.0.0.0" \
-    --command-port 5555 \
-    --broadcast-port 5556 \
-    --log-file /var/log/snake_ai.log \
-    --log-level INFO \
-    --daemon
-```
-
-### Docker Deployment
-
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-RUN pip install -e .
-
-EXPOSE 5555 5556
-
-CMD ["python", "-m", "ai_hydra.headless_server", \
-     "--bind", "0.0.0.0", \
-     "--command-port", "5555", \
-     "--broadcast-port", "5556"]
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes with comprehensive tests
-4. Ensure all tests pass with timeout protection
-5. Update documentation as needed
-6. Submit a pull request
-
-### Development Setup
-
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests with coverage
-pytest --cov=ai_hydra
-
-# Run property-based tests
-pytest -m property --timeout=600
-
-# Build documentation
-cd docs && make html
-```
-
-## License
-
-[License information to be added]
-
-## Acknowledgments
-
-This project implements advanced concepts in:
-- Budget-constrained tree search algorithms
-- Parallel neural network exploration
-- Hybrid AI decision-making systems
-- ZeroMQ-based distributed communication
-- Property-based testing methodologies
-
-The system prioritizes decision quality over speed, making it suitable for research applications where thorough analysis is more important than real-time performance.
+Click the `Start` button in the *HydraRouter* to start the routing functions.
+Click the `Start` button in the *HydraClient*. This causes a `START_RUN` 
+ZeroMQ message to be sent through the *HydraRouter* to the *HydraMgr*. The
+*HydraMgr* continues to listen for `STOP_RUN` or `RESET_GAME` messages. The *HydraMgr*
+starts the simulation, and publishes game telemetry information on a ZeroMQ
+**PUB** socket. The *HydraClient* connects directly to the *HydraMgr* and subscribes 
+to the appropriate topics. The *HydraClient* displays the game state.
