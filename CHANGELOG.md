@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Complete rewrite based on the [Hydra Router](https://pypi.org/project/hydra-router/) codebase. The code is fully functional now.
+
+## Fixed
+- Added pytorch `torch.manual_seed(DHydra.RANDOM_SEED)` throughout the code to make the *HydraMgr* fully deterministic.
+
+
+---
+
+# [Unreleased] 
+
 ### Added
 - **Hydra Router Examples**: Basic client-server example demonstrating router communication patterns
   - Added `hydra-router/examples/basic_client_server.py` with comprehensive client-server communication example

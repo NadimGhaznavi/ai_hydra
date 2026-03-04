@@ -10,6 +10,17 @@
 from typing import Final
 
 
+class DColor:
+    """Color constants"""
+
+    GREEN: Final[str] = "green"
+    RED: Final[str] = "red"
+    BLUE: Final[str] = "blue"
+    YELLOW: Final[str] = "yellow"
+    WHITE: Final[str] = "white"
+    BLACK: Final[str] = "black"
+
+
 class DField:
     """
     Machine readable field names.
@@ -29,13 +40,17 @@ class DField:
     HIGHSCORES_BOX: Final[str] = "highscores_box"
     HIGHSCORES_LH: Final[str] = "highscores_lh"
     LOOKAHEAD_ENABLED: Final[str] = "lookahead_enabled"
+    LOSS: Final[str] = "loss"
+    NO_BOARD: Final[str] = "no_board"
     QUIT: Final[str] = "quit"
     RESET: Final[str] = "reset"
     RUNNING: Final[str] = "running"
     RUNTIME_VALUES: Final[str] = "runtime_values"
+    SHOW_BOARD: Final[str] = "show_board"
     STATUS: Final[str] = "status"
     START: Final[str] = "start"
     STOP: Final[str] = "stop"
+    TABBED_PLOTS: Final[str] = "tabbed_plots"
     TABBED_SCORES: Final[str] = "tabbed_scores"
     TITLE: Final[str] = "title"
 
@@ -54,6 +69,7 @@ class DLabel:
     Human readable text.
     """
 
+    BOARD: Final[str] = "Board"
     BOTH: Final[str] = "Both"
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
@@ -75,7 +91,9 @@ class DLabel:
     LOOKAHEAD: Final[str] = "Look Ahead"
     LOOKAHEAD_ENABLED: Final[str] = "Look Ahead Enabled"
     LOOKAHEAD_P_VAL: Final[str] = "Look Ahead P-Value"
+    LOSS: Final[str] = "Loss"
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
+    NO_BOARD: Final[str] = "No Board"
     PING_ROUTER: Final[str] = "Ping Router"
     PING_SERVER: Final[str] = "Ping Server"
     QUIT: Final[str] = "Quit"
@@ -94,6 +112,14 @@ class DLabel:
     TARGET_PORT: Final[str] = "Target Port"
     TIME: Final[str] = "Time"
     VERSION: Final[str] = "Version"
+
+
+class DPlotDef:
+    """
+    Default Textual plot settings.
+    """
+
+    MAX_LOSS_DATA_POINTS: Final[int] = 100
 
 
 class DStatus:

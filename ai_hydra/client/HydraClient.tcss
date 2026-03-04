@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 2 6;
-    grid-rows: 3 4 3 3 9 13;
+    grid-size: 2 7;
+    grid-rows: 3 4 3 3 9 13 16;
     grid-columns: 44 44;
 }
 
@@ -11,10 +11,21 @@ Button {
     border: none;
 }
 
+TabbedPlots {
+    column-span: 2;
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #5fc442;
+    color: #5fc442;
+    text-style: bold;
+    height: 16;
+    width: 88;
+}
+
 TabbedScores {
     background: black;
     border: round #0c323e;
-
+    border-subtitle-color: #5fc442;
 }
 
 #both {
@@ -67,6 +78,11 @@ TabbedScores {
     background: black;
 }
 
+#loss {
+    width: 86;
+    height: 14;
+}
+
 #runtime_values {
     background: black;
     border: round #0c323e;
@@ -101,4 +117,9 @@ TabbedScores {
     background: #ff0000;
 }
 
-
+.show_board #show_board {
+    display: none;
+}
+.no_board #no_board {
+    display: none;
+}

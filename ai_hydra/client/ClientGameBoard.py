@@ -67,56 +67,28 @@ class ClientGameBoard(ScrollView):
 
     # Updates
     # --------
-    def apply_snapshot(self, snapshot: dict) -> None:
-        """
-        Apply a Hydra SnakeMgr snapshot payload
+    def apply_board_dict(self, board: dict) -> None:
+        grid = board[DGameField.GRID_SIZE]
+        self.grid_w = int(grid[DGameField.W])
+        self.grid_h = int(grid[DGameField.H])
 
-        Expects a snapshot like:
-            {
-                "board": {
-                    "snake_head": {"x":..,"y":..},
-                    "snake_body": [{"x":..,"y":..}, ...]
-                    "food_position": {"x":..,"y":..},
-                    "direction": {"dx":..,"dy":..},
-                    "grid_size": {"w",.., "h":..},
-                    ...
-                }
-            }
-        """
-        board = snapshot.get(DGameField.BOARD, {})
-        if not isinstance(board, dict):
-            raise TypeError(f"ERROR: Unrecognized board: {board}")
+        head = board[DGameField.SNAKE_HEAD]
+        self.snake_head = Offset(
+            int(head[DGameField.X]), int(head[DGameField.Y])
+        )
 
-        grid = board.get(DGameField.GRID_SIZE, {})
-        if isinstance(grid, dict):
-            w = grid.get(DGameField.W)
-            h = grid.get(DGameField.H)
+        self.snake_body = [
+            Offset(int(seg[DGameField.X]), int(seg[DGameField.Y]))
+            for seg in board[DGameField.SNAKE_BODY]
+        ]
 
-        head = board.get(DGameField.SNAKE_HEAD, {})
-        if isinstance(head, dict):
-            self.snake_head = Offset(
-                int(head[DGameField.X]), int(head[DGameField.Y])
-            )
+        food = board[DGameField.FOOD_POSITION]
+        self.food = Offset(int(food[DGameField.X]), int(food[DGameField.Y]))
 
-        body = board.get(DGameField.SNAKE_BODY, [])
-        if isinstance(body, list):
-            self.snake_body = [
-                Offset(int(seg[DGameField.X]), int(seg[DGameField.Y]))
-                for seg in body
-                if isinstance(seg, dict)
-            ]
+        d = board[DGameField.DIRECTION]
+        self.direction = Offset(int(d[DGameField.DX]), int(d[DGameField.DY]))
 
-        food = board.get(DGameField.FOOD_POSITION, {})
-        if isinstance(food, dict):
-            self.food = Offset(
-                int(food[DGameField.X]), int(food[DGameField.Y])
-            )
-
-        d = board.get(DGameField.DIRECTION, {})
-        if isinstance(d, dict):
-            self.direction = Offset(
-                int(d[DGameField.DX]), int(d[DGameField.DY])
-            )
+        self.refresh()
 
     # Rendering
     # ----------

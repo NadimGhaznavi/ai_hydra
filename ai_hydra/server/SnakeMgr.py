@@ -40,6 +40,7 @@ class SnakeSession:
     highscore_lh: int = 0  # Lookahead highscore
     highscore_nlh: int = 0  # No lookahead highscore
     lookahead_on: bool = False
+    per_step_enabled: bool = True
     reward_total: float = 0.0
     score: int = 0
     step_n: int = 0
@@ -126,6 +127,7 @@ class SnakeMgr:
         prev_highscore_lh = getattr(prev, "highscore_lh", 0)
         prev_epoch = getattr(prev, "epoch", 0)
         prev_lookahead_on = getattr(prev, "lookahead_on", False)
+        prev_per_step_enabled = getattr(prev, "per_step_enabled", True)
 
         session_seed, rng = self.new_rng(seed)
         episode_id = rng.getrandbits(32)
@@ -150,6 +152,7 @@ class SnakeMgr:
             highscore_lh=prev_highscore_lh,
             epoch=prev_epoch,
             lookahead_on=prev_lookahead_on,
+            per_step_enabled=prev_per_step_enabled,
         )
         self.sessions[client_id] = sess
         return sess
@@ -163,62 +166,47 @@ class SnakeMgr:
             sess = self.reset_session(client_id, seed=None)
         return sess
 
-    def snapshot(self, client_id: str) -> dict[str, Any]:
-        """
-        Return a JSON-friendly snapshot of session state.
-        """
-        sess = self.get_session(client_id)
-
-        # You’ll want GameBoard.to_dict() for this (or similar)
-        board_dict = (
-            sess.board.to_dict()
-            if hasattr(sess.board, "to_dict")
-            else {"repr": repr(sess.board)}
-        )
-
-        # NN ready state vector
-        state = sess.board.get_state()
-
-        return {
-            DGameField.BOARD: board_dict,
-            DGameField.DONE: sess.done,
-            DGameField.STEP_N: sess.step_n,
-            DGameField.SCORE: sess.score,
-            DGameField.EPISODE_ID: sess.episode_id,
-            DGameField.SEED: sess.seed,
-            DGameField.HIGHSCORE: sess.highscore,
-            DNetField.STATE: state,
-        }
-
     def start_time(self, start_time=None):
         if start_time is not None:
             self._start_time = start_time
         return self._start_time
 
-    def step(self, client_id: str, action: int) -> dict[str, Any]:
+    def step(
+        self,
+        client_id: str,
+        action: int,
+        want_step_payload: bool,
+    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
         """
         Step the client's session forward by one action.
 
-        Returns a JSON-friendly dict suitable for HydraMsg.payload.
+        Returns (ep_payload, step_payload).
+        - step_payload (per_step): board telemetry + current score only
+        - ep_payload (per_episode): everything else; always published
         """
         sess = self.get_session(client_id)
 
         if sess.done:
-            return {
+            ep_payload = {
                 DGameField.OK: False,
                 DGameField.ERROR: DGameField.EPISODE_DONE,
                 DGameField.INFO: {
                     DGameField.EPISODE_ID: sess.episode_id,
                     DGameField.EPOCH: sess.epoch,
                     DGameField.HIGHSCORE: sess.highscore,
-                    DGameField.SCORE: sess.score,
                     DGameField.STEP_N: sess.step_n,
                     DGameField.REWARD_TOTAL: sess.reward_total,
+                    DGameField.REASON: DGameField.EPISODE_DONE,
+                    DGameField.SEED: sess.seed,
                 },
             }
+            step_payload: dict[str, Any] = {}
+            return ep_payload, step_payload
 
+        # NN-ready state vector (pre-step)
         state = sess.board.get_state()
 
+        # Apply action
         result = GameLogic.step(sess.board, int(action), sess.rng)
 
         sess.board = result.new_board
@@ -229,50 +217,60 @@ class SnakeMgr:
         outcome = result.outcome  # use as "reason" for now
 
         # Score delta (Phase 1): +1 on FOOD, else 0
-        score_delta = 1 if outcome == DGameField.FOOD else 0
-        sess.score += score_delta
+        if outcome == DGameField.FOOD:
+            sess.score += 1
+
         elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
         elapsed_str = minutes_to_uptime(elapsed_secs)
+
         sess.done = done
         sess.reward_total += reward
+
+        # NN-ready next state (post-step)
         next_state = sess.board.get_state()
 
-        ret_value = {
+        if sess.score > sess.highscore:
+            sess.highscore = sess.score
+
+        step_payload = None
+        if want_step_payload:
+            step_payload = {
+                DGameField.BOARD: sess.board.to_dict(),
+                DGameField.SCORE: sess.score,
+            }
+
+        ep_payload: dict[str, Any] = {
             DGameField.OK: True,
             DGameField.REWARD: reward,
             DNetField.STATE: state,
             DNetField.NEXT_STATE: next_state,
             DGameField.DONE: sess.done,
-            DGameField.SNAPSHOT: self.snapshot(client_id),
             DGameField.INFO: {
                 DGameField.EPISODE_ID: sess.episode_id,
                 DGameField.EPOCH: sess.epoch,
                 DGameField.HIGHSCORE: sess.highscore,
                 DGameField.STEP_N: sess.step_n,
-                DGameField.SCORE: sess.score,
                 DGameField.REWARD_TOTAL: sess.reward_total,
                 DGameField.REASON: outcome,
                 DGameField.SEED: sess.seed,
             },
         }
 
-        if sess.score > sess.highscore:
-            sess.highscore = sess.score
         if sess.score > sess.highscore_nlh and not sess.lookahead_on:
             sess.highscore_nlh = sess.score
-            ret_value[DGameField.INFO][DGameField.HIGHSCORE_EVENT_NLH] = [
+            ep_payload[DGameField.INFO][DGameField.HIGHSCORE_EVENT_NLH] = [
                 sess.epoch,
                 sess.highscore_nlh,
                 elapsed_str,
             ]
         if sess.score > sess.highscore_lh and sess.lookahead_on:
             sess.highscore_lh = sess.score
-            ret_value[DGameField.INFO][DGameField.HIGHSCORE_EVENT_LH] = [
+            ep_payload[DGameField.INFO][DGameField.HIGHSCORE_EVENT_LH] = [
                 sess.epoch,
                 sess.highscore_lh,
                 elapsed_str,
             ]
-        return ret_value
+        return ep_payload, step_payload
 
     def reset(
         self, client_id: str, seed: Optional[int] = None
@@ -281,7 +279,6 @@ class SnakeMgr:
         Reset and return snapshot.
         """
         self.reset_session(client_id, seed=seed)
-        return self.snapshot(client_id)
 
 
 # Helper function

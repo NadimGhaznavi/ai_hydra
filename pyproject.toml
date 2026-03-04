@@ -44,7 +44,7 @@ dependencies = [
     
     # textual
     "textual>=8.0.0",
-    "textual-plot>=0.8.0",
+    "textual-plot>=0.10.1",
     
     # ZeroMQ for headless server communication
     "pyzmq>=25.0.0",

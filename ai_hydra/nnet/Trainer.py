@@ -12,30 +12,42 @@ import torch.nn as nn
 import torch.optim as optim
 
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
+from ai_hydra.constants.DNet import DNetDef
+from ai_hydra.constants.DHydra import DHydra
 
 
 class Trainer:
     def __init__(
         self,
         model,
-        replay_buffer: ReplayMemory,
+        replay: ReplayMemory,
         *,
         device: torch.device | None = None,
-        gamma: float = 0.9,
+        gamma: float = DNetDef.GAMMA,
     ):
+        torch.manual_seed(DHydra.RANDOM_SEED)
         self.device = device or torch.device("cpu")
         self.model = model.to(self.device)
-        self.replay_buffer = replay_buffer
+        self.replay = replay
         self.gamma = gamma
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         self.criterion = nn.MSELoss()
 
+        self._losses = []
+
+    def get_loss(self):
+        if not self._losses:
+            return None
+        avg_loss = sum(self._losses) / len(self._losses)
+        self._losses = []
+        return avg_loss
+
     def train_step(self, batch_size: int):
-        if len(self.replay_buffer) < batch_size:
+        if len(self.replay) < batch_size:
             return None
 
-        batch = self.replay_buffer.sample(batch_size)
+        batch = self.replay.sample(batch_size)
 
         states = torch.tensor(
             [t.state for t in batch], dtype=torch.float32, device=self.device
@@ -68,5 +80,7 @@ class Trainer:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        self._losses.append(loss.item())
 
         return float(loss.item())

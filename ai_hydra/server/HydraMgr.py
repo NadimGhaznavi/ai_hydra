@@ -31,6 +31,7 @@ from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.nnet.LookaheadPolicy import LookaheadPolicy
+from ai_hydra.utils.HydraLog import HydraLog
 
 
 class HydraMgr(HydraServer):
@@ -61,12 +62,14 @@ class HydraMgr(HydraServer):
                 DGameMethod.RESET_GAME: self.reset_game,
                 DGameMethod.START_RUN: self.start_run,
                 DGameMethod.STOP_RUN: self.stop_run,
+                DGameMethod.PUB_TYPE: self.set_per_step_topic,
             }
         )
         if self.debug:
             self._methods[DGameMethod.GAME_STEP] = self.game_step
 
         self._runs: dict[str, asyncio.Task[None]] = {}
+        self._client_id = None
 
     def _ensure_train_mgr(self):
         """
@@ -98,7 +101,7 @@ class HydraMgr(HydraServer):
         # Model + trainer
         device = torch.device("cpu")  # keep simple; GPU can be passed later
         model = LinearModel()
-        trainer = Trainer(model, replay, device=device, gamma=0.9)
+        trainer = Trainer(model=model, replay=replay, device=device, gamma=0.9)
 
         # Policy stack
         nnet_policy = LinearPolicy(model=model, device=device)
@@ -168,11 +171,12 @@ class HydraMgr(HydraServer):
         Runs as fast as possible.
         """
         try:
-            sess = self.snake.get_session(client_id)
+            snake = self.snake
+            mq = self.mq
             train_mgr = self._ensure_train_mgr()
 
-            # Pass the simulation starting time to the SnakeMgr
-            self.snake.start_time(datetime.now())
+            sess = snake.get_session(client_id)
+            snake.start_time(datetime.now())
 
             # Training vars: Should be moved out of this loop
             train_start = 1_000
@@ -184,13 +188,16 @@ class HydraMgr(HydraServer):
             # Lookahead setting
             lookahead_p = DLookaheadDef.PROBABILITY
             sess.lookahead_on = sess.rng.random() < lookahead_p
-            self.log.debug(sess.lookahead_on)
 
             while True:
-                # If episode is done, reset automatically (viewer stays continuous)
+                # Auto-reset when done
                 if sess.done:
-                    self.snake.reset_session(client_id, seed=None)
-                    sess = self.snake.get_session(client_id)
+                    snake.reset_session(client_id, seed=None)
+                    sess = snake.get_session(client_id)
+
+                # Decide if we will publish per_step *this tick*
+                # If NO BOARD, we don't even build the step payload.
+                want_step = (mq is not None) and sess.per_step_enabled
 
                 # Choose action (server-side)
                 state = sess.board.get_state()
@@ -200,68 +207,77 @@ class HydraMgr(HydraServer):
                     lookahead_on=sess.lookahead_on,
                 )
 
-                # Build the payload starting with board telemetry
-                payload = self.snake.step(client_id, action)
+                # Advance sim
+                ep_payload, step_payload = snake.step(
+                    client_id=client_id,
+                    action=action,
+                    want_step_payload=want_step,
+                )
 
-                # Game over...
-                if payload[DGameField.DONE]:
+                done = ep_payload[DGameField.DONE]
+
+                # Episode-end bookkeeping
+                if done:
                     sess.epoch += 1
                     count += 1
 
-                    # Print some stuff to the console (alive indicator)
                     if count % 50 == 0:
                         self.log.info(
                             f"Epoch: {count} - Highscore: {sess.highscore}"
                         )
 
+                    info = ep_payload.setdefault(DGameField.INFO, {})
+
                     # Epsilon
                     train_mgr.policy.played_game()
-                    payload.setdefault(DGameField.INFO, {})[
-                        DNetField.CUR_EPSILON
-                    ] = train_mgr.policy.cur_epsilon()
+                    info[DNetField.CUR_EPSILON] = (
+                        train_mgr.policy.cur_epsilon()
+                    )
 
-                    # Lookahead
+                    # Lookahead coinflip
                     if sess.epoch % 10 == 0:
                         sess.lookahead_on = sess.rng.random() < lookahead_p
-                    payload.setdefault(DGameField.INFO, {})[
-                        DNetField.LOOKAHEAD_ON
-                    ] = sess.lookahead_on
+                    info[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
 
-                # Build/store transition
+                    # Loss snapshot
+                    loss_snap = train_mgr.trainer.get_loss()
+                    if loss_snap is not None:
+                        info[DNetField.LOSS] = loss_snap
+
+                # Build/store transition (unchanged for now)
                 t = Transition(
-                    state=payload[DNetField.STATE],
+                    state=ep_payload[DNetField.STATE],
                     action=action,
-                    reward=payload[DGameField.REWARD],
-                    next_state=payload[DNetField.NEXT_STATE],
-                    done=payload[DGameField.DONE],
+                    reward=ep_payload[DGameField.REWARD],
+                    next_state=ep_payload[DNetField.NEXT_STATE],
+                    done=done,
                 )
                 train_mgr.replay.add(t)
 
-                # Train periodically once replay is "warm"
-                loss = None
+                # Train periodically once replay is warm
                 if len(train_mgr.replay) >= train_start and (
                     sess.step_n % train_every == 0
                 ):
                     for _ in range(grad_steps):
-                        loss = await asyncio.to_thread(
+                        await asyncio.to_thread(
                             train_mgr.trainer.train_step, batch_size
                         )
 
-                # TODO: Attach training stats to telemetry
-
-                if self.mq is not None:
-                    await self.mq.publish("snake.trainer.snapshot", payload)
+                # Publish
+                if mq is not None:
+                    await mq.publish_per_episode(ep_payload)
+                    # publish per_step only if enabled and payload exists
+                    if want_step and step_payload:
+                        await mq.publish_per_step(step_payload)
 
                 # Yield to event loop so MQ IO stays healthy
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0 if not want_step else 0.02)
 
-                sess = self.snake.get_session(client_id)
+                sess = snake.get_session(client_id)
 
         except asyncio.CancelledError:
-            # Normal stop
             return
         except Exception as e:
-            # Send one error update, then stop
             err = HydraMsg(
                 sender=self.identity,
                 target=client_id,
@@ -276,9 +292,21 @@ class HydraMgr(HydraServer):
                 await self.mq.send(err)
             self.log.critical(f"ERROR: {e}")
 
+    async def set_per_step_topic(self, msg: HydraMsg) -> None:
+        """
+        Set the PUB/SUB type to PER_STEP or PER_EPISODE.
+        """
+        enabled = msg.payload[DNetField.PER_STEP]
+        sess = self.snake.get_session(self._client_id)
+        sess.per_step_enabled = enabled
+        self.log.debug(f"Enable per step telemetry: {enabled}")
+
     async def start_run(self, msg: HydraMsg) -> None:
         self._ensure_train_mgr()
         client_id = msg.sender
+        self._client_id = client_id
+
+        self.log.debug(f"PER_STEP: {msg.payload[DNetField.PER_STEP]}")
 
         # already running?
         if client_id in self._runs and not self._runs[client_id].done():

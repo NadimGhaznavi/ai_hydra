@@ -47,7 +47,7 @@ class DLookaheadDef:
     Lookahead defaults.
     """
 
-    PROBABILITY: Final[float] = 0.3
+    PROBABILITY: Final[float] = 0.25
 
 
 class DNetDef:
@@ -59,7 +59,10 @@ class DNetDef:
     DANGER_FEATURES: Final[int] = 3
     DIRECTION_FEATURES: Final[int] = 4
     FOOD_FEATURES: Final[int] = 2
+    GAMMA: Final[float] = 0.9
+    LEARNING_RATE: Final[float] = 0.0005
     STATE_LENGTH_BITS: Final[int] = 7
+
     # Derived
     INPUT_SIZE: Final[int] = (
         DANGER_FEATURES
@@ -78,7 +81,9 @@ class DNetField:
     DONE: Final[str] = DGameField.DONE
     CUR_EPSILON: Final[str] = "cur_epsilon"
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
+    LOSS: Final[str] = "loss"
     NEXT_STATE: Final[str] = "next_state"
+    PER_STEP: Final[str] = "per_step"
     REWARD: Final[str] = DGameField.REWARD
     STATE: Final[str] = "state"
 

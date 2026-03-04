@@ -21,6 +21,7 @@ from zmq.sugar.frame import Frame
 from ai_hydra.constants.DHydra import (
     DHydra,
     DHydraRouterDef,
+    DHydraServer,
     DHydraServerDef,
     DMethod,
     DModule,
@@ -149,8 +150,14 @@ class HydraMQ:
             # Subscribe to prefixes. If none provided, subscribe to the whole
             # topic namespace
             if not self.cli_sub_prefixes:
+                # Default behaviour is for the new lane split:
+                # - Always receive per_episode
+                # - per_step is opt-in via enable_per_step_sub()
                 self.sub_socket.setsockopt(
-                    zmq.SUBSCRIBE, f"{self.topic_prefix}.".encode("utf-8")
+                    zmq.SUBSCRIBE,
+                    self._topic(DHydraServer.PER_EPISODE_TOPIC).encode(
+                        "utf-8"
+                    ),
                 )
             else:
                 for p in self.cli_sub_prefixes:
@@ -274,6 +281,15 @@ class HydraMQ:
 
         return True
 
+    def disable_per_step_sub(self) -> None:
+        self._sub_set(False, self._topic(DHydraServer.PER_STEP_TOPIC))
+
+    def enable_per_step_sub(self) -> None:
+        self._sub_set(True, self._topic(DHydraServer.PER_STEP_TOPIC))
+
+    def ensure_per_episode_sub(self) -> None:
+        self._sub_set(True, self._topic(DHydraServer.PER_EPISODE_TOPIC))
+
     def _ignore_zmq_teardown(
         self, action: Callable[[], None], what: str
     ) -> None:
@@ -283,7 +299,7 @@ class HydraMQ:
             # expected during shutdown races / already-closed sockets
             print(f"{DLabel.DEBUG}: ignoring {what} during shutdown: {e}")
 
-    async def publish(self, topic_suffix: str, payload: dict) -> None:
+    async def _publish(self, topic_suffix: str, payload: dict) -> None:
         """
         Publish telemetry as multipart [topic, json_bytes].
         Topic is f"{topic_prefix}.{topic_suffix}"
@@ -294,6 +310,12 @@ class HydraMQ:
         topic = f"{self.topic_prefix}.{topic_suffix}".encode("utf-8")
         data = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         await self.pub_socket.send_multipart([topic, data])
+
+    async def publish_per_step(self, payload: dict) -> None:
+        await self._publish(DHydraServer.PER_STEP_TOPIC, payload=payload)
+
+    async def publish_per_episode(self, payload: dict) -> None:
+        await self._publish(DHydraServer.PER_EPISODE_TOPIC, payload=payload)
 
     async def quit(self) -> None:
         """
@@ -502,3 +524,12 @@ class HydraMQ:
                 pass
 
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL)
+
+    def _sub_set(self, subscribe: bool, prefix: str) -> None:
+        if self.sub_socket is None:
+            raise RuntimeError("SUB not configured")
+        opt = zmq.SUBSCRIBE if subscribe else zmq.UNSUBSCRIBE
+        self.sub_socket.setsockopt(opt, prefix.encode("utf-8"))
+
+    def _topic(self, suffix: str) -> str:
+        return f"{self.topic_prefix}.{suffix}"

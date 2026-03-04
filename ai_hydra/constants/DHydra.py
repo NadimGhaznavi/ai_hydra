@@ -69,6 +69,15 @@ class DHydraRouterDef:
     HEARTBEAT_PORT: Final[int] = 5758
 
 
+class DHydraServer:
+    """
+    Hydra Server values.
+    """
+
+    PER_STEP_TOPIC: Final[str] = "per_step_topic"
+    PER_EPISODE_TOPIC: Final[str] = "per_episode_topic"
+
+
 class DHydraServerDef:
     """
     Hydra Server defaults.

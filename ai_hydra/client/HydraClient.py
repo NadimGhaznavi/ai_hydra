@@ -21,8 +21,15 @@ from ai_hydra.utils.HydraMQ import HydraMQ
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.client.TabbedScores import TabbedScores
+from ai_hydra.client.TabbedPlots import TabbedPlots
 
-from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
+from ai_hydra.constants.DHydra import (
+    DHydra,
+    DHydraRouterDef,
+    DMethod,
+    DModule,
+    DHydraServer,
+)
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
 from ai_hydra.constants.DNet import (
@@ -132,6 +139,9 @@ class HydraClientTui(App):
             Button(
                 label=DLabel.RESET, id=DGameMethod.RESET_GAME, compact=True
             ),
+            Label(" "),
+            Button(label=DLabel.BOARD, id=DField.SHOW_BOARD, compact=True),
+            Button(label=DLabel.NO_BOARD, id=DField.NO_BOARD, compact=True),
             id=DField.BUTTONS,
         )
 
@@ -158,6 +168,9 @@ class HydraClientTui(App):
         # Highscores
         yield TabbedScores(id=DField.TABBED_SCORES)
 
+        # Plots
+        yield TabbedPlots(id=DField.TABBED_PLOTS)
+
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
 
@@ -179,7 +192,6 @@ class HydraClientTui(App):
 
             try:
                 reply = await mq.recv()
-
             except asyncio.TimeoutError:
                 pass
 
@@ -188,12 +200,12 @@ class HydraClientTui(App):
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
                 method=DGameMethod.START_RUN,
+                payload={DNetField.PER_STEP: True},
             )
             await mq.send(msg)
 
             try:
                 reply = await mq.recv()
-
             except asyncio.TimeoutError:
                 pass
 
@@ -207,9 +219,44 @@ class HydraClientTui(App):
 
             try:
                 reply = await mq.recv()
-
             except asyncio.TimeoutError:
                 pass
+
+        elif button_id == DField.NO_BOARD:
+            self.mq.disable_per_step_sub()
+            msg = HydraMsg(
+                sender=DModule.HYDRA_CLIENT,
+                target=DModule.HYDRA_MGR,
+                method=DGameMethod.PUB_TYPE,
+                payload={DNetField.PER_STEP: False},
+            )
+            await mq.send(msg)
+
+            try:
+                reply = await mq.recv()
+            except asyncio.TimeoutError:
+                pass
+
+            self.remove_class(DField.SHOW_BOARD)
+            self.add_class(DField.NO_BOARD)
+
+        elif button_id == DField.SHOW_BOARD:
+            self.mq.enable_per_step_sub()
+            msg = HydraMsg(
+                sender=DModule.HYDRA_CLIENT,
+                target=DModule.HYDRA_MGR,
+                method=DGameMethod.PUB_TYPE,
+                payload={DNetField.PER_STEP: True},
+            )
+            await mq.send(msg)
+
+            try:
+                reply = await mq.recv()
+            except asyncio.TimeoutError:
+                pass
+
+            self.remove_class(DField.NO_BOARD)
+            self.add_class(DField.SHOW_BOARD)
 
     def on_mount(self) -> None:
         self.mq = HydraMQ(
@@ -218,12 +265,17 @@ class HydraClientTui(App):
             identity=self._identity,
             # --- Telemetry SUB ---
             srv_host=self._address,
-            cli_sub_prefixes=[self._telemetry_prefix],
-            cli_sub_methods={
-                self._telemetry_prefix: self._on_telemetry,
-            },
+            cli_sub_methods={"*": self._on_telemetry},
+            # --- Default PUB_TYPE is "BOARD" (show the board moves)
         )
         self.mq.start()
+
+        # Always receive per-episode updates
+        self.mq.ensure_per_episode_sub()
+
+        # Default UI state is to display the board telemetry
+        self.mq.enable_per_step_sub()
+
         self.check_connection_bg()
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
@@ -233,6 +285,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RUNTIME_VALUES}").border_subtitle = (
             DLabel.RUNTIME_VALS
         )
+        self.add_class(DField.SHOW_BOARD)
 
     async def on_shutdown_request(self) -> None:
         if self.mq is not None:
@@ -240,26 +293,42 @@ class HydraClientTui(App):
             self.mq = None
 
     def on_telemetry_received(self, msg: TelemetryReceived) -> None:
+        topic = msg.topic
         payload = msg.payload
+        score = "N/A"
 
-        snap = payload.get(DGameField.SNAPSHOT, {})
-        board = snap.get(DGameField.BOARD)
+        # print(f"TOPIC: {topic} - PAYLOAD: {payload}")
 
-        if board is not None:
-            self.game_board.apply_snapshot(snap)
+        # per_step: board telemetry + score
+        if topic.endswith(f".{DHydraServer.PER_STEP_TOPIC}"):
+            score = payload.get(DGameField.SCORE)
+            board = payload.get(DGameField.BOARD)
+            self.game_board.apply_board_dict(board)
+            self.query_one(
+                f"#{DField.BOARD_BOX}", Vertical
+            ).border_subtitle = f"{DLabel.SCORE}: {score:<2}"
 
+            # update score display if you want here
+            return
+
+        # Ignore anything that isn't per episode
+        if not topic.endswith(f".{DHydraServer.PER_EPISODE_TOPIC}"):
+            return
+
+        # per_episode: training + episode stats
         info = payload.get(DGameField.INFO, {})
 
         # Current game score and highscore
-        score = info.get(DGameField.SCORE)
         highscore = info.get(DGameField.HIGHSCORE)
         epoch = info.get(DGameField.EPOCH)
-        steps = info.get(DGameField.STEP_N)
-        board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
-        board_box.border_title = f"{DLabel.GAME}: {epoch}"
-        board_box.border_subtitle = (
-            f"{DLabel.HIGHSCORE}: {highscore}  {DLabel.SCORE}: {score:<2}"
+
+        self.query_one(f"#{DField.BOARD_BOX}", Vertical).border_title = (
+            f"{DLabel.GAME}: {epoch}"
         )
+
+        self.query_one(
+            f"#{DField.TABBED_SCORES}", TabbedScores
+        ).border_subtitle = f"{DLabel.HIGHSCORE}: {highscore}"
 
         # Highscore event
         if DGameField.HIGHSCORE_EVENT_NLH in info:
@@ -287,9 +356,9 @@ class HydraClientTui(App):
 
         # Current epsilon value
         epsilon = info.get(DNetField.CUR_EPSILON)
-        if epsilon:
+        if epsilon is not None:
             self.query_one(f"#{DField.CUR_EPSILON}", Label).update(
-                f"{DLabel.CUR_EPSILON:>15s}: {round(epsilon, 5)}"
+                f"{DLabel.CUR_EPSILON:>15s}: {round(epsilon, 4)}"
             )
 
         # Lookahead status
@@ -301,6 +370,13 @@ class HydraClientTui(App):
             self._cur_lookahead = cur_lookahead
             self.query_one(f"#{DField.LOOKAHEAD_ENABLED}", Label).update(
                 f"{DLabel.LOOKAHEAD_ENABLED:>18}: {cur_lookahead}"
+            )
+
+        # Loss
+        if DNetField.LOSS in info:
+            self.query_one(f"#{DField.TABBED_PLOTS}", TabbedPlots).add_loss(
+                epoch,
+                info[DNetField.LOSS],
             )
 
     def _on_telemetry(self, topic: str, payload: dict) -> None:

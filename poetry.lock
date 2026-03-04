@@ -3927,4 +3927,4 @@ viz = ["matplotlib", "pillow", "tensorboard"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "23b42a20906579b5a79946ff1f28f6c91904caca8a51b35725a75f1d95b9c8d8"
+content-hash = "a4baf10633f979e380328d7e3562ccba56c9be79826de2f814d2546ecce2031e"

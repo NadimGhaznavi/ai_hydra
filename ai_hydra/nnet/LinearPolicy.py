@@ -11,13 +11,15 @@ import torch
 import torch.nn as nn
 from typing import Sequence
 
-from ai_hydra.constants.DNet import DNetDef, DLinear
 from ai_hydra.nnet.HydraPolicy import HydraPolicy
+from ai_hydra.constants.DNet import DNetDef, DLinear
+from ai_hydra.constants.DHydra import DHydra
 
 
 class LinearModel(nn.Module):
     def __init__(self):
         super().__init__()
+        torch.manual_seed(DHydra.RANDOM_SEED)
 
         self.net = nn.Sequential(
             nn.Linear(DNetDef.INPUT_SIZE, DLinear.HIDDEN_SIZE),
