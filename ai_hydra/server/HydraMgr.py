@@ -24,13 +24,13 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DHydraServerDef,
 )
-from ai_hydra.constants.DNet import DNetField, DLookaheadDef
+from ai_hydra.constants.DNNet import DNetField, DLookaheadDef
 
 from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
-from ai_hydra.nnet.LookaheadPolicy import LookaheadPolicy
+from ai_hydra.nnet.Policy.LookaheadPolicy import LookaheadPolicy
 from ai_hydra.utils.HydraLog import HydraLog
 
 
@@ -87,9 +87,10 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.TrainMgr import TrainMgr
         from ai_hydra.nnet.ReplayMemory import ReplayMemory
         from ai_hydra.nnet.Trainer import Trainer
-        from ai_hydra.nnet.LinearPolicy import LinearModel, LinearPolicy
+        from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
+        from ai_hydra.nnet.models.LinearModel import LinearModel
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
-        from ai_hydra.nnet.EpsilonPolicy import EpsilonPolicy
+        from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
 
         # Hydra-style RNG streams (minted from the existing SnakeMgr)
         _, policy_rng = self.snake.new_rng()
@@ -291,6 +292,7 @@ class HydraMgr(HydraServer):
             if self.mq is not None:
                 await self.mq.send(err)
             self.log.critical(f"ERROR: {e}")
+            self.log.critical(f"TRACEBACK: {traceback.format_exc}")
 
     async def set_per_step_topic(self, msg: HydraMsg) -> None:
         """

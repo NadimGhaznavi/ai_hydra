@@ -12,7 +12,7 @@ from textual.widgets import TabbedContent, Label, Log
 from textual.app import ComposeResult, Widget
 
 from ai_hydra.constants.DHydraTui import DField, DLabel
-from ai_hydra.constants.DNet import DLookahead
+from ai_hydra.constants.DNNet import DLookahead
 
 
 class TabbedScores(Widget):

@@ -2,8 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+# [Unreleased]
+
+## Changed
+- Refactored, moved and renamed modules and updated dependent modules:
+  - Renamed `constants/DNet.py` to `constants/DNNet.py`
+  - Refactored `nnet/LinearPolicy` into `nnet/LinearPolicy` and `nnet/models/LinearModel`
+  - Moved `EpsilonPolicy.py`, `HydraPolicy.py`, `LinearPolicy.py`, and `LookaheadPolicy.py` into `nnet/Policy`
 
 ---
 
@@ -11,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Complete rewrite based on the [Hydra Router](https://pypi.org/project/hydra-router/) codebase. The code is fully functional now.
 
-## Added
+## Added 
 - Updated the documentation for PyPI and Read-The-Docs.
 - The user can now select *Turbo* mode at the beginning of the session, before starting the simulation.
 

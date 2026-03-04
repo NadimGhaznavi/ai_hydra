@@ -16,10 +16,10 @@ from datetime import datetime
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameField
-from ai_hydra.constants.DNet import DNetField
+from ai_hydra.constants.DNNet import DNetField
 
 from ai_hydra.game.GameLogic import GameLogic
-from ai_hydra.nnet.HydraPolicy import HydraPolicy
+from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.Transition import Transition
 
 

@@ -9,7 +9,7 @@
 
 from typing import Sequence
 
-from ai_hydra.nnet.HydraPolicy import HydraPolicy
+from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
 
 

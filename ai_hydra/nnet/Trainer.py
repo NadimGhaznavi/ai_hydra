@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
-from ai_hydra.constants.DNet import DNetDef
+from ai_hydra.constants.DNNet import DNetDef
 from ai_hydra.constants.DHydra import DHydra
 
 

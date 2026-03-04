@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameDef, DGameLabel, DGameField
-from ai_hydra.constants.DNet import DNetDef
+from ai_hydra.constants.DNNet import DNetDef
 
 
 class MoveAction(Enum):

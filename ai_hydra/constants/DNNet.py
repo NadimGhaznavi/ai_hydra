@@ -1,4 +1,4 @@
-# ai_hydra/constants/DNet.py
+# ai_hydra/constants/DNNet.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi

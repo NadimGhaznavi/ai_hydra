@@ -12,7 +12,7 @@ from __future__ import annotations
 import random
 from typing import Optional
 
-from ai_hydra.constants.DNet import DEpsilonDef, DEpsilonField
+from ai_hydra.constants.DNNet import DEpsilonDef, DEpsilonField
 
 
 class EpsilonAlgo:

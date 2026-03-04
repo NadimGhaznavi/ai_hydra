@@ -32,7 +32,7 @@ from ai_hydra.constants.DHydra import (
 )
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
-from ai_hydra.constants.DNet import (
+from ai_hydra.constants.DNNet import (
     DNetField,
     DEpsilonDef,
     DLookahead,

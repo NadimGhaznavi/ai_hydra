@@ -13,7 +13,7 @@ from textual.app import ComposeResult, Widget
 from textual_plot import PlotWidget, HiResMode, LegendLocation
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DPlotDef, DColor
-from ai_hydra.constants.DNet import DLookahead
+from ai_hydra.constants.DNNet import DLookahead
 
 
 class TabbedPlots(Widget):
