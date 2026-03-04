@@ -11,9 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Complete rewrite based on the [Hydra Router](https://pypi.org/project/hydra-router/) codebase. The code is fully functional now.
 
+## Added
+- Updated the documentation for PyPI and Read-The-Docs.
+- The user can now select *Turbo* mode at the beginning of the session, before starting the simulation.
+
+## Changed
+- Moved the location of the highscore in the TUI to the highscore widget.
+
 ## Fixed
 - Added pytorch `torch.manual_seed(DHydra.RANDOM_SEED)` throughout the code to make the *HydraMgr* fully deterministic.
-
+- Score is displaying again.
+- Made the simulation fully deterministic **if** the user runs it in *Turbo* mode.
 
 ---
 
