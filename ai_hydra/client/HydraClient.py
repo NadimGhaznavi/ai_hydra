@@ -90,6 +90,7 @@ class HydraClientTui(App):
 
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
         self._cur_lookahead = None
+        self._sim_settings = {DNetField.PER_STEP: True}
 
     @work(exclusive=True)
     async def check_connection_bg(self) -> None:
@@ -196,11 +197,12 @@ class HydraClientTui(App):
                 pass
 
         elif button_id == DGameMethod.START_RUN:
+            per_step_enabled = self._sim_settings[DNetField.PER_STEP]
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
                 method=DGameMethod.START_RUN,
-                payload={DNetField.PER_STEP: True},
+                payload={DNetField.PER_STEP: per_step_enabled},
             )
             await mq.send(msg)
 
@@ -224,6 +226,9 @@ class HydraClientTui(App):
 
         elif button_id == DField.NO_BOARD:
             self.mq.disable_per_step_sub()
+            self._sim_settings[DNetField.PER_STEP] = False
+            self.remove_class(DField.SHOW_BOARD)
+            self.add_class(DField.NO_BOARD)
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
@@ -237,11 +242,11 @@ class HydraClientTui(App):
             except asyncio.TimeoutError:
                 pass
 
-            self.remove_class(DField.SHOW_BOARD)
-            self.add_class(DField.NO_BOARD)
-
         elif button_id == DField.SHOW_BOARD:
             self.mq.enable_per_step_sub()
+            self._sim_settings[DNetField.PER_STEP] = True
+            self.remove_class(DField.NO_BOARD)
+            self.add_class(DField.SHOW_BOARD)
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
@@ -254,9 +259,6 @@ class HydraClientTui(App):
                 reply = await mq.recv()
             except asyncio.TimeoutError:
                 pass
-
-            self.remove_class(DField.NO_BOARD)
-            self.add_class(DField.SHOW_BOARD)
 
     def on_mount(self) -> None:
         self.mq = HydraMQ(

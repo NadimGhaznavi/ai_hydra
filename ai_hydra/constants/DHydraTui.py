@@ -69,7 +69,7 @@ class DLabel:
     Human readable text.
     """
 
-    BOARD: Final[str] = "Board"
+    BOARD: Final[str] = "Normal"
     BOTH: Final[str] = "Both"
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
@@ -93,7 +93,7 @@ class DLabel:
     LOOKAHEAD_P_VAL: Final[str] = "Look Ahead P-Value"
     LOSS: Final[str] = "Loss"
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
-    NO_BOARD: Final[str] = "No Board"
+    NO_BOARD: Final[str] = "Turbo"
     PING_ROUTER: Final[str] = "Ping Router"
     PING_SERVER: Final[str] = "Ping Server"
     QUIT: Final[str] = "Quit"
