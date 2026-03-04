@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.10.0] - 2026-03-04 10:38
 
 Complete rewrite based on the [Hydra Router](https://pypi.org/project/hydra-router/) codebase. The code is fully functional now.
 
