@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
-from ai_hydra.constants.DNNet import DNetDef
+from ai_hydra.constants.DNNet import DNetDef, DLinear
 from ai_hydra.constants.DHydra import DHydra
 
 
@@ -31,7 +31,9 @@ class Trainer:
         self.replay = replay
         self.gamma = gamma
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        self.optimizer = optim.Adam(
+            self.model.parameters(), lr=DLinear.LEARNING_RATE
+        )
         self.criterion = nn.MSELoss()
 
         self._losses = []

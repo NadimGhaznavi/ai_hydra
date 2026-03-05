@@ -8,17 +8,17 @@
 #    License: GPL 3.0
 
 import asyncio
-import sys
 
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label, Log, Static
+from textual.widgets import Button, Label
 from textual.message import Message
 
 from ai_hydra.utils.HydraMQ import HydraMQ
 from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.client.TabbedScores import TabbedScores
 from ai_hydra.client.TabbedPlots import TabbedPlots
@@ -38,6 +38,7 @@ from ai_hydra.constants.DNNet import (
     DLookahead,
     DLookaheadDef,
 )
+from ai_hydra.constants.DSimCfg import Phase
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
@@ -90,7 +91,7 @@ class HydraClientTui(App):
 
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
         self._cur_lookahead = None
-        self._sim_settings = {DNetField.PER_STEP: True}
+        self.cfg = SimCfg.init_client()
 
     @work(exclusive=True)
     async def check_connection_bg(self) -> None:
@@ -197,12 +198,12 @@ class HydraClientTui(App):
                 pass
 
         elif button_id == DGameMethod.START_RUN:
-            per_step_enabled = self._sim_settings[DNetField.PER_STEP]
+            # Make sure we have the latest TUI choice
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
                 method=DGameMethod.START_RUN,
-                payload={DNetField.PER_STEP: per_step_enabled},
+                payload=self.cfg.to_start_payload(),
             )
             await mq.send(msg)
 
@@ -225,15 +226,13 @@ class HydraClientTui(App):
                 pass
 
         elif button_id == DField.NO_BOARD:
-            self.mq.disable_per_step_sub()
-            self._sim_settings[DNetField.PER_STEP] = False
-            self.remove_class(DField.SHOW_BOARD)
-            self.add_class(DField.NO_BOARD)
+            # No board == Turbo mode
+            self._set_per_step(False)
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
                 method=DGameMethod.PUB_TYPE,
-                payload={DNetField.PER_STEP: False},
+                payload=self.cfg.to_runtime_payload(),
             )
             await mq.send(msg)
 
@@ -243,15 +242,13 @@ class HydraClientTui(App):
                 pass
 
         elif button_id == DField.SHOW_BOARD:
-            self.mq.enable_per_step_sub()
-            self._sim_settings[DNetField.PER_STEP] = True
-            self.remove_class(DField.NO_BOARD)
-            self.add_class(DField.SHOW_BOARD)
+            # Show board == Normal mode
+            self._set_per_step(True)
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
                 method=DGameMethod.PUB_TYPE,
-                payload={DNetField.PER_STEP: True},
+                payload=self.cfg.to_runtime_payload(),
             )
             await mq.send(msg)
 
@@ -275,9 +272,6 @@ class HydraClientTui(App):
         # Always receive per-episode updates
         self.mq.ensure_per_episode_sub()
 
-        # Default UI state is to display the board telemetry
-        self.mq.enable_per_step_sub()
-
         self.check_connection_bg()
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
@@ -287,7 +281,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RUNTIME_VALUES}").border_subtitle = (
             DLabel.RUNTIME_VALS
         )
-        self.add_class(DField.SHOW_BOARD)
+        self._set_per_step(self.cfg.get(DNetField.PER_STEP))
 
     async def on_shutdown_request(self) -> None:
         if self.mq is not None:
@@ -389,8 +383,29 @@ class HydraClientTui(App):
         if self.mq is not None:
             await self.mq.quit()
             self.mq = None
-
         self.exit()
+
+    def _set_move_delay(self, delay: float) -> None:
+        self.cfg.apply(
+            payload={DNetField.MOVE_DELAY: delay}, phase=Phase.RUNTIME
+        )
+
+    def _set_per_step(self, enabled: bool) -> None:
+        mq = self.mq
+        if mq is None:
+            raise TypeError("self.mq is None!!!")
+        self.cfg.apply(
+            payload={DNetField.PER_STEP: enabled}, phase=Phase.RUNTIME
+        )
+
+        if enabled:
+            mq.enable_per_step_sub()
+            self.remove_class(DField.NO_BOARD)
+            self.add_class(DField.SHOW_BOARD)
+        else:
+            mq.disable_per_step_sub()
+            self.remove_class(DField.SHOW_BOARD)
+            self.add_class(DField.NO_BOARD)
 
 
 def main() -> None:

@@ -18,7 +18,7 @@ class DEpsilonDef:
     """
 
     INITIAL: Final[float] = 0.99
-    MINIMUM: Final[float] = 0.1
+    MINIMUM: Final[float] = 0.0
     DECAY_RATE: Final[float] = 0.98
 
 
@@ -30,6 +30,17 @@ class DEpsilonField:
     INITIAL: Final[str] = "initial"
     MINIMUM: Final[str] = "minimum"
     DECAY_RATE: Final[str] = "decay"
+
+
+class DLinear:
+    """
+    Constants for the Linear neural network
+    """
+
+    HIDDEN_SIZE: Final[int] = 192
+    DROPOUT_P: Final[float] = 0.1
+    LEARNING_RATE: Final[float] = 0.00005
+    OUTPUT_SIZE: Final[int] = 3  # left / straight / right
 
 
 class DLookahead:
@@ -60,7 +71,6 @@ class DNetDef:
     DIRECTION_FEATURES: Final[int] = 4
     FOOD_FEATURES: Final[int] = 2
     GAMMA: Final[float] = 0.9
-    LEARNING_RATE: Final[float] = 0.0005
     STATE_LENGTH_BITS: Final[int] = 7
 
     # Derived
@@ -82,17 +92,8 @@ class DNetField:
     CUR_EPSILON: Final[str] = "cur_epsilon"
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
     LOSS: Final[str] = "loss"
+    MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"
     PER_STEP: Final[str] = "per_step"
     REWARD: Final[str] = DGameField.REWARD
     STATE: Final[str] = "state"
-
-
-class DLinear:
-    """
-    Constants for the Linear neural network
-    """
-
-    HIDDEN_SIZE: Final[int] = 192
-    DROPOUT_P: Final[float] = 0.0
-    OUTPUT_SIZE: Final[int] = 3  # left / straight / right

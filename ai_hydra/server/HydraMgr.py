@@ -7,7 +7,6 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-# ai_hydra/server/HydraMgr.py
 
 from __future__ import annotations
 from typing import Any
@@ -25,13 +24,14 @@ from ai_hydra.constants.DHydra import (
     DHydraServerDef,
 )
 from ai_hydra.constants.DNNet import DNetField, DLookaheadDef
+from ai_hydra.constants.DSimCfg import Phase
 
 from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.nnet.Policy.LookaheadPolicy import LookaheadPolicy
-from ai_hydra.utils.HydraLog import HydraLog
+from ai_hydra.utils.SimCfg import SimCfg, _UNSET
 
 
 class HydraMgr(HydraServer):
@@ -55,7 +55,8 @@ class HydraMgr(HydraServer):
         )
 
         self.debug = bool(debug)
-        self.snake = SnakeMgr()
+        self.cfg = SimCfg.init_server()
+        self.snake: SnakeMgr | None = None
         self._train_mgr = None
         self._methods.update(
             {
@@ -172,7 +173,7 @@ class HydraMgr(HydraServer):
         Runs as fast as possible.
         """
         try:
-            snake = self.snake
+            snake = self.snake = SnakeMgr(cfg=self.cfg)
             mq = self.mq
             train_mgr = self._ensure_train_mgr()
 
@@ -198,7 +199,9 @@ class HydraMgr(HydraServer):
 
                 # Decide if we will publish per_step *this tick*
                 # If NO BOARD, we don't even build the step payload.
-                want_step = (mq is not None) and sess.per_step_enabled
+                want_step = (mq is not None) and self.cfg.get(
+                    DNetField.PER_STEP
+                )
 
                 # Choose action (server-side)
                 state = sess.board.get_state()
@@ -212,7 +215,6 @@ class HydraMgr(HydraServer):
                 ep_payload, step_payload = snake.step(
                     client_id=client_id,
                     action=action,
-                    want_step_payload=want_step,
                 )
 
                 done = ep_payload[DGameField.DONE]
@@ -272,9 +274,12 @@ class HydraMgr(HydraServer):
                         await mq.publish_per_step(step_payload)
 
                 # Yield to event loop so MQ IO stays healthy
-                await asyncio.sleep(0 if not want_step else 0.02)
-
-                sess = snake.get_session(client_id)
+                delay = (
+                    0.0
+                    if not want_step
+                    else self.cfg.get(DNetField.MOVE_DELAY)
+                )
+                await asyncio.sleep(delay)
 
         except asyncio.CancelledError:
             return
@@ -292,23 +297,31 @@ class HydraMgr(HydraServer):
             if self.mq is not None:
                 await self.mq.send(err)
             self.log.critical(f"ERROR: {e}")
-            self.log.critical(f"TRACEBACK: {traceback.format_exc}")
+            self.log.critical(f"TRACEBACK: {traceback.format_exc()}")
+
+    async def set_move_delay(self, msg: HydraMsg) -> None:
+        delay = msg.payload[DNetField.MOVE_DELAY]
+        self.cfg.apply(
+            payload={DNetField.MOVE_DELAY: delay}, phase=Phase.RUNTIME
+        )
+        self.log.debug(f"Move delay is: {delay}")
 
     async def set_per_step_topic(self, msg: HydraMsg) -> None:
         """
         Set the PUB/SUB type to PER_STEP or PER_EPISODE.
         """
         enabled = msg.payload[DNetField.PER_STEP]
-        sess = self.snake.get_session(self._client_id)
-        sess.per_step_enabled = enabled
+        self.cfg.apply(
+            payload={DNetField.PER_STEP: enabled}, phase=Phase.RUNTIME
+        )
         self.log.debug(f"Enable per step telemetry: {enabled}")
 
     async def start_run(self, msg: HydraMsg) -> None:
-        self._ensure_train_mgr()
         client_id = msg.sender
         self._client_id = client_id
 
-        self.log.debug(f"PER_STEP: {msg.payload[DNetField.PER_STEP]}")
+        await self.set_per_step_topic(msg)
+        await self.set_move_delay(msg)
 
         # already running?
         if client_id in self._runs and not self._runs[client_id].done():
@@ -317,9 +330,6 @@ class HydraMgr(HydraServer):
                 DGameField.INFO: {"status": "already_running"},
             }
         else:
-            # ensure session exists (or reset if you prefer)
-            self.snake.get_session(client_id)
-
             task = asyncio.create_task(self._run_loop(client_id))
             self._runs[client_id] = task
             payload = {

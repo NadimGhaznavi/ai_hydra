@@ -20,7 +20,7 @@ from ai_hydra.constants.DNNet import DNetField
 
 from ai_hydra.game.GameLogic import GameLogic
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
-from ai_hydra.nnet.Transition import Transition
+from ai_hydra.utils.SimCfg import SimCfg
 
 
 @dataclass
@@ -40,7 +40,6 @@ class SnakeSession:
     highscore_lh: int = 0  # Lookahead highscore
     highscore_nlh: int = 0  # No lookahead highscore
     lookahead_on: bool = False
-    per_step_enabled: bool = True
     reward_total: float = 0.0
     score: int = 0
     step_n: int = 0
@@ -60,12 +59,20 @@ class SnakeMgr:
       - run neural nets (future)
     """
 
-    def __init__(self, master_seed: int = DHydra.RANDOM_SEED) -> None:
+    def __init__(
+        self,
+        cfg: SimCfg,
+        master_seed: int = DHydra.RANDOM_SEED,
+    ) -> None:
+        if cfg is None:
+            raise TypeError("SnakeMgr requires cfg (SimCfg)")
+        self.cfg = cfg
         self.master_seed = int(master_seed)
+
         self.seed_rng = random.Random(self.master_seed)
         self.sessions: dict[str, SnakeSession] = {}
         self.policy: Optional[HydraPolicy] = None
-        self._start_time = None
+        self._start_time = datetime.now()
 
     # -------------------------
     # RNG API (Pattern B)
@@ -127,7 +134,6 @@ class SnakeMgr:
         prev_highscore_lh = getattr(prev, "highscore_lh", 0)
         prev_epoch = getattr(prev, "epoch", 0)
         prev_lookahead_on = getattr(prev, "lookahead_on", False)
-        prev_per_step_enabled = getattr(prev, "per_step_enabled", True)
 
         session_seed, rng = self.new_rng(seed)
         episode_id = rng.getrandbits(32)
@@ -152,7 +158,6 @@ class SnakeMgr:
             highscore_lh=prev_highscore_lh,
             epoch=prev_epoch,
             lookahead_on=prev_lookahead_on,
-            per_step_enabled=prev_per_step_enabled,
         )
         self.sessions[client_id] = sess
         return sess
@@ -166,6 +171,12 @@ class SnakeMgr:
             sess = self.reset_session(client_id, seed=None)
         return sess
 
+    def reset(self, client_id: str, seed: Optional[int] = None) -> None:
+        """
+        Reset and return snapshot.
+        """
+        self.reset_session(client_id, seed=seed)
+
     def start_time(self, start_time=None):
         if start_time is not None:
             self._start_time = start_time
@@ -175,7 +186,6 @@ class SnakeMgr:
         self,
         client_id: str,
         action: int,
-        want_step_payload: bool,
     ) -> tuple[dict[str, Any], dict[str, Any] | None]:
         """
         Step the client's session forward by one action.
@@ -221,7 +231,7 @@ class SnakeMgr:
             sess.score += 1
 
         elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
-        elapsed_str = minutes_to_uptime(elapsed_secs)
+        elapsed_str = minutes_to_uptime(int(elapsed_secs))
 
         sess.done = done
         sess.reward_total += reward
@@ -233,7 +243,7 @@ class SnakeMgr:
             sess.highscore = sess.score
 
         step_payload = None
-        if want_step_payload:
+        if self.cfg.get(DNetField.PER_STEP):
             step_payload = {
                 DGameField.BOARD: sess.board.to_dict(),
                 DGameField.SCORE: sess.score,
@@ -271,14 +281,6 @@ class SnakeMgr:
                 elapsed_str,
             ]
         return ep_payload, step_payload
-
-    def reset(
-        self, client_id: str, seed: Optional[int] = None
-    ) -> dict[str, Any]:
-        """
-        Reset and return snapshot.
-        """
-        self.reset_session(client_id, seed=seed)
 
 
 # Helper function

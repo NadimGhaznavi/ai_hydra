@@ -24,6 +24,7 @@ class LinearModel(nn.Module):
             nn.ReLU(),
             nn.Linear(DLinear.HIDDEN_SIZE, DLinear.HIDDEN_SIZE),
             nn.ReLU(),
+            nn.Dropout(p=DLinear.DROPOUT_P),
             nn.Linear(DLinear.HIDDEN_SIZE, DLinear.OUTPUT_SIZE),
         )
 
