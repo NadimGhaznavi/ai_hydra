@@ -6,13 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-# [Unreleased]
+## [0.11.0] - 2026-03-05
+
+## Added
+- Added a configuration class. The client sets the configuration, passed it to the server where its used. The client can update runtime settings during a run. 
 
 ## Changed
 - Refactored, moved and renamed modules and updated dependent modules:
   - Renamed `constants/DNet.py` to `constants/DNNet.py`
   - Refactored `nnet/LinearPolicy` into `nnet/LinearPolicy` and `nnet/models/LinearModel`
   - Moved `EpsilonPolicy.py`, `HydraPolicy.py`, `LinearPolicy.py`, and `LookaheadPolicy.py` into `nnet/Policy`
+
+## Fixed
+- Bug in configuration management where Turbo (deterministic and FAST mode) couldn't properly be set before the simulation started.
 
 ---
 
