@@ -69,6 +69,10 @@ TabbedScores {
     background: black;
 }
 
+.input_field {
+    height: 1;
+}
+
 #loss_plot {
     height: 18;
     width: 125;

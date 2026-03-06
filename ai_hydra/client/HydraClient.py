@@ -160,6 +160,7 @@ class HydraClientTui(App):
                     value=str(DEpsilonDef.INITIAL),
                     id=DField.INITIAL_EPSILON_INPUT,
                 ),
+                classes=DField.INPUT_FIELD,
             ),
             Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
             Label(f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"),
