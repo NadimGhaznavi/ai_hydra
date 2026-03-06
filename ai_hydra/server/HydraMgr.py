@@ -107,7 +107,12 @@ class HydraMgr(HydraServer):
 
         # Policy stack
         nnet_policy = LinearPolicy(model=model, device=device)
-        epsilon_schedule = EpsilonAlgo(rng=policy_rng)
+        epsilon_schedule = EpsilonAlgo(
+            rng=policy_rng, log_level=self.log_level
+        )
+        epsilon_schedule.initial_epsilon(
+            self.cfg.get(DNetField.INITIAL_EPSILON)
+        )
         behaviour_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_schedule
         )
@@ -325,6 +330,16 @@ class HydraMgr(HydraServer):
 
         await self.set_per_step_topic(msg)
         await self.set_move_delay(msg)
+
+        # Load settings into SimCfg
+        self.cfg.apply(
+            payload={
+                DNetField.INITIAL_EPSILON: msg.payload[
+                    DNetField.INITIAL_EPSILON
+                ]
+            },
+            phase=Phase.PRE_START,
+        )
 
         # already running?
         if client_id in self._runs and not self._runs[client_id].done():

@@ -6,10 +6,13 @@
 #    GitHub: https://github.com/NadimGhaznavi/ai_hydra
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
-from textual import on, work
+
+from statistics import mean, median
+
+from textual import on
 from textual.app import ComposeResult, Widget
 from textual.widgets import TabbedContent
-from textual_plot import PlotWidget, HiResMode
+from textual_plot import PlotWidget, HiResMode, LegendLocation
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DPlotDef, DColor
 
@@ -25,7 +28,7 @@ class TabbedPlots(Widget):
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
-            DLabel.LOSS, DLabel.SCORES, DLabel.SCORES_LH, DLabel.SCORES_NLH
+            DLabel.LOSS, DLabel.SCORES_ALL, DLabel.SCORES_LH, DLabel.SCORES_NLH
         ):
             yield PlotWidget(id=DField.LOSS_PLOT)
             yield PlotWidget(id=DField.SCORES_PLOT)
@@ -90,6 +93,17 @@ class TabbedPlots(Widget):
                 hires_mode=HiResMode.BRAILLE,
             )
             scores_plot.set_ylimits()
+            scores_plot.set_xlabel(DLabel.SCORES)
+            scores_plot.set_ylabel(DLabel.EPISODES)
+            scores_plot.show_legend(location=LegendLocation.TOPRIGHT)
+            cur_mean = mean(scores_dict)
+            cur_median = median(scores_dict)
+            scores_plot.add_v_line(
+                cur_mean, DColor.GREEN, f"Mean  : {cur_mean:.2f}"
+            )
+            scores_plot.add_v_line(
+                cur_median, "purple", f"Median: {cur_median:.2f}"
+            )
 
     def add_loss(self, epoch, loss, plot=True):
         self.loss.append(loss)
@@ -126,6 +140,8 @@ class TabbedPlots(Widget):
                 line_style=DColor.GREEN,
             )
             loss_plot.set_ylimits()
+            loss_plot.set_xlabel(DLabel.EPISODES)
+            loss_plot.set_ylabel(DLabel.LOSS)
 
     def reset(self) -> None:
         self.loss = []

@@ -66,11 +66,13 @@ class DNetDef:
     Neural network constants.
     """
 
-    # State map
+    # State map and hyperparameters
     DANGER_FEATURES: Final[int] = 3
     DIRECTION_FEATURES: Final[int] = 4
     FOOD_FEATURES: Final[int] = 2
     GAMMA: Final[float] = 0.9
+    MOVE_DELAY: Final[float] = 0.02
+    PER_STEP: Final[bool] = True
     STATE_LENGTH_BITS: Final[int] = 7
 
     # Derived
@@ -91,6 +93,7 @@ class DNetField:
     DONE: Final[str] = DGameField.DONE
     CUR_EPSILON: Final[str] = "cur_epsilon"
     FINAL_SCORE: Final[str] = "final_score"
+    INITIAL_EPSILON: Final[str] = "initial_epsilon"
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
     LOSS: Final[str] = "loss"
     MOVE_DELAY: Final[str] = "move_delay"

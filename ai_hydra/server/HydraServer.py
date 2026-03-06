@@ -57,6 +57,7 @@ class HydraServer:
         self.router_address = router_address
         self.router_port = router_port
         self.identity = identity
+        self.log_level = log_level
 
         self._methods: dict[str, Callable[[HydraMsg], object]] = {
             str(DMethod.PING): self.ping,

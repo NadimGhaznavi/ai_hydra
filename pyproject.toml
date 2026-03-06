@@ -1,7 +1,7 @@
 [project]
 name = "ai-hydra"
 version = "0.12.0"
-description = "A sophisticated parallel neural network exploration system for Snake Game AI with budget-constrained tree search"
+description = "A reinforcement learning experimentation platform for Snake AI with optional lookahead planning and real-time telemetry in a Textual TUI."
 authors = [{ name = "Nadim-Daniel Ghaznavi", email = "nghaznavi@gmail.com" }]
 license = { text = "GPL-3.0" }
 readme = "README.md"
@@ -10,14 +10,10 @@ repository = "https://github.com/NadimGhaznavi/ai-hydra"
 keywords = [
     "AI", 
     "Neural Networks", 
-    "Tree Search", 
     "PyTorch", 
     "Snake Game", 
-    "Parallel Processing", 
-    "Budget-Constrained Search",
     "Reinforcement Learning",
     "ZeroMQ",
-    "Hydra Zen"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

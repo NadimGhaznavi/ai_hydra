@@ -13,7 +13,7 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label
+from textual.widgets import Button, Label, Input
 from textual.message import Message
 
 from ai_hydra.utils.HydraMQ import HydraMQ
@@ -92,6 +92,7 @@ class HydraClientTui(App):
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
         self._cur_lookahead = None
         self.cfg = SimCfg.init_client()
+        self._running = False
 
     @work(exclusive=True)
     async def check_connection_bg(self) -> None:
@@ -121,12 +122,6 @@ class HydraClientTui(App):
         yield Vertical(
             Button(label=DLabel.START, id=DGameMethod.START_RUN, compact=True),
             Label(),
-            Button(label=DLabel.STOP, id=DGameMethod.STOP_RUN, compact=True),
-            Label(),
-            Button(
-                label=DLabel.RESET, id=DGameMethod.RESET_GAME, compact=True
-            ),
-            Label(),
             Button(label=DLabel.BOARD, id=DField.SHOW_BOARD, compact=True),
             Button(label=DLabel.NO_BOARD, id=DField.NO_BOARD, compact=True),
             Label(),
@@ -150,11 +145,26 @@ class HydraClientTui(App):
 
         # Runtime Settings
         yield Vertical(
-            Label(f"{DLabel.INITIAL_EPSILON:>15s}: {DEpsilonDef.INITIAL}"),
+            Label(f"{DLabel.RANDOM_SEED}: {DHydra.RANDOM_SEED}"),
+            Label(),
+            Horizontal(
+                Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
+                Label(
+                    f"{DEpsilonDef.INITIAL}",
+                    id=DField.INITIAL_EPSILON_LABEL,
+                ),
+                Input(
+                    type="number",
+                    compact=True,
+                    valid_empty=False,
+                    value=str(DEpsilonDef.INITIAL),
+                    id=DField.INITIAL_EPSILON_INPUT,
+                ),
+            ),
             Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
             Label(f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"),
             Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
-            Label(""),
+            Label(),
             Label(
                 f"{DLabel.LOOKAHEAD_P_VAL:>18}: {DLookaheadDef.PROBABILITY}"
             ),
@@ -194,6 +204,9 @@ class HydraClientTui(App):
 
         elif button_id == DGameMethod.START_RUN:
             # Make sure we have the latest TUI choice
+            self.remove_class(DField.STOPPED)
+            self.add_class(DField.RUNNING)
+            self.update_settings()
             msg = HydraMsg(
                 sender=DModule.HYDRA_CLIENT,
                 target=DModule.HYDRA_MGR,
@@ -253,6 +266,7 @@ class HydraClientTui(App):
                 pass
 
     def on_mount(self) -> None:
+        self.add_class(DField.STOPPED)
         self.mq = HydraMQ(
             router_address=self._address,
             router_port=self._port,
@@ -410,6 +424,20 @@ class HydraClientTui(App):
             mq.disable_per_step_sub()
             self.remove_class(DField.SHOW_BOARD)
             self.add_class(DField.NO_BOARD)
+
+    def update_settings(self):
+        # Initial epsilon value
+        initial_epsilon = self.query_one(
+            f"#{DField.INITIAL_EPSILON_INPUT}", Input
+        ).value
+        self.query_one(f"#{DField.INITIAL_EPSILON_LABEL}", Label).update(
+            str(initial_epsilon)
+        )
+        # Update the SimCfg object
+        self.cfg.apply(
+            payload={DNetField.INITIAL_EPSILON: float(initial_epsilon)},
+            phase=Phase.PRE_START,
+        )
 
 
 def main() -> None:

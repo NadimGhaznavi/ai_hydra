@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any, Dict, Callable, ClassVar
 
 from ai_hydra.constants.DSimCfg import Phase
-from ai_hydra.constants.DNNet import DNetField
+from ai_hydra.constants.DNNet import DNetField, DNetDef, DEpsilonDef
 
 _UNSET = object()
 
@@ -20,17 +20,16 @@ _UNSET = object()
 class SimCfg:
     # key -> phase (class-level: shared policy)
     _PHASE: ClassVar[Dict[str, Phase]] = {
-        DNetField.PER_STEP: Phase.RUNTIME,
+        DNetField.INITIAL_EPSILON: Phase.PRE_START,
         DNetField.MOVE_DELAY: Phase.RUNTIME,
-        # later:
-        # DNetField.INITIAL_EPSILON: Phase.PRE_START,
-        # DNetField.LOOKAHEAD_P: Phase.PRE_START,
+        DNetField.PER_STEP: Phase.RUNTIME,
     }
 
     # optional: key -> coercer (class-level: shared policy)
     _COERCE: ClassVar[Dict[str, Callable[[Any], Any]]] = {
-        DNetField.PER_STEP: bool,
+        DNetField.INITIAL_EPSILON: float,
         DNetField.MOVE_DELAY: float,
+        DNetField.PER_STEP: bool,
     }
 
     __slots__ = ("_values",)
@@ -43,8 +42,9 @@ class SimCfg:
     def init_client(cls) -> "SimCfg":
         cfg = cls()
         cfg._values = {
-            DNetField.PER_STEP: True,
-            DNetField.MOVE_DELAY: 0.02,
+            DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
+            DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
+            DNetField.PER_STEP: DNetDef.PER_STEP,
         }
         return cfg
 
@@ -52,8 +52,9 @@ class SimCfg:
     def init_server(cls) -> "SimCfg":
         cfg = cls()
         cfg._values = {
-            DNetField.PER_STEP: _UNSET,
+            DNetField.INITIAL_EPSILON: _UNSET,
             DNetField.MOVE_DELAY: _UNSET,
+            DNetField.PER_STEP: _UNSET,
         }
         return cfg
 

@@ -13,6 +13,8 @@ import random
 from typing import Optional
 
 from ai_hydra.constants.DNNet import DEpsilonDef, DEpsilonField
+from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.utils.HydraLog import HydraLog
 
 
 class EpsilonAlgo:
@@ -26,16 +28,19 @@ class EpsilonAlgo:
     - Call played_game() at end of episode to decay epsilon.
     """
 
-    def __init__(self, rng: random.Random):
+    def __init__(self, rng: random.Random, log_level: DHydraLog):
         self._rng = rng
 
-        self._initial_epsilon = float(DEpsilonDef.INITIAL)
+        self._initial_epsilon = None
         self._epsilon_min = float(DEpsilonDef.MINIMUM)
         self._epsilon_decay = float(DEpsilonDef.DECAY_RATE)
 
-        self._cur_epsilon = self._initial_epsilon
+        self._cur_epsilon = None
         self._injected = 0
         self._depleted = False
+        self.log = HydraLog(
+            client_id="EpsilonAlgo", log_level=log_level, to_console=True
+        )
 
     def cur_epsilon(self) -> float:
         return self._cur_epsilon
@@ -46,6 +51,11 @@ class EpsilonAlgo:
             DEpsilonField.MINIMUM: self._epsilon_min,
             DEpsilonField.DECAY_RATE: self._epsilon_decay,
         }
+
+    def initial_epsilon(self, value: float) -> None:
+        self._initial_epsilon = value
+        self._cur_epsilon = value
+        self.log.debug(f"Initial epsilon set: {value}")
 
     def injected(self) -> int:
         return self._injected
