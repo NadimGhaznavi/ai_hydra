@@ -1,8 +1,8 @@
 Screen {
     layout: grid;
-    grid-size: 2 7;
-    grid-rows: 3 4 3 3 9 13 16;
-    grid-columns: 44 44;
+    grid-size: 4 4;
+    grid-rows: 3 5 17 20;
+    grid-columns: 20 44 32 37;
 }
 
 Button {
@@ -12,17 +12,18 @@ Button {
 }
 
 TabbedPlots {
-    column-span: 2;
+    column-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
     color: #5fc442;
     text-style: bold;
-    height: 16;
-    width: 88;
+    height: 20;
+    width: 100%;
 }
 
 TabbedScores {
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -45,19 +46,17 @@ TabbedScores {
 }
 
 #buttons {
-    column-span: 2;
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
     color: #5fc442;
     text-style: bold;
-    width: 100%;
     padding: 0 1;
 }
 
 
-#config {
-    column-span: 2;
+#network {
     background: black;
     border: round #0c323e;
     border-subtitle-color: #acac59ff;
@@ -66,21 +65,24 @@ TabbedScores {
     width: 100%;
 }
 
-#highscores {
-    background: black;
+#scores_plot {
+    height: 18;
 }
 
-#highscores_lh {
-    background: black;
+#scores_plot_lh {
+    height: 18;
+}
+
+#scores_plot_nlh {
+    height: 18;
 }
 
 .highscores_box {
     background: black;
 }
 
-#loss {
-    width: 86;
-    height: 14;
+#loss_plot {
+    height: 18;
 }
 
 #runtime_values {
@@ -89,7 +91,7 @@ TabbedScores {
     border-subtitle-color: #5fc442;
     color: #8dc97dff;
     text-style: bold;
-    height: 9;
+    height: 18;
 }
 
 #status {
@@ -103,7 +105,7 @@ TabbedScores {
 }
 
 #title {
-    column-span: 2;
+    column-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;

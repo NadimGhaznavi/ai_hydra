@@ -247,6 +247,9 @@ class HydraMgr(HydraServer):
                     if loss_snap is not None:
                         info[DNetField.LOSS] = loss_snap
 
+                    # Final score
+                    info[DNetField.FINAL_SCORE] = sess.score
+
                 # Build/store transition (unchanged for now)
                 t = Transition(
                     state=ep_payload[DNetField.STATE],

@@ -6,57 +6,135 @@
 #    GitHub: https://github.com/NadimGhaznavi/ai_hydra
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
-
-from textual.containers import Vertical
-from textual.widgets import TabbedContent, Label, Log
+from textual import on, work
 from textual.app import ComposeResult, Widget
-from textual_plot import PlotWidget, HiResMode, LegendLocation
+from textual.widgets import TabbedContent
+from textual_plot import PlotWidget, HiResMode
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DPlotDef, DColor
-from ai_hydra.constants.DNNet import DLookahead
 
 
 class TabbedPlots(Widget):
-
-    loss = []
-    loss_epoch = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss = []
+        self.epochs = []
+        self.scores = {}
+        self.scores_lh = {}
+        self.scores_nlh = {}
 
     def compose(self) -> ComposeResult:
-        with TabbedContent(DLabel.LOSS):
-            yield PlotWidget(id=DField.LOSS)
+        with TabbedContent(
+            DLabel.LOSS, DLabel.SCORES, DLabel.SCORES_LH, DLabel.SCORES_NLH
+        ):
+            yield PlotWidget(id=DField.LOSS_PLOT)
+            yield PlotWidget(id=DField.SCORES_PLOT)
+            yield PlotWidget(id=DField.SCORES_PLOT_LH)
+            yield PlotWidget(id=DField.SCORES_PLOT_NLH)
+
+    def action_show_tab(self, tab: str) -> None:
+        self.get_child_by_type(TabbedContent).active = tab
+
+    @on(TabbedContent.TabActivated)
+    def handle_tab_activated(self, event: TabbedContent.TabActivated) -> None:
+        pane_id = event.pane.id
+        self.call_later(lambda: self._replot_active_tab(pane_id))
+
+    def _replot_active_tab(self, pane_id: str) -> None:
+        if pane_id == "tab-1":
+            self._plot_loss()
+        elif pane_id == "tab-2":
+            self._plot_scores(self.scores, "all")
+        elif pane_id == "tab-3":
+            self._plot_scores(self.scores_lh, "lh")
+        elif pane_id == "tab-4":
+            self._plot_scores(self.scores_nlh, "nlh")
+        else:
+            raise ValueError(f"Unhandled tab: {pane_id}")
+
+    def add_score(self, cur_score, lookahead, plot=True):
+        self.scores[cur_score] = self.scores.get(cur_score, 0) + 1
+
+        if lookahead:
+            self.scores_lh[cur_score] = self.scores_lh.get(cur_score, 0) + 1
+        else:
+            self.scores_nlh[cur_score] = self.scores_nlh.get(cur_score, 0) + 1
+
+        if plot:
+            self._plot_scores(self.scores, "all")
+            self._plot_scores(self.scores_lh, "lh")
+            self._plot_scores(self.scores_nlh, "nlh")
+
+    def _plot_scores(self, scores_dict, scores_type):
+        x = sorted(scores_dict.keys())
+        y = [scores_dict[k] for k in x]
+
+        if scores_type == "all":
+            scores_plot = self.query_one(f"#{DField.SCORES_PLOT}", PlotWidget)
+        elif scores_type == "lh":
+            scores_plot = self.query_one(
+                f"#{DField.SCORES_PLOT_LH}", PlotWidget
+            )
+        else:
+            scores_plot = self.query_one(
+                f"#{DField.SCORES_PLOT_NLH}", PlotWidget
+            )
+
+        scores_plot.clear()
+        if x:
+            scores_plot.bar(
+                x,
+                y,
+                bar_style=DColor.BLUE,
+                width=0.8,
+                hires_mode=HiResMode.BRAILLE,
+            )
+            scores_plot.set_ylimits()
 
     def add_loss(self, epoch, loss, plot=True):
         self.loss.append(loss)
-        self.loss_epoch.append(epoch)
+        self.epochs.append(epoch)
 
         if plot:
-            losses = self.loss
-            epochs = self.loss_epoch
+            self._plot_loss()
 
-            # We need to "thin" the data as the number of games/epochs rises otherwise
-            # plot gets "blurry". For this kind of data, average binning makes sense.
-            if len(losses) > DPlotDef.MAX_LOSS_DATA_POINTS:
-                step = max(1, len(epochs) // DPlotDef.MAX_LOSS_DATA_POINTS)
-                thinned_epochs = []
-                thinned_losses = []
-                for i in range(0, len(losses), step):
-                    segment = losses[i : i + step]
-                    thinned_losses.append(sum(segment) / len(segment))
-                    thinned_epochs.append(epochs[i])  # midpoint of the bin
-                losses = thinned_losses
-                epochs = thinned_epochs
+    def _plot_loss(self) -> None:
+        losses = self.loss
+        epochs = self.epochs
 
-            # Clear the existing plot and plot the new data
-            loss_plot = self.query_one(f"#{DField.LOSS}")
-            loss_plot.clear()
+        if len(losses) > DPlotDef.MAX_LOSS_DATA_POINTS:
+            step = max(1, len(epochs) // DPlotDef.MAX_LOSS_DATA_POINTS)
+            thinned_epochs = []
+            thinned_losses = []
+
+            for i in range(0, len(losses), step):
+                segment = losses[i : i + step]
+                thinned_losses.append(sum(segment) / len(segment))
+                thinned_epochs.append(epochs[i])
+
+            losses = thinned_losses
+            epochs = thinned_epochs
+
+        loss_plot = self.query_one(f"#{DField.LOSS_PLOT}", PlotWidget)
+        loss_plot.clear()
+
+        if epochs:
             loss_plot.plot(
                 x=epochs,
                 y=losses,
                 hires_mode=HiResMode.BRAILLE,
                 line_style=DColor.GREEN,
             )
+            loss_plot.set_ylimits()
 
     def reset(self) -> None:
         self.loss = []
-        self.loss_epoch = []
-        self.query_one(f"#{DField.LOSS}", PlotWidget).clear()
+        self.epochs = []
+        self.scores = {}
+        self.scores_lh = {}
+        self.scores_nlh = {}
+
+        self.query_one(f"#{DField.LOSS_PLOT}", PlotWidget).clear()
+        self.query_one(f"#{DField.SCORES_PLOT}", PlotWidget).clear()
+        self.query_one(f"#{DField.SCORES_PLOT_LH}", PlotWidget).clear()
+        self.query_one(f"#{DField.SCORES_PLOT_NLH}", PlotWidget).clear()

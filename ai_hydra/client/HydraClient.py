@@ -101,12 +101,12 @@ class HydraClientTui(App):
                 raise TypeError("self.mq is None!!!")
 
             if mq.connected():
-                self._connected_msg = DStatus.GOOD + " " + DLabel.CONNECTED
+                self._connected_msg = DStatus.GOOD
             else:
-                self._connected_msg = DStatus.BAD + " " + DLabel.DISCONNECTED
+                self._connected_msg = DStatus.BAD
 
             self.query_one(f"#{DField.CONNECTED}", Label).update(
-                self._connected_msg
+                f"{DLabel.CONNECTED:>11s}: {self._connected_msg}"
             )
 
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL + 1)
@@ -114,41 +114,39 @@ class HydraClientTui(App):
     def compose(self) -> ComposeResult:
         """The TUI is created here"""
 
-        # Title
+        # Title - 1x4
         yield Label(DLabel.CLIENT_TITLE, id=DField.TITLE)
 
-        # Configuration
+        # Buttons - 2x1
         yield Vertical(
-            Label(f"{DLabel.TARGET_HOST}: {self._address}"),
-            Label(f"{DLabel.TARGET_PORT}: {self._port}"),
-            id=DField.CONFIG,
-        )
-
-        # Runtime status
-        yield Vertical(
-            Label(f"{self._connected_msg}", id=DField.CONNECTED),
-            id=DField.STATUS,
-        )
-
-        # Buttons
-        yield Horizontal(
-            Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
-            Label(" "),
             Button(label=DLabel.START, id=DGameMethod.START_RUN, compact=True),
-            Label(" "),
+            Label(),
             Button(label=DLabel.STOP, id=DGameMethod.STOP_RUN, compact=True),
-            Label(" "),
+            Label(),
             Button(
                 label=DLabel.RESET, id=DGameMethod.RESET_GAME, compact=True
             ),
-            Label(" "),
+            Label(),
             Button(label=DLabel.BOARD, id=DField.SHOW_BOARD, compact=True),
             Button(label=DLabel.NO_BOARD, id=DField.NO_BOARD, compact=True),
+            Label(),
+            Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
             id=DField.BUTTONS,
         )
 
-        # The Snake Game
+        # The Snake Game - 2x1
         yield Vertical(self.game_board, id=DField.BOARD_BOX)
+
+        # Network - 1x1
+        yield Vertical(
+            Label(f"{DLabel.TARGET_HOST:>11s}: {self._address}"),
+            Label(f"{DLabel.TARGET_PORT:>11s}: {self._port}"),
+            Label(f"{DLabel.CONNECTED:>11s}:", id=DField.CONNECTED),
+            id=DField.NETWORK,
+        )
+
+        # Highscores - 1x1
+        yield TabbedScores(id=DField.TABBED_SCORES)
 
         # Runtime Settings
         yield Vertical(
@@ -166,9 +164,6 @@ class HydraClientTui(App):
             ),
             id=DField.RUNTIME_VALUES,
         )
-
-        # Highscores
-        yield TabbedScores(id=DField.TABBED_SCORES)
 
         # Plots
         yield TabbedPlots(id=DField.TABBED_PLOTS)
@@ -276,11 +271,14 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
-        self.query_one(f"#{DField.CONFIG}").border_subtitle = DLabel.CONFIG
-        self.query_one(f"#{DField.STATUS}").border_subtitle = DLabel.STATUS
         self.query_one(f"#{DField.RUNTIME_VALUES}").border_subtitle = (
             DLabel.RUNTIME_VALS
         )
+        self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
+        self.query_one(f"#{DField.TABBED_SCORES}").border_subtitle = (
+            DLabel.HIGHSCORES
+        )
+        self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
         self._set_per_step(self.cfg.get(DNetField.PER_STEP))
 
     async def on_shutdown_request(self) -> None:
@@ -303,7 +301,6 @@ class HydraClientTui(App):
             self.query_one(
                 f"#{DField.BOARD_BOX}", Vertical
             ).border_subtitle = f"{DLabel.SCORE}: {score:<2}"
-
             # update score display if you want here
             return
 
@@ -373,6 +370,13 @@ class HydraClientTui(App):
             self.query_one(f"#{DField.TABBED_PLOTS}", TabbedPlots).add_loss(
                 epoch,
                 info[DNetField.LOSS],
+            )
+
+        # Final score
+        if DNetField.FINAL_SCORE in info:
+            self.query_one(f"#{DField.TABBED_PLOTS}", TabbedPlots).add_score(
+                cur_score=info[DNetField.FINAL_SCORE],
+                lookahead=info[DNetField.LOOKAHEAD_ON],
             )
 
     def _on_telemetry(self, topic: str, payload: dict) -> None:

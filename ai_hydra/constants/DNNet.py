@@ -90,6 +90,7 @@ class DNetField:
     ACTION: Final[str] = DGameField.ACTION
     DONE: Final[str] = DGameField.DONE
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    FINAL_SCORE: Final[str] = "final_score"
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
     LOSS: Final[str] = "loss"
     MOVE_DELAY: Final[str] = "move_delay"
