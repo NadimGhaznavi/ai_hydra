@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [0.12.0] - 2026-03-05 
+
+## Added
+I've setup lookahead with a default p-value of 0.25, so it's only active 25% of the time.
+- Tabbed plots featuring:
+  - Score histogram with all scores
+  - Score histogram with scores when lookahead is enabled
+  - Score histogram with scores when lookahead is disabled
+
+---
+
 ## [0.11.0] - 2026-03-05
 
 ## Added
