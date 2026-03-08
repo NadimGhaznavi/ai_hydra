@@ -135,8 +135,8 @@ class HydraMgr(HydraServer):
         """
         When a HydraClient starts, it sends a "handshake".
         """
+        payload = self.cfg.to_dict()
         if self._sim_running:
-            payload = self.cfg.to_dict()
             payload[DGameField.SIM_RUNNING] = True
         else:
             payload = {DGameField.SIM_RUNNING: False}
