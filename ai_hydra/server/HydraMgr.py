@@ -134,7 +134,6 @@ class HydraMgr(HydraServer):
         """
         try:
             payload = self.cfg.to_dict()
-            print(payload)
             if self._sim_running:
                 payload[DGameField.SIM_RUNNING] = True
             else:

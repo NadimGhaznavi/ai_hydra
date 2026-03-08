@@ -6,7 +6,7 @@ Overview
 
 AI Hydra is a distributed application that includes a Textual TUI client, a 
 simple router, and a headless server. Communication is over ZeroMQ. The basic
-functionality is that the Client sends control messages (e.g. start, stop, reset)
+functionality is that the Client sends control messages (e.g. handshake, start)
 to the router which forwards them to the server. When the server is running
 it publishes board and other telemetry information on a ZeroMQ PUB/SUB socket.
 The client subscribes to the server's PUB socket and displays the game state.
@@ -67,12 +67,24 @@ Finally, start the *HydraMgr* in a third terminal:
 
 
 Click the `Start` button in the *HydraRouter* to start the routing functions.
-Click the `Start` button in the *HydraClient*. This causes a `START_RUN` 
-ZeroMQ message to be sent through the *HydraRouter* to the *HydraMgr*. The
-*HydraMgr* continues to listen for `STOP_RUN` or `RESET_GAME` messages. The *HydraMgr*
-starts the simulation, and publishes game telemetry information on a ZeroMQ
-**PUB** socket. The *HydraClient* connects directly to the *HydraMgr* and subscribes 
-to the appropriate topics. The *HydraClient* displays the game state.
+Click the *Start* button in the *HydraRouter* to start the routing functions.
+Click the *Handshake* button in the *HydraClient*. This causes a `HANDSHAKE` 
+ZeroMQ message to be sent through the *HydraRouter* to the *HydraMgr*. 
+
+- If the server cannot be reached, a console message appears.
+- If the server can be reached
+  - And no simulation is running then the *Handshake* is replaced with a *Start* button and settings appear which can be configured.
+  - If a simulation is running, then the *Handshake* button is replaced with a *Update Config* button and only runtime values are configurable. The settings from the running simulation are displayed in the *HydraClient*.
+
+## Shutdown
+
+In this early release the server can only be stopped by hitting `Control-C` in 
+the terminal where it's running. The client is stopped by hitting the *Quit* key, 
+but the shutdown is currently not clean, so an additional `Control-C` may be 
+required to fully terminate the *HydraClient*. The *HydraRouter* can be shutdown 
+by clicking the *Quit* button.
+
+A clean shutdown will be implemented for the client and server in a future release.
 
 Fully Deterministic
 -------------------
@@ -101,3 +113,7 @@ time. The training of the neural network includes the moves and game state
 information that was executed. So when the *look-ahead* policy is used the
 training data is enhanced. This leads to better neural network performance.
 
+## Visualizations
+
+The TUI includes real-time visualzations that show the loss and a histogram
+of the scores. The score histgrams also show the *mean* and *median* values.

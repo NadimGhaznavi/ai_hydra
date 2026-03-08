@@ -248,7 +248,7 @@ class HydraClientTui(App):
                 f"{DLabel.LOOKAHEAD_STATUS:>18}: {DStatus.UNKNOWN}",
                 id=DField.LOOKAHEAD_STATUS,
             ),
-            id=DField.RUNTIME_VALUES,
+            id=DField.SETTINGS,
         )
 
         # Plots
@@ -374,9 +374,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
-        self.query_one(f"#{DField.RUNTIME_VALUES}").border_subtitle = (
-            DLabel.RUNTIME_VALS
-        )
+        self.query_one(f"#{DField.SETTINGS}").border_subtitle = DLabel.SETTINGS
         self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
         self.query_one(f"#{DField.TABBED_SCORES}").border_subtitle = (
             DLabel.HIGHSCORES

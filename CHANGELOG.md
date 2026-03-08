@@ -8,6 +8,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+### Added
+- Console widget to display messages (e.g. *Simulation started...*, *Unable to connect to simulation server...*)
+- **Handshake Feature**:
+  - On TUI startup *Handshake* and *Quit* buttons are now visible
+  - When the user clicks the *Handshake* button either:
+    - A console message appears, *"Unable to connect to simulation server..."*
+    - A console message appears, *"Connected to simulation server..."*, and the *Handshake* button is replaced with a *Start* button.
+    - A console message appears, *"Connected to running simulation..."*, and the *Handshake* button is replaced with a *Update Config* button
+- **Read-Only vs. Read-Write Settings Feature**:
+  - When the TUI first start, the labels for the settings are visible, but the actual input fields (and turbo checkbos) are not.
+  - When the simulation is stopped the input fields and the turbo checkbox are visible. They are populated with default values.
+  - When the simulation is running, the settings input fields are replaced by labels that show the selected settings.
+  - Currently, the user can change the *Move Delay* and change the *Turbo* setting while a simulation is running. These remain configurable during simulation runs.
+- **SimCfg configuration object**
+  - This object exists on the client and the server and houses the settings.
+  - The settings from the TUI are put into this object and it is passed to the server when the user starts a simulation.
+  - If the TUI connectes to a running simulation, then the SimCfg object is passed back to the client and the TUI is updated with the running simulation settings.
+
+### Changed
+- Refactored `HydraMq` into a base `HydraBaseMQ`, `HydraClientMQ`, and `HydraServerMQ`.
+- Moved the *Turbo* button to be another setting, a checkbox, into the `Settings` widget.
+- Changed *Runtime Values* to *Settings and Runtime Values*
+- Updated the documentation on the PyPI and Read-The-Docs sites.
+
+Final note: I'm encoutering a dead-lock when I try to do a clean shutdown. I have a kludge in place, but it usually requires the user to hit Control-C after clicking *Quit* in the TUI. This bug will be addressed in the next release.
+
 ---
 
 ## [0.12.1] - 2026-03-06 
