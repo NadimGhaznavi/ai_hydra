@@ -14,7 +14,7 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label, Input, Checkbox
+from textual.widgets import Button, Label, Input, Checkbox, Select
 from textual.message import Message
 
 from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
@@ -38,6 +38,8 @@ from ai_hydra.constants.DNNet import (
     DEpsilonDef,
     DLookaheadDef,
     DNetDef,
+    MODEL_TYPE_TABLE,
+    MODEL_TYPES,
 )
 from ai_hydra.constants.DSimCfg import Phase
 
@@ -169,6 +171,19 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.TURBO_MODE:>11s}: "),
                 Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
+                classes=DField.INPUT_FIELD,
+            ),
+            Label(),
+            # Model selection
+            Horizontal(
+                Label(f"{DLabel.NN_MODEL}: "),
+                Label(DLabel.LINEAR, id=DField.MODEL_TYPE_LABEL),
+                Select(
+                    MODEL_TYPES,
+                    compact=True,
+                    id=DField.MODEL_TYPE_SELECT,
+                    allow_blank=False,
+                ),
                 classes=DField.INPUT_FIELD,
             ),
             Label(),
@@ -327,6 +342,12 @@ class HydraClientTui(App):
         )
         self._w_min_epsilon_label = self.query_one(
             f"#{DField.MIN_EPSILON_LABEL}", Label
+        )
+        self._w_model_type_label = self.query_one(
+            f"#{DField.MODEL_TYPE_LABEL}", Label
+        )
+        self._w_model_type_select = self.query_one(
+            f"#{DField.MODEL_TYPE_SELECT}", Select
         )
         self._w_lookahead_enabled = self.query_one(
             f"#{DField.LOOKAHEAD_STATUS}", Label
@@ -601,6 +622,10 @@ class HydraClientTui(App):
         self._w_lookahead_p_val_label.update(str(lookahead_p_value))
         # Move delay
         move_delay = self._w_move_delay_input.value
+        # Model type
+        model_type_label = self._w_model_type_select.value
+        self._w_model_type_label.update(model_type_label)
+        model_type = MODEL_TYPE_TABLE[model_type_label]
 
         self.cfg.apply(
             {
@@ -609,6 +634,7 @@ class HydraClientTui(App):
                 DNetField.LOOKAHEAD_P_VAL: lookahead_p_value,
                 DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,
+                DNetField.MODEL_TYPE: model_type,
                 DNetField.MOVE_DELAY: move_delay,
             }
         )

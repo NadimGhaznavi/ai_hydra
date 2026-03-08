@@ -71,15 +71,6 @@ TabbedScores {
 
 }
 
-#network {
-    background: black;
-    border: round #0c323e;
-    border-subtitle-color: #acac59ff;
-    color: #acac59ff;
-    text-style: bold;
-    width: 100%;
-}
-
 #highscores {
     background: black;
 }
@@ -98,11 +89,22 @@ TabbedScores {
 
 .input_field {
     height: 1;
+    padding: 0 1;
 }
 
 #loss_plot {
     height: 18;
     width: 125;
+}
+
+#network {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #acac59ff;
+    color: #acac59ff;
+    text-style: bold;
+    width: 100%;
+    padding: 0 1;
 }
 
 #settings {
@@ -174,6 +176,9 @@ TabbedScores {
 .sim_stopped #min_epsilon_label {
     display: none;
 }
+.sim_stopped #model_type_label {
+    display: none;
+}
 .sim_stopped #update_runtime_config {
     display: none;
 }
@@ -196,6 +201,9 @@ TabbedScores {
     display: none;
 }
 .sim_running #min_epsilon_input {
+    display: none;
+}
+.sim_running #model_type_select {
     display: none;
 }
 .sim_running #start_run {
@@ -229,6 +237,12 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #min_epsilon_input {
+    display: none;
+}
+.bad_handshake #model_type_label {
+    display: none;
+}
+.bad_handshake #model_type_select {
     display: none;
 }
 .bad_handshake #move_delay_input {

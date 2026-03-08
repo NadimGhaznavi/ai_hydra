@@ -10,6 +10,7 @@
 from typing import Final
 
 from ai_hydra.constants.DGame import DGameField
+from ai_hydra.constants.DHydraTui import DLabel, DField
 
 
 class DEpsilonDef:
@@ -89,8 +90,33 @@ class DNetField:
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
     LOOKAHEAD_P_VAL: Final[str] = "lookahead_p_val"
     LOSS: Final[str] = "loss"
+    MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"
     PER_STEP: Final[str] = "per_step"
     REWARD: Final[str] = DGameField.REWARD
     STATE: Final[str] = "state"
+
+
+class DRNN:
+    """
+    RNN Model defaults
+    """
+
+    HIDDEN_SIZE: Final[int] = 192
+    RNN_LAYERS: Final[int] = 6
+    OUTPUT_SIZE: Final[int] = 3
+    P_VALUE: Final[float] = 0.1
+    NON_LINEARITY: Final[str] = "tanh"
+    LEARNING_RATE: Final[float] = 0.0002
+
+
+MODEL_TYPE_TABLE: Final[dict] = {
+    DField.LINEAR: DLabel.LINEAR,
+    DField.RNN: DLabel.RNN,
+}
+
+MODEL_TYPES: Final[list] = [
+    (DLabel.LINEAR, DField.LINEAR),
+    (DLabel.RNN, DField.RNN),
+]
