@@ -108,10 +108,13 @@ class HydraMgr(HydraServer):
         device = torch.device("cpu")  # keep simple; GPU can be passed later
 
         # NN Model being used
-        if self.cfg.get(DNetField.MODEL_TYPE) == DField.LINEAR:
+        model_type = self.cfg.get(DNetField.MODEL_TYPE)
+        if model_type == DField.LINEAR:
             model = LinearModel()
-        if self.cfg.get(DNetField.MODEL_TYPE) == DField.RNN:
+        elif model_type == DField.RNN:
             model = RNNModel()
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
 
         # Model + trainer
         trainer = Trainer(model=model, replay=replay, device=device, gamma=0.9)

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Added
+- An RNN:
+  - Created `nnet/models/RNNModel.py`
+  
+---
+
 ## [0.13.0] - 2026-03-08
 
 ### Added
@@ -17,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
     - A console message appears, *"Connected to simulation server..."*, and the *Handshake* button is replaced with a *Start* button.
     - A console message appears, *"Connected to running simulation..."*, and the *Handshake* button is replaced with a *Update Config* button
 - **Read-Only vs. Read-Write Settings Feature**:
-  - When the TUI first start, the labels for the settings are visible, but the actual input fields (and turbo checkbos) are not.
+  - When the TUI first starts, the labels for the settings are visible, but the actual input fields (and turbo checkbos) are not.
   - When the simulation is stopped the input fields and the turbo checkbox are visible. They are populated with default values.
   - When the simulation is running, the settings input fields are replaced by labels that show the selected settings.
   - Currently, the user can change the *Move Delay* and change the *Turbo* setting while a simulation is running. These remain configurable during simulation runs.

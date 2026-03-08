@@ -623,9 +623,9 @@ class HydraClientTui(App):
         # Move delay
         move_delay = self._w_move_delay_input.value
         # Model type
-        model_type_label = self._w_model_type_select.value
+        model_type = self._w_model_type_select.value
+        model_type_label = MODEL_TYPE_TABLE[model_type]
         self._w_model_type_label.update(model_type_label)
-        model_type = MODEL_TYPE_TABLE[model_type_label]
 
         self.cfg.apply(
             {
