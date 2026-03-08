@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.13.0] - 2026-03-08
 
 ### Added
 - Console widget to display messages (e.g. *Simulation started...*, *Unable to connect to simulation server...*)
