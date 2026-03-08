@@ -11,13 +11,19 @@ from __future__ import annotations
 
 from typing import Any, Callable, ClassVar
 
-from ai_hydra.constants.DNNet import DNetField, DNetDef, DEpsilonDef
+from ai_hydra.constants.DNNet import (
+    DNetField,
+    DNetDef,
+    DEpsilonDef,
+    DLookaheadDef,
+)
 
 
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
         DNetField.EPSILON_DECAY: DEpsilonDef.DECAY_RATE,
         DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
+        DNetField.LOOKAHEAD_P_VAL: DLookaheadDef.PROBABILITY,
         DNetField.MIN_EPSILON: DEpsilonDef.MINIMUM,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
         DNetField.PER_STEP: DNetDef.PER_STEP,
@@ -26,6 +32,7 @@ class SimCfg:
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
         DNetField.EPSILON_DECAY: float,
         DNetField.INITIAL_EPSILON: float,
+        DNetField.LOOKAHEAD_P_VAL: float,
         DNetField.MIN_EPSILON: float,
         DNetField.MOVE_DELAY: float,
         DNetField.PER_STEP: bool,

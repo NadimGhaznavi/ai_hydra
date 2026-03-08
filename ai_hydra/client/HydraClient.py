@@ -224,8 +224,20 @@ class HydraClientTui(App):
             Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
             Label(),
             # Lookahead p-value
-            Label(
-                f"{DLabel.LOOKAHEAD_P_VAL:>18}: {DLookaheadDef.PROBABILITY}"
+            Horizontal(
+                Label(f"{DLabel.LOOKAHEAD_P_VAL:>18}: "),
+                Label(
+                    f"{DLookaheadDef.PROBABILITY}",
+                    id=DField.LOOKAHEAD_P_VAL_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=str(DLookaheadDef.PROBABILITY),
+                    id=DField.LOOKAHEAD_P_VAL_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
             ),
             # Lookahead enabled
             Label(
@@ -307,6 +319,12 @@ class HydraClientTui(App):
         self._w_lookahead_enabled = self.query_one(
             f"#{DField.LOOKAHEAD_STATUS}", Label
         )
+        self._w_lookahead_p_val_input = self.query_one(
+            f"#{DField.LOOKAHEAD_P_VAL_INPUT}", Input
+        )
+        self._w_lookahead_p_val_label = self.query_one(
+            f"#{DField.LOOKAHEAD_P_VAL_LABEL}", Label
+        )
         self._w_move_delay_input = self.query_one(
             f"#{DField.MOVE_DELAY_INPUT}", Input
         )
@@ -376,6 +394,16 @@ class HydraClientTui(App):
             highscore_event_lh = info[DGameField.HIGHSCORE_EVENT_LH]
             if highscore_event_lh[2]:
                 self._w_tabbed_scores.add_highscore_lh(
+                    epoch=highscore_event_lh[0],
+                    highscore=highscore_event_lh[1],
+                    event_time=highscore_event_lh[2],
+                )
+
+        # Lookahead Highscore event
+        if DGameField.HIGHSCORE_EVENT_NLH in info:
+            highscore_event_lh = info[DGameField.HIGHSCORE_EVENT_NLH]
+            if highscore_event_lh[2]:
+                self._w_tabbed_scores.add_highscore_nlh(
                     epoch=highscore_event_lh[0],
                     highscore=highscore_event_lh[1],
                     event_time=highscore_event_lh[2],
@@ -515,6 +543,7 @@ class HydraClientTui(App):
                 # Sim was already running
                 self.remove_class(DField.SIM_STOPPED)
                 self.add_class(DField.SIM_RUNNING)
+            self.console_msg("Simulation started...")
 
         except asyncio.TimeoutError:
             pass
@@ -556,8 +585,11 @@ class HydraClientTui(App):
         self._w_cur_epsilon_label.update(str(epsilon_decay))
         self._w_initial_epsilon_label.update(str(initial_epsilon))
         self._w_min_epsilon_label.update(str(min_epsilon))
-        # Turbo mode
+        # Turbo mode == Not per_step
         per_step = not self._w_turbo_mode.value
+        # Lookahead p-value
+        lookahead_p_value = self._w_lookahead_p_val_input.value
+        self._w_lookahead_p_val_label.update(str(lookahead_p_value))
         # Move delay
         move_delay = self._w_move_delay_input.value
 
@@ -565,6 +597,7 @@ class HydraClientTui(App):
             {
                 DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
+                DNetField.LOOKAHEAD_P_VAL: lookahead_p_value,
                 DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,
                 DNetField.MOVE_DELAY: move_delay,

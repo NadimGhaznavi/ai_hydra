@@ -110,16 +110,12 @@ class HydraMgr(HydraServer):
 
         # Policy stack
         nnet_policy = LinearPolicy(model=model, device=device)
-        epsilon_schedule = EpsilonAlgo(
-            rng=policy_rng, log_level=self.log_level
-        )
-        epsilon_schedule.initial_epsilon(
-            self.cfg.get(DNetField.INITIAL_EPSILON)
-        )
-        epsilon_schedule.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))
-        epsilon_schedule.decay_rate(self.cfg.get(DNetField.EPSILON_DECAY))
+        epsilon_algo = EpsilonAlgo(rng=policy_rng, log_level=self.log_level)
+        epsilon_algo.initial_epsilon(self.cfg.get(DNetField.INITIAL_EPSILON))
+        epsilon_algo.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))
+        epsilon_algo.decay_rate(self.cfg.get(DNetField.EPSILON_DECAY))
         behaviour_policy = EpsilonPolicy(
-            base_policy=nnet_policy, epsilon=epsilon_schedule
+            base_policy=nnet_policy, epsilon=epsilon_algo
         )
         policy = LookaheadPolicy(base_policy=behaviour_policy)
 
@@ -136,19 +132,26 @@ class HydraMgr(HydraServer):
         """
         When a HydraClient starts, it sends a "handshake".
         """
-        payload = self.cfg.to_dict()
-        if self._sim_running:
-            payload[DGameField.SIM_RUNNING] = True
-        else:
-            payload = {DGameField.SIM_RUNNING: False}
-        reply = HydraMsg(
-            sender=self.identity,
-            target=msg.sender,
-            method=DMethod.HANDSHAKE_REPLY,
-            payload=payload,
-        )
-        if self.mq is not None:
-            await self.mq.send(reply)
+        try:
+            payload = self.cfg.to_dict()
+            print(payload)
+            if self._sim_running:
+                payload[DGameField.SIM_RUNNING] = True
+            else:
+                payload[DGameField.SIM_RUNNING] = False
+
+            reply = HydraMsg(
+                sender=self.identity,
+                target=msg.sender,
+                method=DMethod.HANDSHAKE_REPLY,
+                payload=payload,
+            )
+
+            if self.mq is not None:
+                await self.mq.send(reply)
+        except Exception as e:
+            self.log.critical(f"ERROR: {e}")
+            self.log.critical(f"TRACEBACK: {traceback.format_exc()}")
 
     async def reset_game(self, msg: HydraMsg) -> None:
         """
@@ -189,7 +192,8 @@ class HydraMgr(HydraServer):
             count = 0
 
             # Lookahead setting
-            lookahead_p = DLookaheadDef.PROBABILITY
+            lookahead_p = self.cfg.get(DNetField.LOOKAHEAD_P_VAL)
+            self.log.debug(f"Setting lookahead p-value to: {lookahead_p}")
             sess.lookahead_on = sess.rng.random() < lookahead_p
 
             while True:
@@ -310,16 +314,8 @@ class HydraMgr(HydraServer):
         self._client_id = client_id
         self.log.debug(f"Received START_RUN: {msg.payload}")
 
-        # Load settings into SimCfg
-        self.cfg.apply(
-            payload={
-                DNetField.INITIAL_EPSILON: msg.payload[
-                    DNetField.INITIAL_EPSILON
-                ],
-                DNetField.MOVE_DELAY: msg.payload[DNetField.MOVE_DELAY],
-                DNetField.PER_STEP: msg.payload[DNetField.PER_STEP],
-            },
-        )
+        # Get runtime settings
+        self.cfg = SimCfg.from_dict(msg.payload)
 
         await self.set_per_step_topic(msg)
         await self.set_move_delay(msg)

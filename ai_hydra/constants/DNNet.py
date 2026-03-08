@@ -87,6 +87,7 @@ class DNetField:
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     MIN_EPSILON: Final[str] = "min_epsilon"
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
+    LOOKAHEAD_P_VAL: Final[str] = "lookahead_p_val"
     LOSS: Final[str] = "loss"
     MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"
