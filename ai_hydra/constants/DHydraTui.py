@@ -137,7 +137,7 @@ class DLabel:
     RIGHT: Final[str] = "Right"
     ROUTER: Final[str] = "Router"
     ROUTER_TITLE: Final[str] = "Hydra Router"
-    SETTINGS: Final[str] = "Settings and Runtime Values"
+    SETTINGS: Final[str] = "Settings and Values"
     SCORE: Final[str] = "Score"
     SCORES: Final[str] = "Scores"
     SCORES_ALL: Final[str] = "Scores/All"

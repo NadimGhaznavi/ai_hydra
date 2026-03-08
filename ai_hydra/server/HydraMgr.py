@@ -311,7 +311,7 @@ class HydraMgr(HydraServer):
         self._sim_running = True
         client_id = msg.sender
         self._client_id = client_id
-        self.log.debug(f"Received START_RUN: {msg.payload}")
+        self.log.debug(f"Received START_RUN, starting the simulation")
 
         # Get runtime settings
         self.cfg = SimCfg.from_dict(msg.payload)
