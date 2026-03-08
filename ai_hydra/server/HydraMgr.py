@@ -26,6 +26,7 @@ from ai_hydra.constants.DHydra import (
 from ai_hydra.constants.DNNet import DNetField, DLookaheadDef
 from ai_hydra.constants.DSimCfg import Phase
 from ai_hydra.constants.DHydra import DMethod
+from ai_hydra.constants.DHydraTui import DField
 
 from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
@@ -93,6 +94,7 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.Trainer import Trainer
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
         from ai_hydra.nnet.models.LinearModel import LinearModel
+        from ai_hydra.nnet.models.RNNModel import RNNModel
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
 
@@ -103,9 +105,15 @@ class HydraMgr(HydraServer):
         # Replay memory (RAM now, SQLite later)
         replay = ReplayMemory(capacity=50_000, rng=replay_rng)
 
-        # Model + trainer
         device = torch.device("cpu")  # keep simple; GPU can be passed later
-        model = LinearModel()
+
+        # NN Model being used
+        if self.cfg.get(DNetField.MODEL_TYPE) == DField.LINEAR:
+            model = LinearModel()
+        if self.cfg.get(DNetField.MODEL_TYPE) == DField.RNN:
+            model = RNNModel()
+
+        # Model + trainer
         trainer = Trainer(model=model, replay=replay, device=device, gamma=0.9)
 
         # Policy stack
@@ -316,6 +324,7 @@ class HydraMgr(HydraServer):
         # Get runtime settings
         self.cfg = SimCfg.from_dict(msg.payload)
 
+        # Setup the PUB/SUB topic publications
         await self.set_per_step_topic(msg)
         await self.set_move_delay(msg)
 
