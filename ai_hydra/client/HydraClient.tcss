@@ -174,27 +174,33 @@ TabbedScores {
 
 /* Failed handshake with HydraMgr */
 /* ------------------------------ */
-.bad_handshake #start_run {
-    display: none;
-}
-.bad_handshake #update_runtime_config {
-    display: none;
-}
-.bad_handshake #update_config_spacer {
-    display: none;
-}
 .bad_handshake #initial_epsilon_label {
     display: none;
 }
 .bad_handshake #initial_epsilon_input {
     display: none;
 }
-.bad_handshake #turbo_mode {
+.bad_handshake #min_epsilon_label {
+    display: none;
+}
+.bad_handshake #min_epsilon_input {
     display: none;
 }
 .bad_handshake #move_delay_input {
     display: none;
 }
 .bad_handshake #random_seed_label {
+    display: none;
+}
+.bad_handshake #start_run {
+    display: none;
+}
+.bad_handshake #turbo_mode {
+    display: none;
+}
+.bad_handshake #update_config_spacer {
+    display: none;
+}
+.bad_handshake #update_runtime_config {
     display: none;
 }

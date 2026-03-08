@@ -83,4 +83,4 @@ class DGameMethod:
     XXX_PUB_TYPE: Final[str] = "pub_type"
     STOP_RUN: Final[str] = "stop_run"
     XXX_UPDATE: Final[str] = "update"
-    UPDATE_RUNTIME_CONFIG: Final[str] = "update_runtime_config"
+    UPDATE_CONFIG: Final[str] = "update_config"

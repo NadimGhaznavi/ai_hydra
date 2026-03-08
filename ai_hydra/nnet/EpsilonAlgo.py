@@ -32,7 +32,7 @@ class EpsilonAlgo:
         self._rng = rng
 
         self._initial_epsilon = None
-        self._epsilon_min = float(DEpsilonDef.MINIMUM)
+        self._min_epsilon = None
         self._epsilon_decay = float(DEpsilonDef.DECAY_RATE)
 
         self._cur_epsilon = None
@@ -69,6 +69,10 @@ class EpsilonAlgo:
             self._injected += 1
             return self._rng.randrange(3)
         return None
+
+    def min_epsilon(self, value: float) -> None:
+        self._min_epsilon = value
+        self.log.debug(f"Minimum epsilon set: {value}")
 
     def played_game(self) -> None:
         """

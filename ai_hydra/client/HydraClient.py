@@ -190,7 +190,21 @@ class HydraClientTui(App):
                 classes=DField.INPUT_FIELD,
             ),
             # Minimum epsilon
-            Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
+            Horizontal(
+                Label(f"{DLabel.MIN_EPSILON:>15s}: "),
+                Label(
+                    f"{DEpsilonDef.MINIMUM}",
+                    id=DField.MIN_EPSILON_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=str({DEpsilonDef.MINIMUM}),
+                    id=DField.MIN_EPSILON_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
             # Epsilon decay
             Label(f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"),
             # Current epsilon
@@ -202,8 +216,8 @@ class HydraClientTui(App):
             ),
             # Lookahead enabled
             Label(
-                f"{DLabel.LOOKAHEAD_ENABLED:>18}: {DStatus.UNKNOWN}",
-                id=DField.LOOKAHEAD_ENABLED,
+                f"{DLabel.LOOKAHEAD_STATUS:>18}: {DStatus.UNKNOWN}",
+                id=DField.LOOKAHEAD_STATUS,
             ),
             id=DField.RUNTIME_VALUES,
         )
@@ -252,8 +266,14 @@ class HydraClientTui(App):
         self._w_initial_epsilon_label = self.query_one(
             f"#{DField.INITIAL_EPSILON_LABEL}", Label
         )
+        self._w_min_epsilon_input = self.query_one(
+            f"#{DField.MIN_EPSILON_INPUT}", Input
+        )
+        self._w_min_epsilon_label = self.query_one(
+            f"#{DField.MIN_EPSILON_LABEL}", Label
+        )
         self._w_lookahead_enabled = self.query_one(
-            f"#{DField.LOOKAHEAD_ENABLED}", Label
+            f"#{DField.LOOKAHEAD_STATUS}", Label
         )
         self._w_move_delay_input = self.query_one(
             f"#{DField.MOVE_DELAY_INPUT}", Input
@@ -341,7 +361,7 @@ class HydraClientTui(App):
                 cur_lookahead = DStatus.BAD
             self._cur_lookahead = cur_lookahead
             self._w_lookahead_enabled.update(
-                f"{DLabel.LOOKAHEAD_ENABLED:>18}: {cur_lookahead}"
+                f"{DLabel.LOOKAHEAD_STATUS:>18}: {cur_lookahead}"
             )
 
         # Loss
@@ -450,7 +470,7 @@ class HydraClientTui(App):
         msg = HydraMsg(
             sender=DModule.HYDRA_CLIENT,
             target=DModule.HYDRA_MGR,
-            method=DGameMethod.UPDATE_RUNTIME_CONFIG,
+            method=DGameMethod.UPDATE_CONFIG,
             payload=self.cfg.to_dict(),
         )
         await self.mq.send(msg)
@@ -479,6 +499,9 @@ class HydraClientTui(App):
         # Initial epsilon value
         initial_epsilon = self._w_initial_epsilon_input.value
         self._w_initial_epsilon_label.update(str(initial_epsilon))
+        # Minimum epsilon value
+        min_epsilon = self._w_min_epsilon_input.value
+        self._w_initial_epsilon_label.update(str(min_epsilon))
         # Turbo mode
         per_step = not self._w_turbo_mode.value
         # Move delay
@@ -486,7 +509,8 @@ class HydraClientTui(App):
 
         self.cfg.apply(
             {
-                DNetField.INITIAL_EPSILON: float(initial_epsilon),
+                DNetField.INITIAL_EPSILON: initial_epsilon,
+                DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,
                 DNetField.MOVE_DELAY: move_delay,
             }

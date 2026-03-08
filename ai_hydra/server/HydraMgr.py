@@ -65,7 +65,7 @@ class HydraMgr(HydraServer):
                 DGameMethod.RESET_GAME: self.reset_game,
                 DGameMethod.START_RUN: self.start_run,
                 DGameMethod.STOP_RUN: self.stop_run,
-                DGameMethod.UPDATE_RUNTIME_CONFIG: self.update_runtime_config,
+                DGameMethod.UPDATE_CONFIG: self.update_config,
             }
         )
         if self.debug:
@@ -370,7 +370,7 @@ class HydraMgr(HydraServer):
         if self.mq is not None:
             await self.mq.send(reply)
 
-    async def update_runtime_config(self, msg: HydraMsg) -> None:
+    async def update_config(self, msg: HydraMsg) -> None:
         """
         Update settings while a simulation is running
         """
