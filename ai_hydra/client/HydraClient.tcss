@@ -156,6 +156,9 @@ TabbedScores {
 
 /* Visibity is managed here */
 /* -------------------------*/
+#hidden_widget {
+    display: none;
+}
 
 /* Simulation is NOT running */
 /* --------------------------*/

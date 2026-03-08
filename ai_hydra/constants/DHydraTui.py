@@ -43,6 +43,7 @@ class DField:
     EPSILON_DECAY_LABEL: Final[str] = "epsilon_decay_label"
     HANDSHAKE: Final[str] = "handshake"
     ROUTER_HB: Final[str] = "router_hb"
+    HIDDEN_WIDGET: Final[str] = "hidden_widget"
     HIGHSCORES: Final[str] = "highscores"
     HIGHSCORES_BOX: Final[str] = "highscores_box"
     HIGHSCORES_LH: Final[str] = "highscores_lh"

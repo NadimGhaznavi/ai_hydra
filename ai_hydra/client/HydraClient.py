@@ -221,7 +221,11 @@ class HydraClientTui(App):
                 classes=DField.INPUT_FIELD,
             ),
             # Current epsilon
-            Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
+            Horizontal(
+                Label(f"{DLabel.CUR_EPSILON:>15s}: "),
+                Label(id=DField.CUR_EPSILON),
+                classes=DField.INPUT_FIELD,
+            ),
             Label(),
             # Lookahead p-value
             Horizontal(
@@ -252,6 +256,10 @@ class HydraClientTui(App):
 
         # Consolr
         yield Vertical(Label(id=DField.CONSOLE_SCREEN), id=DField.CONSOLE_BOX)
+
+        # Focus widget: This is hidden, but it allows me to move focus away
+        # from the selected button when a button is clicked.
+        yield Checkbox(id=DField.HIDDEN_WIDGET)
 
     def console_msg(self, value: str) -> None:
         self._w_console_label.update(str(value))
@@ -286,6 +294,7 @@ class HydraClientTui(App):
         elif button_id == DField.UPDATE_RUNTIME_CONFIG:
             self._update_tui_labels()
             await self._send_update_config()
+        self._w_hidden_widget.focus()
 
     def on_mount(self) -> None:
         self.add_class(DField.BAD_HANDSHAKE)
@@ -303,6 +312,9 @@ class HydraClientTui(App):
         )
         self._w_epsilon_decay_label = self.query_one(
             f"#{DField.EPSILON_DECAY_LABEL}", Label
+        )
+        self._w_hidden_widget = self.query_one(
+            f"#{DField.HIDDEN_WIDGET}", Checkbox
         )
         self._w_initial_epsilon_input = self.query_one(
             f"#{DField.INITIAL_EPSILON_INPUT}", Input
@@ -374,6 +386,7 @@ class HydraClientTui(App):
             DLabel.CONSOLE
         )
         self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
+        self._w_hidden_widget.focus()
         self.console_msg("Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
@@ -412,9 +425,7 @@ class HydraClientTui(App):
         # Current epsilon value
         epsilon = info.get(DNetField.CUR_EPSILON)
         if epsilon is not None:
-            self._w_cur_epsilon_label.update(
-                f"{DLabel.CUR_EPSILON:>15s}: {round(epsilon, 4)}"
-            )
+            self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
 
         # Lookahead status
         if DNetField.LOOKAHEAD_ON in info:
