@@ -16,6 +16,7 @@ from ai_hydra.constants.DNNet import DNetField, DNetDef, DEpsilonDef
 
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
+        DNetField.EPSILON_DECAY: DEpsilonDef.DECAY_RATE,
         DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
         DNetField.MIN_EPSILON: DEpsilonDef.MINIMUM,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
@@ -23,6 +24,7 @@ class SimCfg:
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
+        DNetField.EPSILON_DECAY: float,
         DNetField.INITIAL_EPSILON: float,
         DNetField.MIN_EPSILON: float,
         DNetField.MOVE_DELAY: float,

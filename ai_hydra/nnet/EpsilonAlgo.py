@@ -33,7 +33,7 @@ class EpsilonAlgo:
 
         self._initial_epsilon = None
         self._min_epsilon = None
-        self._epsilon_decay = float(DEpsilonDef.DECAY_RATE)
+        self._decay_rate = float(DEpsilonDef.DECAY_RATE)
 
         self._cur_epsilon = None
         self._injected = 0
@@ -45,11 +45,15 @@ class EpsilonAlgo:
     def cur_epsilon(self) -> float:
         return self._cur_epsilon
 
+    def decay_rate(self, value: float) -> None:
+        self._decay_rate = value
+        self.log.debug(f"Epsilon decay rate set: {value}")
+
     def get_params(self) -> dict[str, float]:
         return {
             DEpsilonField.INITIAL: self._initial_epsilon,
             DEpsilonField.MINIMUM: self._epsilon_min,
-            DEpsilonField.DECAY_RATE: self._epsilon_decay,
+            DEpsilonField.DECAY_RATE: self._decay_rate,
         }
 
     def initial_epsilon(self, value: float) -> None:
@@ -79,7 +83,7 @@ class EpsilonAlgo:
         Decay epsilon at the end of an episode.
         """
         self._cur_epsilon = max(
-            self._min_epsilon, self._cur_epsilon * self._epsilon_decay
+            self._min_epsilon, self._cur_epsilon * self._decay_rate
         )
         self._depleted = self._cur_epsilon <= self._min_epsilon
         self.reset_injected()
@@ -103,4 +107,4 @@ class EpsilonAlgo:
     ) -> None:
         self._initial_epsilon = float(initial)
         self._min_epsilon = float(minimum)
-        self._epsilon_decay = float(decay)
+        self._decay_rate = float(decay)

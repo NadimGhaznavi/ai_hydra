@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 4 4;
-    grid-rows: 3 5 17 22;
+    grid-size: 4 5;
+    grid-rows: 3 5 17 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -55,6 +55,21 @@ TabbedScores {
     padding: 0 1;
 }
 
+#console_screen {
+    column-span: 4;
+}
+
+#console_box {
+    column-span: 4;
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    color: #5fc442;
+    text-style: bold;
+    padding: 0 1;
+
+}
 
 #network {
     background: black;
@@ -144,6 +159,9 @@ TabbedScores {
 
 /* Simulation is NOT running */
 /* --------------------------*/
+.sim_stopped #epsilon_decay_label {
+    display: none;
+}
 .sim_stopped #initial_epsilon_label {
     display: none;
 }
@@ -162,6 +180,9 @@ TabbedScores {
 
 /* Simulation IS running */
 /* --------------------- */
+.sim_running #epsilon_decay_input {
+    display: none;
+}
 .sim_running #initial_epsilon_input {
     display: none;
 }
@@ -177,6 +198,12 @@ TabbedScores {
 
 /* Failed handshake with HydraMgr */
 /* ------------------------------ */
+.bad_handshake #epsilon_decay_input {
+    display: none;
+}
+.bad_handshake #epsilon_decay_label {
+    display: none;
+}
 .bad_handshake #initial_epsilon_label {
     display: none;
 }

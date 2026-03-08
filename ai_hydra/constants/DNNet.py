@@ -82,6 +82,7 @@ class DNetField:
     ACTION: Final[str] = DGameField.ACTION
     DONE: Final[str] = DGameField.DONE
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     MIN_EPSILON: Final[str] = "min_epsilon"

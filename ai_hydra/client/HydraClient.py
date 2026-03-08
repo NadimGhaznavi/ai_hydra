@@ -103,8 +103,8 @@ class HydraClientTui(App):
             else:
                 status = DStatus.BAD
 
-            self.query_one(f"#{DField.HEARTBEAT}", Label).update(
-                f"{DLabel.HEARTBEAT:>11s}: {status}"
+            self.query_one(f"#{DField.ROUTER_HB}", Label).update(
+                f"{DLabel.ROUTER:>11s}: {status}"
             )
 
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL)
@@ -138,7 +138,7 @@ class HydraClientTui(App):
         yield Vertical(
             Label(f"{DLabel.TARGET_HOST:>11s}: {self._address}"),
             Label(f"{DLabel.TARGET_PORT:>11s}: {self._port}"),
-            Label(f"{DLabel.HEARTBEAT:>11s}", id=DField.HEARTBEAT),
+            Label(f"{DLabel.ROUTER:>11s}", id=DField.ROUTER_HB),
             id=DField.NETWORK,
         )
 
@@ -205,7 +205,21 @@ class HydraClientTui(App):
                 classes=DField.INPUT_FIELD,
             ),
             # Epsilon decay
-            Label(f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"),
+            Horizontal(
+                Label(f"{DLabel.EPSILON_DECAY:>15s}: "),
+                Label(
+                    f"{DEpsilonDef.DECAY_RATE}",
+                    id=DField.EPSILON_DECAY_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=str(DEpsilonDef.DECAY_RATE),
+                    id=DField.EPSILON_DECAY_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
             # Current epsilon
             Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
             Label(),
@@ -223,6 +237,12 @@ class HydraClientTui(App):
 
         # Plots
         yield TabbedPlots(id=DField.TABBED_PLOTS)
+
+        # Consolr
+        yield Vertical(Label(id=DField.CONSOLE_SCREEN), id=DField.CONSOLE_BOX)
+
+    def console_msg(self, value: str) -> None:
+        self._w_console_label.update(str(value))
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
@@ -260,8 +280,17 @@ class HydraClientTui(App):
 
         # Create references to TUI elements that are being updated
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
+        self._w_console_label = self.query_one(
+            f"#{DField.CONSOLE_SCREEN}", Label
+        )
         self._w_cur_epsilon_label = self.query_one(
             f"#{DField.CUR_EPSILON}", Label
+        )
+        self._w_epsilon_decay_input = self.query_one(
+            f"#{DField.EPSILON_DECAY_INPUT}", Input
+        )
+        self._w_epsilon_decay_label = self.query_one(
+            f"#{DField.EPSILON_DECAY_LABEL}", Label
         )
         self._w_initial_epsilon_input = self.query_one(
             f"#{DField.INITIAL_EPSILON_INPUT}", Input
@@ -304,13 +333,14 @@ class HydraClientTui(App):
         self.mq.disable_per_step_sub()
 
         # Network
-        self.query_one(f"#{DField.HEARTBEAT}", Label).update(
-            f"{DLabel.HEARTBEAT:>11s}: {DStatus.UNKNOWN}"
+        self.query_one(f"#{DField.ROUTER_HB}", Label).update(
+            f"{DLabel.ROUTER:>11s}: {DStatus.UNKNOWN}"
         )
 
         # Monitor the connection to the server in the background
         self.check_heartbeat()
 
+        # Add some text to the borders around the widgets
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
@@ -322,6 +352,11 @@ class HydraClientTui(App):
             DLabel.HIGHSCORES
         )
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
+        self.query_one(f"#{DField.CONSOLE_BOX}", Vertical).border_subtitle = (
+            DLabel.CONSOLE
+        )
+        self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
+        self.console_msg("Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
         info = payload.get(DGameField.INFO, {})
@@ -436,13 +471,15 @@ class HydraClientTui(App):
                     self.cfg.get(DNetField.MOVE_DELAY)
                 )
                 self._update_tui_labels()
+                self.console_msg("Connecting to running simulation...")
 
             else:
                 self.add_class(DField.SIM_STOPPED)
+                self.console_msg("Connected to simulation server...")
             self.remove_class(DField.BAD_HANDSHAKE)
 
         except asyncio.TimeoutError:
-            pass
+            self.console_msg("Unable to connect to simulation server...")
 
     async def _send_reset(self):
         msg = HydraMsg(
@@ -512,11 +549,12 @@ class HydraClientTui(App):
         """
         Update the SimCfg settings and the TUI labels
         """
-        # Initial epsilon value
+        # Epsilon values
+        epsilon_decay = self._w_epsilon_decay_input.value
         initial_epsilon = self._w_initial_epsilon_input.value
-        self._w_initial_epsilon_label.update(str(initial_epsilon))
-        # Minimum epsilon value
         min_epsilon = self._w_min_epsilon_input.value
+        self._w_cur_epsilon_label.update(str(epsilon_decay))
+        self._w_initial_epsilon_label.update(str(initial_epsilon))
         self._w_min_epsilon_label.update(str(min_epsilon))
         # Turbo mode
         per_step = not self._w_turbo_mode.value
@@ -525,6 +563,7 @@ class HydraClientTui(App):
 
         self.cfg.apply(
             {
+                DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
                 DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,

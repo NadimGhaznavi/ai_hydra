@@ -117,6 +117,7 @@ class HydraMgr(HydraServer):
             self.cfg.get(DNetField.INITIAL_EPSILON)
         )
         epsilon_schedule.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))
+        epsilon_schedule.decay_rate(self.cfg.get(DNetField.EPSILON_DECAY))
         behaviour_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_schedule
         )
