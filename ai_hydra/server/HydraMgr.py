@@ -32,7 +32,7 @@ from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.nnet.Policy.LookaheadPolicy import LookaheadPolicy
-from ai_hydra.utils.SimCfg import SimCfg, _UNSET
+from ai_hydra.utils.SimCfg import SimCfg
 
 
 class HydraMgr(HydraServer):
