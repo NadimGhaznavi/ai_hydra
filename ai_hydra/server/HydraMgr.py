@@ -116,6 +116,7 @@ class HydraMgr(HydraServer):
         epsilon_schedule.initial_epsilon(
             self.cfg.get(DNetField.INITIAL_EPSILON)
         )
+        epsilon_schedule.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))
         behaviour_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_schedule
         )

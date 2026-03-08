@@ -79,9 +79,9 @@ class EpsilonAlgo:
         Decay epsilon at the end of an episode.
         """
         self._cur_epsilon = max(
-            self._epsilon_min, self._cur_epsilon * self._epsilon_decay
+            self._min_epsilon, self._cur_epsilon * self._epsilon_decay
         )
-        self._depleted = self._cur_epsilon <= self._epsilon_min
+        self._depleted = self._cur_epsilon <= self._min_epsilon
         self.reset_injected()
 
     def reset(self) -> None:
@@ -89,7 +89,7 @@ class EpsilonAlgo:
         Start a fresh schedule (called at START_RUN or RESET)
         """
         self._cur_epsilon = self._initial_epsilon
-        self._depleted = self.cur_epsilon <= self._epsilon_min
+        self._depleted = self.cur_epsilon <= self._min_epsilon
         self.reset_injected()
 
     def reset_injected(self) -> None:
@@ -102,5 +102,5 @@ class EpsilonAlgo:
         self, *, initial: float, minimum: float, decay: float
     ) -> None:
         self._initial_epsilon = float(initial)
-        self._epsilon_min = float(minimum)
+        self._min_epsilon = float(minimum)
         self._epsilon_decay = float(decay)

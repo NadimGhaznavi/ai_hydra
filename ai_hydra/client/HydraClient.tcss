@@ -147,10 +147,10 @@ TabbedScores {
 .sim_stopped #initial_epsilon_label {
     display: none;
 }
-.sim_stopped #update_runtime_config {
+.sim_stopped #min_epsilon_label {
     display: none;
 }
-.sim_stopped #update_config_spacer {
+.sim_stopped #update_runtime_config {
     display: none;
 }
 .sim_stopped #initial_epsilon_label {
@@ -163,6 +163,9 @@ TabbedScores {
 /* Simulation IS running */
 /* --------------------- */
 .sim_running #initial_epsilon_input {
+    display: none;
+}
+.sim_running #min_epsilon_input {
     display: none;
 }
 .sim_running #start_run {
@@ -196,9 +199,6 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #turbo_mode {
-    display: none;
-}
-.bad_handshake #update_config_spacer {
     display: none;
 }
 .bad_handshake #update_runtime_config {

@@ -17,12 +17,14 @@ from ai_hydra.constants.DNNet import DNetField, DNetDef, DEpsilonDef
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
         DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
+        DNetField.MIN_EPSILON: DEpsilonDef.MINIMUM,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
         DNetField.PER_STEP: DNetDef.PER_STEP,
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
         DNetField.INITIAL_EPSILON: float,
+        DNetField.MIN_EPSILON: float,
         DNetField.MOVE_DELAY: float,
         DNetField.PER_STEP: bool,
     }

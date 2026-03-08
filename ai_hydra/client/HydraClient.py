@@ -121,13 +121,12 @@ class HydraClientTui(App):
         yield Vertical(
             Button(label=DLabel.HANDSHAKE, id=DField.HANDSHAKE, compact=True),
             Button(label=DLabel.START, id=DField.START_RUN, compact=True),
-            Label(),
             Button(
                 label=DLabel.UPDATE_CONFIG,
                 id=DField.UPDATE_RUNTIME_CONFIG,
                 compact=True,
             ),
-            Label(id=DField.UPDATE_CONFIG_SPACER),
+            Label(),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
             id=DField.BUTTONS,
         )
@@ -200,7 +199,7 @@ class HydraClientTui(App):
                     type=DField.NUMBER,
                     compact=True,
                     valid_empty=False,
-                    value=str({DEpsilonDef.MINIMUM}),
+                    value=str(DEpsilonDef.MINIMUM),
                     id=DField.MIN_EPSILON_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
@@ -241,15 +240,19 @@ class HydraClientTui(App):
             await self._send_reset()
 
         elif button_id == DGameMethod.START_RUN:
-            self._update_config()
+            self._update_tui_labels()
             self.mq.enable_per_episode_sub()
+            if self.cfg.get(DNetField.PER_STEP):
+                self.mq.enable_per_step_sub()
+            else:
+                self.mq.disable_per_step_sub()
             await self._send_start_run()
 
         elif button_id == DGameMethod.STOP_RUN:
             await self._send_stop_run()
 
         elif button_id == DField.UPDATE_RUNTIME_CONFIG:
-            self._update_config()
+            self._update_tui_labels()
             await self._send_update_config()
 
     def on_mount(self) -> None:
@@ -297,6 +300,8 @@ class HydraClientTui(App):
             self.mq.topic(DHydraMQDef.PER_EPISODE_TOPIC): self.on_per_episode,
         }
         self.mq.start()
+        self.mq.disable_per_episode_sub()
+        self.mq.disable_per_step_sub()
 
         # Network
         self.query_one(f"#{DField.HEARTBEAT}", Label).update(
@@ -317,11 +322,6 @@ class HydraClientTui(App):
             DLabel.HIGHSCORES
         )
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
-        if self.cfg.get(DNetField.PER_STEP):
-            # True == Subscribe to per-step sub-topic
-            self.mq.enable_per_step_sub()
-        else:
-            self.mq.disable_per_step_sub()
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
         info = payload.get(DGameField.INFO, {})
@@ -421,6 +421,22 @@ class HydraClientTui(App):
                 self.mq.enable_per_episode_sub()
                 self.add_class(DField.SIM_RUNNING)
                 self.cfg = SimCfg.from_dict(reply.payload)
+                if self.cfg.get(DNetField.PER_STEP):
+                    self.mq.enable_per_step_sub()
+                else:
+                    self.mq.disable_per_step_sub()
+                # Load configurable TUI settings from the running sim config
+                self._w_initial_epsilon_input.value = str(
+                    self.cfg.get(DNetField.INITIAL_EPSILON)
+                )
+                self._w_min_epsilon_input.value = str(
+                    self.cfg.get(DNetField.MIN_EPSILON)
+                )
+                self._w_move_delay_input.value = str(
+                    self.cfg.get(DNetField.MOVE_DELAY)
+                )
+                self._update_tui_labels()
+
             else:
                 self.add_class(DField.SIM_STOPPED)
             self.remove_class(DField.BAD_HANDSHAKE)
@@ -466,19 +482,6 @@ class HydraClientTui(App):
         except asyncio.TimeoutError:
             pass
 
-    async def _send_update_config(self):
-        msg = HydraMsg(
-            sender=DModule.HYDRA_CLIENT,
-            target=DModule.HYDRA_MGR,
-            method=DGameMethod.UPDATE_CONFIG,
-            payload=self.cfg.to_dict(),
-        )
-        await self.mq.send(msg)
-        if self._w_turbo_mode.value:
-            self.mq.disable_per_step_sub()
-        else:
-            self.mq.enable_per_step_sub()
-
     async def _send_stop_run(self):
         msg = HydraMsg(
             sender=DModule.HYDRA_CLIENT,
@@ -492,7 +495,20 @@ class HydraClientTui(App):
         except asyncio.TimeoutError:
             pass
 
-    def _update_config(self):
+    async def _send_update_config(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.UPDATE_CONFIG,
+            payload=self.cfg.to_dict(),
+        )
+        await self.mq.send(msg)
+        if self._w_turbo_mode.value:
+            self.mq.disable_per_step_sub()
+        else:
+            self.mq.enable_per_step_sub()
+
+    def _update_tui_labels(self):
         """
         Update the SimCfg settings and the TUI labels
         """
@@ -501,7 +517,7 @@ class HydraClientTui(App):
         self._w_initial_epsilon_label.update(str(initial_epsilon))
         # Minimum epsilon value
         min_epsilon = self._w_min_epsilon_input.value
-        self._w_initial_epsilon_label.update(str(min_epsilon))
+        self._w_min_epsilon_label.update(str(min_epsilon))
         # Turbo mode
         per_step = not self._w_turbo_mode.value
         # Move delay
