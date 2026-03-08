@@ -16,6 +16,7 @@ from ai_hydra.constants.DNNet import (
     DNetDef,
     DEpsilonDef,
     DLookaheadDef,
+    DLinear,
 )
 from ai_hydra.constants.DHydraTui import DField
 
@@ -24,6 +25,7 @@ class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
         DNetField.EPSILON_DECAY: DEpsilonDef.DECAY_RATE,
         DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
+        DNetField.LEARNING_RATE: DLinear.LEARNING_RATE,
         DNetField.LOOKAHEAD_P_VAL: DLookaheadDef.PROBABILITY,
         DNetField.MIN_EPSILON: DEpsilonDef.MINIMUM,
         DNetField.MODEL_TYPE: DField.LINEAR,
@@ -34,6 +36,7 @@ class SimCfg:
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
         DNetField.EPSILON_DECAY: float,
         DNetField.INITIAL_EPSILON: float,
+        DNetField.LEARNING_RATE: float,
         DNetField.LOOKAHEAD_P_VAL: float,
         DNetField.MIN_EPSILON: float,
         DNetField.MODEL_TYPE: str,

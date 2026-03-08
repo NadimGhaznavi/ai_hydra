@@ -170,6 +170,9 @@ TabbedScores {
 .sim_stopped #initial_epsilon_label {
     display: none;
 }
+.sim_stopped #learning_rate_label {
+    display: none;
+}
 .sim_stopped #lookahead_p_val_label {
     display: none;
 }
@@ -195,6 +198,9 @@ TabbedScores {
     display: none;
 }
 .sim_running #initial_epsilon_input {
+    display: none;
+}
+.sim_running #learning_rate_input {
     display: none;
 }
 .sim_running #lookahead_p_val_input {
@@ -225,6 +231,12 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #initial_epsilon_input {
+    display: none;
+}
+.bad_handshake #learning_rate_input {
+    display: none;
+}
+.bad_handshake #learning_rate_label {
     display: none;
 }
 .bad_handshake #lookahead_p_val_input {

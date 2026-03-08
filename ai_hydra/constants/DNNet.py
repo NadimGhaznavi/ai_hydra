@@ -87,6 +87,7 @@ class DNetField:
     FINAL_SCORE: Final[str] = "final_score"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     MIN_EPSILON: Final[str] = "min_epsilon"
+    LEARNING_RATE: Final[str] = "learning_rate"
     LOOKAHEAD_ON: Final[str] = "lookahead_on"
     LOOKAHEAD_P_VAL: Final[str] = "lookahead_p_val"
     LOSS: Final[str] = "loss"
@@ -108,7 +109,7 @@ class DRNN:
     OUTPUT_SIZE: Final[int] = 3
     P_VALUE: Final[float] = 0.1
     NON_LINEARITY: Final[str] = "tanh"
-    LEARNING_RATE: Final[float] = 0.0002
+    LEARNING_RATE: Final[float] = 0.00009
 
 
 MODEL_TYPE_TABLE: Final[dict] = {

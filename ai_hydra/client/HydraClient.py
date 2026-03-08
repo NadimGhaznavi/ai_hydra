@@ -38,6 +38,8 @@ from ai_hydra.constants.DNNet import (
     DEpsilonDef,
     DLookaheadDef,
     DNetDef,
+    DLinear,
+    DRNN,
     MODEL_TYPE_TABLE,
     MODEL_TYPES,
 )
@@ -152,7 +154,7 @@ class HydraClientTui(App):
             # Random seed
             Horizontal(
                 Label(f"{DLabel.RANDOM_SEED:>11s}: "),
-                Label(f"{DHydra.RANDOM_SEED}", id=DField.RANDOM_SEED_LABEL),
+                Label(str(DHydra.RANDOM_SEED), id=DField.RANDOM_SEED_LABEL),
                 classes=DField.INPUT_FIELD,
             ),
             # Move delay
@@ -186,12 +188,28 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
+            # Learning rate
+            Horizontal(
+                Label(f"{DLabel.LEARNING_RATE}: "),
+                Label(
+                    f"{DLinear.LEARNING_RATE:.7f}",
+                    id=DField.LEARNING_RATE_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.LEARNING_RATE:.7f}",
+                    id=DField.LEARNING_RATE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
             Label(),
             # Initial epsilon
             Horizontal(
                 Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
                 Label(
-                    f"{DEpsilonDef.INITIAL}",
+                    str(DEpsilonDef.INITIAL),
                     id=DField.INITIAL_EPSILON_LABEL,
                 ),
                 Input(
@@ -207,7 +225,7 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.MIN_EPSILON:>15s}: "),
                 Label(
-                    f"{DEpsilonDef.MINIMUM}",
+                    str(DEpsilonDef.MINIMUM),
                     id=DField.MIN_EPSILON_LABEL,
                 ),
                 Input(
@@ -223,7 +241,7 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.EPSILON_DECAY:>15s}: "),
                 Label(
-                    f"{DEpsilonDef.DECAY_RATE}",
+                    str(DEpsilonDef.DECAY_RATE),
                     id=DField.EPSILON_DECAY_LABEL,
                 ),
                 Input(
@@ -246,7 +264,7 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.LOOKAHEAD_P_VAL:>18}: "),
                 Label(
-                    f"{DLookaheadDef.PROBABILITY}",
+                    str(DLookaheadDef.PROBABILITY),
                     id=DField.LOOKAHEAD_P_VAL_LABEL,
                 ),
                 Input(
@@ -336,6 +354,12 @@ class HydraClientTui(App):
         )
         self._w_initial_epsilon_label = self.query_one(
             f"#{DField.INITIAL_EPSILON_LABEL}", Label
+        )
+        self._w_learning_rate_input = self.query_one(
+            f"#{DField.LEARNING_RATE_INPUT}", Input
+        )
+        self._w_learning_rate_label = self.query_one(
+            f"#{DField.LEARNING_RATE_LABEL}", Label
         )
         self._w_min_epsilon_input = self.query_one(
             f"#{DField.MIN_EPSILON_INPUT}", Input
@@ -430,15 +454,21 @@ class HydraClientTui(App):
                     highscore=highscore_event_lh[1],
                     event_time=highscore_event_lh[2],
                 )
+                self.console_msg(
+                    f"🎉 New highscore with look ahead enabled: {highscore_event_lh[1]}"
+                )
 
         # Lookahead Highscore event
         if DGameField.HIGHSCORE_EVENT_NLH in info:
-            highscore_event_lh = info[DGameField.HIGHSCORE_EVENT_NLH]
-            if highscore_event_lh[2]:
+            highscore_event_nlh = info[DGameField.HIGHSCORE_EVENT_NLH]
+            if not highscore_event_lh[2]:
                 self._w_tabbed_scores.add_highscore_nlh(
-                    epoch=highscore_event_lh[0],
-                    highscore=highscore_event_lh[1],
-                    event_time=highscore_event_lh[2],
+                    epoch=highscore_event_nlh[0],
+                    highscore=highscore_event_nlh[1],
+                    event_time=highscore_event_nlh[2],
+                )
+                self.console_msg(
+                    f"🎉 New highscore without look ahead enabled: {highscore_event_lh[1]}"
                 )
 
         # Current epsilon value
@@ -497,6 +527,18 @@ class HydraClientTui(App):
             await self.mq.quit()
             self.mq = None
         self.exit()
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        # We want to change the default learning rate if the user changes the
+        # model.
+        if event.control.id == DField.MODEL_TYPE_SELECT:
+            if event.value == DField.LINEAR:
+                lr = f"{DLinear.LEARNING_RATE:.5f}"  # 0.00005
+                self._w_learning_rate_input.value = lr
+            elif event.value == DField.RNN:
+                lr = f"{DRNN.LEARNING_RATE:.5f}"  # 0.00009
+                self._w_learning_rate_input.value = lr
+            self.console_msg(f"Updated default learning rate to: {lr}...")
 
     async def _send_handshake(self):
         msg = HydraMsg(
@@ -626,11 +668,15 @@ class HydraClientTui(App):
         model_type = self._w_model_type_select.value
         model_type_label = MODEL_TYPE_TABLE[model_type]
         self._w_model_type_label.update(model_type_label)
+        # Learning rate
+        learning_rate = self._w_learning_rate_input.value
+        self._w_learning_rate_label.update(learning_rate)
 
         self.cfg.apply(
             {
                 DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
+                DNetField.LEARNING_RATE: float(learning_rate),
                 DNetField.LOOKAHEAD_P_VAL: lookahead_p_value,
                 DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,

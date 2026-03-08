@@ -14,6 +14,8 @@ import torch.optim as optim
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.constants.DNNet import DNetDef, DLinear
 from ai_hydra.constants.DHydra import DHydra
+from ai_hydra.nnet.models.LinearModel import LinearModel
+from ai_hydra.nnet.models.RNNModel import RNNModel
 
 
 class Trainer:
@@ -21,6 +23,7 @@ class Trainer:
         self,
         model,
         replay: ReplayMemory,
+        lr: float,
         *,
         device: torch.device | None = None,
         gamma: float = DNetDef.GAMMA,
@@ -31,10 +34,8 @@ class Trainer:
         self.replay = replay
         self.gamma = gamma
 
-        self.optimizer = optim.Adam(
-            self.model.parameters(), lr=DLinear.LEARNING_RATE
-        )
-        self.criterion = nn.MSELoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.criterion = nn.MSELoss()  # nn.SmoothL1Loss()
 
         self._losses = []
 

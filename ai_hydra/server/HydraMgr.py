@@ -98,6 +98,8 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
 
+        from ai_hydra.constants.DNNet import DNetField
+
         # Hydra-style RNG streams (minted from the existing SnakeMgr)
         _, policy_rng = self.snake.new_rng()
         _, replay_rng = self.snake.new_rng()
@@ -117,7 +119,13 @@ class HydraMgr(HydraServer):
             raise ValueError(f"Unsupported model type: {model_type}")
 
         # Model + trainer
-        trainer = Trainer(model=model, replay=replay, device=device, gamma=0.9)
+        trainer = Trainer(
+            model=model,
+            replay=replay,
+            lr=self.cfg.get(DNetField.LEARNING_RATE),
+            device=device,
+            gamma=0.9,
+        )
 
         # Policy stack
         nnet_policy = LinearPolicy(model=model, device=device)

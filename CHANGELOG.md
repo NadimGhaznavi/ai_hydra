@@ -9,9 +9,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [Unreleased]
 
 ### Added
-- An RNN:
-  - Created `nnet/models/RNNModel.py`
-  
+- **A RNN model**:
+  - Created `nnet/models/RNNModel.py`, the new RNN!
+  - Created a drop-down menu in the TUI to select the model type (Linear or RNN).
+  - Updated the `SimCfg` to support passing the model.
+- **Learning Rate**:
+  - Added the *learning rate* to the TUI.
+  - Handled the learning rate in the *HydraMgr*.
+  - Configured the TUI so that the default learning rate is based on the selected model.
+
+### Changed
+- Modified the `Trainer` to accept a learning rate.
+- Modifed the `SimCfg` to support passing the learning rate.
+- Modifed the `HydraMgr` to handle the new `MODEL_TYPE` and `LEARNING_RATE` settings.
+- Set the criterion in the `Trainer` to an appropriate default based on the selected model.
+
+### Fixed
+- Removed unnecessary f-string formatting in the TUI code.
+- Fixed a bug where the lookahead highscore was display in the "no lookahead" highscore tab. The "no lookahead" highscore was being ignored.
+
 ---
 
 ## [0.13.0] - 2026-03-08
