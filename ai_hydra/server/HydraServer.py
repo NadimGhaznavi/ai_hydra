@@ -21,7 +21,8 @@ from ai_hydra.constants.DHydra import (
     DModule,
 )
 from ai_hydra.utils.HydraLog import HydraLog
-from ai_hydra.utils.HydraMQ import HydraMQ, HydraMsg
+from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraServerMQ import HydraServerMQ
 
 
 class HydraServer:
@@ -59,12 +60,10 @@ class HydraServer:
         self.identity = identity
         self.log_level = log_level
 
-        self._methods: dict[str, Callable[[HydraMsg], object]] = {
-            str(DMethod.PING): self.ping,
-        }
+        self._methods: dict[str, Callable[[HydraMsg], object]] = {}
 
         # Messaging stub
-        self.mq: Optional[HydraMQ] = None
+        self.mq: Optional[HydraServerMQ] = None
 
         # Structured console logs
         self.log = HydraLog(
@@ -107,7 +106,7 @@ class HydraServer:
         )
 
     async def _main_loop(self, stop_event: asyncio.Event) -> None:
-        self.mq = HydraMQ(
+        self.mq = HydraServerMQ(
             router_address=self.router_address,
             router_port=self.router_port,
             identity=self.identity,
@@ -140,7 +139,7 @@ class HydraServer:
         stop_event = self._stop_event  # local alias for closure safety
         self._install_signal_handlers(stop_event)
 
-        self.log.info("Initialized, starting main loop")
+        self.log.info("Initialized")
         self._main_task = asyncio.create_task(
             self._main_loop(stop_event), name="hydra-server-main"
         )

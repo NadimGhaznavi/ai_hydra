@@ -25,6 +25,7 @@ from ai_hydra.constants.DHydra import (
 )
 from ai_hydra.constants.DNNet import DNetField, DLookaheadDef
 from ai_hydra.constants.DSimCfg import Phase
+from ai_hydra.constants.DHydra import DMethod
 
 from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
@@ -55,15 +56,16 @@ class HydraMgr(HydraServer):
         )
 
         self.debug = bool(debug)
-        self.cfg = SimCfg.init_server()
+        self.cfg = SimCfg()
         self.snake: SnakeMgr | None = None
         self._train_mgr = None
         self._methods.update(
             {
+                DMethod.HANDSHAKE: self.handshake,
                 DGameMethod.RESET_GAME: self.reset_game,
                 DGameMethod.START_RUN: self.start_run,
                 DGameMethod.STOP_RUN: self.stop_run,
-                DGameMethod.PUB_TYPE: self.set_per_step_topic,
+                DGameMethod.UPDATE_RUNTIME_CONFIG: self.update_runtime_config,
             }
         )
         if self.debug:
@@ -71,6 +73,7 @@ class HydraMgr(HydraServer):
 
         self._runs: dict[str, asyncio.Task[None]] = {}
         self._client_id = None
+        self._sim_running = False
 
     def _ensure_train_mgr(self):
         """
@@ -127,29 +130,19 @@ class HydraMgr(HydraServer):
         )
         return self._train_mgr
 
-    async def game_step(self, msg: HydraMsg) -> None:
+    async def handshake(self, msg: HydraMsg) -> None:
         """
-        Apply one action to the sender's session and reply with step result.
+        When a HydraClient starts, it sends a "handshake".
         """
-        try:
-            action = msg.payload[DGameField.ACTION]
-            payload = self.snake.step(msg.sender, int(action))
-        except KeyError:
-            payload: dict[str, Any] = {
-                DGameField.OK: False,
-                DGameField.ERROR: DGameField.MISSING_ACTION,
-            }
-        except Exception as e:
-            payload = {
-                DGameField.OK: False,
-                DGameField.ERROR: DGameField.INVALID_ACTION,
-                DGameField.INFO: {DGameField.REASON: str(e)},
-            }
-
+        if self._sim_running:
+            payload = self.cfg.to_dict()
+            payload[DGameField.SIM_RUNNING] = True
+        else:
+            payload = {DGameField.SIM_RUNNING: False}
         reply = HydraMsg(
             sender=self.identity,
             target=msg.sender,
-            method=DGameMethod.STEP,
+            method=DMethod.HANDSHAKE_REPLY,
             payload=payload,
         )
         if self.mq is not None:
@@ -177,6 +170,7 @@ class HydraMgr(HydraServer):
         """
         Runs as fast as possible.
         """
+        self.log.debug("Starting simulation run")
         try:
             snake = self.snake = SnakeMgr(cfg=self.cfg)
             mq = self.mq
@@ -292,59 +286,46 @@ class HydraMgr(HydraServer):
         except asyncio.CancelledError:
             return
         except Exception as e:
-            err = HydraMsg(
-                sender=self.identity,
-                target=client_id,
-                method=DGameMethod.UPDATE,
-                payload={
-                    DGameField.OK: False,
-                    DGameField.ERROR: "run_loop_failed",
-                    DGameField.INFO: {DGameField.REASON: str(e)},
-                },
-            )
-            if self.mq is not None:
-                await self.mq.send(err)
             self.log.critical(f"ERROR: {e}")
             self.log.critical(f"TRACEBACK: {traceback.format_exc()}")
 
     async def set_move_delay(self, msg: HydraMsg) -> None:
         delay = msg.payload[DNetField.MOVE_DELAY]
-        self.cfg.apply(
-            payload={DNetField.MOVE_DELAY: delay}, phase=Phase.RUNTIME
-        )
-        self.log.debug(f"Move delay is: {delay}")
+        self.cfg.set(DNetField.MOVE_DELAY, delay)
+        self.log.debug(f"Move delay set to: {delay}")
 
     async def set_per_step_topic(self, msg: HydraMsg) -> None:
         """
         Set the PUB/SUB type to PER_STEP or PER_EPISODE.
         """
         enabled = msg.payload[DNetField.PER_STEP]
-        self.cfg.apply(
-            payload={DNetField.PER_STEP: enabled}, phase=Phase.RUNTIME
-        )
+        self.cfg.set(DNetField.PER_STEP, enabled)
         self.log.debug(f"Enable per step telemetry: {enabled}")
 
     async def start_run(self, msg: HydraMsg) -> None:
+        self._sim_running = True
         client_id = msg.sender
         self._client_id = client_id
-
-        await self.set_per_step_topic(msg)
-        await self.set_move_delay(msg)
+        self.log.debug(f"Received START_RUN: {msg.payload}")
 
         # Load settings into SimCfg
         self.cfg.apply(
             payload={
                 DNetField.INITIAL_EPSILON: msg.payload[
                     DNetField.INITIAL_EPSILON
-                ]
+                ],
+                DNetField.MOVE_DELAY: msg.payload[DNetField.MOVE_DELAY],
+                DNetField.PER_STEP: msg.payload[DNetField.PER_STEP],
             },
-            phase=Phase.PRE_START,
         )
+
+        await self.set_per_step_topic(msg)
+        await self.set_move_delay(msg)
 
         # already running?
         if client_id in self._runs and not self._runs[client_id].done():
             payload = {
-                DGameField.OK: True,
+                DGameField.OK: False,
                 DGameField.INFO: {"status": "already_running"},
             }
         else:
@@ -389,12 +370,13 @@ class HydraMgr(HydraServer):
         if self.mq is not None:
             await self.mq.send(reply)
 
-    def train_n_episodes(self, *, n_episodes: int, **kwargs):
+    async def update_runtime_config(self, msg: HydraMsg) -> None:
         """
-        Local training entrypoint. Does not touch MQ.
+        Update settings while a simulation is running
         """
-        tm = self._ensure_train_mgr()
-        return tm.train_n_episodes(n_episodes=n_episodes, **kwargs)
+        self.log.debug(f"Received config update: {msg.payload}")
+        await self.set_move_delay(msg)
+        await self.set_per_step_topic(msg)
 
 
 async def amain() -> None:

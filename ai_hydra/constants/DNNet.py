@@ -43,16 +43,6 @@ class DLinear:
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
 
 
-class DLookahead:
-    """
-    Lookahead constants.
-    """
-
-    ON: Final[str] = "🟢"
-    OFF: Final[str] = "🔴"
-    UNKNOWN: Final[str] = "⚪"
-
-
 class DLookaheadDef:
     """
     Lookahead defaults.

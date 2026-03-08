@@ -11,8 +11,7 @@ from textual.containers import Vertical
 from textual.widgets import TabbedContent, Label, Log
 from textual.app import ComposeResult, Widget
 
-from ai_hydra.constants.DHydraTui import DField, DLabel
-from ai_hydra.constants.DNNet import DLookahead
+from ai_hydra.constants.DHydraTui import DField, DLabel, DStatus
 
 
 class TabbedScores(Widget):
@@ -50,7 +49,7 @@ class TabbedScores(Widget):
             f"{epoch:7d}{highscore:7d}{event_time:>13s}"
         )
         self.query_one(f"#{DField.BOTH}", Log).write_line(
-            f"{epoch:7d}{highscore:7d}{DLookahead.OFF:>3s}{event_time:>13s}"
+            f"{epoch:7d}{highscore:7d}{DStatus.OFF:>3s}{event_time:>13s}"
         )
 
     def add_highscore_lh(self, epoch, highscore, event_time):
@@ -58,5 +57,5 @@ class TabbedScores(Widget):
             f"{epoch:7d}{highscore:7d}{event_time:>13s}"
         )
         self.query_one(f"#{DField.BOTH}", Log).write_line(
-            f"{epoch:7d}{highscore:7d}{DLookahead.ON:>3s}{event_time:>13s}"
+            f"{epoch:7d}{highscore:7d}{DStatus.ON:>3s}{event_time:>13s}"
         )

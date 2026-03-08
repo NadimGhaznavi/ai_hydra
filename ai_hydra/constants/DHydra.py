@@ -12,6 +12,7 @@ from enum import StrEnum
 from typing import Final, Mapping
 
 
+# This should be DHydraDef....
 class DHydra:
     """
     Global project constants.
@@ -59,6 +60,17 @@ class DHydraMsg(StrEnum):
     PROTOCOL_VERSION = "protocol_version"
 
 
+class DHydraMQ:
+    HEARTBEAT: Final[str] = "heartbeat"
+    UTF_8: Final[str] = "utf-8"
+
+
+class DHydraMQDef:
+    TOPIC_PREFIX: Final[str] = "ai-hydra"
+    PER_STEP_TOPIC: Final[str] = "per_step_topic"
+    PER_EPISODE_TOPIC: Final[str] = "per_episode_topic"
+
+
 class DHydraRouterDef:
     """
     Hydra Router defaults.
@@ -69,15 +81,6 @@ class DHydraRouterDef:
     HEARTBEAT_PORT: Final[int] = 5758
 
 
-class DHydraServer:
-    """
-    Hydra Server values.
-    """
-
-    PER_STEP_TOPIC: Final[str] = "per_step_topic"
-    PER_EPISODE_TOPIC: Final[str] = "per_episode_topic"
-
-
 class DHydraServerDef:
     """
     Hydra Server defaults.
@@ -86,7 +89,6 @@ class DHydraServerDef:
     HOSTNAME: Final[str] = "localhost"
     PORT: Final[int] = 5759
     PUB_PORT: Final[int] = 5760
-    TOPIC_PREFIX: Final[str] = "telemetry"
 
 
 class DMethod(StrEnum):
@@ -101,6 +103,8 @@ class DMethod(StrEnum):
     ACTION_STRAIGHT = "action_straight"
     ACTION_RIGHT = "action_right"
     GAME_STEP = "game_step"
+    HANDSHAKE = "handshake"
+    HANDSHAKE_REPLY = "handshake_reply"
     HEARTBEAT = "heartbeat"
     HEARTBEAT_REPLY = "heartbeat_reply"
     PING = "ping"

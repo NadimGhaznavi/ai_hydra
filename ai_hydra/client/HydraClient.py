@@ -8,15 +8,16 @@
 #    License: GPL 3.0
 
 import asyncio
+import sys
 
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label, Input
+from textual.widgets import Button, Label, Input, Checkbox
 from textual.message import Message
 
-from ai_hydra.utils.HydraMQ import HydraMQ
+from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
 from ai_hydra.utils.HydraMsg import HydraMsg
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
@@ -28,15 +29,15 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DMethod,
     DModule,
-    DHydraServer,
+    DHydraMQDef,
 )
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
 from ai_hydra.constants.DNNet import (
     DNetField,
     DEpsilonDef,
-    DLookahead,
     DLookaheadDef,
+    DNetDef,
 )
 from ai_hydra.constants.DSimCfg import Phase
 
@@ -86,67 +87,93 @@ class HydraClientTui(App):
         self._port = port
         self._identity = DModule.HYDRA_CLIENT
         self._connected_msg = DStatus.BAD + " " + DLabel.DISCONNECTED
-        self.mq: HydraMQ | None = None
-        self._telemetry_prefix = "telemetry.snake.trainer"
+        self.mq: HydraClientMQ | None = None
 
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
         self._cur_lookahead = None
-        self.cfg = SimCfg.init_client()
+        self.cfg = SimCfg()
         self._running = False
+        self._wgt = None
 
     @work(exclusive=True)
-    async def check_connection_bg(self) -> None:
+    async def check_heartbeat(self) -> None:
         while True:
-            mq = self.mq
-            if mq is None:
-                raise TypeError("self.mq is None!!!")
-
-            if mq.connected():
-                self._connected_msg = DStatus.GOOD
+            if self.mq.connected():
+                status = DStatus.GOOD
             else:
-                self._connected_msg = DStatus.BAD
+                status = DStatus.BAD
 
-            self.query_one(f"#{DField.CONNECTED}", Label).update(
-                f"{DLabel.CONNECTED:>11s}: {self._connected_msg}"
+            self.query_one(f"#{DField.HEARTBEAT}", Label).update(
+                f"{DLabel.HEARTBEAT:>11s}: {status}"
             )
 
-            await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL + 1)
+            await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL)
 
     def compose(self) -> ComposeResult:
         """The TUI is created here"""
 
-        # Title - 1x4
+        ## We're using a Textual "grid" layout...
+
+        # ----- Title --- 1 row x 4 cols
         yield Label(DLabel.CLIENT_TITLE, id=DField.TITLE)
 
-        # Buttons - 2x1
+        # ----- Buttons --- 2x1
         yield Vertical(
-            Button(label=DLabel.START, id=DGameMethod.START_RUN, compact=True),
+            Button(label=DLabel.HANDSHAKE, id=DField.HANDSHAKE, compact=True),
+            Button(label=DLabel.START, id=DField.START_RUN, compact=True),
             Label(),
-            Button(label=DLabel.BOARD, id=DField.SHOW_BOARD, compact=True),
-            Button(label=DLabel.NO_BOARD, id=DField.NO_BOARD, compact=True),
-            Label(),
+            Button(
+                label=DLabel.UPDATE_CONFIG,
+                id=DField.UPDATE_RUNTIME_CONFIG,
+                compact=True,
+            ),
+            Label(id=DField.UPDATE_CONFIG_SPACER),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
             id=DField.BUTTONS,
         )
 
-        # The Snake Game - 2x1
+        # ------ The Snake Game --- 2x1
         yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
-        # Network - 1x1
+        # ------ Network --- 1x1
         yield Vertical(
             Label(f"{DLabel.TARGET_HOST:>11s}: {self._address}"),
             Label(f"{DLabel.TARGET_PORT:>11s}: {self._port}"),
-            Label(f"{DLabel.CONNECTED:>11s}:", id=DField.CONNECTED),
+            Label(f"{DLabel.HEARTBEAT:>11s}", id=DField.HEARTBEAT),
             id=DField.NETWORK,
         )
 
-        # Highscores - 1x1
+        # ----- Highscores widget --- 2x1
         yield TabbedScores(id=DField.TABBED_SCORES)
 
-        # Runtime Settings
+        # ----- Runtime Settings ---1x1
         yield Vertical(
-            Label(f"{DLabel.RANDOM_SEED}: {DHydra.RANDOM_SEED}"),
+            # Random seed
+            Horizontal(
+                Label(f"{DLabel.RANDOM_SEED:>11s}: "),
+                Label(f"{DHydra.RANDOM_SEED}", id=DField.RANDOM_SEED_LABEL),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Move delay
+            Horizontal(
+                Label(f"{DLabel.MOVE_DELAY:>11s}: "),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=str(DNetDef.MOVE_DELAY),
+                    id=DField.MOVE_DELAY_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Turbo mode
+            Horizontal(
+                Label(f"{DLabel.TURBO_MODE:>11s}: "),
+                Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
+                classes=DField.INPUT_FIELD,
+            ),
             Label(),
+            # Initial epsilon
             Horizontal(
                 Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
                 Label(
@@ -154,7 +181,7 @@ class HydraClientTui(App):
                     id=DField.INITIAL_EPSILON_LABEL,
                 ),
                 Input(
-                    type="number",
+                    type=DField.NUMBER,
                     compact=True,
                     valid_empty=False,
                     value=str(DEpsilonDef.INITIAL),
@@ -162,15 +189,20 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
+            # Minimum epsilon
             Label(f"{DLabel.MIN_EPSILON:>15s}: {DEpsilonDef.MINIMUM}"),
+            # Epsilon decay
             Label(f"{DLabel.EPSILON_DECAY:>15s}: {DEpsilonDef.DECAY_RATE}"),
+            # Current epsilon
             Label(f"{DLabel.CUR_EPSILON:>15s}:", id=DField.CUR_EPSILON),
             Label(),
+            # Lookahead p-value
             Label(
                 f"{DLabel.LOOKAHEAD_P_VAL:>18}: {DLookaheadDef.PROBABILITY}"
             ),
+            # Lookahead enabled
             Label(
-                f"{DLabel.LOOKAHEAD_ENABLED:>18}: {DLookahead.UNKNOWN}",
+                f"{DLabel.LOOKAHEAD_ENABLED:>18}: {DStatus.UNKNOWN}",
                 id=DField.LOOKAHEAD_ENABLED,
             ),
             id=DField.RUNTIME_VALUES,
@@ -182,107 +214,78 @@ class HydraClientTui(App):
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
 
-        if button_id == DMethod.QUIT:
-            await self.on_quit()
-            return
-
-        mq = self.mq
-        if mq is None:
+        if self.mq is None:
             raise TypeError("self.mq is None!!!")
 
-        elif button_id == DGameMethod.RESET_GAME:
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_MGR,
-                method=DGameMethod.RESET_GAME,
-            )
-            await mq.send(msg)
+        elif button_id == DField.HANDSHAKE:
+            await self._send_handshake()
 
-            try:
-                reply = await mq.recv()
-            except asyncio.TimeoutError:
-                pass
+        elif button_id == DMethod.QUIT:
+            await self.on_quit()
+
+        elif button_id == DGameMethod.RESET_GAME:
+            await self._send_reset()
 
         elif button_id == DGameMethod.START_RUN:
-            # Make sure we have the latest TUI choice
-            self.remove_class(DField.STOPPED)
-            self.add_class(DField.RUNNING)
-            self.update_settings()
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_MGR,
-                method=DGameMethod.START_RUN,
-                payload=self.cfg.to_start_payload(),
-            )
-            await mq.send(msg)
-
-            try:
-                reply = await mq.recv()
-            except asyncio.TimeoutError:
-                pass
+            self._update_config()
+            self.mq.enable_per_episode_sub()
+            await self._send_start_run()
 
         elif button_id == DGameMethod.STOP_RUN:
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_MGR,
-                method=DGameMethod.STOP_RUN,
-            )
-            await mq.send(msg)
+            await self._send_stop_run()
 
-            try:
-                reply = await mq.recv()
-            except asyncio.TimeoutError:
-                pass
-
-        elif button_id == DField.NO_BOARD:
-            # No board == Turbo mode
-            self._set_per_step(False)
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_MGR,
-                method=DGameMethod.PUB_TYPE,
-                payload=self.cfg.to_runtime_payload(),
-            )
-            await mq.send(msg)
-
-            try:
-                reply = await mq.recv()
-            except asyncio.TimeoutError:
-                pass
-
-        elif button_id == DField.SHOW_BOARD:
-            # Show board == Normal mode
-            self._set_per_step(True)
-            msg = HydraMsg(
-                sender=DModule.HYDRA_CLIENT,
-                target=DModule.HYDRA_MGR,
-                method=DGameMethod.PUB_TYPE,
-                payload=self.cfg.to_runtime_payload(),
-            )
-            await mq.send(msg)
-
-            try:
-                reply = await mq.recv()
-            except asyncio.TimeoutError:
-                pass
+        elif button_id == DField.UPDATE_RUNTIME_CONFIG:
+            self._update_config()
+            await self._send_update_config()
 
     def on_mount(self) -> None:
-        self.add_class(DField.STOPPED)
-        self.mq = HydraMQ(
+        self.add_class(DField.BAD_HANDSHAKE)
+
+        # Create references to TUI elements that are being updated
+        self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
+        self._w_cur_epsilon_label = self.query_one(
+            f"#{DField.CUR_EPSILON}", Label
+        )
+        self._w_initial_epsilon_input = self.query_one(
+            f"#{DField.INITIAL_EPSILON_INPUT}", Input
+        )
+        self._w_initial_epsilon_label = self.query_one(
+            f"#{DField.INITIAL_EPSILON_LABEL}", Label
+        )
+        self._w_lookahead_enabled = self.query_one(
+            f"#{DField.LOOKAHEAD_ENABLED}", Label
+        )
+        self._w_move_delay_input = self.query_one(
+            f"#{DField.MOVE_DELAY_INPUT}", Input
+        )
+        self._w_tabbed_plots = self.query_one(
+            f"#{DField.TABBED_PLOTS}", TabbedPlots
+        )
+        self._w_tabbed_scores = self.query_one(
+            f"#{DField.TABBED_SCORES}", TabbedScores
+        )
+        self._w_turbo_mode = self.query_one(f"#{DField.TURBO_MODE}", Checkbox)
+
+        self.mq = HydraClientMQ(
             router_address=self._address,
             router_port=self._port,
             identity=self._identity,
-            # --- Telemetry SUB ---
             srv_host=self._address,
-            cli_sub_methods={"*": self._on_telemetry},
-            # --- Default PUB_TYPE is "BOARD" (show the board moves)
         )
+        self.mq.sub_methods = {
+            self.mq.topic(DHydraMQDef.PER_STEP_TOPIC): self.on_per_step,
+            self.mq.topic(DHydraMQDef.PER_EPISODE_TOPIC): self.on_per_episode,
+        }
         self.mq.start()
 
-        # Always receive per-episode updates
-        self.mq.ensure_per_episode_sub()
+        # Network
+        self.query_one(f"#{DField.HEARTBEAT}", Label).update(
+            f"{DLabel.HEARTBEAT:>11s}: {DStatus.UNKNOWN}"
+        )
 
-        self.check_connection_bg()
+        # Monitor the connection to the server in the background
+        self.check_heartbeat()
+
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
@@ -294,69 +297,30 @@ class HydraClientTui(App):
             DLabel.HIGHSCORES
         )
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
-        self._set_per_step(self.cfg.get(DNetField.PER_STEP))
+        if self.cfg.get(DNetField.PER_STEP):
+            # True == Subscribe to per-step sub-topic
+            self.mq.enable_per_step_sub()
+        else:
+            self.mq.disable_per_step_sub()
 
-    async def on_shutdown_request(self) -> None:
-        if self.mq is not None:
-            await self.mq.quit()
-            self.mq = None
-
-    def on_telemetry_received(self, msg: TelemetryReceived) -> None:
-        topic = msg.topic
-        payload = msg.payload
-        score = "N/A"
-
-        # print(f"TOPIC: {topic} - PAYLOAD: {payload}")
-
-        # per_step: board telemetry + score
-        if topic.endswith(f".{DHydraServer.PER_STEP_TOPIC}"):
-            score = payload.get(DGameField.SCORE)
-            board = payload.get(DGameField.BOARD)
-            self.game_board.apply_board_dict(board)
-            self.query_one(
-                f"#{DField.BOARD_BOX}", Vertical
-            ).border_subtitle = f"{DLabel.SCORE}: {score:<2}"
-            # update score display if you want here
-            return
-
-        # Ignore anything that isn't per episode
-        if not topic.endswith(f".{DHydraServer.PER_EPISODE_TOPIC}"):
-            return
-
-        # per_episode: training + episode stats
+    def on_per_episode(self, topic: str, payload: dict) -> None:
         info = payload.get(DGameField.INFO, {})
 
-        # Current game score and highscore
-        highscore = info.get(DGameField.HIGHSCORE)
+        # Epoch
         epoch = info.get(DGameField.EPOCH)
+        self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
 
-        self.query_one(f"#{DField.BOARD_BOX}", Vertical).border_title = (
-            f"{DLabel.GAME}: {epoch}"
+        # Current score and highscore
+        highscore = info.get(DGameField.HIGHSCORE)
+        self._w_tabbed_scores.border_subtitle = (
+            f"{DLabel.HIGHSCORE}: {highscore}"
         )
-
-        self.query_one(
-            f"#{DField.TABBED_SCORES}", TabbedScores
-        ).border_subtitle = f"{DLabel.HIGHSCORE}: {highscore}"
-
-        # Highscore event
-        if DGameField.HIGHSCORE_EVENT_NLH in info:
-            highscore_event = info[DGameField.HIGHSCORE_EVENT_NLH]
-            if highscore_event[2]:
-                self.query_one(
-                    f"#{DField.TABBED_SCORES}", TabbedScores
-                ).add_highscore_nlh(
-                    epoch=highscore_event[0],
-                    highscore=highscore_event[1],
-                    event_time=highscore_event[2],
-                )
 
         # Lookahead Highscore event
         if DGameField.HIGHSCORE_EVENT_LH in info:
             highscore_event_lh = info[DGameField.HIGHSCORE_EVENT_LH]
             if highscore_event_lh[2]:
-                self.query_one(
-                    f"#{DField.TABBED_SCORES}", TabbedScores
-                ).add_highscore_lh(
+                self._w_tabbed_scores.add_highscore_lh(
                     epoch=highscore_event_lh[0],
                     highscore=highscore_event_lh[1],
                     event_time=highscore_event_lh[2],
@@ -365,79 +329,167 @@ class HydraClientTui(App):
         # Current epsilon value
         epsilon = info.get(DNetField.CUR_EPSILON)
         if epsilon is not None:
-            self.query_one(f"#{DField.CUR_EPSILON}", Label).update(
+            self._w_cur_epsilon_label.update(
                 f"{DLabel.CUR_EPSILON:>15s}: {round(epsilon, 4)}"
             )
 
         # Lookahead status
         if DNetField.LOOKAHEAD_ON in info:
             if info[DNetField.LOOKAHEAD_ON]:
-                cur_lookahead = DLookahead.ON
+                cur_lookahead = DStatus.GOOD
             else:
-                cur_lookahead = DLookahead.OFF
+                cur_lookahead = DStatus.BAD
             self._cur_lookahead = cur_lookahead
-            self.query_one(f"#{DField.LOOKAHEAD_ENABLED}", Label).update(
+            self._w_lookahead_enabled.update(
                 f"{DLabel.LOOKAHEAD_ENABLED:>18}: {cur_lookahead}"
             )
 
         # Loss
         if DNetField.LOSS in info:
-            self.query_one(f"#{DField.TABBED_PLOTS}", TabbedPlots).add_loss(
+            self._w_tabbed_plots.add_loss(
                 epoch,
                 info[DNetField.LOSS],
             )
 
         # Final score
         if DNetField.FINAL_SCORE in info:
-            self.query_one(f"#{DField.TABBED_PLOTS}", TabbedPlots).add_score(
+            self._w_tabbed_plots.add_score(
                 cur_score=info[DNetField.FINAL_SCORE],
                 lookahead=info[DNetField.LOOKAHEAD_ON],
             )
 
-    def _on_telemetry(self, topic: str, payload: dict) -> None:
-        self.post_message(TelemetryReceived(topic, payload))
+    def on_per_step(self, topic: str, payload: dict) -> None:
+        score = "N/A"
+        score = payload.get(DGameField.SCORE)
+        board = payload.get(DGameField.BOARD)
+        self.game_board.apply_board_dict(board)
+        self._w_board_box.border_subtitle = f"{DLabel.SCORE}: {score:<2}"
+
+    async def on_shutdown_request(self) -> None:
+        if self.mq is not None:
+            await self.mq.quit()
+            self.mq = None
 
     async def on_quit(self) -> None:
-        # Stop background tasks and close ZMQ sockets cleanly
+        sys.exit(0)
+
+        ###
+        ### The code below (clean shutdown) causes the client to hang
+        ### requiring a `kill <PID>``, followed by a `tput reset` to get
+        ### your terminal back into a sane state. So....
+        ###
+        ### "If in doubt, nuke it from orbit"
+        ###
         if self.mq is not None:
             await self.mq.quit()
             self.mq = None
         self.exit()
 
-    def _set_move_delay(self, delay: float) -> None:
-        self.cfg.apply(
-            payload={DNetField.MOVE_DELAY: delay}, phase=Phase.RUNTIME
+    async def _send_handshake(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DMethod.HANDSHAKE,
         )
+        await self.mq.send(msg)
 
-    def _set_per_step(self, enabled: bool) -> None:
-        mq = self.mq
-        if mq is None:
-            raise TypeError("self.mq is None!!!")
-        self.cfg.apply(
-            payload={DNetField.PER_STEP: enabled}, phase=Phase.RUNTIME
+        try:
+            reply = await self.mq.recv()
+            sim_running = reply.payload.pop(DGameField.SIM_RUNNING)
+            if sim_running:
+                # Always receive per-episode updates
+                self.mq.enable_per_episode_sub()
+                self.add_class(DField.SIM_RUNNING)
+                self.cfg = SimCfg.from_dict(reply.payload)
+            else:
+                self.add_class(DField.SIM_STOPPED)
+            self.remove_class(DField.BAD_HANDSHAKE)
+
+        except asyncio.TimeoutError:
+            pass
+
+    async def _send_reset(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.RESET_GAME,
         )
+        await self.mq.send(msg)
 
-        if enabled:
-            mq.enable_per_step_sub()
-            self.remove_class(DField.NO_BOARD)
-            self.add_class(DField.SHOW_BOARD)
+        try:
+            reply = await self.mq.recv()
+        except asyncio.TimeoutError:
+            pass
+
+    async def _send_start_run(self):
+        # Send a START_RUN message to the HydraMgr
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.START_RUN,
+            payload=self.cfg.to_dict(),
+        )
+        await self.mq.send(msg)
+
+        # Check what the HydraMgr sent back:
+        try:
+            reply = await self.mq.recv()
+            if reply.payload[DGameField.OK]:
+                # Perfect, sim wasn't running now it is.
+                self.remove_class(DField.SIM_STOPPED)
+                self.add_class(DField.SIM_RUNNING)
+            else:
+                # Sim was already running
+                self.remove_class(DField.SIM_STOPPED)
+                self.add_class(DField.SIM_RUNNING)
+
+        except asyncio.TimeoutError:
+            pass
+
+    async def _send_update_config(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.UPDATE_RUNTIME_CONFIG,
+            payload=self.cfg.to_dict(),
+        )
+        await self.mq.send(msg)
+        if self._w_turbo_mode.value:
+            self.mq.disable_per_step_sub()
         else:
-            mq.disable_per_step_sub()
-            self.remove_class(DField.SHOW_BOARD)
-            self.add_class(DField.NO_BOARD)
+            self.mq.enable_per_step_sub()
 
-    def update_settings(self):
-        # Initial epsilon value
-        initial_epsilon = self.query_one(
-            f"#{DField.INITIAL_EPSILON_INPUT}", Input
-        ).value
-        self.query_one(f"#{DField.INITIAL_EPSILON_LABEL}", Label).update(
-            str(initial_epsilon)
+    async def _send_stop_run(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.STOP_RUN,
         )
-        # Update the SimCfg object
+        await self.mq.send(msg)
+        try:
+            reply = await self.mq.recv()
+
+        except asyncio.TimeoutError:
+            pass
+
+    def _update_config(self):
+        """
+        Update the SimCfg settings and the TUI labels
+        """
+        # Initial epsilon value
+        initial_epsilon = self._w_initial_epsilon_input.value
+        self._w_initial_epsilon_label.update(str(initial_epsilon))
+        # Turbo mode
+        per_step = not self._w_turbo_mode.value
+        # Move delay
+        move_delay = self._w_move_delay_input.value
+
         self.cfg.apply(
-            payload={DNetField.INITIAL_EPSILON: float(initial_epsilon)},
-            phase=Phase.PRE_START,
+            {
+                DNetField.INITIAL_EPSILON: float(initial_epsilon),
+                DNetField.PER_STEP: per_step,
+                DNetField.MOVE_DELAY: move_delay,
+            }
         )
 
 

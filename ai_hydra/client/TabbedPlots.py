@@ -108,7 +108,6 @@ class TabbedPlots(Widget):
     def add_loss(self, epoch, loss, plot=True):
         self.loss.append(loss)
         self.epochs.append(epoch)
-
         if plot:
             self._plot_loss()
 

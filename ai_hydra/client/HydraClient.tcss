@@ -65,6 +65,18 @@ TabbedScores {
     width: 100%;
 }
 
+#highscores {
+    background: black;
+}
+
+#highscores_lh {
+    background: black;
+}
+
+#both {
+    background: black;
+}
+
 .highscores_box {
     background: black;
 }
@@ -128,16 +140,61 @@ TabbedScores {
 }
 
 /* Visibity is managed here */
-.show_board #show_board {
+/* -------------------------*/
+
+/* Simulation is NOT running */
+/* --------------------------*/
+.sim_stopped #initial_epsilon_label {
     display: none;
 }
-.no_board #no_board {
+.sim_stopped #update_runtime_config {
+    display: none;
+}
+.sim_stopped #update_config_spacer {
+    display: none;
+}
+.sim_stopped #initial_epsilon_label {
+    display: none;
+}
+.sim_stopped #handshake {
     display: none;
 }
 
-.stopped #initial_epsilon_label {
+/* Simulation IS running */
+/* --------------------- */
+.sim_running #initial_epsilon_input {
     display: none;
 }
-.running #initial_epsilon_input {
+.sim_running #start_run {
+    display: none;
+}
+.sim_running #handshake {
+    display: none;
+}
+
+/* Failed handshake with HydraMgr */
+/* ------------------------------ */
+.bad_handshake #start_run {
+    display: none;
+}
+.bad_handshake #update_runtime_config {
+    display: none;
+}
+.bad_handshake #update_config_spacer {
+    display: none;
+}
+.bad_handshake #initial_epsilon_label {
+    display: none;
+}
+.bad_handshake #initial_epsilon_input {
+    display: none;
+}
+.bad_handshake #turbo_mode {
+    display: none;
+}
+.bad_handshake #move_delay_input {
+    display: none;
+}
+.bad_handshake #random_seed_label {
     display: none;
 }
