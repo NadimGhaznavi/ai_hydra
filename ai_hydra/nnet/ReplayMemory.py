@@ -9,73 +9,96 @@ from random import Random
 from typing import Deque, List
 import pickle
 
+from ai_hydra.constants.DReplayMemory import DMemory
+from ai_hydra.constants.DHydra import DHydraLog
+
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.DBMgr import DBMgr
-from ai_hydra.constants.DReplayMemory import DMemory
+from ai_hydra.utils.HydraLog import HydraLog
 
 
 class ReplayMemory:
 
-    def __init__(self, db_mgr: DBMgr):
+    def __init__(self, db_mgr: DBMgr, log_level: DHydraLog):
         # Our SQLite DB manager
         self._db_mgr = db_mgr
-
-        # How large batches of frames should be
-        self._batch_size = DMemory.FRAME_BATCH_SIZE  # 256
+        self.log = HydraLog(
+            client_id="ReplayMemory", log_level=log_level, to_console=True
+        )
 
         # Memory type, valid choices are ran_frames, ran_game or none.
         self._mem_type = DMemory.RAN_GAMES
+        # self._mem_type = DMemory.RAN_FRAMES
 
         # Frames for the current game are stored here.
         self._cur_mem = []
 
-    def append(self, transition, final_score=None):
+    def append(self, transition: Transition, final_score=None):
         """
-        Add a transition to the current game frames list.
+        Add a transition to the current game buffer.
+        When the episode ends, flush the whole game to SQLite in one batch.
         """
+
+        ## NOTE: This is low-level SQLite DB code that *should* be in
+        ## DBMgr, but that resulted in a huge performance hit. Moving it
+        ## here means we don't pass in one frame at a time.
+        ##
+
         if self.mem_type() == DMemory.NO_MEMORY:
             return
 
-        (old_state, action, reward, new_state, done) = transition
+        old_state = transition.old_state
+        action = transition.action
+        reward = transition.reward
+        new_state = transition.new_state
+        done = transition.done
 
+        # Accumulate frames for the current episode in memory
         self._cur_mem.append((old_state, action, reward, new_state, done))
 
-        if done:
-            if final_score is None:
-                raise ValueError(
-                    "final_score must be provided when the game ends"
-                )
+        if not done:
+            return
 
-            total_frames = len(self._cur_mem)
+        if final_score is None:
+            raise ValueError("final_score must be provided when the game ends")
 
-            game_id = self._db_mgr.add_game(
-                final_score=final_score, total_frames=total_frames
+        total_frames = len(self._cur_mem)
+
+        # Insert the game row first so we get the foreign key
+        game_id = self._db_mgr.add_game(
+            final_score=final_score,
+            total_frames=total_frames,
+        )
+
+        # Prepare all frame rows up front, then bulk insert
+        frame_rows = [
+            (
+                game_id,
+                index,
+                pickle.dumps(state),
+                pickle.dumps(action),
+                reward,
+                pickle.dumps(next_state),
+                int(done),
             )
-            ## NOTE: This is low-level SQLite DB code that *should* be in
-            ## DBMgr, but that resulted in a huge performance hit. Moving it
-            ## here means we don't pass in one frame at a time.
-            ##
-            db_cursor = self._db_mgr.cursor()
             for index, (state, action, reward, next_state, done) in enumerate(
                 self._cur_mem
-            ):
-                db_cursor.execute(
-                    """
-                    INSERT INTO frames (game_id, frame_index, state, action, reward, next_state, done)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        game_id,
-                        index,
-                        pickle.dumps(state),
-                        pickle.dumps(action),
-                        reward,
-                        pickle.dumps(next_state),
-                        done,
-                    ),
-                )
-            self._db_mgr._conn.commit()
-            self.cur_memory = []
+            )
+        ]
+
+        db_cursor = self._db_mgr.cursor()
+        db_cursor.executemany(
+            """
+            INSERT INTO frames
+                (game_id, frame_index, state, action, reward, next_state, done)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            frame_rows,
+        )
+        self._db_mgr._conn.commit()
+
+        # Clear current episode buffer
+        self._cur_mem = []
 
     def get_training_data(self):
         mem_type = self.mem_type()

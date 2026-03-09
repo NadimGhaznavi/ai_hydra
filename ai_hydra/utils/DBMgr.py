@@ -12,14 +12,20 @@ import random
 import sqlite3, pickle
 from pathlib import Path
 
-from ai_hydra.constants.DHydra import DHydra
+from ai_hydra.constants.DHydra import DHydra, DHydraLog
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydraTui import DFile
+
+from ai_hydra.utils.HydraLog import HydraLog
 
 
 class DBMgr:
 
-    def __init__(self):
+    def __init__(self, log_level: DHydraLog):
+
+        self.log = HydraLog(
+            client_id="DBMgr", log_level=log_level, to_console=True
+        )
 
         # We need determinism for RL experiments
         random.seed(DHydra.RANDOM_SEED)
@@ -27,6 +33,8 @@ class DBMgr:
         # The minimum number of episodes, before anyting is returned from
         # the replay memory.
         self._min_games = DMemory.MIN_GAMES
+        # How large batches of frames should be
+        self._batch_size = DMemory.BATCH_SIZE  # 256
 
         # AI Hydra stores temporary and persistent files in this directory
         ai_hydra_dir = os.path.join(Path.home(), DHydra.HYDRA_DIR)
@@ -114,10 +122,13 @@ class DBMgr:
         self._cursor.execute("SELECT id FROM frames")
         all_ids = [row[0] for row in self._cursor.fetchall()]
 
+        if len(all_ids) < self._batch_size * 10:
+            return [], 0
+
         # Get n random ids
         sample_ids = random.sample(all_ids, min(num_frames, len(all_ids)))
         if not sample_ids:
-            return []
+            return [], 0
 
         # Build placeholders for the SQL IN clause
         placeholders = ",".join("?" for _ in sample_ids)
@@ -125,7 +136,7 @@ class DBMgr:
         # Execute the query with the unpacked tuple
         self._cursor.execute(
             f"SELECT state, action, reward, next_state, done FROM frames "
-            f"WHERE id IN ({placeholders})",
+            f"WHERE id IN ({placeholders}) ORDER BY id ASC",
             sample_ids,
         )
         rows = self._cursor.fetchall()
@@ -144,7 +155,7 @@ class DBMgr:
     def get_random_game(self):
         self._cursor.execute("SELECT id FROM games")
         all_ids = [row[0] for row in self._cursor.fetchall()]
-        if not all_ids or len(all_ids) < self.min_games:
+        if not all_ids or len(all_ids) < DMemory.MIN_GAMES:
             return [], DMemory.NO_DATA  # no games available
 
         rand_id = random.choice(all_ids)
@@ -168,40 +179,6 @@ class DBMgr:
             for state_blob, action, reward, next_state_blob, done in rows
         ]
         return game, rand_id
-
-    def get_training_data(self):
-        mem_type = self._mem_type()
-
-        if mem_type == DMemory.NO_MEMORY:
-            return None, DMemory.NO_DATA  # No data available
-
-        # RANDOM_GAME mode: return full ordered frames from one random game
-        elif mem_type == DMemory.RAN_GAMES:
-            frames, game_id = self._db_mgr.get_random_game()
-            if not frames:  # no frames available
-                return None, MEM.NO_DATA
-            training_data = frames
-            metadata = game_id
-
-        # SHUFFLE mode: return a random set of frames
-        elif mem_type == MEM_TYPE.SHUFFLE:
-            frames, num_frames = self.db_mgr.get_random_frames()
-            if not frames:  # no frames available
-                return None, MEM.NO_DATA
-            training_data = frames
-            metadata = num_frames
-
-        else:
-            raise ValueError(f"Unknown memory type: {mem_type}")
-
-        # Split into arrays for vectorized training
-        states = [d[0] for d in training_data]
-        actions = [d[1] for d in training_data]
-        rewards = [d[2] for d in training_data]
-        next_states = [d[3] for d in training_data]
-        dones = [d[4] for d in training_data]
-
-        return (states, actions, rewards, next_states, dones), metadata
 
     def _init_db(self) -> None:
         # Create the tables

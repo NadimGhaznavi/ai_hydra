@@ -75,6 +75,7 @@ class HydraMgr(HydraServer):
         self._runs: dict[str, asyncio.Task[None]] = {}
         self._client_id = None
         self._sim_running = False
+        self._db_mgr = None
 
     def _ensure_train_mgr(self):
         """
@@ -97,6 +98,7 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.models.RNNModel import RNNModel
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
+        from ai_hydra.utils.DBMgr import DBMgr
 
         from ai_hydra.constants.DNNet import DNetField
 
@@ -104,8 +106,8 @@ class HydraMgr(HydraServer):
         _, policy_rng = self.snake.new_rng()
         _, replay_rng = self.snake.new_rng()
 
-        # Replay memory (RAM now, SQLite later)
-        replay = ReplayMemory(capacity=50_000, rng=replay_rng)
+        self._db_mgr = DBMgr(log_level=self.log_level)
+        replay = ReplayMemory(db_mgr=self._db_mgr, log_level=self.log_level)
 
         device = torch.device("cpu")  # keep simple; GPU can be passed later
 
@@ -125,6 +127,7 @@ class HydraMgr(HydraServer):
             lr=self.cfg.get(DNetField.LEARNING_RATE),
             device=device,
             gamma=0.9,
+            log_level=self.log_level,
         )
 
         # Policy stack
@@ -202,11 +205,6 @@ class HydraMgr(HydraServer):
             sess = snake.get_session(client_id)
             snake.start_time(datetime.now())
 
-            # Training vars: Should be moved out of this loop
-            train_start = 1_000
-            train_every = 4
-            grad_steps = 1
-            batch_size = 64
             count = 0
 
             # Lookahead setting
@@ -265,25 +263,16 @@ class HydraMgr(HydraServer):
                         sess.lookahead_on = sess.rng.random() < lookahead_p
                     info[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
 
-                    # Loss snapshot
-                    loss_snap = train_mgr.trainer.get_loss()
-                    if loss_snap is not None:
-                        info[DNetField.LOSS] = loss_snap
+                    # Loss, if available, is loaded into the telemetry here
+                    ep_loss = train_mgr.trainer.get_per_ep_loss()
+                    if ep_loss is not None:
+                        info[DNetField.EP_LOSS] = ep_loss
+                    step_loss = train_mgr.trainer.get_avg_per_step_loss()
+                    if step_loss is not None:
+                        info[DNetField.STEP_LOSS] = step_loss
 
                     # Final score
                     info[DNetField.FINAL_SCORE] = sess.score
-
-                    # Save the last move to memory
-                    t = Transition(
-                        old_state=ep_payload[DNetField.STATE],
-                        action=action,
-                        reward=ep_payload[DGameField.REWARD],
-                        new_state=ep_payload[DNetField.NEXT_STATE],
-                        done=done,
-                    )
-                    train_mgr.replay.append(t)
-
-                    #
 
                 # Build/store transition (unchanged for now)
                 t = Transition(
@@ -293,7 +282,14 @@ class HydraMgr(HydraServer):
                     new_state=ep_payload[DNetField.NEXT_STATE],
                     done=done,
                 )
-                train_mgr.replay.append(t)
+
+                if done:
+                    train_mgr.replay.append(
+                        transition=t, final_score=sess.score
+                    )
+                    self._train_mgr.trainer.train_long_memory()
+                else:
+                    train_mgr.replay.append(transition=t)
 
                 # Train step here
                 train_mgr.trainer.train_step(t)
