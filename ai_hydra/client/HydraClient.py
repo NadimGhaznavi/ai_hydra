@@ -98,6 +98,7 @@ class HydraClientTui(App):
         self.cfg = SimCfg()
         self._running = False
         self._wgt = None
+        self._not_first_time_kludge = False
 
     @work(exclusive=True)
     async def check_heartbeat(self) -> None:
@@ -315,6 +316,7 @@ class HydraClientTui(App):
         elif button_id == DGameMethod.START_RUN:
             self._update_tui_labels()
             self.mq.enable_per_episode_sub()
+            self.mq.enable_scores_sub()
             if self.cfg.get(DNetField.PER_STEP):
                 self.mq.enable_per_step_sub()
             else:
@@ -406,6 +408,7 @@ class HydraClientTui(App):
         self.mq.start()
         self.mq.disable_per_episode_sub()
         self.mq.disable_per_step_sub()
+        self.mq.disable_scores_sub()
 
         # Network
         self.query_one(f"#{DField.ROUTER_HB}", Label).update(
@@ -461,7 +464,7 @@ class HydraClientTui(App):
         # Lookahead Highscore event
         if DGameField.HIGHSCORE_EVENT_NLH in info:
             highscore_event_nlh = info[DGameField.HIGHSCORE_EVENT_NLH]
-            if not highscore_event_lh[2]:
+            if not highscore_event_nlh[2]:
                 self._w_tabbed_scores.add_highscore_nlh(
                     epoch=highscore_event_nlh[0],
                     highscore=highscore_event_nlh[1],
@@ -488,10 +491,15 @@ class HydraClientTui(App):
             )
 
         # Loss
-        if DNetField.LOSS in info:
-            self._w_tabbed_plots.add_loss(
-                epoch,
-                info[DNetField.LOSS],
+        if DNetField.EP_LOSS in info:
+            self._w_tabbed_plots.add_ep_loss(
+                epoch=epoch,
+                loss=info[DNetField.EP_LOSS],
+            )
+        if DNetField.STEP_LOSS in info:
+            self._w_tabbed_plots.add_step_loss(
+                epoch=epoch,
+                loss=info[DNetField.STEP_LOSS],
             )
 
         # Final score
@@ -513,6 +521,32 @@ class HydraClientTui(App):
             await self.mq.quit()
             self.mq = None
 
+    def on_select_changed(self, event: Select.Changed) -> None:
+        if event.control.id != DField.MODEL_TYPE_SELECT:
+            return
+
+        if event.value == DField.LINEAR:
+            lr = f"{DLinear.LEARNING_RATE:.5f}"
+            lookahead = DLookaheadDef.PROBABILITY
+
+        elif event.value == DField.RNN:
+            lr = f"{DRNN.LEARNING_RATE:.5f}"
+            lookahead = 0
+
+        else:
+            return
+
+        self._w_learning_rate_input.value = lr
+        self._w_lookahead_p_val_input.value = str(lookahead)
+
+        if self._not_first_time_kludge:
+            self.console_msg(
+                f"Updated defaults: learning rate: {lr}, "
+                f"look ahead p-value: {lookahead}"
+            )
+
+        self._not_first_time_kludge = True
+
     async def on_quit(self) -> None:
         sys.exit(0)
 
@@ -527,18 +561,6 @@ class HydraClientTui(App):
             await self.mq.quit()
             self.mq = None
         self.exit()
-
-    def on_select_changed(self, event: Select.Changed) -> None:
-        # We want to change the default learning rate if the user changes the
-        # model.
-        if event.control.id == DField.MODEL_TYPE_SELECT:
-            if event.value == DField.LINEAR:
-                lr = f"{DLinear.LEARNING_RATE:.5f}"  # 0.00005
-                self._w_learning_rate_input.value = lr
-            elif event.value == DField.RNN:
-                lr = f"{DRNN.LEARNING_RATE:.5f}"  # 0.00009
-                self._w_learning_rate_input.value = lr
-            self.console_msg(f"Updated default learning rate to: {lr}...")
 
     async def _send_handshake(self):
         msg = HydraMsg(

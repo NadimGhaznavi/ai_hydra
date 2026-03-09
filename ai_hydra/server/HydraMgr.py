@@ -119,7 +119,7 @@ class HydraMgr(HydraServer):
             nnet_policy = LinearPolicy(model=model, device=device)
         elif model_type == DField.RNN:
             model = RNNModel()
-            nnet_policy = RNNPolicy()
+            nnet_policy = RNNPolicy(model=model, device=device)
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
@@ -235,12 +235,14 @@ class HydraMgr(HydraServer):
                 )
 
                 # Advance sim
-                ep_payload, step_payload = snake.step(
-                    client_id=client_id,
-                    action=action,
+                state_dict, scores_payload, step_payload, ep_payload = (
+                    snake.step(
+                        client_id=client_id,
+                        action=action,
+                    )
                 )
 
-                done = ep_payload[DGameField.DONE]
+                done = state_dict[DGameField.DONE]
 
                 # Episode-end bookkeeping
                 if done:
@@ -252,36 +254,31 @@ class HydraMgr(HydraServer):
                             f"Epoch: {count} - Highscore: {sess.highscore}"
                         )
 
-                    info = ep_payload.setdefault(DGameField.INFO, {})
-
                     # Epsilon
                     train_mgr.policy.played_game()
-                    info[DNetField.CUR_EPSILON] = (
+                    ep_payload[DNetField.CUR_EPSILON] = (
                         train_mgr.policy.cur_epsilon()
                     )
 
                     # Lookahead coinflip
                     if sess.epoch % 10 == 0:
                         sess.lookahead_on = sess.rng.random() < lookahead_p
-                    info[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
+                    ep_payload[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
 
                     # Loss, if available, is loaded into the telemetry here
                     ep_loss = train_mgr.trainer.get_per_ep_loss()
                     if ep_loss is not None:
-                        info[DNetField.EP_LOSS] = ep_loss
+                        ep_payload[DNetField.EP_LOSS] = ep_loss
                     step_loss = train_mgr.trainer.get_avg_per_step_loss()
                     if step_loss is not None:
-                        info[DNetField.STEP_LOSS] = step_loss
-
-                    # Final score
-                    info[DNetField.FINAL_SCORE] = sess.score
+                        ep_payload[DNetField.STEP_LOSS] = step_loss
 
                 # Build/store transition (unchanged for now)
                 t = Transition(
-                    old_state=ep_payload[DNetField.STATE],
+                    old_state=state_dict[DNetField.STATE],
                     action=action,
-                    reward=ep_payload[DGameField.REWARD],
-                    new_state=ep_payload[DNetField.NEXT_STATE],
+                    reward=state_dict[DGameField.REWARD],
+                    new_state=state_dict[DNetField.NEXT_STATE],
                     done=done,
                 )
 
@@ -298,7 +295,12 @@ class HydraMgr(HydraServer):
 
                 # Publish
                 if mq is not None:
-                    await mq.publish_per_episode(ep_payload)
+                    # Publish scores at every step
+                    await mq.publish_scores(scores_payload)
+
+                    # Publish per epsisode if the episode is "done"
+                    if done:
+                        await mq.publish_per_episode(ep_payload)
                     # publish per_step only if enabled and payload exists
                     if want_step and step_payload:
                         await mq.publish_per_step(step_payload)

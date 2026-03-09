@@ -97,6 +97,16 @@ TabbedScores {
     width: 125;
 }
 
+#loss_ep_plot {
+    height: 18;
+    width: 125;
+}
+
+#loss_step_plot {
+    height: 18;
+    width: 125;
+}
+
 #network {
     background: black;
     border: round #0c323e;

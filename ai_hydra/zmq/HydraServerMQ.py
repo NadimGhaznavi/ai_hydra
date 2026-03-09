@@ -117,6 +117,9 @@ class HydraServerMQ(HydraBaseMQ):
     async def publish_per_episode(self, payload: dict) -> None:
         await self._publish(DHydraMQDef.PER_EPISODE_TOPIC, payload=payload)
 
+    async def publish_scores(self, payload: dict) -> None:
+        await self._publish(DHydraMQDef.SCORES_TOPIC, payload=payload)
+
     def start(self) -> None:
         super().start()
 

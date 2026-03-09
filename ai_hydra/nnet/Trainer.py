@@ -150,9 +150,6 @@ class Trainer:
 
         # No training data is available
         game_id = self.game_id()
-        if isinstance(self.game_id(), int):
-            self.log.debug(f"Training on game: {game_id}")
-
         if isinstance(self.num_frames(), int):
             self.log.debug(f"Training on {self.num_frames()}")
 
@@ -198,10 +195,6 @@ class Trainer:
 
         # Get the training data from ReplayMemory
         self.load_training_data()
-
-        game_id = self.game_id()
-        if isinstance(game_id, int):
-            self.log.debug(f"Training RNN on game: {game_id}")
 
         training_batch = self.training_data()
 

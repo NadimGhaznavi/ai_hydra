@@ -15,22 +15,30 @@ from textual.widgets import TabbedContent
 from textual_plot import PlotWidget, HiResMode, LegendLocation
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DPlotDef, DColor
+from ai_hydra.constants.DNNet import DNetField
 
 
 class TabbedPlots(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.loss = []
-        self.epochs = []
+        self.ep_epochs = []
+        self.ep_loss = []
+        self.step_epochs = []
+        self.step_loss = []
         self.scores = {}
         self.scores_lh = {}
         self.scores_nlh = {}
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
-            DLabel.LOSS, DLabel.SCORES_ALL, DLabel.SCORES_LH, DLabel.SCORES_NLH
+            DLabel.EP_LOSS,
+            DLabel.STEP_LOSS,
+            DLabel.SCORES_ALL,
+            DLabel.SCORES_LH,
+            DLabel.SCORES_NLH,
         ):
-            yield PlotWidget(id=DField.LOSS_PLOT)
+            yield PlotWidget(id=DField.LOSS_EP_PLOT)
+            yield PlotWidget(id=DField.LOSS_STEP_PLOT)
             yield PlotWidget(id=DField.SCORES_PLOT)
             yield PlotWidget(id=DField.SCORES_PLOT_LH)
             yield PlotWidget(id=DField.SCORES_PLOT_NLH)
@@ -45,12 +53,14 @@ class TabbedPlots(Widget):
 
     def _replot_active_tab(self, pane_id: str) -> None:
         if pane_id == "tab-1":
-            self._plot_loss()
+            self._plot_loss(DNetField.EP_LOSS)
         elif pane_id == "tab-2":
-            self._plot_scores(self.scores, "all")
+            self._plot_loss(DNetField.STEP_LOSS)
         elif pane_id == "tab-3":
-            self._plot_scores(self.scores_lh, "lh")
+            self._plot_scores(self.scores, "all")
         elif pane_id == "tab-4":
+            self._plot_scores(self.scores_lh, "lh")
+        elif pane_id == "tab-5":
             self._plot_scores(self.scores_nlh, "nlh")
         else:
             raise ValueError(f"Unhandled tab: {pane_id}")
@@ -105,15 +115,31 @@ class TabbedPlots(Widget):
                 cur_median, "purple", f"Median: {cur_median:.2f}"
             )
 
-    def add_loss(self, epoch, loss, plot=True):
-        self.loss.append(loss)
-        self.epochs.append(epoch)
+    def add_ep_loss(self, epoch, loss, plot=True):
+        self.ep_loss.append(loss)
+        self.ep_epochs.append(epoch)
         if plot:
-            self._plot_loss()
+            self._plot_loss(type=DNetField.EP_LOSS)
 
-    def _plot_loss(self) -> None:
-        losses = self.loss
-        epochs = self.epochs
+    def add_step_loss(self, epoch, loss, plot=True):
+        self.step_loss.append(loss)
+        self.step_epochs.append(epoch)
+        if plot:
+            self._plot_loss(type=DNetField.STEP_LOSS)
+
+    def _plot_loss(self, type: str) -> None:
+        if type == DNetField.EP_LOSS:
+            line_style = DColor.GREEN
+            losses = self.ep_loss
+            plot_name = "Episode"
+            epochs = self.ep_epochs
+            loss_plot = self.query_one(f"#{DField.LOSS_EP_PLOT}", PlotWidget)
+        else:
+            line_style = DColor.RED
+            losses = self.step_loss
+            plot_name = "Step"
+            epochs = self.step_epochs
+            loss_plot = self.query_one(f"#{DField.LOSS_STEP_PLOT}", PlotWidget)
 
         if len(losses) > DPlotDef.MAX_LOSS_DATA_POINTS:
             step = max(1, len(epochs) // DPlotDef.MAX_LOSS_DATA_POINTS)
@@ -128,7 +154,6 @@ class TabbedPlots(Widget):
             losses = thinned_losses
             epochs = thinned_epochs
 
-        loss_plot = self.query_one(f"#{DField.LOSS_PLOT}", PlotWidget)
         loss_plot.clear()
 
         if epochs:
@@ -136,20 +161,25 @@ class TabbedPlots(Widget):
                 x=epochs,
                 y=losses,
                 hires_mode=HiResMode.BRAILLE,
-                line_style=DColor.GREEN,
+                line_style=line_style,
+                label=plot_name,
             )
             loss_plot.set_ylimits()
             loss_plot.set_xlabel(DLabel.EPISODES)
             loss_plot.set_ylabel(DLabel.LOSS)
+            loss_plot.show_legend(location=LegendLocation.TOPRIGHT)
 
     def reset(self) -> None:
-        self.loss = []
-        self.epochs = []
+        self.ep_loss = []
+        self.ep_epochs = []
+        self.step_loss = []
+        self.step_epochs = []
         self.scores = {}
         self.scores_lh = {}
         self.scores_nlh = {}
 
-        self.query_one(f"#{DField.LOSS_PLOT}", PlotWidget).clear()
+        self.query_one(f"#{DField.LOSS_EP_PLOT}", PlotWidget).clear()
+        self.query_one(f"#{DField.LOSS_STEP_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT_LH}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT_NLH}", PlotWidget).clear()

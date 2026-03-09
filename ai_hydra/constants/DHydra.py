@@ -67,9 +67,10 @@ class DHydraMQ:
 
 
 class DHydraMQDef:
-    TOPIC_PREFIX: Final[str] = "ai-hydra"
+    TOPIC_PREFIX: Final[str] = "ai_hydra"
     PER_STEP_TOPIC: Final[str] = "per_step_topic"
     PER_EPISODE_TOPIC: Final[str] = "per_episode_topic"
+    SCORES_TOPIC: Final[str] = "scores_topic"
 
 
 class DHydraRouterDef:

@@ -121,11 +121,17 @@ class HydraClientMQ(HydraBaseMQ):
     def disable_per_episode_sub(self) -> None:
         self._sub_set(False, self.topic(DHydraMQDef.PER_EPISODE_TOPIC))
 
+    def disable_scores_sub(self) -> None:
+        self._sub_set(False, self.topci(DHydraMQDef.SCORES_TOPIC))
+
     def enable_per_step_sub(self) -> None:
         self._sub_set(True, self.topic(DHydraMQDef.PER_STEP_TOPIC))
 
     def enable_per_episode_sub(self) -> None:
         self._sub_set(True, self.topic(DHydraMQDef.PER_EPISODE_TOPIC))
+
+    def enable_scores_sub(self) -> None:
+        self._sub_set(True, self.topci(DHydraMQDef.SCORES_TOPIC))
 
     async def quit(self) -> None:
         if self._stopped:

@@ -20,6 +20,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - **SQLite DBMgr**:
   - Created `utils/DBMgr.py`, the new DBMgr, used to provide a SQLite backed *Replay Memory*.
   - Stores the ordered set of transitions for every game.
+- **ZeroMQ Scores Tpic**:
+  - Moved all score telementry (current score, highscore with and without lookahead) into this topic.
+  - Published on a per-step basis to capture *outlier* scores where the snake has one lucky game and the highscore jumps multiple points.
 
 ### Changed
 - Modified the `Trainer` to accept a learning rate.
@@ -37,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Fixed
 - Removed unnecessary f-string formatting in the TUI code.
 - Fixed a bug where the lookahead highscore was display in the "no lookahead" highscore tab. The "no lookahead" highscore was being ignored.
+- Removed a bug that was sending per-episode telementry every step.
 
 ---
 
