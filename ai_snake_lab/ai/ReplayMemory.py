@@ -49,7 +49,9 @@ class ReplayMemory:
 
         if done:
             if final_score is None:
-                raise ValueError("final_score must be provided when the game ends")
+                raise ValueError(
+                    "final_score must be provided when the game ends"
+                )
 
             total_frames = len(self.cur_memory)
 

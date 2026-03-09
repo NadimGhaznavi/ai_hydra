@@ -13,8 +13,8 @@ from typing import Sequence
 
 @dataclass(frozen=True)
 class Transition:
-    state: Sequence[float]
+    old_state: Sequence[float]
     action: int
     reward: float
-    next_state: Sequence[float]
+    new_state: Sequence[float]
     done: bool

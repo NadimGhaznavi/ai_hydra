@@ -23,6 +23,7 @@ class DHydra:
     PROTOCOL_VERSION: Final[int] = 1
     RANDOM_SEED: Final[int] = 129
     VERSION: Final[str] = "0.13.0"
+    HYDRA_DIR: Final[str] = ".ai_hydra"
 
 
 class DHydraLog(StrEnum):

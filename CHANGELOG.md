@@ -17,12 +17,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Added the *learning rate* to the TUI.
   - Handled the learning rate in the *HydraMgr*.
   - Configured the TUI so that the default learning rate is based on the selected model.
+- **SQLite DBMgr**:
+  - Created `utils/DBMgr.py`, the new DBMgr, used to provide a SQLite backed *Replay Memory*.
+  - Stores the ordered set of transitions for every game.
 
 ### Changed
 - Modified the `Trainer` to accept a learning rate.
 - Modifed the `SimCfg` to support passing the learning rate.
 - Modifed the `HydraMgr` to handle the new `MODEL_TYPE` and `LEARNING_RATE` settings.
 - Set the criterion in the `Trainer` to an appropriate default based on the selected model.
+- **ReplayMemory**:
+  - Implemented a completely new *ReplayMemory* class.
+  - Uses the (SQLite) `DBMgr` to support very large ReplayMemory without running out of RAM.
+  - Support different memory types:
+    - None: No replay memory
+    - *Random Game*: Return an ordered list of transitions for a randomly selected game.
+    - *Random Frames*: Return a list of random transitions from random games.
 
 ### Fixed
 - Removed unnecessary f-string formatting in the TUI code.

@@ -77,7 +77,7 @@ class HydraClientTui(App):
     """A Textual interface to the HydraServer"""
 
     TITLE = DLabel.CLIENT_TITLE
-    CSS_PATH = DFile.CLIENT_CSS_PATH
+    CSS_PATH = DFile.CLIENT_CSS
 
     def __init__(
         self,

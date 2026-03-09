@@ -39,7 +39,7 @@ class HydraRouter(App):
     """A Textual interface to the Hydra Router"""
 
     TITLE = DLabel.ROUTER_TITLE
-    CSS_PATH = DFile.ROUTER_CSS_PATH
+    CSS_PATH = DFile.ROUTER_CSS
 
     def __init__(
         self,

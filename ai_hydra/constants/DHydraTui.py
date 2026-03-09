@@ -97,8 +97,9 @@ class DFile:
     Filenames.
     """
 
-    CLIENT_CSS_PATH: Final[str] = "HydraClient.tcss"
-    ROUTER_CSS_PATH: Final[str] = "HydraRouter.tcss"
+    CLIENT_CSS: Final[str] = "HydraClient.tcss"
+    ROUTER_CSS: Final[str] = "HydraRouter.tcss"
+    HYDRA_SERVER_DB: Final[str] = "HydraServer.db"
 
 
 class DLabel:

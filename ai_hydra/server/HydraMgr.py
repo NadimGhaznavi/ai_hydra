@@ -227,9 +227,9 @@ class HydraMgr(HydraServer):
                 )
 
                 # Choose action (server-side)
-                state = sess.board.get_state()
+                old_state = sess.board.get_state()
                 action = train_mgr.policy.select_action(
-                    state,
+                    old_state,
                     board=sess.board,
                     lookahead_on=sess.lookahead_on,
                 )
@@ -273,24 +273,30 @@ class HydraMgr(HydraServer):
                     # Final score
                     info[DNetField.FINAL_SCORE] = sess.score
 
+                    # Save the last move to memory
+                    t = Transition(
+                        old_state=ep_payload[DNetField.STATE],
+                        action=action,
+                        reward=ep_payload[DGameField.REWARD],
+                        new_state=ep_payload[DNetField.NEXT_STATE],
+                        done=done,
+                    )
+                    train_mgr.replay.append(t)
+
+                    #
+
                 # Build/store transition (unchanged for now)
                 t = Transition(
-                    state=ep_payload[DNetField.STATE],
+                    old_state=ep_payload[DNetField.STATE],
                     action=action,
                     reward=ep_payload[DGameField.REWARD],
-                    next_state=ep_payload[DNetField.NEXT_STATE],
+                    new_state=ep_payload[DNetField.NEXT_STATE],
                     done=done,
                 )
-                train_mgr.replay.add(t)
+                train_mgr.replay.append(t)
 
-                # Train periodically once replay is warm
-                if len(train_mgr.replay) >= train_start and (
-                    sess.step_n % train_every == 0
-                ):
-                    for _ in range(grad_steps):
-                        await asyncio.to_thread(
-                            train_mgr.trainer.train_step, batch_size
-                        )
+                # Train step here
+                train_mgr.trainer.train_step(t)
 
                 # Publish
                 if mq is not None:
