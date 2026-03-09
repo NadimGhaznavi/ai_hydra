@@ -226,7 +226,7 @@ class SnakeMgr:
         if sess.score > sess.highscore:
             sess.highscore = sess.score
 
-        # State information
+        # ----- State information ---
         state_dict = {
             DGameField.DONE: done,
             DNetField.STATE: state,
@@ -236,11 +236,16 @@ class SnakeMgr:
             DGameField.EPISODE_ID: sess.episode_id,
         }
 
-        # The payload for the ZeroMQ "scores" topic
+        # ----- The payload for the ZeroMQ "scores" topic ---
         scores_payload = {
             DGameField.SCORE: sess.score,
             DGameField.HIGHSCORE: sess.highscore,
+            DNetField.LOOKAHEAD_ON: sess.lookahead_on,
         }
+        # Create a "final score" field for the TUI
+        if done:
+            scores_payload[DNetField.FINAL_SCORE] = sess.score
+        # Add a new "no lookahead highscore" event
         if sess.score > sess.highscore_nlh and not sess.lookahead_on:
             sess.highscore_nlh = sess.score
             scores_payload[DGameField.HIGHSCORE_EVENT_NLH] = [
@@ -248,6 +253,7 @@ class SnakeMgr:
                 sess.highscore_nlh,
                 elapsed_str,
             ]
+        # Add a "lookahead highscore" event
         if sess.score > sess.highscore_lh and sess.lookahead_on:
             sess.highscore_lh = sess.score
             scores_payload[DGameField.HIGHSCORE_EVENT_LH] = [
@@ -256,7 +262,7 @@ class SnakeMgr:
                 elapsed_str,
             ]
 
-        # The payload for the ZeroMQ "per step" topic
+        # ----- The payload for the ZeroMQ "per step" topic ---
         step_payload = None
         if self.cfg.get(DNetField.PER_STEP):
             step_payload = {DGameField.BOARD: sess.board.to_dict()}
@@ -271,106 +277,6 @@ class SnakeMgr:
             }
 
         return state_dict, scores_payload, step_payload, ep_payload
-
-    def UNUSED_step(
-        self,
-        client_id: str,
-        action: int,
-    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
-        """
-        Step the client's session forward by one action.
-
-        Returns (ep_payload, step_payload).
-        - step_payload (per_step): board telemetry + current score only
-        - ep_payload (per_episode): everything else; always published
-        """
-        sess = self.get_session(client_id)
-
-        if sess.done:
-            ep_payload = {
-                DGameField.OK: False,
-                DGameField.ERROR: DGameField.EPISODE_DONE,
-                DGameField.INFO: {
-                    DGameField.EPISODE_ID: sess.episode_id,
-                    DGameField.EPOCH: sess.epoch,
-                    DGameField.HIGHSCORE: sess.highscore,
-                    DGameField.STEP_N: sess.step_n,
-                    DGameField.REWARD_TOTAL: sess.reward_total,
-                    DGameField.REASON: DGameField.EPISODE_DONE,
-                    DGameField.SEED: sess.seed,
-                },
-            }
-            step_payload: dict[str, Any] = {}
-            return ep_payload, step_payload
-
-        # NN-ready state vector (pre-step)
-        state = sess.board.get_state()
-
-        # Apply action
-        result = GameLogic.step(sess.board, int(action), sess.rng)
-
-        sess.board = result.new_board
-        sess.step_n += 1
-
-        reward = int(result.reward)
-        done = bool(result.is_terminal)
-        outcome = result.outcome  # use as "reason" for now
-
-        # Score delta (Phase 1): +1 on FOOD, else 0
-        if outcome == DGameField.FOOD:
-            sess.score += 1
-
-        elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
-        elapsed_str = minutes_to_uptime(int(elapsed_secs))
-
-        sess.done = done
-        sess.reward_total += reward
-
-        # NN-ready next state (post-step)
-        next_state = sess.board.get_state()
-
-        if sess.score > sess.highscore:
-            sess.highscore = sess.score
-
-        step_payload = None
-        if self.cfg.get(DNetField.PER_STEP):
-            step_payload = {
-                DGameField.BOARD: sess.board.to_dict(),
-                DGameField.SCORE: sess.score,
-            }
-
-        ep_payload: dict[str, Any] = {
-            DGameField.OK: True,
-            DGameField.REWARD: reward,
-            DNetField.STATE: state,
-            DNetField.NEXT_STATE: next_state,
-            DGameField.DONE: sess.done,
-            DGameField.INFO: {
-                DGameField.EPISODE_ID: sess.episode_id,
-                DGameField.EPOCH: sess.epoch,
-                DGameField.HIGHSCORE: sess.highscore,
-                DGameField.STEP_N: sess.step_n,
-                DGameField.REWARD_TOTAL: sess.reward_total,
-                DGameField.REASON: outcome,
-                DGameField.SEED: sess.seed,
-            },
-        }
-
-        if sess.score > sess.highscore_nlh and not sess.lookahead_on:
-            sess.highscore_nlh = sess.score
-            ep_payload[DGameField.INFO][DGameField.HIGHSCORE_EVENT_NLH] = [
-                sess.epoch,
-                sess.highscore_nlh,
-                elapsed_str,
-            ]
-        if sess.score > sess.highscore_lh and sess.lookahead_on:
-            sess.highscore_lh = sess.score
-            ep_payload[DGameField.INFO][DGameField.HIGHSCORE_EVENT_LH] = [
-                sess.epoch,
-                sess.highscore_lh,
-                elapsed_str,
-            ]
-        return ep_payload, step_payload
 
 
 # Helper function

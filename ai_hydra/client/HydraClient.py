@@ -404,6 +404,7 @@ class HydraClientTui(App):
         self.mq.sub_methods = {
             self.mq.topic(DHydraMQDef.PER_STEP_TOPIC): self.on_per_step,
             self.mq.topic(DHydraMQDef.PER_EPISODE_TOPIC): self.on_per_episode,
+            self.mq.topic(DHydraMQDef.SCORES_TOPIC): self.on_scores,
         }
         self.mq.start()
         self.mq.disable_per_episode_sub()
@@ -436,52 +437,18 @@ class HydraClientTui(App):
         self.console_msg("Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
-        info = payload.get(DGameField.INFO, {})
-
         # Epoch
-        epoch = info.get(DGameField.EPOCH)
+        epoch = payload[DGameField.EPOCH]
         self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
 
-        # Current score and highscore
-        highscore = info.get(DGameField.HIGHSCORE)
-        self._w_tabbed_scores.border_subtitle = (
-            f"{DLabel.HIGHSCORE}: {highscore}"
-        )
-
-        # Lookahead Highscore event
-        if DGameField.HIGHSCORE_EVENT_LH in info:
-            highscore_event_lh = info[DGameField.HIGHSCORE_EVENT_LH]
-            if highscore_event_lh[2]:
-                self._w_tabbed_scores.add_highscore_lh(
-                    epoch=highscore_event_lh[0],
-                    highscore=highscore_event_lh[1],
-                    event_time=highscore_event_lh[2],
-                )
-                self.console_msg(
-                    f"🎉 New highscore with look ahead enabled: {highscore_event_lh[1]}"
-                )
-
-        # Lookahead Highscore event
-        if DGameField.HIGHSCORE_EVENT_NLH in info:
-            highscore_event_nlh = info[DGameField.HIGHSCORE_EVENT_NLH]
-            if not highscore_event_nlh[2]:
-                self._w_tabbed_scores.add_highscore_nlh(
-                    epoch=highscore_event_nlh[0],
-                    highscore=highscore_event_nlh[1],
-                    event_time=highscore_event_nlh[2],
-                )
-                self.console_msg(
-                    f"🎉 New highscore without look ahead enabled: {highscore_event_lh[1]}"
-                )
-
         # Current epsilon value
-        epsilon = info.get(DNetField.CUR_EPSILON)
+        epsilon = payload.get(DNetField.CUR_EPSILON)
         if epsilon is not None:
             self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
 
         # Lookahead status
-        if DNetField.LOOKAHEAD_ON in info:
-            if info[DNetField.LOOKAHEAD_ON]:
+        if DNetField.LOOKAHEAD_ON in payload:
+            if payload[DNetField.LOOKAHEAD_ON]:
                 cur_lookahead = DStatus.GOOD
             else:
                 cur_lookahead = DStatus.BAD
@@ -491,30 +458,62 @@ class HydraClientTui(App):
             )
 
         # Loss
-        if DNetField.EP_LOSS in info:
+        if DNetField.EP_LOSS in payload:
             self._w_tabbed_plots.add_ep_loss(
                 epoch=epoch,
-                loss=info[DNetField.EP_LOSS],
+                loss=payload[DNetField.EP_LOSS],
             )
-        if DNetField.STEP_LOSS in info:
+        if DNetField.STEP_LOSS in payload:
             self._w_tabbed_plots.add_step_loss(
                 epoch=epoch,
-                loss=info[DNetField.STEP_LOSS],
-            )
-
-        # Final score
-        if DNetField.FINAL_SCORE in info:
-            self._w_tabbed_plots.add_score(
-                cur_score=info[DNetField.FINAL_SCORE],
-                lookahead=info[DNetField.LOOKAHEAD_ON],
+                loss=payload[DNetField.STEP_LOSS],
             )
 
     def on_per_step(self, topic: str, payload: dict) -> None:
-        score = "N/A"
-        score = payload.get(DGameField.SCORE)
         board = payload.get(DGameField.BOARD)
         self.game_board.apply_board_dict(board)
+
+    def on_scores(self, topic: str, payload: dict) -> None:
+        # Current highscore
+        highscore = payload[DGameField.HIGHSCORE]
+        self._w_tabbed_scores.border_subtitle = (
+            f"{DLabel.HIGHSCORE}: {highscore}"
+        )
+
+        # current score
+        score = payload[DGameField.SCORE]
         self._w_board_box.border_subtitle = f"{DLabel.SCORE}: {score:<2}"
+
+        # Lookahead Highscore event
+        if DGameField.HIGHSCORE_EVENT_LH in payload:
+            hs_event = payload[DGameField.HIGHSCORE_EVENT_LH]
+            self._w_tabbed_scores.add_highscore_lh(
+                epoch=hs_event[0],
+                highscore=hs_event[1],
+                event_time=hs_event[2],
+            )
+            self.console_msg(
+                f"🎉 New highscore with look ahead enabled: {hs_event[1]}"
+            )
+
+        # Lookahead Highscore event
+        if DGameField.HIGHSCORE_EVENT_NLH in payload:
+            hs_event = payload[DGameField.HIGHSCORE_EVENT_NLH]
+            self._w_tabbed_scores.add_highscore_nlh(
+                epoch=hs_event[0],
+                highscore=hs_event[1],
+                event_time=hs_event[2],
+            )
+            self.console_msg(
+                f"🎉 New highscore without look ahead enabled: {hs_event[1]}"
+            )
+
+        # Final score
+        if DNetField.FINAL_SCORE in payload:
+            self._w_tabbed_plots.add_score(
+                cur_score=payload[DNetField.FINAL_SCORE],
+                lookahead=payload[DNetField.LOOKAHEAD_ON],
+            )
 
     async def on_shutdown_request(self) -> None:
         if self.mq is not None:

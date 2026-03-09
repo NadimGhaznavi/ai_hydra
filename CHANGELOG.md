@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [Unreleased]
 
 ### Added
+- Stacktrace support for HydraClientMQ exceptions. Useful when expected topic data is missing.
 - **A RNN model**:
   - Created `nnet/models/RNNModel.py`, the new RNN!
   - Created a drop-down menu in the TUI to select the model type (Linear or RNN).
@@ -23,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - **ZeroMQ Scores Tpic**:
   - Moved all score telementry (current score, highscore with and without lookahead) into this topic.
   - Published on a per-step basis to capture *outlier* scores where the snake has one lucky game and the highscore jumps multiple points.
+
 
 ### Changed
 - Modified the `Trainer` to accept a learning rate.

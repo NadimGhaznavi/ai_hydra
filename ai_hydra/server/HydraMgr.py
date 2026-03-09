@@ -317,7 +317,7 @@ class HydraMgr(HydraServer):
             return
         except Exception as e:
             self.log.critical(f"ERROR: {e}")
-            self.log.critical(f"TRACEBACK: {traceback.format_exc()}")
+            self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
 
     async def set_move_delay(self, msg: HydraMsg) -> None:
         delay = msg.payload[DNetField.MOVE_DELAY]

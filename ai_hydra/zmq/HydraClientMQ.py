@@ -20,6 +20,7 @@ from collections.abc import Awaitable, Callable
 import asyncio
 import zmq, zmq.asyncio
 import json
+import traceback
 
 from ai_hydra.constants.DHydra import (
     DHydra,
@@ -111,6 +112,7 @@ class HydraClientMQ(HydraBaseMQ):
                     pass
                 except Exception as e:
                     print(f"ERROR: telemetry listen error: {e}")
+                    print(f"STACKTRACK: {traceback.format_exc()}")
 
         except asyncio.CancelledError:
             raise
@@ -122,7 +124,7 @@ class HydraClientMQ(HydraBaseMQ):
         self._sub_set(False, self.topic(DHydraMQDef.PER_EPISODE_TOPIC))
 
     def disable_scores_sub(self) -> None:
-        self._sub_set(False, self.topci(DHydraMQDef.SCORES_TOPIC))
+        self._sub_set(False, self.topic(DHydraMQDef.SCORES_TOPIC))
 
     def enable_per_step_sub(self) -> None:
         self._sub_set(True, self.topic(DHydraMQDef.PER_STEP_TOPIC))
@@ -131,7 +133,7 @@ class HydraClientMQ(HydraBaseMQ):
         self._sub_set(True, self.topic(DHydraMQDef.PER_EPISODE_TOPIC))
 
     def enable_scores_sub(self) -> None:
-        self._sub_set(True, self.topci(DHydraMQDef.SCORES_TOPIC))
+        self._sub_set(True, self.topic(DHydraMQDef.SCORES_TOPIC))
 
     async def quit(self) -> None:
         if self._stopped:
