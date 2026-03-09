@@ -110,7 +110,7 @@ class DRNN:
     OUTPUT_SIZE: Final[int] = 3
     P_VALUE: Final[float] = 0.1
     NON_LINEARITY: Final[str] = "tanh"
-    LEARNING_RATE: Final[float] = 0.00009
+    LEARNING_RATE: Final[float] = 0.0002
 
 
 MODEL_TYPE_TABLE: Final[dict] = {

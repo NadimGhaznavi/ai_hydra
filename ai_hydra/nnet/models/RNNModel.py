@@ -39,11 +39,40 @@ class RNNModel(nn.Module):
         self.m_out = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        x = self.m_in(x)
-        inputs = x.view(1, -1, DRNN.HIDDEN_SIZE)
-        x, h_n = self.m_rnn(inputs)
-        x = self.m_out(x)
-        return x[len(x) - 1]
+        # Accept a single state or a full sequence of states.
+        # Expected shapes:
+        #   [input_size]              -> one state
+        #   [seq_len, input_size]     -> one full game / one sequence
+
+        if x.dim() == 1:
+            x = x.unsqueeze(0)  # [1, input_size]
+
+        x = self.m_in(x)  # [seq_len, hidden_size]
+        x = x.unsqueeze(1)  # [seq_len, 1, hidden_size]
+        x, h_n = self.m_rnn(x)  # [seq_len, 1, hidden_size]
+        x = self.m_out(x)  # [seq_len, 1, output_size]
+
+        return x[-1, 0, :]
+
+    def forward_sequence(self, x):
+        """
+        Return Q-values for every timestep in the sequence.
+
+        Expected input shapes:
+            [input_size]           -> one state
+            [seq_len, input_size]  -> one sequence / one game
+
+        Returns:
+            [seq_len, output_size]
+        """
+        if x.dim() == 1:
+            x = x.unsqueeze(0)  # [1, input_size]
+
+        x = self.m_in(x)  # [seq_len, hidden_size]
+        x = x.unsqueeze(1)  # [seq_len, 1, hidden_size]
+        x, _ = self.m_rnn(x)  # [seq_len, 1, hidden_size]
+        x = self.m_out(x)  # [seq_len, 1, output_size]
+        return x[:, 0, :]  # [seq_len, output_size]
 
     def reset_parameters(self):
         for layer in self.children():

@@ -93,9 +93,10 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.TrainMgr import TrainMgr
         from ai_hydra.nnet.ReplayMemory import ReplayMemory
         from ai_hydra.nnet.Trainer import Trainer
-        from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
         from ai_hydra.nnet.models.LinearModel import LinearModel
+        from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
         from ai_hydra.nnet.models.RNNModel import RNNModel
+        from ai_hydra.nnet.Policy.RNNPolicy import RNNPolicy
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
         from ai_hydra.utils.DBMgr import DBMgr
@@ -115,8 +116,10 @@ class HydraMgr(HydraServer):
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
         if model_type == DField.LINEAR:
             model = LinearModel()
+            nnet_policy = LinearPolicy(model=model, device=device)
         elif model_type == DField.RNN:
             model = RNNModel()
+            nnet_policy = RNNPolicy()
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
@@ -131,7 +134,6 @@ class HydraMgr(HydraServer):
         )
 
         # Policy stack
-        nnet_policy = LinearPolicy(model=model, device=device)
         epsilon_algo = EpsilonAlgo(rng=policy_rng, log_level=self.log_level)
         epsilon_algo.initial_epsilon(self.cfg.get(DNetField.INITIAL_EPSILON))
         epsilon_algo.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))

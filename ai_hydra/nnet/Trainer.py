@@ -127,6 +127,16 @@ class Trainer:
             )
 
     def train_long_memory(self, batch_size=DMemory.BATCH_SIZE) -> float:
+        if isinstance(self.model, LinearModel):
+            return self._train_long_memory_linear(batch_size)
+        elif isinstance(self.model, RNNModel):
+            return self._train_long_memory_rnn()
+        else:
+            raise TypeError(f"Unsupported model type: {type(self.model)}")
+
+    def _train_long_memory_linear(
+        self, batch_size=DMemory.BATCH_SIZE
+    ) -> float:
         self._epoch += 1
         num_batches = 0
 
@@ -182,6 +192,80 @@ class Trainer:
         avg_loss = total_loss / num_batches
         self._per_ep_loss = avg_loss
         return avg_loss
+
+    def _train_long_memory_rnn(self) -> float:
+        self._epoch += 1
+
+        # Get the training data from ReplayMemory
+        self.load_training_data()
+
+        game_id = self.game_id()
+        if isinstance(game_id, int):
+            self.log.debug(f"Training RNN on game: {game_id}")
+
+        training_batch = self.training_data()
+
+        # No training data is available
+        if not training_batch:
+            return
+
+        states, actions, rewards, new_states, dones = zip(*training_batch)
+
+        # Convert full game sequence to tensors
+        states = torch.tensor(
+            np.array(states), dtype=torch.float, device=self.device
+        )
+        new_states = torch.tensor(
+            np.array(new_states), dtype=torch.float, device=self.device
+        )
+        actions = torch.tensor(
+            np.array(actions), dtype=torch.long, device=self.device
+        ).view(-1)
+        rewards = torch.tensor(
+            np.array(rewards), dtype=torch.float, device=self.device
+        ).view(-1)
+        dones = torch.tensor(
+            np.array(dones), dtype=torch.bool, device=self.device
+        ).view(-1)
+
+        # Get Q-values for every timestep in the sequence
+        pred_Q_all = self.model.forward_sequence(
+            states
+        )  # [seq_len, n_actions]
+        pred_Q = pred_Q_all.gather(1, actions.unsqueeze(1)).squeeze(
+            1
+        )  # [seq_len]
+
+        with torch.no_grad():
+            next_Q_online = self.model.forward_sequence(
+                new_states
+            )  # [seq_len, n_actions]
+            next_actions = torch.argmax(
+                next_Q_online, dim=1, keepdim=True
+            )  # [seq_len, 1]
+
+            next_Q_target_all = self.target_model.forward_sequence(
+                new_states
+            )  # [seq_len, n_actions]
+            next_Q_target = next_Q_target_all.gather(1, next_actions).squeeze(
+                1
+            )  # [seq_len]
+
+            target_Q = rewards + self.gamma * next_Q_target * (~dones)
+
+        loss = self.criterion(pred_Q, target_Q)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+        self.optimizer.step()
+
+        self._update_counter += 1
+        if self._update_counter % self._target_update_freq == 0:
+            self.soft_update_target()
+
+        self._per_ep_loss = loss.item()
+        return loss.item()
 
     def train_step(self, t: Transition) -> float:
         if isinstance(self.model, LinearModel):
