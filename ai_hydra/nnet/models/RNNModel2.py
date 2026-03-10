@@ -26,7 +26,7 @@ from ai_hydra.constants.DHydra import DHydra
 import torch
 import torch.nn as nn
 
-from ai_hydra.constants.DNNet import DNetDef, DRNN
+from ai_hydra.constants.DNNet import DNetDef, DRNN2
 from ai_hydra.constants.DHydra import DHydra
 
 
@@ -36,10 +36,10 @@ class RNNModel2(nn.Module):
         torch.manual_seed(DHydra.RANDOM_SEED)
 
         input_size = DNetDef.INPUT_SIZE
-        hidden_size = DRNN.HIDDEN_SIZE
-        output_size = DRNN.OUTPUT_SIZE
-        rnn_layers = DRNN.RNN_LAYERS
-        rnn_dropout = DRNN.P_VALUE
+        hidden_size = DRNN2.HIDDEN_SIZE
+        output_size = DRNN2.OUTPUT_SIZE
+        rnn_layers = DRNN2.RNN_LAYERS
+        rnn_dropout = DRNN2.P_VALUE
 
         self.m_in = nn.Sequential(
             nn.Linear(input_size, hidden_size),

@@ -20,7 +20,7 @@ class DRNN2:
 
     BATCH_SIZE: Final[int] = 64
     SEQ_LENGTH: Final[int] = 8
-    HIDDEN_SIZE: Final[int] = 192
+    HIDDEN_SIZE: Final[int] = 256
     RNN_LAYERS: Final[int] = 2
     OUTPUT_SIZE: Final[int] = 3
     P_VALUE: Final[float] = 0.1
