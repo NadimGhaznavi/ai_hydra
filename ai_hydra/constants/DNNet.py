@@ -13,6 +13,20 @@ from ai_hydra.constants.DGame import DGameField
 from ai_hydra.constants.DHydraTui import DLabel, DField
 
 
+class DRNN2:
+    """
+    RNN Model defaults
+    """
+
+    BATCH_SIZE: Final[int] = 64
+    SEQ_LENGTH: Final[int] = 8
+    HIDDEN_SIZE: Final[int] = 192
+    RNN_LAYERS: Final[int] = 2
+    OUTPUT_SIZE: Final[int] = 3
+    P_VALUE: Final[float] = 0.1
+    LEARNING_RATE: Final[float] = 0.0002
+
+
 class DEpsilonDef:
     """
     Epsilon-greedy defaults.
@@ -105,11 +119,10 @@ class DRNN:
     RNN Model defaults
     """
 
-    HIDDEN_SIZE: Final[int] = 192
-    RNN_LAYERS: Final[int] = 6
+    HIDDEN_SIZE: Final[int] = 128
+    RNN_LAYERS: Final[int] = 2
     OUTPUT_SIZE: Final[int] = 3
     P_VALUE: Final[float] = 0.1
-    NON_LINEARITY: Final[str] = "tanh"
     LEARNING_RATE: Final[float] = 0.0002
     REPLAY_MEM_SEQ_SIZE: Final[int] = 10
 
@@ -117,9 +130,11 @@ class DRNN:
 MODEL_TYPE_TABLE: Final[dict] = {
     DField.LINEAR: DLabel.LINEAR,
     DField.RNN: DLabel.RNN,
+    DField.RNN2: DLabel.RNN2,
 }
 
 MODEL_TYPES: Final[list] = [
     (DLabel.LINEAR, DField.LINEAR),
     (DLabel.RNN, DField.RNN),
+    (DLabel.RNN2, DField.RNN2),
 ]

@@ -91,10 +91,13 @@ class HydraMgr(HydraServer):
 
         from ai_hydra.nnet.TrainMgr import TrainMgr
         from ai_hydra.nnet.ReplayMemory import ReplayMemory
-        from ai_hydra.nnet.Trainer import Trainer
+        from ai_hydra.nnet.LinearTrainer import LinearTrainer
+        from ai_hydra.nnet.RNNTrainer import RNNTrainer
+        from ai_hydra.nnet.RNNTrainer2 import RNNTrainer2
         from ai_hydra.nnet.models.LinearModel import LinearModel
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
         from ai_hydra.nnet.models.RNNModel import RNNModel
+        from ai_hydra.nnet.models.RNNModel2 import RNNModel2
         from ai_hydra.nnet.Policy.RNNPolicy import RNNPolicy
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
@@ -111,24 +114,55 @@ class HydraMgr(HydraServer):
 
         # NN Model being used
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
+        # model_type = DField.RNN2
+        # self.cfg.set(DNetField.MODEL_TYPE, DField.RNN2)
+
         if model_type == DField.LINEAR:
+            self.log.debug("Using Linear model")
             model = LinearModel()
             nnet_policy = LinearPolicy(model=model, device=device)
+            trainer = LinearTrainer(
+                model=model,
+                replay=replay,
+                lr=self.cfg.get(DNetField.LEARNING_RATE),
+                device=device,
+                gamma=0.9,
+                log_level=self.log_level,
+            )
+
         elif model_type == DField.RNN:
+            self.log.debug("Using RNN model")
             model = RNNModel()
             nnet_policy = RNNPolicy(model=model, device=device)
+            trainer = RNNTrainer(
+                model=model,
+                replay=replay,
+                lr=self.cfg.get(DNetField.LEARNING_RATE),
+                device=device,
+                gamma=0.9,
+                log_level=self.log_level,
+            )
+
+        elif model_type == DField.RNN2:
+            self.log.debug("Using RNN2 Model")
+            replay = ReplayMemory(
+                rng=replay_rng, log_level=self.log_level, rnn2=True
+            )
+            model = RNNModel2()
+            nnet_policy = RNNPolicy(model=model, device=device)
+            trainer = RNNTrainer2(
+                model=model,
+                replay=replay,
+                lr=self.cfg.get(DNetField.LEARNING_RATE),
+                device=device,
+                gamma=0.9,
+                log_level=self.log_level,
+            )
+
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
         # Model + trainer
-        trainer = Trainer(
-            model=model,
-            replay=replay,
-            lr=self.cfg.get(DNetField.LEARNING_RATE),
-            device=device,
-            gamma=0.9,
-            log_level=self.log_level,
-        )
 
         # Policy stack
         epsilon_algo = EpsilonAlgo(rng=policy_rng, log_level=self.log_level)
@@ -197,6 +231,8 @@ class HydraMgr(HydraServer):
         """
         self.log.debug("Starting simulation run")
         try:
+            model_type = self.cfg.get(DNetField.MODEL_TYPE)
+
             snake = self.snake = SnakeMgr(cfg=self.cfg)
             mq = self.mq
             train_mgr = self._ensure_train_mgr()
@@ -266,6 +302,9 @@ class HydraMgr(HydraServer):
                         sess.lookahead_on = sess.rng.random() < lookahead_p
                     ep_payload[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
 
+                    if model_type == DField.RNN2:
+                        train_mgr.trainer.train_long_memory()
+
                     # Loss, if available, is loaded into the telemetry here
                     ep_loss = train_mgr.trainer.get_per_ep_loss()
                     if ep_loss is not None:
@@ -286,11 +325,12 @@ class HydraMgr(HydraServer):
                     done=bool(done),
                 )
 
-                train_mgr.replay.append(transition=t)
+                train_mgr.replay.append(t=t)
 
-                if sess.step_n % train_every == 0:
-                    for _ in range(grad_steps):
-                        train_mgr.trainer.train_long_memory(batch_size)
+                if model_type != DField.RNN2:
+                    if sess.step_n % train_every == 0:
+                        for _ in range(grad_steps):
+                            train_mgr.trainer.train_long_memory(batch_size)
 
                 # Publish
                 if mq is not None:

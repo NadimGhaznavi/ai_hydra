@@ -20,11 +20,14 @@ class DGameDef:
     FOOD_REWARD: Final[int] = 10
     COLLISION_PENALTY: Final[int] = -10
     EMPTY_MOVE_REWARD: Final[int] = 0
+    CLOSER_TO_FOOD: Final[float] = 1.0
+    FURTHER_FROM_FOOD: Final[float] = -1.0
 
 
 class DGameField:
     ACTION: Final[str] = "action"
     BOARD: Final[str] = "board"
+    CLOSER_TO_FOOD: Final[str] = "closer_to_food"
     DIRECTION: Final[str] = "direction"
     DONE: Final[str] = "done"
     DX: Final[str] = "dx"
@@ -36,6 +39,7 @@ class DGameField:
     EPOCH: Final[str] = "epoch"
     FOOD: Final[str] = "food"
     FOOD_POSITION: Final[str] = "food_position"
+    FURTHER_FROM_FOOD: Final[str] = "further_from_food"
     GRID_SIZE: Final[str] = "grid_size"
     H: Final[str] = "h"
     HIGHSCORE: Final[str] = "highscore"

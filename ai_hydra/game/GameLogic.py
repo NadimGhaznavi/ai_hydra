@@ -40,6 +40,10 @@ class GameLogic:
     """
 
     @staticmethod
+    def _manhattan_distance(a: Position, b: Position) -> int:
+        return abs(a.x - b.x) + abs(a.y - b.y)
+
+    @staticmethod
     def step(
         board: GameBoard,
         action: MoveAction | int,
@@ -68,6 +72,11 @@ class GameLogic:
                 action = MoveAction.RIGHT_TURN
             else:
                 raise ValueError(f"Invalid action index: {action}")
+
+        # Calculate the manhattan distance to the food
+        old_distance = GameLogic._manhattan_distance(
+            board.snake_head, board.food_position
+        )
 
         # Build the move (fixes the undefined 'move' bug)
         move = GameLogic.create_move(board.direction, action)
@@ -178,6 +187,19 @@ class GameLogic:
                 is_terminal=bool(food_ends_episode),
             )
 
+        # Empty move....
+
+        new_distance = GameLogic._manhattan_distance(
+            new_head, board.food_position
+        )
+
+        if new_distance < old_distance:
+            reward = GameLogic.calculate_reward(DGameField.CLOSER_TO_FOOD)
+        elif new_distance > old_distance:
+            reward = GameLogic.calculate_reward(DGameField.FURTHER_FROM_FOOD)
+        else:
+            reward = GameLogic.calculate_reward(DGameField.EMPTY)
+
         # Empty move: shift body (drop tail)
         new_body = (board.snake_head,) + board.snake_body[:-1]
 
@@ -196,7 +218,7 @@ class GameLogic:
         outcome = DGameField.EMPTY
         return MoveResult(
             new_board=new_board,
-            reward=GameLogic.calculate_reward(outcome),
+            reward=reward,
             outcome=outcome,
             is_terminal=False,
         )
@@ -253,5 +275,7 @@ class GameLogic:
             DGameField.WALL: DGameDef.COLLISION_PENALTY,
             DGameField.SNAKE: DGameDef.COLLISION_PENALTY,
             DGameField.MAX_MOVES: DGameDef.EMPTY_MOVE_REWARD,
+            DGameField.CLOSER_TO_FOOD: DGameDef.CLOSER_TO_FOOD,
+            DGameField.FURTHER_FROM_FOOD: DGameDef.FURTHER_FROM_FOOD,
         }
         return int(reward_map.get(outcome, 0))

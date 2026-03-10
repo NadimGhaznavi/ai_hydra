@@ -473,6 +473,21 @@ class HydraClientTui(App):
         board = payload.get(DGameField.BOARD)
         self.game_board.apply_board_dict(board)
 
+    async def on_quit(self) -> None:
+        sys.exit(0)
+
+        ###
+        ### The code below (clean shutdown) causes the client to hang
+        ### requiring a `kill <PID>``, followed by a `tput reset` to get
+        ### your terminal back into a sane state. So....
+        ###
+        ### "If in doubt, nuke it from orbit"
+        ###
+        if self.mq is not None:
+            await self.mq.quit()
+            self.mq = None
+        self.exit()
+
     def on_scores(self, topic: str, payload: dict) -> None:
         # Current highscore
         highscore = payload[DGameField.HIGHSCORE]
@@ -528,6 +543,10 @@ class HydraClientTui(App):
             lr = f"{DRNN.LEARNING_RATE:.5f}"
             lookahead = 0
 
+        elif event.value == DField.RNN2:
+            lr = f"{DRNN.LEARNING_RATE:.5f}"
+            lookahead = 0
+
         else:
             return
 
@@ -541,21 +560,6 @@ class HydraClientTui(App):
             )
 
         self._not_first_time_kludge = True
-
-    async def on_quit(self) -> None:
-        sys.exit(0)
-
-        ###
-        ### The code below (clean shutdown) causes the client to hang
-        ### requiring a `kill <PID>``, followed by a `tput reset` to get
-        ### your terminal back into a sane state. So....
-        ###
-        ### "If in doubt, nuke it from orbit"
-        ###
-        if self.mq is not None:
-            await self.mq.quit()
-            self.mq = None
-        self.exit()
 
     async def _send_handshake(self):
         msg = HydraMsg(
@@ -671,7 +675,7 @@ class HydraClientTui(App):
         epsilon_decay = self._w_epsilon_decay_input.value
         initial_epsilon = self._w_initial_epsilon_input.value
         min_epsilon = self._w_min_epsilon_input.value
-        self._w_cur_epsilon_label.update(str(epsilon_decay))
+        self._w_epsilon_decay_label.update(str(epsilon_decay))
         self._w_initial_epsilon_label.update(str(initial_epsilon))
         self._w_min_epsilon_label.update(str(min_epsilon))
         # Turbo mode == Not per_step

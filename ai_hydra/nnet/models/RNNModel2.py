@@ -14,7 +14,23 @@ from ai_hydra.constants.DNNet import DNetDef, DRNN
 from ai_hydra.constants.DHydra import DHydra
 
 
-class RNNModel(nn.Module):
+# ai_hydra/net/RNNModel.py
+#
+#    AI Hydra
+#    Author: Nadim-Daniel Ghaznavi
+#    Copyright: (c) 2025-2026 Nadim-Daniel Ghaznavi
+#    GitHub: https://github.com/NadimGhaznavi/ai_hydra
+#    Website: https://ai-hydra.readthedocs.io/en/latest
+#    License: GPL 3.0
+
+import torch
+import torch.nn as nn
+
+from ai_hydra.constants.DNNet import DNetDef, DRNN
+from ai_hydra.constants.DHydra import DHydra
+
+
+class RNNModel2(nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(DHydra.RANDOM_SEED)
@@ -35,29 +51,32 @@ class RNNModel(nn.Module):
             nonlinearity="tanh",
             num_layers=rnn_layers,
             dropout=rnn_dropout,
+            batch_first=True,
         )
         self.m_out = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         if x.dim() == 1:
-            x = x.unsqueeze(0)
+            x = x.unsqueeze(0).unsqueeze(0)  # [1, 1, F]
+        elif x.dim() == 2:
+            x = x.unsqueeze(0)  # [1, T, F]
 
-        x = self.m_in(x)
-        x = x.unsqueeze(1)
-        x, _ = self.m_rnn(x)
-        x = self.m_out(x)
+        x = self.m_in(x)  # [B, T, H]
+        x, _ = self.m_rnn(x)  # [B, T, H]
+        x = self.m_out(x)  # [B, T, A]
 
-        return x[-1, 0, :]
+        return x[:, -1, :]  # [B, A]
 
     def forward_sequence(self, x):
         if x.dim() == 1:
-            x = x.unsqueeze(0)
+            x = x.unsqueeze(0).unsqueeze(0)  # [1, 1, F]
+        elif x.dim() == 2:
+            x = x.unsqueeze(0)  # [1, T, F]
 
-        x = self.m_in(x)
-        x = x.unsqueeze(1)
-        x, _ = self.m_rnn(x)
-        x = self.m_out(x)
-        return x[:, 0, :]
+        x = self.m_in(x)  # [B, T, H]
+        x, _ = self.m_rnn(x)  # [B, T, H]
+        x = self.m_out(x)  # [B, T, A]
+        return x
 
     def reset_parameters(self):
         def _reset(m):

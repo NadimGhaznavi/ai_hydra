@@ -11,11 +11,8 @@ from typing import Final
 
 
 class DMemory:
-    BATCH_SIZE: Final[int] = 64
-    MIN_GAMES: Final[int] = 20
-    MIN_FRAMES: Final[int] = 1000
-    MAX_MEM_SIZE: Final[int] = 50000
-    NO_DATA: Final[str] = "no_data"
-    NO_MEMORY: Final[str] = "no_memory"
-    RAN_FRAMES: Final[str] = "random_frames"
-    RAN_GAMES: Final[str] = "random_games"
+    BATCH_SIZE: Final[int] = 64  # Used by Linear model
+    MAX_CHUNKS: Final[int] = 10000  # Used by RNN II
+    MIN_CHUNKS: Final[int] = 100  # Used by RNN II
+    MIN_FRAMES: Final[int] = 1500  # Used by Linear
+    MAX_MEM_SIZE: Final[int] = 50000  # Used by Linear

@@ -7,7 +7,8 @@ from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.constants.DGame import DGameField
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
-from ai_hydra.nnet.Trainer import Trainer
+from ai_hydra.nnet.RNNTrainer import RNNTrainer
+from ai_hydra.nnet.LinearTrainer import LinearTrainer
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.nnet.Transition import Transition
 
@@ -53,7 +54,7 @@ class TrainMgr:
         *,
         snake_mgr: SnakeMgr,
         policy: HydraPolicy,
-        trainer: Trainer,
+        trainer,
         replay: ReplayMemory,
         client_id: str = "TrainMgr",
     ) -> None:
