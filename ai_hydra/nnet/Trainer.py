@@ -147,7 +147,7 @@ class Trainer:
         loss.backward()
         self.optimizer.step()
 
-        self._per_step_loss.append(loss.item())
+        self._per_step_losses.append(loss.item())
         self._per_ep_loss = loss.item()
 
         return float(loss.item())
