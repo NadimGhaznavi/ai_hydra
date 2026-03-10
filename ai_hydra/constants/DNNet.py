@@ -11,6 +11,8 @@ from typing import Final
 
 from ai_hydra.constants.DGame import DGameField
 from ai_hydra.constants.DHydraTui import DLabel, DField
+import torch.nn as nn
+import torch.optim as optim
 
 
 class DRNN2:
@@ -20,8 +22,8 @@ class DRNN2:
 
     BATCH_SIZE: Final[int] = 64
     SEQ_LENGTH: Final[int] = 8
-    HIDDEN_SIZE: Final[int] = 256
-    RNN_LAYERS: Final[int] = 2
+    HIDDEN_SIZE: Final[int] = 384
+    RNN_LAYERS: Final[int] = 3
     OUTPUT_SIZE: Final[int] = 3
     P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
@@ -125,6 +127,17 @@ class DRNN:
     P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
     REPLAY_MEM_SEQ_SIZE: Final[int] = 10
+
+
+class DRNNTrainer:
+    """
+    RNN Trainer defaults
+    """
+
+    CRITERION = nn.SmoothL1Loss
+    OPTIM = optim.Adam
+    TAU: Final[float] = 0.005
+    UPDATE_FREQ: Final[int] = 100
 
 
 MODEL_TYPE_TABLE: Final[dict] = {

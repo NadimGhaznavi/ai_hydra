@@ -132,6 +132,8 @@ class HydraClientTui(App):
                 compact=True,
             ),
             Label(),
+            Button(label=DLabel.SNAPSHOT, id=DField.SNAPSHOT, compact=True),
+            Label(),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
             id=DField.BUTTONS,
         )
@@ -312,6 +314,9 @@ class HydraClientTui(App):
 
         elif button_id == DGameMethod.RESET_GAME:
             await self._send_reset()
+
+        elif button_id == DField.SNAPSHOT:
+            await self._take_snapshot()
 
         elif button_id == DGameMethod.START_RUN:
             self._update_tui_labels()
