@@ -44,13 +44,13 @@ class ReplayMemory:
     def _sample_sequences(self, batch_size):
         """Sample sequences of transitions (for RNNs)."""
         # We'll need to adjust how we sample to maintain sequential order
-        indices = self._rng.sample(range(len(self.buffer) - 1), batch_size)
+        indices = self._rng.sample(range(len(self._memory) - 1), batch_size)
         sequences = []
 
         for idx in indices:
             # Extract a sequence (a set of transitions from the buffer)
             # Here you could define your sequence length, say 10 transitions
-            sequence = self.buffer[idx : idx + DRNN.REPLAY_MEM_SEQ_SIZE]
+            sequence = self._memory[idx : idx + DRNN.REPLAY_MEM_SEQ_SIZE]
             sequences.append(sequence)
 
         return sequences

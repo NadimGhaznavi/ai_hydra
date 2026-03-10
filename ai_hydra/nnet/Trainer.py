@@ -107,7 +107,7 @@ class Trainer:
 
     def _train_long_memory_linear(
         self, batch_size=DMemory.BATCH_SIZE
-    ) -> float:
+    ) -> float | None:
 
         batch = self.replay.sample(batch_size)
         if batch is None:
@@ -152,13 +152,13 @@ class Trainer:
 
         return float(loss.item())
 
-    def _train_long_memory_rnn(self) -> float:
+    def _train_long_memory_rnn(self) -> float | None:
         self._epoch += 1
 
         # Get the training data from ReplayMemory
         self.load_training_data()
 
-        training_batch = self.training_data()
+        training_batch = self.replay.sample()
 
         # No training data is available
         if not training_batch:

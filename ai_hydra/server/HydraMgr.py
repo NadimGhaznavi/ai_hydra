@@ -211,7 +211,6 @@ class HydraMgr(HydraServer):
             self.log.debug(f"Setting lookahead p-value to: {lookahead_p}")
             sess.lookahead_on = sess.rng.random() < lookahead_p
 
-            train_start = 1000
             train_every = 4
             grad_steps = 1
             batch_size = 64
@@ -275,19 +274,20 @@ class HydraMgr(HydraServer):
                     if step_loss is not None:
                         ep_payload[DNetField.STEP_LOSS] = step_loss
 
+                reward = state_dict[DGameField.REWARD]
+                new_state = state_dict[DNetField.NEXT_STATE]
+
                 # Build/store transition (unchanged for now)
                 t = Transition(
-                    old_state=state_dict[DNetField.STATE],
-                    action=action,
-                    reward=state_dict[DGameField.REWARD],
-                    new_state=state_dict[DNetField.NEXT_STATE],
-                    done=done,
+                    old_state=tuple(old_state),
+                    action=int(action),
+                    reward=float(reward),
+                    new_state=tuple(new_state),
+                    done=bool(done),
                 )
 
                 train_mgr.replay.append(transition=t)
 
-                # Train step here
-                # train_mgr.trainer.train_step(t)
                 if sess.step_n % train_every == 0:
                     for _ in range(grad_steps):
                         train_mgr.trainer.train_long_memory(batch_size)

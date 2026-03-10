@@ -8,13 +8,13 @@
 #    License: GPL 3.0
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Tuple
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Transition:
-    old_state: Sequence[float]
+    old_state: Tuple[float, ...]
     action: int
     reward: float
-    new_state: Sequence[float]
+    new_state: Tuple[float, ...]
     done: bool
