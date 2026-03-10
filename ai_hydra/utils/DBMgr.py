@@ -113,16 +113,23 @@ class DBMgr:
         avg = self._cursor.fetchone()[0]
         return int(avg) if avg else 0
 
-    def get_random_frames(self):
+    def get_random_frames(self, batch_size=None):
         """Return a random set of frames from the database. Do not use the SQLite3
         RANDOM() function, because we can't set the seed."""
-        num_frames = self.get_avg_game_length() or 32  # fallback if no data
+
+        if batch_size:
+            num_frames = batch_size
+        else:
+            num_frames = (
+                self.get_avg_game_length() or 32
+            )  # fallback if no data
 
         # Retrieve the id values from the frames table
         self._cursor.execute("SELECT id FROM frames")
         all_ids = [row[0] for row in self._cursor.fetchall()]
 
-        if len(all_ids) < self._batch_size * 10:
+        # if len(all_ids) < self._batch_size * 10:
+        if len(all_ids) < 1000:
             return [], 0
 
         # Get n random ids

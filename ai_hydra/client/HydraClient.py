@@ -492,9 +492,7 @@ class HydraClientTui(App):
                 highscore=hs_event[1],
                 event_time=hs_event[2],
             )
-            self.console_msg(
-                f"🎉 New highscore with look ahead enabled: {hs_event[1]}"
-            )
+            self.console_msg(f"🎉 New (look ahead) highscore : {hs_event[1]}")
 
         # Lookahead Highscore event
         if DGameField.HIGHSCORE_EVENT_NLH in payload:
@@ -504,9 +502,7 @@ class HydraClientTui(App):
                 highscore=hs_event[1],
                 event_time=hs_event[2],
             )
-            self.console_msg(
-                f"🎉 New highscore without look ahead enabled: {hs_event[1]}"
-            )
+            self.console_msg(f"🎉 New highscore: {hs_event[1]}")
 
         # Final score
         if DNetField.FINAL_SCORE in payload:

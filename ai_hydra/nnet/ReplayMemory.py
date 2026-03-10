@@ -11,130 +11,46 @@ import pickle
 
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.constants.DNNet import DRNN
 
 from ai_hydra.nnet.Transition import Transition
-from ai_hydra.utils.DBMgr import DBMgr
 from ai_hydra.utils.HydraLog import HydraLog
 
 
 class ReplayMemory:
 
-    def __init__(self, db_mgr: DBMgr, log_level: DHydraLog):
+    def __init__(self, rng: Random, log_level: DHydraLog, use_rnn=False):
         # Our SQLite DB manager
-        self._db_mgr = db_mgr
         self.log = HydraLog(
             client_id="ReplayMemory", log_level=log_level, to_console=True
         )
 
-        # Memory type, valid choices are ran_frames, ran_game or none.
-        self._mem_type = DMemory.RAN_GAMES
-        # self._mem_type = DMemory.RAN_FRAMES
+        self._rng = rng
+        self._use_rnn = use_rnn
+        self._memory: Deque[Transition] = deque(maxlen=DMemory.MAX_MEM_SIZE)
 
-        # Frames for the current game are stored here.
-        self._cur_mem = []
+    def append(self, transition: Transition):
+        self._memory.append(transition)
 
-    def append(self, transition: Transition, final_score=None):
-        """
-        Add a transition to the current game buffer.
-        When the episode ends, flush the whole game to SQLite in one batch.
-        """
+    def sample(self, batch_size=DMemory.BATCH_SIZE):
 
-        ## NOTE: This is low-level SQLite DB code that *should* be in
-        ## DBMgr, but that resulted in a huge performance hit. Moving it
-        ## here means we don't pass in one frame at a time.
-        ##
-
-        if self.mem_type() == DMemory.NO_MEMORY:
-            return
-
-        old_state = transition.old_state
-        action = transition.action
-        reward = transition.reward
-        new_state = transition.new_state
-        done = transition.done
-
-        # Accumulate frames for the current episode in memory
-        self._cur_mem.append((old_state, action, reward, new_state, done))
-
-        if not done:
-            return
-
-        if final_score is None:
-            raise ValueError("final_score must be provided when the game ends")
-
-        total_frames = len(self._cur_mem)
-
-        # Insert the game row first so we get the foreign key
-        game_id = self._db_mgr.add_game(
-            final_score=final_score,
-            total_frames=total_frames,
-        )
-
-        # Prepare all frame rows up front, then bulk insert
-        frame_rows = [
-            (
-                game_id,
-                index,
-                pickle.dumps(state),
-                pickle.dumps(action),
-                reward,
-                pickle.dumps(next_state),
-                int(done),
-            )
-            for index, (state, action, reward, next_state, done) in enumerate(
-                self._cur_mem
-            )
-        ]
-
-        db_cursor = self._db_mgr.cursor()
-        db_cursor.executemany(
-            """
-            INSERT INTO frames
-                (game_id, frame_index, state, action, reward, next_state, done)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            frame_rows,
-        )
-        self._db_mgr._conn.commit()
-
-        # Clear current episode buffer
-        self._cur_mem = []
-
-    def get_training_data(self):
-        mem_type = self.mem_type()
-
-        if mem_type == DMemory.NO_MEMORY:
-            return None, DMemory.NO_DATA  # No data available
-
-        # RANDOM_GAME mode: return full ordered frames from one random game
-        elif mem_type == DMemory.RAN_GAMES:
-            frames, game_id = self._db_mgr.get_random_game()
-            if not frames:  # no frames available
-                return None, DMemory.NO_DATA
-            training_data = frames
-            metadata = game_id
-
-        # SHUFFLE mode: return a random set of frames
-        elif mem_type == DMemory.RAN_FRAMES:
-            frames, num_frames = self._db_mgr.get_random_frames()
-            if not frames:  # no frames available
-                return None, DMemory.NO_DATA
-            training_data = frames
-            metadata = num_frames
-
+        if self._use_rnn:
+            return self._sample_sequences(batch_size)
         else:
-            raise ValueError(f"Unknown memory type: {mem_type}")
+            if len(self._memory) < DMemory.MIN_FRAMES:
+                return None
+            return self._rng.sample(list(self._memory), k=batch_size)
 
-        # Split into arrays for vectorized training
-        states = [d[0] for d in training_data]
-        actions = [d[1] for d in training_data]
-        rewards = [d[2] for d in training_data]
-        next_states = [d[3] for d in training_data]
-        dones = [d[4] for d in training_data]
+    def _sample_sequences(self, batch_size):
+        """Sample sequences of transitions (for RNNs)."""
+        # We'll need to adjust how we sample to maintain sequential order
+        indices = self._rng.sample(range(len(self.buffer) - 1), batch_size)
+        sequences = []
 
-        return (states, actions, rewards, next_states, dones), metadata
+        for idx in indices:
+            # Extract a sequence (a set of transitions from the buffer)
+            # Here you could define your sequence length, say 10 transitions
+            sequence = self.buffer[idx : idx + DRNN.REPLAY_MEM_SEQ_SIZE]
+            sequences.append(sequence)
 
-    def mem_type(self, mem_type: str = None) -> None:
-        if mem_type is not None:
-            self._mem_type = mem_type
-        return self._mem_type
+        return sequences

@@ -87,35 +87,6 @@ class Trainer:
         self._per_step_losses = []
         return avg_loss
 
-    def load_training_data(self):
-        # Ask ReplayMemory for training data and check that it was provided
-        batch, metadata = self.replay.get_training_data()
-        if batch is None:
-            self.game_id(DMemory.NO_DATA)
-            self.num_frames(DMemory.NO_DATA)
-            return
-
-        states, actions, rewards, new_states, dones = batch
-
-        ### TODO: Update current game id/num_frames in the TUI
-        mem_type = self.replay.mem_type()
-        self.log
-        if mem_type == DMemory.RAN_GAMES:
-            self.game_id(metadata)
-        # Update the number of frames for the TUI
-        elif mem_type == DMemory.RAN_FRAMES:
-            self.num_frames(metadata)
-
-        # Store the training data in the agent (without frame index)
-        self._training_data = list(
-            zip(states, actions, rewards, new_states, dones)
-        )
-
-    def num_frames(self, value: int = None) -> int:
-        if value is not None:
-            self._num_frames = value
-        return self._num_frames
-
     def soft_update_target(self):
         """Soft update: θ_target ← τ*θ_main + (1-τ)*θ_target"""
         for target_param, main_param in zip(
@@ -128,7 +99,7 @@ class Trainer:
 
     def train_long_memory(self, batch_size=DMemory.BATCH_SIZE) -> float:
         if isinstance(self.model, LinearModel):
-            return self._train_long_memory_linear(batch_size)
+            return self._train_long_memory_linear(batch_size=batch_size)
         elif isinstance(self.model, RNNModel):
             return self._train_long_memory_rnn()
         else:
@@ -137,58 +108,49 @@ class Trainer:
     def _train_long_memory_linear(
         self, batch_size=DMemory.BATCH_SIZE
     ) -> float:
-        self._epoch += 1
-        num_batches = 0
 
-        # Let the memory "warm up"
-        if self._epoch < DMemory.MIN_GAMES:
-            self.game_id(DMemory.NO_DATA)
-            self.num_frames(DMemory.NO_DATA)
-
-        # Get the training data from the ReplayMemory
-        self.load_training_data()
-
-        # No training data is available
-        game_id = self.game_id()
-        if isinstance(self.num_frames(), int):
-            self.log.debug(f"Training on {self.num_frames()}")
-
-        training_batch = self.training_data()
-
-        # No training data is available
-        if not training_batch:
+        batch = self.replay.sample(batch_size)
+        if batch is None:
             return
 
-        states, actions, rewards, new_states, dones = zip(*training_batch)
-        n_samples = len(states)
-        total_loss = 0.0
+        states = torch.tensor(
+            [t.old_state for t in batch],
+            dtype=torch.float32,
+            device=self.device,
+        )
+        actions = torch.tensor(
+            [t.action for t in batch], dtype=torch.int64, device=self.device
+        )
+        rewards = torch.tensor(
+            [t.reward for t in batch], dtype=torch.float32, device=self.device
+        )
+        next_states = torch.tensor(
+            [t.new_state for t in batch],
+            dtype=torch.float32,
+            device=self.device,
+        )
+        dones = torch.tensor(
+            [t.done for t in batch], dtype=torch.float32, device=self.device
+        )
 
-        # Slice into mini-batches
-        for start in range(0, n_samples, batch_size):
-            end = min(start + batch_size, n_samples)
-            batch_states = states[start:end]
-            batch_actions = actions[start:end]
-            batch_rewards = rewards[start:end]
-            batch_new_states = new_states[start:end]
-            batch_dones = dones[start:end]
+        q_values = self.model(states)
+        q_selected = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
 
-            # Vectorized training step
-            # Create a batched transition
-            t = Transition(
-                old_state=batch_states,
-                action=batch_actions,
-                reward=batch_rewards,
-                new_state=batch_new_states,
-                done=batch_dones,
-            )
+        with torch.no_grad():
+            next_q = self.model(next_states)
+            max_next_q = next_q.max(dim=1).values
+            target = rewards + self.gamma * max_next_q * (1.0 - dones)
 
-            loss = self.train_step(t)
-            total_loss += loss
-            num_batches += 1
+        loss = self.criterion(q_selected, target)
 
-        avg_loss = total_loss / num_batches
-        self._per_ep_loss = avg_loss
-        return avg_loss
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        self._per_step_loss.append(loss.item())
+        self._per_ep_loss = loss.item()
+
+        return float(loss.item())
 
     def _train_long_memory_rnn(self) -> float:
         self._epoch += 1
@@ -269,31 +231,23 @@ class Trainer:
             raise TypeError(f"Unsupported model type: {type(self.model)}")
 
     def _train_step_linear(self, t: Transition) -> float:
-        old_state = t.old_state
-        action = t.action
-        reward = t.reward
-        new_state = t.new_state
-        done = t.done
-
-        # Convert t values into tensors
         old_state = torch.tensor(
-            np.array(old_state), dtype=torch.float, device=self.device
+            np.array(t.old_state), dtype=torch.float32, device=self.device
         )
         new_state = torch.tensor(
-            np.array(new_state), dtype=torch.float, device=self.device
+            np.array(t.new_state), dtype=torch.float32, device=self.device
         )
         action = torch.tensor(
-            np.array(action), dtype=torch.long, device=self.device
+            np.array(t.action), dtype=torch.long, device=self.device
         )
         reward = torch.tensor(
-            np.array(reward), dtype=torch.float, device=self.device
+            np.array(t.reward), dtype=torch.float32, device=self.device
         )
         done = torch.tensor(
-            np.array(done), dtype=torch.bool, device=self.device
+            np.array(t.done), dtype=torch.float32, device=self.device
         )
 
-        # Handle single transition case → batch size 1
-        if len(old_state.shape) == 1:
+        if old_state.ndim == 1:
             old_state = old_state.unsqueeze(0)
             new_state = new_state.unsqueeze(0)
             action = action.unsqueeze(0)
@@ -304,40 +258,22 @@ class Trainer:
         reward = reward.view(-1)
         done = done.view(-1)
 
-        # Predicted Q-values (main network)
-        pred_Q_all = self.model(old_state)  # shape: [batch, n_actions]
-        pred_Q = pred_Q_all.gather(1, action.unsqueeze(1)).squeeze(1)
+        q_values = self.model(old_state)
+        q_selected = q_values.gather(1, action.unsqueeze(1)).squeeze(1)
 
         with torch.no_grad():
-            # Select best actions using online (policy) network
-            next_actions = torch.argmax(
-                self.model(new_state), dim=1, keepdim=True
-            )
-            # Evaluate them using target network
-            next_Q_target = (
-                self.target_model(new_state).gather(1, next_actions).squeeze(1)
-            )
-            # Compute final target values
-            target_Q = reward + self.gamma * next_Q_target * (~done)
+            next_q = self.model(new_state)
+            max_next_q = next_q.max(dim=1).values
+            target = reward + self.gamma * max_next_q * (1.0 - done)
 
-        # Compute loss
-        loss = self.criterion(pred_Q, target_Q)
+        loss = self.criterion(q_selected, target)
 
-        # Backpropagate
         self.optimizer.zero_grad()
         loss.backward()
-
-        # Gradient clipping for stability
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
         self.optimizer.step()
 
-        # Periodic soft update of target model
-        self._update_counter += 1
-        if self._update_counter % self._target_update_freq == 0:
-            self.soft_update_target()
-
         self._per_step_losses.append(loss.item())
-        return loss.item()
+        return float(loss.item())
 
     def _train_step_rnn(self, t: Transition) -> float:
         old_state = t.old_state

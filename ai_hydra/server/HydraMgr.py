@@ -23,8 +23,7 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DHydraServerDef,
 )
-from ai_hydra.constants.DNNet import DNetField, DLookaheadDef
-from ai_hydra.constants.DSimCfg import Phase
+from ai_hydra.constants.DNNet import DNetField
 from ai_hydra.constants.DHydra import DMethod
 from ai_hydra.constants.DHydraTui import DField
 
@@ -99,7 +98,6 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.Policy.RNNPolicy import RNNPolicy
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
-        from ai_hydra.utils.DBMgr import DBMgr
 
         from ai_hydra.constants.DNNet import DNetField
 
@@ -107,8 +105,7 @@ class HydraMgr(HydraServer):
         _, policy_rng = self.snake.new_rng()
         _, replay_rng = self.snake.new_rng()
 
-        self._db_mgr = DBMgr(log_level=self.log_level)
-        replay = ReplayMemory(db_mgr=self._db_mgr, log_level=self.log_level)
+        replay = ReplayMemory(rng=replay_rng, log_level=self.log_level)
 
         device = torch.device("cpu")  # keep simple; GPU can be passed later
 
@@ -148,7 +145,7 @@ class HydraMgr(HydraServer):
             policy=policy,
             trainer=trainer,
             replay=replay,
-            client_id="trainer",
+            client_id="TrainMgr",
         )
         return self._train_mgr
 
@@ -213,6 +210,11 @@ class HydraMgr(HydraServer):
             lookahead_p = self.cfg.get(DNetField.LOOKAHEAD_P_VAL)
             self.log.debug(f"Setting lookahead p-value to: {lookahead_p}")
             sess.lookahead_on = sess.rng.random() < lookahead_p
+
+            train_start = 1000
+            train_every = 4
+            grad_steps = 1
+            batch_size = 64
 
             while True:
                 # Auto-reset when done
@@ -282,16 +284,13 @@ class HydraMgr(HydraServer):
                     done=done,
                 )
 
-                if done:
-                    train_mgr.replay.append(
-                        transition=t, final_score=sess.score
-                    )
-                    self._train_mgr.trainer.train_long_memory()
-                else:
-                    train_mgr.replay.append(transition=t)
+                train_mgr.replay.append(transition=t)
 
                 # Train step here
-                train_mgr.trainer.train_step(t)
+                # train_mgr.trainer.train_step(t)
+                if sess.step_n % train_every == 0:
+                    for _ in range(grad_steps):
+                        train_mgr.trainer.train_long_memory(batch_size)
 
                 # Publish
                 if mq is not None:

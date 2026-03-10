@@ -111,6 +111,7 @@ class DRNN:
     P_VALUE: Final[float] = 0.1
     NON_LINEARITY: Final[str] = "tanh"
     LEARNING_RATE: Final[float] = 0.0002
+    REPLAY_MEM_SEQ_SIZE: Final[int] = 10
 
 
 MODEL_TYPE_TABLE: Final[dict] = {
