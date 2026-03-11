@@ -672,6 +672,9 @@ class HydraClientTui(App):
         else:
             self.mq.enable_per_step_sub()
 
+    async def _take_snapshot(self):
+        
+
     def _update_tui_labels(self):
         """
         Update the SimCfg settings and the TUI labels

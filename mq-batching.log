@@ -1,0 +1,53 @@
+                publish_scores()
+                       │
+                       ▼
+                acquire topic lock
+                       │
+                       ▼
+               append payload to msgs
+                       │
+                       ▼
+        msgs length == 1 ? start timer
+                       │
+                       ▼
+        batch size >= MAX_BATCH_SIZE ?
+             │                 │
+            yes               no
+             │                 │
+   swap msgs → local batch     │
+   reset msgs + timer          │
+   release lock                │
+             │                 │
+             ▼                 ▼
+          send batch        release lock
+                               │
+                               ▼
+                          return
+
+
+
+
+      periodic bg loop
+             │
+             ▼
+       acquire topic lock
+             │
+             ▼
+        msgs empty ?
+        │          │
+       yes        no
+        │          │
+   release lock    │
+        │          ▼
+        │    timer expired ?
+        │      │        │
+        │     no       yes
+        │      │        │
+        │ release lock  │
+        │               ▼
+        │        swap msgs → local batch
+        │        reset msgs + timer
+        │        release lock
+        │               │
+        ▼               ▼
+       sleep         send batch                          

@@ -63,6 +63,11 @@ class DHydraMsg(StrEnum):
 
 class DHydraMQ:
     HEARTBEAT: Final[str] = "heartbeat"
+    MSGS: Final[str] = "msgs"
+    PER_EP: Final[str] = "per_ep"
+    PER_STEP: Final[str] = "per_step"
+    SCORES: Final[str] = "scores"
+    TIMER: Final[str] = "timer"
     UTF_8: Final[str] = "utf-8"
 
 
@@ -71,6 +76,8 @@ class DHydraMQDef:
     PER_STEP_TOPIC: Final[str] = "per_step_topic"
     PER_EPISODE_TOPIC: Final[str] = "per_episode_topic"
     SCORES_TOPIC: Final[str] = "scores_topic"
+    MAX_BATCH_TIME: Final[float] = 0.5
+    MAX_BATCH_SIZE: Final[int] = 100
 
 
 class DHydraRouterDef:
@@ -104,16 +111,20 @@ class DMethod(StrEnum):
     ACTION_LEFT = "action_left"
     ACTION_STRAIGHT = "action_straight"
     ACTION_RIGHT = "action_right"
+    COUNTER = "counter"
     GAME_STEP = "game_step"
     HANDSHAKE = "handshake"
     HANDSHAKE_REPLY = "handshake_reply"
     HEARTBEAT = "heartbeat"
     HEARTBEAT_REPLY = "heartbeat_reply"
+    PER_EP_BATCH = "per_ep_batch"
+    PER_STEP_BATCH = "per_step_batch"
     PING = "ping"
     PING_ROUTER = "ping_router"
     PING_SERVER = "ping_server"
     PONG = "pong"
     QUIT = "quit"
+    SCORES_BATCH = "scores_batch"
     START = "start"
     STOP = "stop"
 

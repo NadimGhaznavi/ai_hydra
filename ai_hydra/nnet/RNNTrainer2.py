@@ -16,6 +16,7 @@ from copy import deepcopy
 
 from ai_hydra.constants.DNNet import DNetDef, DRNN2
 from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.constants.DNNet import DRNNTrainer
 
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.utils.HydraLog import HydraLog
@@ -44,8 +45,8 @@ class RNNTrainer2:
         self._update_counter = 0
         self._tau = tau
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
-        self.criterion = nn.SmoothL1Loss()
+        self.optimizer = DRNNTrainer.OPTIM(self.model.parameters(), lr=lr)
+        self.criterion = DRNNTrainer.CRITERION()
 
         self.log = HydraLog(
             client_id="RNNTrainer2",
