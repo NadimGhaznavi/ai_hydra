@@ -165,7 +165,7 @@ class DLabel:
     RESET: Final[str] = "Reset"
     RIGHT: Final[str] = "Right"
     RNN: Final[str] = "RNN"
-    RNN2: Final[str] = "RNN II"
+    RNN2: Final[str] = "RNN"
     ROUTER: Final[str] = "Router"
     ROUTER_TITLE: Final[str] = "Hydra Router"
     SETTINGS: Final[str] = "Settings and Values"
