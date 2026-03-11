@@ -21,7 +21,7 @@ from ai_hydra.constants.DHydra import (
     DModule,
 )
 from ai_hydra.utils.HydraLog import HydraLog
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.zmq.HydraServerMQ import HydraServerMQ
 
 
@@ -111,6 +111,7 @@ class HydraServer:
             router_port=self.router_port,
             identity=self.identity,
             srv_methods=self._methods,
+            log_level=self.log_level,
         )
         self.mq.start()
 

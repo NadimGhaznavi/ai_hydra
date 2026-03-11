@@ -10,20 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 - Stacktrace support for HydraClientMQ exceptions. Useful when expected topic data is missing.
+- A `HydraLog` to the `HydraBaseMQ` class to support structured logging.
 - **A RNN model**:
   - Created `nnet/models/RNNModel.py`, the new RNN!
   - Created a drop-down menu in the TUI to select the model type (Linear or RNN).
   - Updated the `SimCfg` to support passing the model.
 - **Learning Rate**:
   - Added the *learning rate* to the TUI.
-  - Handled the learning rate in the *HydraMgr*.
+  - Handled the learning rate in the `HydraMgr`.
   - Configured the TUI so that the default learning rate is based on the selected model.
-- **SQLite DBMgr**:
-  - Created `utils/DBMgr.py`, the new DBMgr, used to provide a SQLite backed *Replay Memory*.
-  - Stores the ordered set of transitions for every game.
-- **ZeroMQ Scores Tpic**:
+- **New ZeroMQ Scores Topic**:
   - Moved all score telementry (current score, highscore with and without lookahead) into this topic.
   - Published on a per-step basis to capture *outlier* scores where the snake has one lucky game and the highscore jumps multiple points.
+  - Updated the `HydraClientMQ` and `HydraServerMQ` to support the new topic.
+- **Batched ZeroMQ Messages**
 
 
 ### Changed

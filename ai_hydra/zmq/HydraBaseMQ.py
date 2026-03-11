@@ -25,7 +25,7 @@ from ai_hydra.constants.DHydra import (
     DMethod,
     DHydra,
 )
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
 
 MsgHandler = Callable[[HydraMsg], Any | Awaitable[Any]]
 

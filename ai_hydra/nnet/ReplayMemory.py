@@ -47,7 +47,7 @@ class ReplayMemory:
         self._cur_game: list[Transition] = []
         self._max_chunks = MAX_CHUNKS
         self._mem_loaded_flag = True
-        self.log.debug("Initialized...")
+        self.log.debug("Initialized")
 
     def append(self, t: Transition) -> None:
         """Add a transition."""

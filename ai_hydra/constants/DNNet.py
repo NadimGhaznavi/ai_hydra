@@ -15,7 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 
-class DRNN2:
+class DRNN:
     """
     RNN Model defaults
     """
@@ -114,19 +114,6 @@ class DNetField:
     PER_STEP: Final[str] = "per_step"
     REWARD: Final[str] = DGameField.REWARD
     STATE: Final[str] = "state"
-
-
-class DRNN:
-    """
-    RNN Model defaults
-    """
-
-    HIDDEN_SIZE: Final[int] = 128
-    RNN_LAYERS: Final[int] = 2
-    OUTPUT_SIZE: Final[int] = 3
-    P_VALUE: Final[float] = 0.1
-    LEARNING_RATE: Final[float] = 0.0002
-    REPLAY_MEM_SEQ_SIZE: Final[int] = 10
 
 
 class DRNNTrainer:

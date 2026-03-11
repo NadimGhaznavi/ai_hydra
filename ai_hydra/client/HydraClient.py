@@ -9,6 +9,7 @@
 
 import asyncio
 import sys
+import time
 
 from textual import work
 from textual.app import App, ComposeResult
@@ -18,7 +19,7 @@ from textual.widgets import Button, Label, Input, Checkbox, Select
 from textual.message import Message
 
 from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.client.TabbedScores import TabbedScores
@@ -30,6 +31,7 @@ from ai_hydra.constants.DHydra import (
     DMethod,
     DModule,
     DHydraMQDef,
+    DHydraMQ,
 )
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
@@ -99,6 +101,15 @@ class HydraClientTui(App):
         self._running = False
         self._wgt = None
         self._not_first_time_kludge = False
+
+        # ZeroMQ batching support
+        self._prev_scores_batch_num = None
+        self._cur_scores_batch_num = None
+        self._first_scores_batch = True
+
+        self._prev_per_ep_batch_num = None
+        self._cur_per_ep_batch_num = None
+        self._first_per_ep_batch = True
 
     @work(exclusive=True)
     async def check_heartbeat(self) -> None:
@@ -442,37 +453,50 @@ class HydraClientTui(App):
         self.console_msg("Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
-        # Epoch
-        epoch = payload[DGameField.EPOCH]
-        self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
+        batch_msg = HydraMsg.from_dict(payload)
+        messages = batch_msg.payload[DHydraMQ.MSGS]
+        self._cur_per_ep_batch_num = messages[0]["payload"]["count"]
+        if self._first_per_ep_batch:
+            self._first_per_ep_batch_num = False
+            self._prev_per_ep_batch_num = self._cur_per_ep_batch_num - 1
 
-        # Current epsilon value
-        epsilon = payload.get(DNetField.CUR_EPSILON)
-        if epsilon is not None:
-            self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
+        if (self._cur_per_ep_batch_num - self._prev_per_ep_batch_num) != 1:
+            self.console_msg("WARNING: Per episode data is being dropped!!!")
 
-        # Lookahead status
-        if DNetField.LOOKAHEAD_ON in payload:
-            if payload[DNetField.LOOKAHEAD_ON]:
-                cur_lookahead = DStatus.GOOD
-            else:
-                cur_lookahead = DStatus.BAD
-            self._cur_lookahead = cur_lookahead
-            self._w_lookahead_enabled.update(
-                f"{DLabel.LOOKAHEAD_STATUS:>18}: {cur_lookahead}"
-            )
+        self._prev_per_ep_batch_num = self._cur_per_ep_batch_num
 
-        # Loss
-        if DNetField.EP_LOSS in payload:
-            self._w_tabbed_plots.add_ep_loss(
-                epoch=epoch,
-                loss=payload[DNetField.EP_LOSS],
-            )
-        if DNetField.STEP_LOSS in payload:
-            self._w_tabbed_plots.add_step_loss(
-                epoch=epoch,
-                loss=payload[DNetField.STEP_LOSS],
-            )
+        for payload in messages[1:]:
+            # Epoch
+            epoch = payload[DGameField.EPOCH]
+            self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
+
+            # Current epsilon value
+            epsilon = payload.get(DNetField.CUR_EPSILON)
+            if epsilon is not None:
+                self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
+
+            # Lookahead status
+            if DNetField.LOOKAHEAD_ON in payload:
+                if payload[DNetField.LOOKAHEAD_ON]:
+                    cur_lookahead = DStatus.GOOD
+                else:
+                    cur_lookahead = DStatus.BAD
+                self._cur_lookahead = cur_lookahead
+                self._w_lookahead_enabled.update(
+                    f"{DLabel.LOOKAHEAD_STATUS:>18}: {cur_lookahead}"
+                )
+
+            # Loss
+            if DNetField.EP_LOSS in payload:
+                self._w_tabbed_plots.add_ep_loss(
+                    epoch=epoch,
+                    loss=payload[DNetField.EP_LOSS],
+                )
+            if DNetField.STEP_LOSS in payload:
+                self._w_tabbed_plots.add_step_loss(
+                    epoch=epoch,
+                    loss=payload[DNetField.STEP_LOSS],
+                )
 
     def on_per_step(self, topic: str, payload: dict) -> None:
         board = payload.get(DGameField.BOARD)
@@ -493,43 +517,59 @@ class HydraClientTui(App):
             self.mq = None
         self.exit()
 
-    def on_scores(self, topic: str, payload: dict) -> None:
-        # Current highscore
-        highscore = payload[DGameField.HIGHSCORE]
-        self._w_tabbed_scores.border_subtitle = (
-            f"{DLabel.HIGHSCORE}: {highscore}"
-        )
+    def on_scores(self, topic: str, payload) -> None:
+        batch_msg = HydraMsg.from_dict(payload)
+        messages = batch_msg.payload[DHydraMQ.MSGS]
+        self._cur_scores_batch_num = messages[0]["payload"]["count"]
+        if self._first_scores_batch:
+            self._first_scores_batch_num = False
+            self._prev_scores_batch_num = self._cur_scores_batch_num - 1
 
-        # current score
-        score = payload[DGameField.SCORE]
-        self._w_board_box.border_subtitle = f"{DLabel.SCORE}: {score:<2}"
+        if (self._cur_scores_batch_num - self._prev_scores_batch_num) != 1:
+            self.console_msg("WARNING: Score data is being dropped!!!")
 
-        # Lookahead Highscore event
-        if DGameField.HIGHSCORE_EVENT_LH in payload:
-            hs_event = payload[DGameField.HIGHSCORE_EVENT_LH]
-            self._w_tabbed_scores.add_highscore_lh(
-                epoch=hs_event[0],
-                highscore=hs_event[1],
-                event_time=hs_event[2],
+        self._prev_scores_batch_num = self._cur_scores_batch_num
+
+        for payload in messages[1:]:
+
+            # Current highscore
+            highscore = payload[DGameField.HIGHSCORE]
+            self._w_tabbed_scores.border_subtitle = (
+                f"{DLabel.HIGHSCORE}: {highscore}"
             )
-            self.console_msg(f"🎉 New (look ahead) highscore : {hs_event[1]}")
 
-        # Lookahead Highscore event
-        if DGameField.HIGHSCORE_EVENT_NLH in payload:
-            hs_event = payload[DGameField.HIGHSCORE_EVENT_NLH]
-            self._w_tabbed_scores.add_highscore_nlh(
-                epoch=hs_event[0],
-                highscore=hs_event[1],
-                event_time=hs_event[2],
-            )
-            self.console_msg(f"🎉 New highscore: {hs_event[1]}")
+            # current score
+            score = payload[DGameField.SCORE]
+            self._w_board_box.border_subtitle = f"{DLabel.SCORE}: {score:<2}"
 
-        # Final score
-        if DNetField.FINAL_SCORE in payload:
-            self._w_tabbed_plots.add_score(
-                cur_score=payload[DNetField.FINAL_SCORE],
-                lookahead=payload[DNetField.LOOKAHEAD_ON],
-            )
+            # Lookahead Highscore event
+            if DGameField.HIGHSCORE_EVENT_LH in payload:
+                hs_event = payload[DGameField.HIGHSCORE_EVENT_LH]
+                self._w_tabbed_scores.add_highscore_lh(
+                    epoch=hs_event[0],
+                    highscore=hs_event[1],
+                    event_time=hs_event[2],
+                )
+                self.console_msg(
+                    f"🎉 New (look ahead) highscore : {hs_event[1]}"
+                )
+
+            # Lookahead Highscore event
+            if DGameField.HIGHSCORE_EVENT_NLH in payload:
+                hs_event = payload[DGameField.HIGHSCORE_EVENT_NLH]
+                self._w_tabbed_scores.add_highscore_nlh(
+                    epoch=hs_event[0],
+                    highscore=hs_event[1],
+                    event_time=hs_event[2],
+                )
+                self.console_msg(f"🎉 New highscore: {hs_event[1]}")
+
+            # Final score
+            if DNetField.FINAL_SCORE in payload:
+                self._w_tabbed_plots.add_score(
+                    cur_score=payload[DNetField.FINAL_SCORE],
+                    lookahead=payload[DNetField.LOOKAHEAD_ON],
+                )
 
     async def on_shutdown_request(self) -> None:
         if self.mq is not None:
@@ -580,6 +620,8 @@ class HydraClientTui(App):
             if sim_running:
                 # Always receive per-episode updates
                 self.mq.enable_per_episode_sub()
+                # Always receive score updates
+                self.mq.enable_scores_sub()
                 self.add_class(DField.SIM_RUNNING)
                 self.cfg = SimCfg.from_dict(reply.payload)
                 if self.cfg.get(DNetField.PER_STEP):
@@ -673,7 +715,7 @@ class HydraClientTui(App):
             self.mq.enable_per_step_sub()
 
     async def _take_snapshot(self):
-        
+        pass
 
     def _update_tui_labels(self):
         """

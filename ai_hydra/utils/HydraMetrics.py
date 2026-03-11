@@ -17,10 +17,11 @@ class HydraMetrics:
     def __init__(self):
         self._epsilon = {}
         self._highscore_events = []
+        self._linear_model = {}
         self._mean_median = []
         self._random_seed = DHydra.RANDOM_SEED
-        self._linear_model = {}
         self._rnn_model = {}
+        self._trainer = {}
 
     def add_epsilon(self, initial, min, decay):
         self._epsilon[DField.INITIAL_EPSILON] = initial
@@ -48,6 +49,9 @@ class HydraMetrics:
         self._rnn_model[DField.HIDDEN_SIZE] = DRNN2.HIDDEN_SIZE
         self._rnn_model[DField.RNN_LAYERS] = DRNN2.RNN_LAYERS
         self._rnn_model[DField.RNN_DROPOUT] = DRNN2.P_VALUE
+
+    def add_trainer(self):
+        self._trainer[]
 
     def _init_headers(self):
         self.add_highscore_event(

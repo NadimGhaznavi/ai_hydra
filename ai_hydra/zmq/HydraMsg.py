@@ -117,9 +117,14 @@ class HydraMsg:
         if not isinstance(payload, dict):
             raise TypeError("Payload must be a dict")
 
+        if DHydraMsg.TARGET in data:
+            target = data[DHydraMsg.TARGET]
+        else:
+            target = None
+
         return cls(
             sender=data[DHydraMsg.SENDER],
-            target=data[DHydraMsg.TARGET],
+            target=target,
             method=data[DHydraMsg.METHOD],
             payload=payload,
         )

@@ -31,7 +31,7 @@ from ai_hydra.constants.DHydra import (
     DHydraServerDef,
 )
 from ai_hydra.zmq.HydraBaseMQ import HydraBaseMQ
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
 
 SubHandler = Callable[[str, dict], Any | Awaitable[Any]]
 

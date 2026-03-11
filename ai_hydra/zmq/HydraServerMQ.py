@@ -11,6 +11,7 @@
 from typing import Any
 from collections.abc import Callable, Awaitable
 import inspect
+import traceback
 
 import zmq
 import zmq.asyncio
@@ -27,10 +28,12 @@ from ai_hydra.constants.DHydra import (
     DHydraMQDef,
     DMethod,
     DHydraMsg,
+    DHydraLog,
 )
 from ai_hydra.constants.DHydraTui import DField
 
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
+from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraBaseMQ import HydraBaseMQ
 from ai_hydra.zmq.HydraMsgBatch import HydraMsgBatch
 
@@ -40,7 +43,7 @@ MsgHandler = Callable[[HydraMsg], Any | Awaitable[Any]]
 class HydraServerMQ(HydraBaseMQ):
     def __init__(
         self,
-        *,
+        log_level: DHydraLog,
         router_address: str = DHydraRouterDef.HOSTNAME,
         router_port: int = DHydraRouterDef.PORT,
         router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
@@ -57,13 +60,20 @@ class HydraServerMQ(HydraBaseMQ):
             identity=identity,
             topic_prefix=topic_prefix,
         )
+        self.log = HydraLog(
+            client_id="HydraServerMQ",
+            log_level=log_level,
+            to_console=True,
+        )
         self.pub_port = pub_port
         self.srv_methods = srv_methods or {}
 
         # Per topic batch storage
         self._per_ep_batch = HydraMsgBatch()
-        self._per_step_batch = HydraMsgBatch()
         self._scores_batch = HydraMsgBatch()
+
+        # Per-Step topic doesn't need batching, it's slow, because of the
+        # user defined move_delay
 
         self.pub_socket: zmq.asyncio.Socket | None = None
         self.pub_addr = f"tcp://*:{pub_port}"
@@ -79,80 +89,24 @@ class HydraServerMQ(HydraBaseMQ):
     async def bg_check_batches(self) -> None:
         try:
             while not self.check_batches_stop_event.is_set():
-
-                # Per epsiode batch
-                now = time.monotonic()
-                local_storage = None
-                await self._per_ep_lock.acquire()
-                if (
-                    self._per_ep_msgs
-                    and self._per_ep_timer
-                    and (
-                        now - self._per_ep_timer >= DHydraMQDef.MAX_BATCH_TIME
-                    )
-                ):
-                    local_storage = self._per_ep_msgs
-                    self._per_ep_msgs = []
-                    self._per_ep_timer = None
-                self._per_ep_lock.release()
-                if local_storage is not None:
-                    await self._publish(
-                        topic=DHydraMQDef.PER_EPISODE_TOPIC,
-                        method=DMethod.PER_EP_BATCH,
-                        payload=local_storage,
-                    )
-
-                # Per step batch
-                now = time.monotonic()
-                local_storage = None
-                await self._per_step_lock.acquire()
-                if (
-                    self._per_step_msgs
-                    and self._per_step_timer
-                    and (
-                        now - self._per_step_timer
-                        >= DHydraMQDef.MAX_BATCH_TIME
-                    )
-                ):
-                    local_storage = self._per_step_msgs
-                    self._per_step_msgs = []
-                    self._per_step_timer = None
-                self._per_step_lock.release()
-                if local_storage is not None:
-                    await self._publish(
-                        topic=DHydraMQDef.PER_STEP_TOPIC,
-                        method=DMethod.PER_STEP_BATCH,
-                        payload=local_storage,
-                    )
-
-                # Scores batch
-                now = time.monotonic()
-                local_storage = None
-                await self._scores_lock.acquire()
-                if (
-                    self._scores_msgs
-                    and self._scores_timer
-                    and (
-                        now - self._scores_timer >= DHydraMQDef.MAX_BATCH_TIME
-                    )
-                ):
-                    local_storage = self._scores_msgs
-                    self._scores_msgs = []
-                    self._scores_timer = None
-                self._scores_lock.release()
-                if local_storage is not None:
-                    await self._publish(
-                        topic=DHydraMQDef.SCORES_TOPIC,
-                        method=DMethod.SCORES_BATCH,
-                        payload=local_storage,
-                    )
+                await self._flush_timed_out_batch(
+                    batch=self._per_ep_batch,
+                    topic=DHydraMQDef.PER_EPISODE_TOPIC,
+                    method=DMethod.PER_EP_BATCH,
+                )
+                await self._flush_timed_out_batch(
+                    batch=self._scores_batch,
+                    topic=DHydraMQDef.SCORES_TOPIC,
+                    method=DMethod.SCORES_BATCH,
+                )
 
                 await asyncio.sleep(0.1)
 
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            print(f"ERROR: {e}")
+            self.log.critical(f"ERROR: {e}")
+            self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
 
     async def bg_listen(self) -> None:
         try:
@@ -188,6 +142,25 @@ class HydraServerMQ(HydraBaseMQ):
             print(f"ERROR: {e}")
             # let the task end; caller can decide what to do
             return
+
+    async def _bg_publish(
+        self,
+        *,
+        topic: str,
+        method: str,
+        payload: list[dict],
+    ) -> None:
+        envelope = {
+            DHydraMsg.SENDER: self.identity,
+            DHydraMsg.METHOD: method,
+            DHydraMsg.PAYLOAD: {DHydraMQ.MSGS: payload},
+            DHydraMsg.PROTOCOL_VERSION: DHydra.PROTOCOL_VERSION,
+        }
+        topic_b = self.topic(topic).encode(DHydraMQ.UTF_8)
+        data = json.dumps(envelope, separators=(",", ":")).encode(
+            DHydraMQ.UTF_8
+        )
+        await self.pub_socket.send_multipart([topic_b, data])
 
     async def _enqueue_and_maybe_flush(
         self,
@@ -243,47 +216,57 @@ class HydraServerMQ(HydraBaseMQ):
 
         lock.release()
 
+    async def _flush_timed_out_batch(
+        self,
+        *,
+        batch: HydraMsgBatch,
+        topic: str,
+        method: str,
+    ) -> None:
+        local_storage = None
+        now = time.monotonic()
+
+        await batch.acquire_lock()
+        try:
+            if batch.has_timed_out(now):
+                local_storage = batch.pop_batch()
+        finally:
+            batch.release_lock()
+
+        if local_storage is not None:
+            await self._bg_publish(
+                topic=topic,
+                method=method,
+                payload=local_storage,
+            )
+
     async def publish_per_episode(self, payload: dict) -> None:
         """
         Received a new message to publish.
         """
-        local_storage = None
-        await self._per_ep_batch.acquire_lock()
-        try:
-            if self._per_ep_batch.is_empty():
-                count_msg = HydraMsg(
-                    sender=self.identity,
-                    method=DMethod.COUNTER,
-                    payload={DField.COUNT: self._per_ep_batch.batch_num()},
-                )
-                self._per_ep_batch.append(count_msg)
-                self._per_ep_batch.append(payload)
-
-            elif self._per_ep_batch.batch_size() >= DHydraMQDef.MAX_BATCH_SIZE:
-                self._per_ep_batch.append(payload)
-                local_storage = self._per_ep_batch.pop_batch()
-
-            else:
-                self._per_ep_batch.append(payload)
-        finally:
-            self._per_ep_batch.release_lock()
-
-        if local_storage is not None:
-            await self._publish(
-                topic=DHydraMQDef.PER_EPISODE_TOPIC,
-                method=DMethod.PER_EP_BATCH,
-                payload=local_storage,
-            )
-
-    async def publish_per_step(self, payload: dict) -> None:
-        await self._publish(
-            batch=self._per_step_batch,
+        await self._batched_publish(
+            batch=self._per_ep_batch,
             payload=payload,
-            topic=DHydraMQDef.PER_STEP_TOPIC,
-            method=DMethod.PER_STEP_BATCH,
+            topic=DHydraMQDef.PER_EPISODE_TOPIC,
+            method=DMethod.PER_EP_BATCH,
         )
 
-    async def _publish(
+    async def publish_per_step(self, payload: dict) -> None:
+        topic = self.topic(DHydraMQDef.PER_STEP_TOPIC).encode(DHydraMQ.UTF_8)
+        data = json.dumps(payload, separators=(",", ":")).encode(
+            DHydraMQ.UTF_8
+        )
+        await self.pub_socket.send_multipart([topic, data])
+
+    async def publish_scores(self, payload: dict) -> None:
+        await self._batched_publish(
+            batch=self._scores_batch,
+            payload=payload,
+            topic=DHydraMQDef.SCORES_TOPIC,
+            method=DMethod.SCORES_BATCH,
+        )
+
+    async def _batched_publish(
         self, batch: HydraMsgBatch, payload: dict, topic: str, method: str
     ) -> None:
         """
@@ -308,6 +291,11 @@ class HydraServerMQ(HydraBaseMQ):
 
             else:
                 batch.append(payload)
+
+        except Exception as e:
+            self.log.critical(f"ERROR: {e}")
+            self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
+
         finally:
             batch.release_lock()
 
@@ -315,7 +303,7 @@ class HydraServerMQ(HydraBaseMQ):
             envelope = {
                 DHydraMsg.SENDER: DModule.HYDRA_MGR,
                 DHydraMsg.METHOD: method,
-                DHydraMsg.PAYLOAD: local_storage,
+                DHydraMsg.PAYLOAD: {DHydraMQ.MSGS: local_storage},
                 DHydraMsg.PROTOCOL_VERSION: DHydra.PROTOCOL_VERSION,
             }
             topic = self.topic(topic).encode(DHydraMQ.UTF_8)
@@ -323,38 +311,6 @@ class HydraServerMQ(HydraBaseMQ):
                 DHydraMQ.UTF_8
             )
             await self.pub_socket.send_multipart([topic, data])
-
-    async def publish_scores(self, payload: dict) -> None:
-        await self._scores_lock.acquire()
-
-        if len(self._scores_msgs) == 0:
-            self._scores_timer = time.monotonic()
-            count_msg = {
-                DHydraMsg.SENDER: self.identity,
-                DHydraMsg.METHOD: DMethod.COUNTER,
-                DHydraMsg.PAYLOAD: {DField.COUNT: self._scores_count},
-                DHydraMsg.PROTOCOL_VERSION: DHydra.PROTOCOL_VERSION,
-            }
-            self._scores_msgs.append(count_msg)
-            self._scores_msgs.append(payload)
-            self._scores_lock.release()
-            self._scores_count += 1
-
-        elif len(self._scores_msgs) >= DHydraMQDef.MAX_BATCH_SIZE:
-            self._scores_msgs.append(payload)
-            local_storage = self._scores_msgs
-            self._scores_msgs = []
-            self._scores_timer = None
-            self._scores_lock.release()
-            await self._publish(
-                topic=DHydraMQDef.SCORES_TOPIC,
-                method=DMethod.SCORES_BATCH,
-                payload=local_storage,
-            )
-
-        else:
-            self._scores_msgs.append(payload)
-            self._scores_lock.release()
 
     async def UNUSED_publish(
         self, topic: str, method: str, payload: dict

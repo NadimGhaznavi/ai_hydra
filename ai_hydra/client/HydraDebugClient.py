@@ -17,7 +17,7 @@ from textual.theme import Theme
 from textual.widgets import Button, Label, Log
 
 from ai_hydra.utils.HydraMQ import HydraMQ
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField

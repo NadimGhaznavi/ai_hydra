@@ -29,7 +29,7 @@ from ai_hydra.constants.DHydraTui import DField
 
 from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
-from ai_hydra.utils.HydraMsg import HydraMsg
+from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.nnet.Policy.LookaheadPolicy import LookaheadPolicy
 from ai_hydra.utils.SimCfg import SimCfg
@@ -377,35 +377,41 @@ class HydraMgr(HydraServer):
         self._client_id = client_id
         self.log.debug(f"Received START_RUN, starting the simulation")
 
-        # Get runtime settings
-        self.cfg = SimCfg.from_dict(msg.payload)
+        try:
 
-        # Setup the PUB/SUB topic publications
-        await self.set_per_step_topic(msg)
-        await self.set_move_delay(msg)
+            # Get runtime settings
+            self.cfg = SimCfg.from_dict(msg.payload)
 
-        # already running?
-        if client_id in self._runs and not self._runs[client_id].done():
-            payload = {
-                DGameField.OK: False,
-                DGameField.INFO: {"status": "already_running"},
-            }
-        else:
-            task = asyncio.create_task(self._run_loop(client_id))
-            self._runs[client_id] = task
-            payload = {
-                DGameField.OK: True,
-                DGameField.INFO: {"status": "started"},
-            }
+            # Setup the PUB/SUB topic publications
+            await self.set_per_step_topic(msg)
+            await self.set_move_delay(msg)
 
-        reply = HydraMsg(
-            sender=self.identity,
-            target=client_id,
-            method=DGameMethod.START_RUN,
-            payload=payload,
-        )
-        if self.mq is not None:
-            await self.mq.send(reply)
+            # already running?
+            if client_id in self._runs and not self._runs[client_id].done():
+                payload = {
+                    DGameField.OK: False,
+                    DGameField.INFO: {"status": "already_running"},
+                }
+            else:
+                task = asyncio.create_task(self._run_loop(client_id))
+                self._runs[client_id] = task
+                payload = {
+                    DGameField.OK: True,
+                    DGameField.INFO: {"status": "started"},
+                }
+
+            reply = HydraMsg(
+                sender=self.identity,
+                target=client_id,
+                method=DGameMethod.START_RUN,
+                payload=payload,
+            )
+            if self.mq is not None:
+                await self.mq.send(reply)
+
+        except Exception as e:
+            self.log.critical(f"ERROR: {e}")
+            self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
 
     async def stop_run(self, msg: HydraMsg) -> None:
         client_id = msg.sender
