@@ -105,7 +105,9 @@ class HydraClientTui(App):
         self._running = False
         self._wgt = None
 
+        # Metrics to hold config and runtime sim data
         self.metrics = HydraMetrics()
+        self._cur_epsilon = None
 
         # Ahem...
         self._not_first_time_kludge = False
@@ -492,6 +494,7 @@ class HydraClientTui(App):
             epsilon = payload.get(DNetField.CUR_EPSILON)
             if epsilon is not None:
                 self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
+                self._cur_epsilon = epsilon
 
             # Lookahead status
             if DNetField.LOOKAHEAD_ON in payload:
@@ -574,11 +577,15 @@ class HydraClientTui(App):
                 self.console_msg(
                     f"🎉 New (look ahead) highscore : {hs_event[1]}"
                 )
+                cur_epsilon = (
+                    self._cur_epsilon or self._w_initial_epsilon_input.value
+                )
                 self.metrics.add_highscore_event(
                     episode=hs_event[0],
                     highscore=hs_event[1],
                     event_time=hs_event[2],
                     lookahead=True,
+                    cur_ep=cur_epsilon,
                 )
 
             # Lookahead Highscore event
@@ -590,11 +597,15 @@ class HydraClientTui(App):
                     event_time=hs_event[2],
                 )
                 self.console_msg(f"🎉 New highscore: {hs_event[1]}")
+                cur_epsilon = (
+                    self._cur_epsilon or self._w_initial_epsilon_input.value
+                )
                 self.metrics.add_highscore_event(
                     episode=hs_event[0],
                     highscore=hs_event[1],
                     event_time=hs_event[2],
                     lookahead=False,
+                    cur_ep=cur_epsilon,
                 )
 
             # Final score

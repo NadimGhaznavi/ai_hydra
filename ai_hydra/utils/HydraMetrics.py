@@ -33,9 +33,11 @@ class HydraMetrics:
     def add_epsilon_depleted(self, episode):
         self.epsilon[DField.EPSILON_DEPLETED] = episode
 
-    def add_highscore_event(self, episode, highscore, event_time, lookahead):
+    def add_highscore_event(
+        self, episode, highscore, event_time, lookahead, cur_ep
+    ):
         self.highscore_events.append(
-            (episode, highscore, event_time, lookahead)
+            (episode, highscore, event_time, lookahead, cur_ep)
         )
 
     def add_lookahead(self, pvalue):
@@ -67,7 +69,7 @@ class HydraMetrics:
             self.add_rnn_model()
 
         with open(snap_file, "w") as f:
-            f.writelines(
+            f.write(
                 "📸 AI Hydra - Snapshot\n"
                 "══════════════════════\n"
                 f"Timestamp: {timestamp}\n"
@@ -81,7 +83,7 @@ class HydraMetrics:
                 f"Epsilon Decay Rate: {self.epsilon[DField.EPSILON_DECAY]}\n\n"
             )
             if model_type == DField.LINEAR:
-                f.writelines(
+                f.write(
                     "🧠 Linear Model\n"
                     "═══════════════\n"
                     f"Input Size: {self.linear_model[DField.INPUT_SIZE]}\n"
@@ -89,22 +91,25 @@ class HydraMetrics:
                     f"Dropout Layer P-Value: {self.linear_model[DField.DROPOUT_P]}\n\n"
                 )
             else:
-                f.writelines(
+                f.write(
                     "🧠 RNN Model\n"
                     "════════════\n"
                     f"Input Size: {self.rnn_model[DField.INPUT_SIZE]}\n"
                     f"Hidden Size: {self.rnn_model[DField.HIDDEN_SIZE]}\n"
                     f"RNN Layers: {self.rnn_model[DField.RNN_LAYERS]}\n"
-                    f"Dropout Layer P-Value: {self.rnn_model[DField.RNN_DROPOUT]}\n\n"
+                    f"Dropout Layer P-Value: {self.rnn_model[DField.RNN_DROPOUT]}\n"
+                    f"Batch Size: {DRNN.BATCH_SIZE}\n"
+                    f"Sequence Length: {DRNN.SEQ_LENGTH}\n\n"
                 )
-            f.writelines(
+            f.write(
                 "🏆 Highscore Events\n"
                 "═══════════════════\n"
-                f"{'Episode':8s}{'Highscore':10s}{'Time':>11s}{'Look Ahead':>11}\n"
-                "═══════ ═════════ ═══════════ ══════════\n"
+                f"{'Episode':8s}{'Highscore':10s}{'Time':>11s}{'Look Ahead':>11}{'Epsilon':>8s}\n"
+                "═══════ ═════════ ═══════════ ══════════ ═══════\n"
             )
             for event in self.highscore_events:
-                episode, highscore, ev_time, lookahead = event
+                episode, highscore, ev_time, lookahead, cur_ep = event
+                cur_ep = str(round(float(cur_ep), 4))
                 f.write(
-                    f"{str(episode):>8s}{str(highscore):>10s}{ev_time:>11s}{str(lookahead):>11s}\n"
+                    f"{str(episode):>8s}{str(highscore):>10s}{ev_time:>11s}{str(lookahead):>11s}{cur_ep:>8s}\n"
                 )

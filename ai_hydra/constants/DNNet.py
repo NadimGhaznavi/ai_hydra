@@ -21,7 +21,7 @@ class DRNN:
     """
 
     BATCH_SIZE: Final[int] = 64
-    SEQ_LENGTH: Final[int] = 8
+    SEQ_LENGTH: Final[int] = 16
     HIDDEN_SIZE: Final[int] = 384
     RNN_LAYERS: Final[int] = 3
     OUTPUT_SIZE: Final[int] = 3
