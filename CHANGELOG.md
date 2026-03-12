@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.14.0] - 2026-03-12 10:19
 
 ### Added
 - Stacktrace support for HydraClientMQ exceptions. Useful when expected topic data is missing.
