@@ -7,7 +7,8 @@ from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.constants.DGame import DGameField
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
-from ai_hydra.nnet.RNNTrainer import RNNTrainer
+
+# from ai_hydra.nnet.UNUSED_RNNTrainer import RNNTrainer
 from ai_hydra.nnet.LinearTrainer import LinearTrainer
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.nnet.Transition import Transition

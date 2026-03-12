@@ -42,6 +42,7 @@ class LinearTrainer:
         )
         self._per_step_losses = []
         self._per_ep_loss = None
+        self.log.debug("Initialized")
 
     def get_per_ep_loss(self) -> float | None:
         return self._per_ep_loss

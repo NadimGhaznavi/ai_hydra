@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 from copy import deepcopy
 
-from ai_hydra.constants.DNNet import DNetDef, DRNN2
+from ai_hydra.constants.DNNet import DNetDef, DRNN
 from ai_hydra.constants.DHydra import DHydraLog
 from ai_hydra.constants.DNNet import DRNNTrainer
 
@@ -56,6 +56,7 @@ class RNNTrainer2:
 
         self._per_ep_loss: float | None = None
         self._per_step_losses: list[float] = []
+        self.log.debug("Initialized")
 
     def get_per_ep_loss(self) -> float | None:
         return self._per_ep_loss
@@ -67,13 +68,13 @@ class RNNTrainer2:
         self._per_step_losses = []
         return avg_loss
 
-    def train_long_memory(self, batch_size=DRNN2.BATCH_SIZE) -> None:
+    def train_long_memory(self, batch_size=DRNN.BATCH_SIZE) -> None:
         chunks = self.replay.sample_chunks(batch_size=batch_size)
         if chunks is None:
             self._per_ep_loss = None
             return
 
-        # Shapes:
+        # Shapes (B = batch_size, T = seq_length, F = feature/input size)
         # states      -> [B, T, F]
         # actions     -> [B, T]
         # rewards     -> [B, T]

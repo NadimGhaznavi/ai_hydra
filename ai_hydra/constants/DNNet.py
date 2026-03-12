@@ -15,20 +15,6 @@ import torch.nn as nn
 import torch.optim as optim
 
 
-class DRNN2:
-    """
-    RNN Model defaults
-    """
-
-    BATCH_SIZE: Final[int] = 64
-    SEQ_LENGTH: Final[int] = 8
-    HIDDEN_SIZE: Final[int] = 384
-    RNN_LAYERS: Final[int] = 3
-    OUTPUT_SIZE: Final[int] = 3
-    P_VALUE: Final[float] = 0.1
-    LEARNING_RATE: Final[float] = 0.0002
-
-
 class DRNN:
     """
     RNN Model defaults
@@ -41,7 +27,6 @@ class DRNN:
     OUTPUT_SIZE: Final[int] = 3
     P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
-    REPLAY_MEM_SEQ_SIZE: Final[float] = 10
 
 
 class DEpsilonDef:
@@ -144,10 +129,10 @@ class DRNNTrainer:
 
 MODEL_TYPE_TABLE: Final[dict] = {
     DField.LINEAR: DLabel.LINEAR,
-    DField.RNN2: DLabel.RNN2,
+    DField.RNN: DLabel.RNN,
 }
 
 MODEL_TYPES: Final[list] = [
     (DLabel.LINEAR, DField.LINEAR),
-    (DLabel.RNN2, DField.RNN2),
+    (DLabel.RNN, DField.RNN),
 ]

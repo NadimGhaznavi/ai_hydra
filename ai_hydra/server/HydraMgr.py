@@ -92,11 +92,13 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.TrainMgr import TrainMgr
         from ai_hydra.nnet.ReplayMemory import ReplayMemory
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
-        from ai_hydra.nnet.RNNTrainer import RNNTrainer
+
+        # from ai_hydra.nnet.UNUSED_RNNTrainer import RNNTrainer
         from ai_hydra.nnet.RNNTrainer2 import RNNTrainer2
         from ai_hydra.nnet.models.LinearModel import LinearModel
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
-        from ai_hydra.nnet.models.RNNModel import RNNModel
+
+        # from ai_hydra.nnet.models.UNUSED_RNNModel import RNNModel
         from ai_hydra.nnet.models.RNNModel2 import RNNModel2
         from ai_hydra.nnet.Policy.RNNPolicy import RNNPolicy
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
@@ -108,17 +110,14 @@ class HydraMgr(HydraServer):
         _, policy_rng = self.snake.new_rng()
         _, replay_rng = self.snake.new_rng()
 
-        replay = ReplayMemory(rng=replay_rng, log_level=self.log_level)
-
         device = torch.device("cpu")  # keep simple; GPU can be passed later
 
         # NN Model being used
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
-        # model_type = DField.RNN2
-        # self.cfg.set(DNetField.MODEL_TYPE, DField.RNN2)
 
         if model_type == DField.LINEAR:
-            self.log.debug("Using Linear model")
+            self.log.debug("Using Linear Model")
+            replay = ReplayMemory(rng=replay_rng, log_level=self.log_level)
             model = LinearModel()
             nnet_policy = LinearPolicy(model=model, device=device)
             trainer = LinearTrainer(
@@ -131,22 +130,9 @@ class HydraMgr(HydraServer):
             )
 
         elif model_type == DField.RNN:
-            self.log.debug("Using RNN model")
-            model = RNNModel()
-            nnet_policy = RNNPolicy(model=model, device=device)
-            trainer = RNNTrainer(
-                model=model,
-                replay=replay,
-                lr=self.cfg.get(DNetField.LEARNING_RATE),
-                device=device,
-                gamma=0.9,
-                log_level=self.log_level,
-            )
-
-        elif model_type == DField.RNN2:
-            self.log.debug("Using RNN2 Model")
+            self.log.debug("Using RNN Model")
             replay = ReplayMemory(
-                rng=replay_rng, log_level=self.log_level, rnn2=True
+                rng=replay_rng, log_level=self.log_level, rnn=True
             )
             model = RNNModel2()
             nnet_policy = RNNPolicy(model=model, device=device)
@@ -302,7 +288,7 @@ class HydraMgr(HydraServer):
                         sess.lookahead_on = sess.rng.random() < lookahead_p
                     ep_payload[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
 
-                    if model_type == DField.RNN2:
+                    if model_type == DField.RNN:
                         train_mgr.trainer.train_long_memory()
 
                     # Loss, if available, is loaded into the telemetry here
@@ -327,7 +313,7 @@ class HydraMgr(HydraServer):
 
                 train_mgr.replay.append(t=t)
 
-                if model_type != DField.RNN2:
+                if model_type != DField.RNN:
                     if sess.step_n % train_every == 0:
                         for _ in range(grad_steps):
                             train_mgr.trainer.train_long_memory(batch_size)

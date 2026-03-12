@@ -15,13 +15,14 @@ from typing import Deque
 
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydra import DHydraLog
-from ai_hydra.constants.DNNet import DRNN, DRNN2
+from ai_hydra.constants.DNNet import DRNN
 
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
 
 MAX_CHUNKS = DMemory.MAX_CHUNKS
 MIN_CHUNKS = DMemory.MIN_CHUNKS
+SEQ_LENGTH = DRNN.SEQ_LENGTH
 
 
 class ReplayMemory:
@@ -29,8 +30,7 @@ class ReplayMemory:
         self,
         rng: Random,
         log_level: DHydraLog,
-        rnn2: bool = False,
-        seq_len: int = DRNN2.SEQ_LENGTH,
+        rnn: bool = False,
     ):
         self.log = HydraLog(
             client_id="ReplayMemory",
@@ -40,18 +40,21 @@ class ReplayMemory:
         self._rng = rng
         self._memory: Deque[Transition] = deque(maxlen=DMemory.MAX_MEM_SIZE)
 
-        # RNN 2 settings
-        self._rnn2 = rnn2
-        self._seq_len = seq_len
+        # RNN settings
+        self._rnn = rnn
         self._chunks: list[list[Transition]] = []
         self._cur_game: list[Transition] = []
         self._max_chunks = MAX_CHUNKS
         self._mem_loaded_flag = True
-        self.log.debug("Initialized")
+        self._seq_len = SEQ_LENGTH
+        if self._rnn:
+            self.log.debug("Initialized for RNN model training")
+        else:
+            self.log.debug("Initialized for Linear model training")
 
     def append(self, t: Transition) -> None:
         """Add a transition."""
-        if not self._rnn2:
+        if not self._rnn:
             self._memory.append(t)
             return
 
@@ -110,40 +113,3 @@ class ReplayMemory:
 
         memory = list(self._memory)
         return self._rng.sample(memory, k=batch_size)
-
-    def sample_sequences(
-        self,
-        batch_size: int,
-        seq_len: int = DRNN.REPLAY_MEM_SEQ_SIZE,
-    ) -> list[list[Transition]] | None:
-        """Sample contiguous transition sequences for an RNN."""
-        memory = list(self._memory)
-
-        if len(memory) < max(DMemory.MIN_FRAMES, seq_len):
-            return None
-
-        max_start = len(memory) - seq_len + 1
-        if max_start <= 0:
-            return None
-
-        valid_starts: list[int] = []
-        for start in range(max_start):
-            window = memory[start : start + seq_len]
-
-            # Reject windows that cross an episode boundary before the end
-            if any(t.done for t in window[:-1]):
-                continue
-
-            valid_starts.append(start)
-
-        if not valid_starts:
-            return None
-
-        actual_batch_size = min(batch_size, len(valid_starts))
-        starts = self._rng.sample(valid_starts, k=actual_batch_size)
-
-        # self.log.debug(
-        #    f"sample_sequences(): memory={len(memory)}, valid_starts={len(valid_starts)}, "
-        #    f"batch_size={actual_batch_size}, seq_len={seq_len}"
-        # )
-        return [memory[start : start + seq_len] for start in starts]
