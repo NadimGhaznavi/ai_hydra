@@ -34,6 +34,7 @@ class DGameField:
     DY: Final[str] = "dy"
     EMPTY: Final[str] = "empty"
     ERROR: Final[str] = "error"
+    ELAPSED_TIME: Final[str] = "elapsed_time"
     EPISODE_DONE: Final[str] = "episode_done"
     EPISODE_ID: Final[str] = "episode_id"
     EPOCH: Final[str] = "epoch"

@@ -301,7 +301,7 @@ class HydraClientTui(App):
         # Plots
         yield TabbedPlots(id=DField.TABBED_PLOTS)
 
-        # Consolr
+        # Console
         yield Vertical(Label(id=DField.CONSOLE_SCREEN), id=DField.CONSOLE_BOX)
 
         # Focus widget: This is hidden, but it allows me to move focus away
@@ -352,6 +352,9 @@ class HydraClientTui(App):
 
         # Create references to TUI elements that are being updated
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
+        self._w_console_box = self.query_one(
+            f"#{DField.CONSOLE_BOX}", Vertical
+        )
         self._w_console_label = self.query_one(
             f"#{DField.CONSOLE_SCREEN}", Label
         )
@@ -445,9 +448,7 @@ class HydraClientTui(App):
             DLabel.HIGHSCORES
         )
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
-        self.query_one(f"#{DField.CONSOLE_BOX}", Vertical).border_subtitle = (
-            DLabel.CONSOLE
-        )
+        self._w_console_box.border_subtitle = DLabel.CONSOLE
         self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
         self._w_hidden_widget.focus()
         self.console_msg("Initialized...")
@@ -470,6 +471,10 @@ class HydraClientTui(App):
             epoch = payload[DGameField.EPOCH]
             self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
 
+            # Elapsed time
+            self._w_console_box.border_subtitle = payload[
+                DGameField.ELAPSED_TIME
+            ]
             # Current epsilon value
             epsilon = payload.get(DNetField.CUR_EPSILON)
             if epsilon is not None:

@@ -268,13 +268,14 @@ class SnakeMgr:
         if self.cfg.get(DNetField.PER_STEP):
             step_payload = {DGameField.BOARD: sess.board.to_dict()}
 
-        # The payload for the ZeroMQ "per episode" topic
+        # ----- The payload for the ZeroMQ "per episode" topic ----
         ep_payload = None
         if sess.done:
             ep_payload: dict[str, Any] = {
                 DGameField.EPOCH: sess.epoch,
                 DGameField.REASON: outcome,
                 DGameField.STEP_N: sess.step_n,
+                DGameField.ELAPSED_TIME: elapsed_str,
             }
 
         return state_dict, scores_payload, step_payload, ep_payload
