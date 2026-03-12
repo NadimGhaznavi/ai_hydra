@@ -114,6 +114,7 @@ class DFile:
     CLIENT_CSS: Final[str] = "HydraClient.tcss"
     ROUTER_CSS: Final[str] = "HydraRouter.tcss"
     HYDRA_SERVER_DB: Final[str] = "HydraServer.db"
+    BASE_SNAPSHOT: Final[str] = "AI-Hydra-Snapshot_"
 
 
 class DLabel:

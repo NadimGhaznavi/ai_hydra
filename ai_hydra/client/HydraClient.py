@@ -10,6 +10,9 @@
 import asyncio
 import sys
 import time
+from pathlib import Path
+import os
+from datetime import datetime
 
 from textual import work
 from textual.app import App, ComposeResult
@@ -21,6 +24,7 @@ from textual.message import Message
 from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
 from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.utils.SimCfg import SimCfg
+from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.client.TabbedScores import TabbedScores
 from ai_hydra.client.TabbedPlots import TabbedPlots
@@ -100,6 +104,10 @@ class HydraClientTui(App):
         self.cfg = SimCfg()
         self._running = False
         self._wgt = None
+
+        self.metrics = HydraMetrics()
+
+        # Ahem...
         self._not_first_time_kludge = False
 
         # ZeroMQ batching support
@@ -110,6 +118,11 @@ class HydraClientTui(App):
         self._prev_per_ep_batch_num = None
         self._cur_per_ep_batch_num = None
         self._first_per_ep_batch = True
+
+        # AI Hydra stores temporary and persistent files in this directory
+        self._hydra_dir = os.path.join(Path.home(), DHydra.HYDRA_DIR)
+        if not os.path.exists(self._hydra_dir):
+            os.mkdir(self._hydra_dir)
 
     @work(exclusive=True)
     async def check_heartbeat(self) -> None:
@@ -561,6 +574,12 @@ class HydraClientTui(App):
                 self.console_msg(
                     f"🎉 New (look ahead) highscore : {hs_event[1]}"
                 )
+                self.metrics.add_highscore_event(
+                    episode=hs_event[0],
+                    highscore=hs_event[1],
+                    event_time=hs_event[2],
+                    lookahead=True,
+                )
 
             # Lookahead Highscore event
             if DGameField.HIGHSCORE_EVENT_NLH in payload:
@@ -571,6 +590,12 @@ class HydraClientTui(App):
                     event_time=hs_event[2],
                 )
                 self.console_msg(f"🎉 New highscore: {hs_event[1]}")
+                self.metrics.add_highscore_event(
+                    episode=hs_event[0],
+                    highscore=hs_event[1],
+                    event_time=hs_event[2],
+                    lookahead=False,
+                )
 
             # Final score
             if DNetField.FINAL_SCORE in payload:
@@ -723,7 +748,25 @@ class HydraClientTui(App):
             self.mq.enable_per_step_sub()
 
     async def _take_snapshot(self):
-        pass
+        # Snapshot file
+        now = datetime.now()
+        timestamp = now.strftime("%Y-%m-%d_%H-%M.txt")
+        snapshot_file = DFile.BASE_SNAPSHOT + timestamp
+        fq_snapshot = os.path.join(self._hydra_dir, snapshot_file)
+        # Epsilon
+        self.metrics.add_epsilon(
+            initial=self._w_initial_epsilon_input.value,
+            minimum=self._w_min_epsilon_input.value,
+            decay=self._w_epsilon_decay_input.value,
+        )
+        # Model
+        model_type = MODEL_TYPE_TABLE[self._w_model_type_select.value]
+        self.metrics.add_lookahead(self._w_lookahead_p_val_input.value)
+        self.metrics.create_snapshot(
+            snap_file=fq_snapshot, model_type=model_type
+        )
+
+        self.console_msg(f"📸 Created snapshot file: {fq_snapshot}")
 
     def _update_tui_labels(self):
         """

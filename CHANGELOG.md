@@ -11,10 +11,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Added
 - Stacktrace support for HydraClientMQ exceptions. Useful when expected topic data is missing.
 - A `HydraLog` to the `HydraBaseMQ` class to support structured logging.
+- Improved `HydraMgr` startup console log: 
+  - Added a line indicating which model (Linear or RNN) is being used.
+  - Added a line from the `ReplayMemory` indicating if it's using Linear/RNN memory type.
+  
 - **A RNN model**:
   - Created `nnet/models/RNNModel.py`, the new RNN!
   - Created a drop-down menu in the TUI to select the model type (Linear or RNN).
   - Updated the `SimCfg` to support passing the model.
+  - Created `nnet/RNNTrainer.py` to support the RNN.
+  - When the *RNN* is selected from the dropdown menu the Look Ahead p-value default sets to 0
 - **Learning Rate**:
   - Added the *learning rate* to the TUI.
   - Handled the learning rate in the `HydraMgr`.
@@ -24,7 +30,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Published on a per-step basis to capture *outlier* scores where the snake has one lucky game and the highscore jumps multiple points.
   - Updated the `HydraClientMQ` and `HydraServerMQ` to support the new topic.
 - **Batched ZeroMQ Messages**
-
+  - The simulations ran so fast, that the per-step score telemtry ZeroMQ messages flooded the client. It couldn't keep up and since ZeroMQ PUB/SUB does not guarantee delivery, telemetry data was being dropped.
+  - A new ZeroMQ PUB/SUB topic created and batched.
+  - Per-Episode telemetry is also batched; AI Hydra runs episodes per second...
+- **Hydra Metrics**
+  - An initial draft of a Hydra Metrics class is introduced in this release.
+  - Added a *Snapshot* button that creates a text file that contains the summary of the simulation run.
 
 ### Changed
 - Modified the `Trainer` to accept a learning rate.
@@ -38,11 +49,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
     - None: No replay memory
     - *Random Game*: Return an ordered list of transitions for a randomly selected game.
     - *Random Frames*: Return a list of random transitions from random games.
+- Renamed `Trainer` to `LinearTrainer` to distinguish it from the `RNNTrainer`
+- Updated the `ReplayMemory` to support the new `RNN`:
+  - The `ReplayMemory` stores the transition data in a format that supports the `RNNTrainer` *batch size* and *sequence size* making simulations run **BLAZINGLY** fast.
 
 ### Fixed
 - Removed unnecessary f-string formatting in the TUI code.
 - Fixed a bug where the lookahead highscore was display in the "no lookahead" highscore tab. The "no lookahead" highscore was being ignored.
 - Removed a bug that was sending per-episode telementry every step.
+- Improved `HydraClient` shutdown (it still needs work).
 
 ---
 
