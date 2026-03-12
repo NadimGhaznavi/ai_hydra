@@ -508,8 +508,6 @@ class HydraClientTui(App):
         self.game_board.apply_board_dict(board)
 
     async def on_quit(self) -> None:
-        sys.exit(0)
-
         ###
         ### The code below (clean shutdown) causes the client to hang
         ### requiring a `kill <PID>``, followed by a `tput reset` to get
