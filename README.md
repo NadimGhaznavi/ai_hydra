@@ -1,18 +1,18 @@
-# AI Hydra: Hybrid Neural Network + Tree Search System
+# AI Hydra - Reinforcement Learning Observatory Platform
 
 ## Overview
 
 AI Hydra is a distributed application that includes a Textual TUI client, a 
 simple router, and a headless server. Communication is over ZeroMQ. The basic
-functionality is that the Client sends control messages (e.g. handshake, start)
-to the router which forwards them to the server. When the server is running
+functionality is that the Client sends control messages (e.g., handshake, start)
+to the router, which forwards them to the server. When the server is running,
 it publishes board and other telemetry information on a ZeroMQ PUB/SUB socket.
 The client subscribes to the server's PUB socket and displays the game state.
 
-The server splits the simulation telemetric into two ZeroMQ PUB topics. One 
+The server splits the simulation telemetry into two ZeroMQ PUB topics. One 
 topic provides *per-step* updates that include the actual board state (snake
-position, food position and current score). The other topic publishes per 
-episode information such as highscore, NN loss, current epsilon and more.
+position, food position, and current score). The other topic publishes per 
+episode information such as high score, NN loss, current epsilon, and more.
 
 The client can select *Turbo* mode to disable per-step updates. The board and
 current score are no longer updated, but the server runs more than 15x faster.
@@ -66,15 +66,15 @@ ZeroMQ message to be sent through the *HydraRouter* to the *HydraMgr*.
 
 - If the server cannot be reached, a console message appears.
 - If the server can be reached
-  - And no simulation is running then the *Handshake* is replaced with a *Start* button and settings appear which can be configured.
-  - If a simulation is running, then the *Handshake* button is replaced with a *Update Config* button and only runtime values are configurable. The settings from the running simulation are displayed in the *HydraClient*.
+  - And no simulation is running, then the *Handshake* is replaced with a *Start* button, and settings appear which can be configured.
+  - If a simulation is running, then the *Handshake* button is replaced with a *Update Config* button, and only runtime values are configurable. The settings from the running simulation are displayed in the *HydraClient*.
 
 ## Shutdown
 
-In this early release the server can only be stopped by hitting `Control-C` in 
+In this early release, the server can only be stopped by hitting `Control-C` in 
 the terminal where it's running. The client is stopped by hitting the *Quit* key, 
-but the shutdown is currently not clean, so an additional `Control-C` may be 
-required to fully terminate the *HydraClient*. The *HydraRouter* can be shutdown 
+but the shutdown is currently not 100% clean, so an additional `Control-C` may be 
+required to fully terminate the *HydraClient*. The *HydraRouter* can be shut down 
 by clicking the *Quit* button.
 
 A clean shutdown will be implemented for the client and server in a future release.
@@ -101,10 +101,26 @@ a collision, then that move is selected.
 
 The *look-ahead* policy is only enabled for a configurable probability of the
 time. The training of the neural network includes the moves and game state
-information that was executed. So when the *look-ahead* policy is used the
+information that were executed. So when the *look-ahead* policy is used, the
 training data is enhanced. This leads to better neural network performance.
 
 ## Visualizations
 
 The TUI includes real-time visualzations that show the loss and a histogram
 of the scores. The score histgrams also show the *mean* and *median* values.
+
+## Supported Models: Linear and RNN
+
+This project includes a *Linear* and an *RNN* for the backend neural network.
+The choice of model is made available in the TUI with a simple drop down 
+menu.
+
+## Blazing Speed
+
+Simulations run **BLAZINGLY** fast on a consumer grade laptop without a GPU.
+This is due to careful architectural design decisions. In particular, the
+`ReplayMemory`, `RNNModel`, and `RNNTrainer` work in a pipeline, minimizing
+data transformations.
+
+On my consumer grade laptop (11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz),
+simulations are run at about 3.5 episodes per second.
