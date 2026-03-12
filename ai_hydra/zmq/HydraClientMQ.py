@@ -136,6 +136,7 @@ class HydraClientMQ(HydraBaseMQ):
         self._sub_set(True, self.topic(DHydraMQDef.SCORES_TOPIC))
 
     async def quit(self) -> None:
+        await super().quit()
         if self._stopped:
             return
         self._stopped = True
