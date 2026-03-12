@@ -14,7 +14,7 @@ from ai_hydra.constants.DNNet import DNetDef, DRNN
 from ai_hydra.constants.DHydra import DHydra
 
 
-class RNNModel2(nn.Module):
+class RNNModel(nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(DHydra.RANDOM_SEED)

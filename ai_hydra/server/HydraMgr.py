@@ -99,7 +99,7 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
 
         # from ai_hydra.nnet.models.UNUSED_RNNModel import RNNModel
-        from ai_hydra.nnet.models.RNNModel2 import RNNModel2
+        from ai_hydra.nnet.models.RNNModel import RNNModel
         from ai_hydra.nnet.Policy.RNNPolicy import RNNPolicy
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
@@ -134,7 +134,7 @@ class HydraMgr(HydraServer):
             replay = ReplayMemory(
                 rng=replay_rng, log_level=self.log_level, rnn=True
             )
-            model = RNNModel2()
+            model = RNNModel()
             nnet_policy = RNNPolicy(model=model, device=device)
             trainer = RNNTrainer2(
                 model=model,

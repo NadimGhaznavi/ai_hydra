@@ -11,13 +11,11 @@ import torch
 from typing import Sequence
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
-
-# from ai_hydra.nnet.models import UNUSED_RNNModel
-from ai_hydra.nnet.models import RNNModel2
+from ai_hydra.nnet.models import RNNModel
 
 
 class RNNPolicy(HydraPolicy):
-    def __init__(self, model: RNNModel2, device: torch.device | None = None):
+    def __init__(self, model: RNNModel, device: torch.device | None = None):
         self.model = model
         self.device = device or torch.device("cpu")
         self.model.eval()
