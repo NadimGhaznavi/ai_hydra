@@ -22,7 +22,7 @@ from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.utils.HydraLog import HydraLog
 
 
-class RNNTrainer2:
+class RNNTrainer:
     def __init__(
         self,
         model,

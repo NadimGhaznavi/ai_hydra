@@ -540,7 +540,12 @@ class HydraClientTui(App):
 
             # current score
             score = payload[DGameField.SCORE]
-            self._w_board_box.border_subtitle = f"{DLabel.SCORE}: {score:<2}"
+            if self.cfg.get(DNetField.PER_STEP):
+                self._w_board_box.border_subtitle = (
+                    f"{DLabel.SCORE}: {score:<2}"
+                )
+            else:
+                self._w_board_box.border_subtitle = ""
 
             # Lookahead Highscore event
             if DGameField.HIGHSCORE_EVENT_LH in payload:

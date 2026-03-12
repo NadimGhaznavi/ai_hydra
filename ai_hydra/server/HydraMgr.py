@@ -94,7 +94,7 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
 
         # from ai_hydra.nnet.UNUSED_RNNTrainer import RNNTrainer
-        from ai_hydra.nnet.RNNTrainer2 import RNNTrainer2
+        from ai_hydra.nnet.RNNTrainer import RNNTrainer
         from ai_hydra.nnet.models.LinearModel import LinearModel
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
 
@@ -136,7 +136,7 @@ class HydraMgr(HydraServer):
             )
             model = RNNModel()
             nnet_policy = RNNPolicy(model=model, device=device)
-            trainer = RNNTrainer2(
+            trainer = RNNTrainer(
                 model=model,
                 replay=replay,
                 lr=self.cfg.get(DNetField.LEARNING_RATE),
