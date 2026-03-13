@@ -31,7 +31,6 @@ from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
-from ai_hydra.nnet.Policy.LookaheadPolicy import LookaheadPolicy
 from ai_hydra.utils.SimCfg import SimCfg
 
 
@@ -159,11 +158,10 @@ class HydraMgr(HydraServer):
         behaviour_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_algo
         )
-        policy = LookaheadPolicy(base_policy=behaviour_policy)
 
         self._train_mgr = TrainMgr(
             snake_mgr=self.snake,
-            policy=policy,
+            policy=behaviour_policy,
             trainer=trainer,
             replay=replay,
             client_id="TrainMgr",
@@ -230,19 +228,6 @@ class HydraMgr(HydraServer):
 
             count = 0
 
-            # Lookahead setting
-            lookahead_p = self.cfg.get(DNetField.LOOKAHEAD_P_VAL)
-            self.log.debug(f"Setting look ahead p-value to: {lookahead_p}")
-            if model_type == DField.LINEAR:
-                self.log.debug(
-                    f"Look ahead replay memory sample p-value: {DLinear.LOOKAHEAD_SAMPLE_P_VALUE}"
-                )
-            elif model_type == DField.RNN:
-                self.log.debug(
-                    f"Look ahead replay memory sample p-value: {DRNN.LOOKAHEAD_SAMPLE_P_VALUE}"
-                )
-            sess.lookahead_on = sess.rng.random() < lookahead_p
-
             train_every = 4
             grad_steps = 1
             batch_size = 64
@@ -264,7 +249,6 @@ class HydraMgr(HydraServer):
                 action = train_mgr.policy.select_action(
                     old_state,
                     board=sess.board,
-                    lookahead_on=sess.lookahead_on,
                 )
 
                 # Advance sim
@@ -293,10 +277,6 @@ class HydraMgr(HydraServer):
                         train_mgr.policy.cur_epsilon()
                     )
 
-                    # Lookahead coinflip
-                    sess.lookahead_on = sess.rng.random() < lookahead_p
-                    ep_payload[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
-
                     if model_type == DField.RNN:
                         train_mgr.trainer.train_long_memory()
 
@@ -319,8 +299,6 @@ class HydraMgr(HydraServer):
                     new_state=tuple(new_state),
                     done=bool(done),
                 )
-
-                train_mgr.replay.append(t=t, lookahead=sess.lookahead_on)
 
                 if model_type != DField.RNN:
                     if sess.step_n % train_every == 0:

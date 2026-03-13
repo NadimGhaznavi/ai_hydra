@@ -54,12 +54,15 @@ you’re seeing.
 
 # Secondary Analysis
 
+
+## Overview 
+
 Yes. That write-up is basically a crime scene report with little evidence flags 
 stuck into the pasta 🍝🔍
 
 The good news is that it also clarifies exactly what feels wrong:
 
-The core issue
+**The core issue**
 
 Your runtime path is still conceptually simple:
 
@@ -75,7 +78,7 @@ So the system acts like one thing and learns like another thing.
 
 That mismatch is the real rot.
 
-1. “The replay stores filtered behavior without the model seeing the filter mode”
+# 1. “The replay stores filtered behavior without the model seeing the filter mode”
 
 This is the biggest red flag.
 
