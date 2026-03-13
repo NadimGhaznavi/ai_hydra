@@ -22,7 +22,7 @@ class DRNN:
 
     BATCH_SIZE: Final[int] = 16
     SEQ_LENGTH: Final[int] = 20
-    HIDDEN_SIZE: Final[int] = 384
+    HIDDEN_SIZE: Final[int] = 256  # 512 # 384
     RNN_LAYERS: Final[int] = 3
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
