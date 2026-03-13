@@ -27,7 +27,8 @@ class DRNN:
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
-    LOOKAHEAD_P_VALUE: Final[float] = 0.25
+    LOOKAHEAD_P_VALUE: Final[float] = 0.2
+    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.2
 
 
 class DEpsilonDef:
@@ -59,7 +60,8 @@ class DLinear:
     DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
-    LOOKAHEAD_P_VALUE: Final[float] = 0.25
+    LOOKAHEAD_P_VALUE: Final[float] = 0.05
+    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.05
 
 
 class DNetDef:

@@ -21,7 +21,7 @@ class DHydra:
     HEARTBEAT_INTERVAL: Final[float] = 5.0
     NETWORK_TIMEOUT: Final[float] = 2.0
     PROTOCOL_VERSION: Final[int] = 1
-    RANDOM_SEED: Final[int] = 129
+    RANDOM_SEED: Final[int] = 8675309
     VERSION: Final[str] = "0.14.1"
     HYDRA_DIR: Final[str] = "AI-Hydra"
 

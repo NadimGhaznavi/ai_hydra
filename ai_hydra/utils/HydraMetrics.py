@@ -24,6 +24,13 @@ class HydraMetrics:
         self.rnn_model = {}
         self.lookahead = None
         self.mean_median = []
+        self.elapsed_time = None
+
+    def add_elapsed_time(self, elapsed_time):
+        self.elapsed_time = elapsed_time
+
+    def add_cur_epoch(self, cur_epoch):
+        self.cur_epoch = cur_epoch
 
     def add_epsilon(self, initial, minimum, decay):
         self.epsilon[DField.INITIAL_EPSILON] = initial
@@ -73,9 +80,24 @@ class HydraMetrics:
                 "📸 AI Hydra - Snapshot\n"
                 "══════════════════════\n"
                 f"Timestamp: {timestamp}\n"
+                f"Simulation Run Time: {self.elapsed_time}\n"
+                f"Episode Number: {self.cur_epoch}\n"
                 f"AI Hydra Version: v{DHydra.VERSION}\n"
                 f"Random Seed: {DHydra.RANDOM_SEED}\n"
-                f"Look Ahead P-Value: {self.lookahead}\n\n"
+                f"Look Ahead P-Value: {self.lookahead}\n"
+            )
+            if model_type == DField.LINEAR:
+                f.write(
+                    f"Look Ahead Sample P-Value: {DLinear.LOOKAHEAD_SAMPLE_P_VALUE}\n\n"
+                )
+            elif model_type == DField.RNN:
+                f.write(
+                    f"Look Ahead Sample P-Value: {DRNN.LOOKAHEAD_SAMPLE_P_VALUE}\n\n"
+                )
+            else:
+                raise ValueError(f"ERROR: Unrecogized model type {model_type}")
+
+            f.write(
                 "🎯 Epsilon Greedy\n"
                 "═════════════════\n"
                 f"Initial Epsilon: {self.epsilon[DField.INITIAL_EPSILON]}\n"
@@ -90,7 +112,7 @@ class HydraMetrics:
                     f"Hidden Size: {self.linear_model[DField.HIDDEN_SIZE]}\n"
                     f"Dropout Layer P-Value: {self.linear_model[DField.DROPOUT_P]}\n\n"
                 )
-            else:
+            elif model_type == DField.RNN:
                 f.write(
                     "🧠 RNN Model\n"
                     "════════════\n"

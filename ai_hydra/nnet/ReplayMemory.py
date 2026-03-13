@@ -17,7 +17,7 @@ from typing import Deque, Sequence, TypeVar
 
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydra import DHydraLog
-from ai_hydra.constants.DNNet import DRNN
+from ai_hydra.constants.DNNet import DRNN, DLinear
 
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
@@ -25,8 +25,8 @@ from ai_hydra.utils.HydraLog import HydraLog
 MAX_CHUNKS = DMemory.MAX_CHUNKS
 MIN_CHUNKS = DMemory.MIN_CHUNKS
 SEQ_LENGTH = DRNN.SEQ_LENGTH
-SAMPLE_P_VALUE = 0.25  #### MUST Be between 0 and 1
-
+RNN_LOOKAHEAD_SAMPLE_P_VALUE = DRNN.LOOKAHEAD_SAMPLE_P_VALUE
+LINEAR_LOOKAHEAD_SAMPLE_P_VALUE = DLinear.LOOKAHEAD_SAMPLE_P_VALUE
 
 T = TypeVar("T")
 
@@ -131,9 +131,12 @@ class ReplayMemory:
     def sample_chunks(
         self,
         batch_size: int,
-        sample_lh_p: float = SAMPLE_P_VALUE,
+        sample_lh_p: float = RNN_LOOKAHEAD_SAMPLE_P_VALUE,
     ) -> list[list[Transition]] | None:
 
+        # This only checks whether a full batch is possible in aggregate.
+        # The requested LH/NLH ratio is best-effort and is resolved in
+        # _sample_mixed().
         total_chunks = len(self._chunks) + len(self._lh_chunks)
         if total_chunks < max(batch_size, MIN_CHUNKS):
             return None
@@ -194,9 +197,13 @@ class ReplayMemory:
     def sample_transitions(
         self,
         batch_size: int = DMemory.BATCH_SIZE,
-        sample_lh_p: float = SAMPLE_P_VALUE,
+        sample_lh_p: float = LINEAR_LOOKAHEAD_SAMPLE_P_VALUE,
     ) -> list[Transition] | None:
         """Sample random transitions for a linear model."""
+
+        # This only checks whether a full batch is possible in aggregate.
+        # The requested LH/NLH ratio is best-effort and is resolved in
+        # _sample_mixed().
         total_mem = len(self._memory) + len(self._lh_memory)
         if total_mem < max(DMemory.MIN_FRAMES, batch_size):
             return None

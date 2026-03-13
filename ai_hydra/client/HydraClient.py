@@ -484,11 +484,13 @@ class HydraClientTui(App):
             # Epoch
             epoch = payload[DGameField.EPOCH]
             self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
+            self.metrics.add_cur_epoch(epoch)
 
             # Elapsed time
-            self._w_console_box.border_subtitle = payload[
-                DGameField.ELAPSED_TIME
-            ]
+            elapsed_time = payload[DGameField.ELAPSED_TIME]
+            self._w_console_box.border_subtitle = elapsed_time
+            self.metrics.add_elapsed_time(elapsed_time)
+
             # Current epsilon value
             epsilon = payload.get(DNetField.CUR_EPSILON)
             if epsilon is not None:
@@ -773,7 +775,7 @@ class HydraClientTui(App):
             decay=self._w_epsilon_decay_input.value,
         )
         # Model
-        model_type = MODEL_TYPE_TABLE[self._w_model_type_select.value]
+        model_type = self._w_model_type_select.value
         self.metrics.add_lookahead(self._w_lookahead_p_val_input.value)
         self.metrics.create_snapshot(
             snap_file=fq_snapshot, model_type=model_type

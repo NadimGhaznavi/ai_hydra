@@ -21,8 +21,9 @@ from ai_hydra.constants.DHydra import (
     DHydraLogDef,
     DHydraRouterDef,
     DHydraServerDef,
+    DHydra,
 )
-from ai_hydra.constants.DNNet import DNetField
+from ai_hydra.constants.DNNet import DNetField, DRNN, DLinear
 from ai_hydra.constants.DHydra import DMethod
 from ai_hydra.constants.DHydraTui import DField
 
@@ -215,6 +216,7 @@ class HydraMgr(HydraServer):
         Runs as fast as possible.
         """
         self.log.debug("Starting simulation run")
+        self.log.debug(f"Using random seed: {DHydra.RANDOM_SEED}")
         try:
             model_type = self.cfg.get(DNetField.MODEL_TYPE)
 
@@ -229,7 +231,15 @@ class HydraMgr(HydraServer):
 
             # Lookahead setting
             lookahead_p = self.cfg.get(DNetField.LOOKAHEAD_P_VAL)
-            self.log.debug(f"Setting lookahead p-value to: {lookahead_p}")
+            self.log.debug(f"Setting look ahead p-value to: {lookahead_p}")
+            if model_type == DField.LINEAR:
+                self.log.debug(
+                    f"Look ahead replay memory sample p-value: {DLinear.LOOKAHEAD_SAMPLE_P_VALUE}"
+                )
+            elif model_type == DField.RNN:
+                self.log.debug(
+                    f"Look ahead replay memory sample p-value: {DRNN.LOOKAHEAD_SAMPLE_P_VALUE}"
+                )
             sess.lookahead_on = sess.rng.random() < lookahead_p
 
             train_every = 4
