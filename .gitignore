@@ -2,6 +2,7 @@ __pycache__/
 output
 docs/_build/
 hydra_venv
+ai_snake_lab
 
 # Coverage reports
 .coverage
