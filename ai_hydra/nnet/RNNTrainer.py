@@ -49,7 +49,7 @@ class RNNTrainer:
         self.criterion = DRNNTrainer.CRITERION()
 
         self.log = HydraLog(
-            client_id="RNNTrainer2",
+            client_id="RNNTrainer",
             log_level=log_level,
             to_console=True,
         )
