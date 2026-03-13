@@ -6,7 +6,7 @@ Screen {
 }
 
 Button {
-    background: #3b7735ff;
+    background: rgb(27, 55, 24);
     padding: 0 1;
     border: none;
 }
@@ -100,7 +100,6 @@ TabbedScores {
     color: #5fc442;
     width: 44;
     text-style: bold;
-    padding: 0 1;
 }
 
 #loss_plot {

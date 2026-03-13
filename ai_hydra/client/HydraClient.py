@@ -51,7 +51,7 @@ from ai_hydra.constants.DSimCfg import Phase
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
-    primary="#88C0D0",
+    primary="#0E191C",
     secondary="#1f6a83ff",
     accent="#B48EAD",
     foreground="#31b8e6",
@@ -64,7 +64,7 @@ HYDRA_THEME = Theme(
     dark=True,
     variables={
         "block-cursor-text-style": "none",
-        "footer-key-foreground": "#88C0D0",
+        "footer-key-foreground": "#FF0000",
         "input-selection-background": "#81a1c1 35%",
     },
 )
@@ -293,7 +293,7 @@ class HydraClientTui(App):
         yield Vertical(
             # Lookahead p-value
             Horizontal(
-                Label(f"{DLabel.P_VALUE:>18}: "),
+                Label(f"{DLabel.P_VALUE:>16s}: "),
                 Label(
                     str(DLinear.LOOKAHEAD_P_VALUE),
                     id=DField.LOOKAHEAD_P_VAL_LABEL,
@@ -309,7 +309,7 @@ class HydraClientTui(App):
             ),
             # Lookahead p-value for Replay Memory Sampling
             Horizontal(
-                Label(f"{DLabel.SAMPLING_P_VALUE:>18}: "),
+                Label(f"{DLabel.SAMPLING_P_VALUE:>16s}: "),
                 Label(
                     str(DLinear.LOOKAHEAD_SAMPLE_P_VALUE),
                     id=DField.LOOKAHEAD_SAMPLE_P_VALUE_LABEL,
@@ -318,7 +318,7 @@ class HydraClientTui(App):
             ),
             # Lookahead enabled
             Horizontal(
-                Label(f"{DLabel.STATUS:>18}: "),
+                Label(f"{DLabel.STATUS:>16s}: "),
                 Label(id=DField.LOOKAHEAD_STATUS),
                 classes=DField.INPUT_FIELD,
             ),
