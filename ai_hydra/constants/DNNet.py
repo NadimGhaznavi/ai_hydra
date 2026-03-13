@@ -27,8 +27,8 @@ class DRNN:
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
-    LOOKAHEAD_P_VALUE: Final[float] = 0.2
-    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.2
+    LOOKAHEAD_P_VALUE: Final[float] = 0.25
+    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.25
 
 
 class DEpsilonDef:
