@@ -203,7 +203,7 @@ class HydraClientTui(App):
                 classes=DField.INPUT_FIELD,
             ),
             Label(),
-            # Model selection
+            # Model type
             Horizontal(
                 Label(f"{DLabel.NN_MODEL}: "),
                 Label(DLabel.LINEAR, id=DField.MODEL_TYPE_LABEL),
@@ -215,9 +215,10 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
+            Label(),
             # Learning rate
             Horizontal(
-                Label(f"{DLabel.LEARNING_RATE}: "),
+                Label(f"{DLabel.LEARNING_RATE:>15s}: "),
                 Label(
                     f"{DLinear.LEARNING_RATE:.7f}",
                     id=DField.LEARNING_RATE_LABEL,
@@ -231,7 +232,6 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
-            Label(),
             # Initial epsilon
             Horizontal(
                 Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
@@ -286,10 +286,14 @@ class HydraClientTui(App):
                 Label(id=DField.CUR_EPSILON),
                 classes=DField.INPUT_FIELD,
             ),
-            Label(),
+            id=DField.SETTINGS,
+        )
+
+        # Look Ahead Settings
+        yield Vertical(
             # Lookahead p-value
             Horizontal(
-                Label(f"{DLabel.LOOKAHEAD_P_VAL:>18}: "),
+                Label(f"{DLabel.P_VALUE:>18}: "),
                 Label(
                     str(DLinear.LOOKAHEAD_P_VALUE),
                     id=DField.LOOKAHEAD_P_VAL_LABEL,
@@ -303,12 +307,22 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
-            # Lookahead enabled
-            Label(
-                f"{DLabel.LOOKAHEAD_STATUS:>18}: {DStatus.UNKNOWN}",
-                id=DField.LOOKAHEAD_STATUS,
+            # Lookahead p-value for Replay Memory Sampling
+            Horizontal(
+                Label(f"{DLabel.SAMPLING_P_VALUE:>18}: "),
+                Label(
+                    str(DLinear.LOOKAHEAD_SAMPLE_P_VALUE),
+                    id=DField.LOOKAHEAD_SAMPLE_P_VALUE_LABEL,
+                ),
+                classes=DField.INPUT_FIELD,
             ),
-            id=DField.SETTINGS,
+            # Lookahead enabled
+            Horizontal(
+                Label(f"{DLabel.STATUS:>18}: "),
+                Label(id=DField.LOOKAHEAD_STATUS),
+                classes=DField.INPUT_FIELD,
+            ),
+            id=DField.LOOKAHEAD_BOX,
         )
 
         # Plots
@@ -427,6 +441,33 @@ class HydraClientTui(App):
         )
         self._w_turbo_mode = self.query_one(f"#{DField.TURBO_MODE}", Checkbox)
 
+        # Network
+        self.query_one(f"#{DField.ROUTER_HB}", Label).update(
+            f"{DLabel.ROUTER:>11s}: {DStatus.UNKNOWN}"
+        )
+
+        # Monitor the connection to the server in the background
+        self.check_heartbeat()
+
+        ## Add some text to the borders around the widgets
+        self.query_one(f"#{DField.TITLE}").border_subtitle = (
+            DLabel.VERSION + " " + DHydra.VERSION
+        )
+        self.query_one(f"#{DField.SETTINGS}").border_subtitle = DLabel.SETTINGS
+        self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
+        self.query_one(f"#{DField.TABBED_SCORES}").border_subtitle = (
+            DLabel.HIGHSCORES
+        )
+        self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
+        self._w_console_box.border_subtitle = DLabel.CONSOLE
+        self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
+        self.query_one(
+            f"#{DField.LOOKAHEAD_BOX}", Vertical
+        ).border_subtitle = DLabel.LOOKAHEAD_SETTINGS
+
+        # Switch focus to a hidden widget
+        self._w_hidden_widget.focus()
+
         self.mq = HydraClientMQ(
             router_address=self._address,
             router_port=self._port,
@@ -443,27 +484,6 @@ class HydraClientTui(App):
         self.mq.disable_per_step_sub()
         self.mq.disable_scores_sub()
 
-        # Network
-        self.query_one(f"#{DField.ROUTER_HB}", Label).update(
-            f"{DLabel.ROUTER:>11s}: {DStatus.UNKNOWN}"
-        )
-
-        # Monitor the connection to the server in the background
-        self.check_heartbeat()
-
-        # Add some text to the borders around the widgets
-        self.query_one(f"#{DField.TITLE}").border_subtitle = (
-            DLabel.VERSION + " " + DHydra.VERSION
-        )
-        self.query_one(f"#{DField.SETTINGS}").border_subtitle = DLabel.SETTINGS
-        self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
-        self.query_one(f"#{DField.TABBED_SCORES}").border_subtitle = (
-            DLabel.HIGHSCORES
-        )
-        self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
-        self._w_console_box.border_subtitle = DLabel.CONSOLE
-        self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
-        self._w_hidden_widget.focus()
         self.console_msg("Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
@@ -503,9 +523,7 @@ class HydraClientTui(App):
                 else:
                     cur_lookahead = DStatus.BAD
                 self._cur_lookahead = cur_lookahead
-                self._w_lookahead_enabled.update(
-                    f"{DLabel.LOOKAHEAD_STATUS:>18}: {cur_lookahead}"
-                )
+                self._w_lookahead_enabled.update(cur_lookahead)
 
             # Loss
             if DNetField.EP_LOSS in payload:

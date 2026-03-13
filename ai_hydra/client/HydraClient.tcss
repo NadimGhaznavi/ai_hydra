@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 4 5;
-    grid-rows: 3 5 17 22 3;
+    grid-size: 4 6;
+    grid-rows: 3 5 12 5 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -23,7 +23,7 @@ TabbedPlots {
 }
 
 TabbedScores {
-    row-span: 2;
+    row-span: 3;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -34,7 +34,7 @@ TabbedScores {
 }
 
 #board_box {
-    row-span: 2;
+    row-span: 3;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -46,7 +46,7 @@ TabbedScores {
 }
 
 #buttons {
-    row-span: 2;
+    row-span: 3;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -89,6 +89,17 @@ TabbedScores {
 
 .input_field {
     height: 1;
+    padding: 0 1;
+}
+
+#lookahead_box {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    color: #5fc442;
+    width: 44;
+    text-style: bold;
     padding: 0 1;
 }
 
@@ -146,7 +157,7 @@ TabbedScores {
     width: 125;
 }
 
-#status {
+#UNUSED_status {
     column-span: 2;
     background: black;
     border: round #0c323e;
@@ -255,6 +266,9 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #lookahead_p_val_input {
+    display: none;
+}
+.bad_handshake #lookahead_sample_p_val_label {
     display: none;
 }
 .bad_handshake #lookahead_p_val_label {

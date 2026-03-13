@@ -20,18 +20,28 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 32
-    SEQ_LENGTH: Final[int] = 20
+    BATCH_SIZE: Final[int] = 16  # 32
+    SEQ_LENGTH: Final[int] = 32  # 20
     HIDDEN_SIZE: Final[int] = 384
     RNN_LAYERS: Final[int] = 3
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
-    LOOKAHEAD_P_VALUE: Final[float] = 0.25
-    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.25
+    LOOKAHEAD_P_VALUE: Final[float] = 0.23
+    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.23
     INITIAL_EPSILON: Final[float] = 0.99
     MINIMUM_EPSILON: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.98
+
+
+class DEpsilonField:
+    """
+    Epsilon-greedy fields.
+    """
+
+    INITIAL: Final[str] = "initial"
+    MINIMUM: Final[str] = "minimum"
+    DECAY_RATE: Final[str] = "decay"
 
 
 class DLinear:
@@ -48,16 +58,6 @@ class DLinear:
     INITIAL_EPSILON: Final[float] = 0.99
     MINIMUM_EPSILON: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.98
-
-
-class DEpsilonField:
-    """
-    Epsilon-greedy fields.
-    """
-
-    INITIAL: Final[str] = "initial"
-    MINIMUM: Final[str] = "minimum"
-    DECAY_RATE: Final[str] = "decay"
 
 
 class DNetDef:
