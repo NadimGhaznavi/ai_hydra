@@ -12,7 +12,7 @@ from __future__ import annotations
 import random
 from typing import Optional
 
-from ai_hydra.constants.DNNet import DEpsilonDef, DEpsilonField
+from ai_hydra.constants.DNNet import DEpsilonField
 from ai_hydra.constants.DHydra import DHydraLog
 from ai_hydra.utils.HydraLog import HydraLog
 
@@ -33,7 +33,7 @@ class EpsilonAlgo:
 
         self._initial_epsilon = None
         self._min_epsilon = None
-        self._decay_rate = float(DEpsilonDef.DECAY_RATE)
+        self._decay_rate = None
 
         self._cur_epsilon = None
         self._injected = 0
@@ -52,7 +52,7 @@ class EpsilonAlgo:
     def get_params(self) -> dict[str, float]:
         return {
             DEpsilonField.INITIAL: self._initial_epsilon,
-            DEpsilonField.MINIMUM: self._epsilon_min,
+            DEpsilonField.MINIMUM: self._min_epsilon,
             DEpsilonField.DECAY_RATE: self._decay_rate,
         }
 

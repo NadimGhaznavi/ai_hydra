@@ -656,8 +656,8 @@ class HydraClientTui(App):
 
         if self._not_first_time_kludge:
             self.console_msg(
-                f"Updated defaults: learning rate: {lr}, "
-                f"look ahead p-value: {lookahead}",
+                f"Updated defaults: learning rate ({lr}), "
+                f"look ahead p-value (  {lookahead}), "
                 f"epsilon min ({min_epsilon}), decay ({epsilon_decay}), "
                 f"and initial ({initial_epsilon})",
             )
