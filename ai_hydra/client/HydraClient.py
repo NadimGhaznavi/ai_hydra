@@ -41,7 +41,6 @@ from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
 from ai_hydra.constants.DNNet import (
     DNetField,
-    DEpsilonDef,
     DNetDef,
     DLinear,
     DRNN,
@@ -237,14 +236,14 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
                 Label(
-                    str(DEpsilonDef.INITIAL),
+                    str(DLinear.INITIAL_EPSILON),
                     id=DField.INITIAL_EPSILON_LABEL,
                 ),
                 Input(
                     type=DField.NUMBER,
                     compact=True,
                     valid_empty=False,
-                    value=str(DEpsilonDef.INITIAL),
+                    value=str(DLinear.INITIAL_EPSILON),
                     id=DField.INITIAL_EPSILON_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
@@ -253,14 +252,14 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.MIN_EPSILON:>15s}: "),
                 Label(
-                    str(DEpsilonDef.MINIMUM),
+                    str(DLinear.MINIMUM_EPSILON),
                     id=DField.MIN_EPSILON_LABEL,
                 ),
                 Input(
                     type=DField.NUMBER,
                     compact=True,
                     valid_empty=False,
-                    value=str(DEpsilonDef.MINIMUM),
+                    value=str(DLinear.MINIMUM_EPSILON),
                     id=DField.MIN_EPSILON_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
@@ -269,14 +268,14 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.EPSILON_DECAY:>15s}: "),
                 Label(
-                    str(DEpsilonDef.DECAY_RATE),
+                    str(DLinear.EPSILON_DECAY_RATE),
                     id=DField.EPSILON_DECAY_LABEL,
                 ),
                 Input(
                     type=DField.NUMBER,
                     compact=True,
                     valid_empty=False,
-                    value=str(DEpsilonDef.DECAY_RATE),
+                    value=str(DLinear.EPSILON_DECAY_RATE),
                     id=DField.EPSILON_DECAY_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
@@ -628,28 +627,39 @@ class HydraClientTui(App):
         if event.control.id != DField.MODEL_TYPE_SELECT:
             return
 
-        if event.value == DField.LINEAR:
+        model_type = event.value
+        # Linear model defaults
+        if model_type == DField.LINEAR:
             lr = f"{DLinear.LEARNING_RATE:.5f}"
             lookahead = DLinear.LOOKAHEAD_P_VALUE
+            initial_epsilon = DLinear.INITIAL_EPSILON
+            min_epsilon = DLinear.MINIMUM_EPSILON
+            epsilon_decay = DLinear.EPSILON_DECAY_RATE
 
-        elif event.value == DField.RNN:
+        # RNN model defaults
+        elif model_type == DField.RNN:
             lr = f"{DRNN.LEARNING_RATE:.5f}"
             lookahead = DRNN.LOOKAHEAD_P_VALUE
-
-        elif event.value == DField.RNN2:
-            lr = f"{DRNN.LEARNING_RATE:.5f}"
-            lookahead = 0
+            initial_epsilon = DRNN.INITIAL_EPSILON
+            min_epsilon = DRNN.MINIMUM_EPSILON
+            epsilon_decay = DRNN.EPSILON_DECAY_RATE
 
         else:
-            return
+            raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
 
+        # Update widgets with model specific defaults
         self._w_learning_rate_input.value = lr
         self._w_lookahead_p_val_input.value = str(lookahead)
+        self._w_initial_epsilon_input.value = str(initial_epsilon)
+        self._w_min_epsilon_input.value = str(min_epsilon)
+        self._w_epsilon_decay_input.value = str(epsilon_decay)
 
         if self._not_first_time_kludge:
             self.console_msg(
                 f"Updated defaults: learning rate: {lr}, "
-                f"look ahead p-value: {lookahead}"
+                f"look ahead p-value: {lookahead}",
+                f"epsilon min ({min_epsilon}), decay ({epsilon_decay}), "
+                f"and initial ({initial_epsilon})",
             )
 
         self._not_first_time_kludge = True

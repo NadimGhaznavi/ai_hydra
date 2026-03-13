@@ -29,26 +29,9 @@ class DRNN:
     LEARNING_RATE: Final[float] = 0.0002
     LOOKAHEAD_P_VALUE: Final[float] = 0.25
     LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.25
-
-
-class DEpsilonDef:
-    """
-    Epsilon-greedy defaults.
-    """
-
-    INITIAL: Final[float] = 0.99
-    MINIMUM: Final[float] = 0.0
-    DECAY_RATE: Final[float] = 0.98
-
-
-class DEpsilonField:
-    """
-    Epsilon-greedy fields.
-    """
-
-    INITIAL: Final[str] = "initial"
-    MINIMUM: Final[str] = "minimum"
-    DECAY_RATE: Final[str] = "decay"
+    INITIAL_EPSILON: Final[float] = 0.99
+    MINIMUM_EPSILON: Final[float] = 0.0
+    EPSILON_DECAY_RATE: Final[float] = 0.98
 
 
 class DLinear:
@@ -62,6 +45,19 @@ class DLinear:
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
     LOOKAHEAD_P_VALUE: Final[float] = 0.05
     LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.05
+    INITIAL_EPSILON: Final[float] = 0.99
+    MINIMUM_EPSILON: Final[float] = 0.0
+    EPSILON_DECAY_RATE: Final[float] = 0.98
+
+
+class DEpsilonField:
+    """
+    Epsilon-greedy fields.
+    """
+
+    INITIAL: Final[str] = "initial"
+    MINIMUM: Final[str] = "minimum"
+    DECAY_RATE: Final[str] = "decay"
 
 
 class DNetDef:
