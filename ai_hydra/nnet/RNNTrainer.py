@@ -152,9 +152,10 @@ class RNNTrainer:
         self._per_step_losses.append(self._per_ep_loss)
         self.model.eval()
 
-        self._update_counter += 1
-        if self._update_counter % self._target_update_freq == 0:
-            self._soft_update_target()
+        # self._update_counter += 1
+        # if self._update_counter % self._target_update_freq == 0:
+        #    self._soft_update_target()
+        self._soft_update_target()
 
     def _soft_update_target(self) -> None:
         for target_param, param in zip(

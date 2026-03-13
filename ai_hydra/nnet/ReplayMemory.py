@@ -13,11 +13,11 @@ from __future__ import annotations
 
 from collections import deque
 from random import Random
-from typing import Deque, Sequence, TypeVar
+from typing import Deque, TypeVar
 
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydra import DHydraLog
-from ai_hydra.constants.DNNet import DRNN, DLinear
+from ai_hydra.constants.DNNet import DRNN
 
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
@@ -52,6 +52,7 @@ class ReplayMemory:
         self._cur_game: list[Transition] = []
         self._max_chunks = MAX_CHUNKS
         self._seq_len = SEQ_LENGTH
+        self._memory_cold = True
         if self._rnn:
             self.log.debug("Initialized for RNN model training")
         else:
@@ -83,7 +84,6 @@ class ReplayMemory:
             if len(self._chunks) > self._max_chunks:
                 overflow = len(self._chunks) - self._max_chunks
                 del self._chunks[:overflow]
-        print(f"Number of chunks {len(self._chunks)}")
 
     def _chunk_from_end(
         self, game: list[Transition]
@@ -112,6 +112,10 @@ class ReplayMemory:
         if len(self._chunks) < max(batch_size, MIN_CHUNKS):
             return None
 
+        if self._memory_cold:
+            self.log.debug("Memory has warmed up")
+            self._memory_cold = False
+
         return self._rng.sample(self._chunks, batch_size)
 
     def sample_transitions(
@@ -125,5 +129,9 @@ class ReplayMemory:
         # _sample_mixed().
         if len(self._memory) < max(DMemory.MIN_FRAMES, batch_size):
             return None
+
+        if self._memory_cold:
+            self.log.debug("Memory has warmed up")
+            self._memory_cold = False
 
         return self._rng.sample(self._memory, batch_size)
