@@ -21,6 +21,12 @@ class HydraPolicy(ABC):
         """
         pass
 
+    def reset_episode(self) -> None:
+        """
+        Reset any policy-side per-episode inference state.
+        """
+        return None
+
 
 class HydraTrainPolicy(HydraPolicy):
     @abstractmethod

@@ -33,3 +33,6 @@ class EpsilonPolicy(HydraPolicy):
 
     def cur_epsilon(self) -> float:
         return self._epsilon.cur_epsilon()
+
+    def reset_episode(self) -> None:
+        self._base_policy.reset_episode()

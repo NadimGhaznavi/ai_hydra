@@ -57,6 +57,7 @@ class RNNTrainer:
         self._per_ep_loss: float | None = None
         self._per_step_losses: list[float] = []
         self.log.debug("Initialized")
+        self._cold_memory = True
 
     def get_per_ep_loss(self) -> float | None:
         return self._per_ep_loss
@@ -73,6 +74,10 @@ class RNNTrainer:
         if chunks is None:
             self._per_ep_loss = None
             return
+
+        if self._cold_memory:
+            self._cold_memory = False
+            self.log.debug("Training has warmed up...")
 
         # Shapes (B = batch_size, T = seq_length, F = feature/input size)
         # states      -> [B, T, F]
@@ -145,6 +150,7 @@ class RNNTrainer:
 
         self._per_ep_loss = float(loss.item())
         self._per_step_losses.append(self._per_ep_loss)
+        self.model.eval()
 
         self._update_counter += 1
         if self._update_counter % self._target_update_freq == 0:

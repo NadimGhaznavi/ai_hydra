@@ -13,6 +13,7 @@ import random
 from dataclasses import dataclass
 from typing import Any, Optional
 from datetime import datetime
+import traceback
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameField
@@ -185,79 +186,85 @@ class SnakeMgr:
         Returns:
         - state_dict
         """
-        # The previous session....
-        sess = self.get_session(client_id)
+        try:
 
-        # NN-ready state vector (pre-step)
-        state = sess.board.get_state()
+            # The previous session....
+            sess = self.get_session(client_id)
 
-        # Apply action
-        result = GameLogic.step(sess.board, int(action), sess.rng)
+            # NN-ready state vector (pre-step)
+            state = sess.board.get_state()
 
-        sess.board = result.new_board
-        sess.step_n += 1
+            # Apply action
+            result = GameLogic.step(sess.board, int(action), sess.rng)
 
-        reward = int(result.reward)
-        done = bool(result.is_terminal)
-        outcome = result.outcome  # use as "reason" for now
+            sess.board = result.new_board
+            sess.step_n += 1
 
-        # Score delta (Phase 1): +1 on FOOD, else 0
-        if outcome == DGameField.FOOD:
-            sess.score += 1
+            reward = int(result.reward)
+            done = bool(result.is_terminal)
+            outcome = result.outcome  # use as "reason" for now
 
-        elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
-        elapsed_str = minutes_to_uptime(int(elapsed_secs))
+            # Score delta (Phase 1): +1 on FOOD, else 0
+            if outcome == DGameField.FOOD:
+                sess.score += 1
 
-        sess.done = done
-        sess.reward_total += reward
+            elapsed_secs = (datetime.now() - self.start_time()).total_seconds()
+            elapsed_str = minutes_to_uptime(int(elapsed_secs))
 
-        # NN-ready next state (post-step)
-        next_state = sess.board.get_state()
+            sess.done = done
+            sess.reward_total += reward
 
-        # ----- State information ---
-        state_dict = {
-            DGameField.DONE: done,
-            DNetField.STATE: state,
-            DNetField.NEXT_STATE: next_state,
-            DGameField.REWARD: reward,
-            DGameField.REWARD_TOTAL: sess.reward_total,
-            DGameField.EPISODE_ID: sess.episode_id,
-        }
+            # NN-ready next state (post-step)
+            next_state = sess.board.get_state()
 
-        # ----- The payload for the ZeroMQ "scores" topic ---
-        scores_payload = {
-            DGameField.SCORE: sess.score,
-            DGameField.HIGHSCORE: sess.highscore,
-        }
-        # Create a "final score" field for the TUI
-        if done:
-            scores_payload[DNetField.FINAL_SCORE] = sess.score
-
-        # Add a "highscore" event
-        if sess.score > sess.highscore:
-            sess.highscore = sess.score
-            scores_payload[DGameField.HIGHSCORE_EVENT] = [
-                sess.epoch,
-                sess.highscore,
-                elapsed_str,
-            ]
-
-        # ----- The payload for the ZeroMQ "per step" topic ---
-        step_payload = None
-        if self.cfg.get(DNetField.PER_STEP):
-            step_payload = {DGameField.BOARD: sess.board.to_dict()}
-
-        # ----- The payload for the ZeroMQ "per episode" topic ----
-        ep_payload = None
-        if sess.done:
-            ep_payload: dict[str, Any] = {
-                DGameField.EPOCH: sess.epoch,
-                DGameField.REASON: outcome,
-                DGameField.STEP_N: sess.step_n,
-                DGameField.ELAPSED_TIME: elapsed_str,
+            # ----- State information ---
+            state_dict = {
+                DGameField.DONE: done,
+                DNetField.STATE: state,
+                DNetField.NEXT_STATE: next_state,
+                DGameField.REWARD: reward,
+                DGameField.REWARD_TOTAL: sess.reward_total,
+                DGameField.EPISODE_ID: sess.episode_id,
             }
 
-        return state_dict, scores_payload, step_payload, ep_payload
+            # ----- The payload for the ZeroMQ "scores" topic ---
+            scores_payload = {
+                DGameField.SCORE: sess.score,
+                DGameField.HIGHSCORE: sess.highscore,
+            }
+            # Create a "final score" field for the TUI
+            if done:
+                scores_payload[DNetField.FINAL_SCORE] = sess.score
+
+            # Add a "highscore" event
+            if sess.score > sess.highscore:
+                sess.highscore = sess.score
+                scores_payload[DGameField.HIGHSCORE_EVENT] = [
+                    sess.epoch,
+                    sess.highscore,
+                    elapsed_str,
+                ]
+
+            # ----- The payload for the ZeroMQ "per step" topic ---
+            step_payload = None
+            if self.cfg.get(DNetField.PER_STEP):
+                step_payload = {DGameField.BOARD: sess.board.to_dict()}
+
+            # ----- The payload for the ZeroMQ "per episode" topic ----
+            ep_payload = None
+            if sess.done:
+                ep_payload: dict[str, Any] = {
+                    DGameField.EPOCH: sess.epoch,
+                    DGameField.REASON: outcome,
+                    DGameField.STEP_N: sess.step_n,
+                    DGameField.ELAPSED_TIME: elapsed_str,
+                }
+
+            return state_dict, scores_payload, step_payload, ep_payload
+
+        except Exception as e:
+            self.log.critical(f"ERROR: {e}")
+            self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
 
 
 # Helper function

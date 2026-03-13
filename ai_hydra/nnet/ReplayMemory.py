@@ -66,7 +66,6 @@ class ReplayMemory:
         ### If lookahead were allowed to change per step, an episode could be
         ### split across LH and NLH buffers, breaking temporal continuity of
         ### the training sequences.
-
         if not self._rnn:
             self._memory.append(t)
             return
@@ -84,6 +83,7 @@ class ReplayMemory:
             if len(self._chunks) > self._max_chunks:
                 overflow = len(self._chunks) - self._max_chunks
                 del self._chunks[:overflow]
+        print(f"Number of chunks {len(self._chunks)}")
 
     def _chunk_from_end(
         self, game: list[Transition]
@@ -91,13 +91,11 @@ class ReplayMemory:
         n = len(game)
         rem = n % self._seq_len
         start = rem if rem != 0 else 0
-
         chunks: list[list[Transition]] = []
         for i in range(start, n, self._seq_len):
             chunk = game[i : i + self._seq_len]
             if len(chunk) == self._seq_len:
                 chunks.append(chunk)
-
         return chunks
 
     def num_chunks(self) -> int:

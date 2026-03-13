@@ -22,7 +22,6 @@ class HydraMetrics:
         self.highscore_events = []
         self.linear_model = {}
         self.rnn_model = {}
-        self.lookahead = None
         self.mean_median = []
         self.elapsed_time = None
 
@@ -40,15 +39,8 @@ class HydraMetrics:
     def add_epsilon_depleted(self, episode):
         self.epsilon[DField.EPSILON_DEPLETED] = episode
 
-    def add_highscore_event(
-        self, episode, highscore, event_time, lookahead, cur_ep
-    ):
-        self.highscore_events.append(
-            (episode, highscore, event_time, lookahead, cur_ep)
-        )
-
-    def add_lookahead(self, pvalue):
-        self.lookahead = pvalue
+    def add_highscore_event(self, episode, highscore, event_time, cur_ep):
+        self.highscore_events.append((episode, highscore, event_time, cur_ep))
 
     def add_mean_median(self, episode, mean, median):
         self.mean_median.append((episode, mean, median))
@@ -84,18 +76,7 @@ class HydraMetrics:
                 f"Episode Number: {self.cur_epoch}\n"
                 f"AI Hydra Version: v{DHydra.VERSION}\n"
                 f"Random Seed: {DHydra.RANDOM_SEED}\n"
-                f"Look Ahead P-Value: {self.lookahead}\n"
             )
-            if model_type == DField.LINEAR:
-                f.write(
-                    f"Look Ahead Sample P-Value: {DLinear.LOOKAHEAD_SAMPLE_P_VALUE}\n\n"
-                )
-            elif model_type == DField.RNN:
-                f.write(
-                    f"Look Ahead Sample P-Value: {DRNN.LOOKAHEAD_SAMPLE_P_VALUE}\n\n"
-                )
-            else:
-                raise ValueError(f"ERROR: Unrecogized model type {model_type}")
 
             f.write(
                 "🎯 Epsilon Greedy\n"
@@ -126,12 +107,12 @@ class HydraMetrics:
             f.write(
                 "🏆 Highscore Events\n"
                 "═══════════════════\n"
-                f"{'Episode':8s}{'Highscore':10s}{'Time':>11s}{'Look Ahead':>11}{'Epsilon':>8s}\n"
+                f"{'Episode':8s}{'Highscore':10s}{'Time':>11s}{'Epsilon':>8s}\n"
                 "═══════ ═════════ ═══════════ ══════════ ═══════\n"
             )
             for event in self.highscore_events:
-                episode, highscore, ev_time, lookahead, cur_ep = event
+                episode, highscore, ev_time, cur_ep = event
                 cur_ep = str(round(float(cur_ep), 4))
                 f.write(
-                    f"{str(episode):>8s}{str(highscore):>10s}{ev_time:>11s}{str(lookahead):>11s}{cur_ep:>8s}\n"
+                    f"{str(episode):>8s}{str(highscore):>10s}{ev_time:>11s}{cur_ep:>8s}\n"
                 )

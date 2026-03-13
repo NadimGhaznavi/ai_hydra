@@ -98,7 +98,6 @@ class HydraClientTui(App):
         self.mq: HydraClientMQ | None = None
 
         self.game_board = ClientGameBoard(20, id=DGameField.BOARD)
-        self._cur_lookahead = None
         self.cfg = SimCfg()
         self._running = False
         self._wgt = None
@@ -110,7 +109,9 @@ class HydraClientTui(App):
         # Ahem...
         self._not_first_time_kludge = False
 
-        # ZeroMQ batching support
+        # ZeroMQ batching support at this app layer it checks for lost
+        # messages. PUB/SUB does not guarantee delivery, batching  aims to
+        # mitigate that.
         self._prev_scores_batch_num = None
         self._cur_scores_batch_num = None
         self._first_scores_batch = True
@@ -288,42 +289,6 @@ class HydraClientTui(App):
             id=DField.SETTINGS,
         )
 
-        # Look Ahead Settings
-        yield Vertical(
-            # Lookahead p-value
-            Horizontal(
-                Label(f"{DLabel.P_VALUE:>16s}: "),
-                Label(
-                    str(DLinear.LOOKAHEAD_P_VALUE),
-                    id=DField.LOOKAHEAD_P_VAL_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=str(DLinear.LOOKAHEAD_P_VALUE),
-                    id=DField.LOOKAHEAD_P_VAL_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Lookahead p-value for Replay Memory Sampling
-            Horizontal(
-                Label(f"{DLabel.SAMPLING_P_VALUE:>16s}: "),
-                Label(
-                    str(DLinear.LOOKAHEAD_SAMPLE_P_VALUE),
-                    id=DField.LOOKAHEAD_SAMPLE_P_VALUE_LABEL,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Lookahead enabled
-            Horizontal(
-                Label(f"{DLabel.STATUS:>16s}: "),
-                Label(id=DField.LOOKAHEAD_STATUS),
-                classes=DField.INPUT_FIELD,
-            ),
-            id=DField.LOOKAHEAD_BOX,
-        )
-
         # Plots
         yield TabbedPlots(id=DField.TABBED_PLOTS)
 
@@ -408,18 +373,6 @@ class HydraClientTui(App):
         self._w_learning_rate_label = self.query_one(
             f"#{DField.LEARNING_RATE_LABEL}", Label
         )
-        self._w_lookahead_enabled = self.query_one(
-            f"#{DField.LOOKAHEAD_STATUS}", Label
-        )
-        self._w_lookahead_p_val_input = self.query_one(
-            f"#{DField.LOOKAHEAD_P_VAL_INPUT}", Input
-        )
-        self._w_lookahead_p_val_label = self.query_one(
-            f"#{DField.LOOKAHEAD_P_VAL_LABEL}", Label
-        )
-        self._w_lookahead_sample_p_val_label = self.query_one(
-            f"#{DField.LOOKAHEAD_SAMPLE_P_VALUE_LABEL}", Label
-        )
         self._w_min_epsilon_input = self.query_one(
             f"#{DField.MIN_EPSILON_INPUT}", Input
         )
@@ -463,9 +416,6 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
         self._w_console_box.border_subtitle = DLabel.CONSOLE
         self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
-        self.query_one(
-            f"#{DField.LOOKAHEAD_BOX}", Vertical
-        ).border_subtitle = DLabel.LOOKAHEAD_SETTINGS
 
         # Switch focus to a hidden widget
         self._w_hidden_widget.focus()
@@ -517,15 +467,6 @@ class HydraClientTui(App):
             if epsilon is not None:
                 self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
                 self._cur_epsilon = epsilon
-
-            # Lookahead status
-            if DNetField.LOOKAHEAD_ON in payload:
-                if payload[DNetField.LOOKAHEAD_ON]:
-                    cur_lookahead = DStatus.GOOD
-                else:
-                    cur_lookahead = DStatus.BAD
-                self._cur_lookahead = cur_lookahead
-                self._w_lookahead_enabled.update(cur_lookahead)
 
             # Loss
             if DNetField.EP_LOSS in payload:
@@ -625,28 +566,22 @@ class HydraClientTui(App):
         # Linear model defaults
         if model_type == DField.LINEAR:
             lr = f"{DLinear.LEARNING_RATE:.5f}"
-            lookahead = DLinear.LOOKAHEAD_P_VALUE
             initial_epsilon = DLinear.INITIAL_EPSILON
             min_epsilon = DLinear.MINIMUM_EPSILON
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
-            sampling_lookahead = DLinear.LOOKAHEAD_SAMPLE_P_VALUE
 
         # RNN model defaults
         elif model_type == DField.RNN:
             lr = f"{DRNN.LEARNING_RATE:.5f}"
-            lookahead = DRNN.LOOKAHEAD_P_VALUE
             initial_epsilon = DRNN.INITIAL_EPSILON
             min_epsilon = DRNN.MINIMUM_EPSILON
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
-            sampling_lookahead = DRNN.LOOKAHEAD_SAMPLE_P_VALUE
 
         else:
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
 
         # Update widgets with model specific defaults
         self._w_learning_rate_input.value = lr
-        self._w_lookahead_p_val_input.value = str(lookahead)
-        self._w_lookahead_sample_p_val_label.update(str(sampling_lookahead))
         self._w_initial_epsilon_input.value = str(initial_epsilon)
         self._w_min_epsilon_input.value = str(min_epsilon)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
@@ -777,7 +712,6 @@ class HydraClientTui(App):
         )
         # Model
         model_type = self._w_model_type_select.value
-        self.metrics.add_lookahead(self._w_lookahead_p_val_input.value)
         self.metrics.create_snapshot(
             snap_file=fq_snapshot, model_type=model_type
         )
@@ -797,9 +731,6 @@ class HydraClientTui(App):
         self._w_min_epsilon_label.update(str(min_epsilon))
         # Turbo mode == Not per_step
         per_step = not self._w_turbo_mode.value
-        # Lookahead p-value
-        lookahead_p_value = self._w_lookahead_p_val_input.value
-        self._w_lookahead_p_val_label.update(str(lookahead_p_value))
         # Move delay
         move_delay = self._w_move_delay_input.value
         # Model type
@@ -815,7 +746,6 @@ class HydraClientTui(App):
                 DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
                 DNetField.LEARNING_RATE: float(learning_rate),
-                DNetField.LOOKAHEAD_P_VAL: lookahead_p_value,
                 DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,
                 DNetField.MODEL_TYPE: model_type,

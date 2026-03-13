@@ -13,6 +13,6 @@ from typing import Final
 class DMemory:
     BATCH_SIZE: Final[int] = 64  # Used by Linear model
     MAX_CHUNKS: Final[int] = 10000  # Used by RNN II
-    MIN_CHUNKS: Final[int] = 100  # Used by RNN II
+    MIN_CHUNKS: Final[int] = 30  # Used by RNN II
     MIN_FRAMES: Final[int] = 1500  # Used by Linear
     MAX_MEM_SIZE: Final[int] = 50000  # Used by Linear

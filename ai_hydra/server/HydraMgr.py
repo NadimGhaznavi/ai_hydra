@@ -58,6 +58,7 @@ class HydraMgr(HydraServer):
         self.cfg = SimCfg()
         self.snake: SnakeMgr | None = None
         self._train_mgr = None
+        self._train_mgr_model_type: str | None = None
         self._methods.update(
             {
                 DMethod.HANDSHAKE: self.handshake,
@@ -82,8 +83,6 @@ class HydraMgr(HydraServer):
         This keeps HydraMgr import graph clean for headless server use,
         and avoids circular imports until training is actually invoked.
         """
-        if self._train_mgr is not None:
-            return self._train_mgr
 
         # Late imports to avoid circularities
         import torch
@@ -105,14 +104,20 @@ class HydraMgr(HydraServer):
 
         from ai_hydra.constants.DNNet import DNetField
 
+        model_type = self.cfg.get(DNetField.MODEL_TYPE)
+
+        if (
+            self._train_mgr is not None
+            and self._train_mgr_model_type == model_type
+        ):
+            self._train_mgr.snake_mgr = self.snake
+            return self._train_mgr
+
         # Hydra-style RNG streams (minted from the existing SnakeMgr)
         _, policy_rng = self.snake.new_rng()
         _, replay_rng = self.snake.new_rng()
 
         device = torch.device("cpu")  # keep simple; GPU can be passed later
-
-        # NN Model being used
-        model_type = self.cfg.get(DNetField.MODEL_TYPE)
 
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
@@ -166,6 +171,7 @@ class HydraMgr(HydraServer):
             replay=replay,
             client_id="TrainMgr",
         )
+        self._train_mgr_model_type = model_type
         return self._train_mgr
 
     async def handshake(self, msg: HydraMsg) -> None:
@@ -222,12 +228,12 @@ class HydraMgr(HydraServer):
             snake = self.snake = SnakeMgr(cfg=self.cfg)
             mq = self.mq
             train_mgr = self._ensure_train_mgr()
+            train_mgr.policy.reset_episode()
 
             sess = snake.get_session(client_id)
             snake.start_time(datetime.now())
 
             count = 0
-
             train_every = 4
             grad_steps = 1
             batch_size = 64
@@ -237,12 +243,10 @@ class HydraMgr(HydraServer):
                 if sess.done:
                     snake.reset_session(client_id, seed=None)
                     sess = snake.get_session(client_id)
+                    train_mgr.policy.reset_episode()
 
                 # Decide if we will publish per_step *this tick*
-                # If NO BOARD, we don't even build the step payload.
-                want_step = (mq is not None) and self.cfg.get(
-                    DNetField.PER_STEP
-                )
+                want_step = self.cfg.get(DNetField.PER_STEP)
 
                 # Choose action (server-side)
                 old_state = sess.board.get_state()
@@ -277,6 +281,7 @@ class HydraMgr(HydraServer):
                     )
 
                     if model_type == DField.RNN:
+                        train_mgr.replay.append(t=t)
                         train_mgr.trainer.train_long_memory()
 
                     # Loss, if available, is loaded into the telemetry here
@@ -332,19 +337,6 @@ class HydraMgr(HydraServer):
             self.log.critical(f"ERROR: {e}")
             self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
 
-    async def set_move_delay(self, msg: HydraMsg) -> None:
-        delay = msg.payload[DNetField.MOVE_DELAY]
-        self.cfg.set(DNetField.MOVE_DELAY, delay)
-        self.log.debug(f"Move delay set to: {delay}")
-
-    async def set_per_step_topic(self, msg: HydraMsg) -> None:
-        """
-        Set the PUB/SUB type to PER_STEP or PER_EPISODE.
-        """
-        enabled = msg.payload[DNetField.PER_STEP]
-        self.cfg.set(DNetField.PER_STEP, enabled)
-        self.log.debug(f"Enable per step telemetry: {enabled}")
-
     async def start_run(self, msg: HydraMsg) -> None:
         self._sim_running = True
         client_id = msg.sender
@@ -355,10 +347,6 @@ class HydraMgr(HydraServer):
 
             # Get runtime settings
             self.cfg = SimCfg.from_dict(msg.payload)
-
-            # Setup the PUB/SUB topic publications
-            await self.set_per_step_topic(msg)
-            await self.set_move_delay(msg)
 
             # already running?
             if client_id in self._runs and not self._runs[client_id].done():
@@ -417,8 +405,7 @@ class HydraMgr(HydraServer):
         Update settings while a simulation is running
         """
         self.log.debug(f"Received config update: {msg.payload}")
-        await self.set_move_delay(msg)
-        await self.set_per_step_topic(msg)
+        self.cfg = SimCfg.from_dict(msg.payload)
 
 
 async def amain() -> None:

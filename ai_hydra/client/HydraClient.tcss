@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 4 6;
-    grid-rows: 3 5 12 5 22 3;
+    grid-size: 4 5;
+    grid-rows: 3 5 17 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -23,7 +23,7 @@ TabbedPlots {
 }
 
 TabbedScores {
-    row-span: 3;
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -34,7 +34,7 @@ TabbedScores {
 }
 
 #board_box {
-    row-span: 3;
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -46,7 +46,7 @@ TabbedScores {
 }
 
 #buttons {
-    row-span: 3;
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -92,16 +92,6 @@ TabbedScores {
     padding: 0 1;
 }
 
-#lookahead_box {
-    background: black;
-    border: round #0c323e;
-    border-subtitle-color: #5fc442;
-    border-title-color: #5fc442;
-    color: #5fc442;
-    width: 44;
-    text-style: bold;
-}
-
 #loss_plot {
     height: 18;
     width: 125;
@@ -141,29 +131,9 @@ TabbedScores {
     width: 125;
 }
 
-#scores_plot_lh {
-    height: 18;
-    width: 125;
-}
-
-#scores_plot_nlh {
-    height: 18;
-    width: 125;
-}
-
 #scores_scatter_plot {
     height: 18;
     width: 125;
-}
-
-#UNUSED_status {
-    column-span: 2;
-    background: black;
-    border: round #0c323e;
-    border-subtitle-color: #8dc97dff;
-    color: #8dc97dff;
-    text-style: bold;
-    width: 100%;
 }
 
 #title {
@@ -198,9 +168,6 @@ TabbedScores {
 .sim_stopped #learning_rate_label {
     display: none;
 }
-.sim_stopped #lookahead_p_val_label {
-    display: none;
-}
 .sim_stopped #min_epsilon_label {
     display: none;
 }
@@ -226,9 +193,6 @@ TabbedScores {
     display: none;
 }
 .sim_running #learning_rate_input {
-    display: none;
-}
-.sim_running #lookahead_p_val_input {
     display: none;
 }
 .sim_running #min_epsilon_input {
@@ -262,15 +226,6 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #learning_rate_label {
-    display: none;
-}
-.bad_handshake #lookahead_p_val_input {
-    display: none;
-}
-.bad_handshake #lookahead_sample_p_val_label {
-    display: none;
-}
-.bad_handshake #lookahead_p_val_label {
     display: none;
 }
 .bad_handshake #min_epsilon_label {
