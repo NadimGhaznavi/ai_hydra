@@ -587,47 +587,22 @@ class HydraClientTui(App):
             else:
                 self._w_board_box.border_subtitle = ""
 
-            # Lookahead Highscore event
-            if DGameField.HIGHSCORE_EVENT_LH in payload:
-                hs_event = payload[DGameField.HIGHSCORE_EVENT_LH]
-                self._w_tabbed_scores.add_highscore_lh(
+            # Highscore event
+            if DGameField.HIGHSCORE_EVENT in payload:
+                hs_event = payload[DGameField.HIGHSCORE_EVENT]
+                self._w_tabbed_scores.add_highscore(
                     epoch=hs_event[0],
                     highscore=hs_event[1],
                     event_time=hs_event[2],
                 )
                 self._w_tabbed_plots.add_scatter_score(
-                    score=(hs_event[0], hs_event[1]), lookahead=True
+                    score=(hs_event[0], hs_event[1])
                 )
-                self.console_msg(
-                    f"🎉 New (look ahead) highscore : {hs_event[1]}"
-                )
+                self.console_msg(f"🎉 New highscore : {hs_event[1]}")
                 self.metrics.add_highscore_event(
                     episode=hs_event[0],
                     highscore=hs_event[1],
                     event_time=hs_event[2],
-                    lookahead=True,
-                    cur_ep=cur_epsilon,
-                )
-
-            # Lookahead Highscore event
-            if DGameField.HIGHSCORE_EVENT_NLH in payload:
-                hs_event = payload[DGameField.HIGHSCORE_EVENT_NLH]
-                self._w_tabbed_scores.add_highscore_nlh(
-                    epoch=hs_event[0],
-                    highscore=hs_event[1],
-                    event_time=hs_event[2],
-                )
-                self._w_tabbed_plots.add_scatter_score(
-                    score=(hs_event[0], hs_event[1]), lookahead=False
-                )
-                self.console_msg(
-                    f"🎉 New (no look ahead) highscore: {hs_event[1]}"
-                )
-                self.metrics.add_highscore_event(
-                    episode=hs_event[0],
-                    highscore=hs_event[1],
-                    event_time=hs_event[2],
-                    lookahead=False,
                     cur_ep=cur_epsilon,
                 )
 
@@ -635,7 +610,6 @@ class HydraClientTui(App):
             if DNetField.FINAL_SCORE in payload:
                 self._w_tabbed_plots.add_score(
                     cur_score=payload[DNetField.FINAL_SCORE],
-                    lookahead=payload[DNetField.LOOKAHEAD_ON],
                 )
 
     async def on_shutdown_request(self) -> None:
