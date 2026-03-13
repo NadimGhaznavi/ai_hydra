@@ -54,19 +54,15 @@ class RNNTrainer:
             to_console=True,
         )
 
-        self._per_ep_loss: float | None = None
-        self._per_step_losses: list[float] = []
+        self._losses: list[float] = []
         self.log.debug("Initialized")
         self._cold_memory = True
 
-    def get_per_ep_loss(self) -> float | None:
-        return self._per_ep_loss
-
-    def get_avg_per_step_loss(self) -> float | None:
-        if not self._per_step_losses:
+    def get_avg_loss(self) -> float | None:
+        if not self._losses:
             return None
-        avg_loss = sum(self._per_step_losses) / len(self._per_step_losses)
-        self._per_step_losses = []
+        avg_loss = sum(self._losses) / len(self._losses)
+        self._losses = []
         return avg_loss
 
     def train_long_memory(self, batch_size=DRNN.BATCH_SIZE) -> None:
@@ -148,14 +144,10 @@ class RNNTrainer:
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
         self.optimizer.step()
 
-        self._per_ep_loss = float(loss.item())
-        self._per_step_losses.append(self._per_ep_loss)
         self.model.eval()
-
-        # self._update_counter += 1
-        # if self._update_counter % self._target_update_freq == 0:
-        #    self._soft_update_target()
         self._soft_update_target()
+        self._losses.append(loss.item())
+        return float(loss.item())
 
     def _soft_update_target(self) -> None:
         for target_param, param in zip(

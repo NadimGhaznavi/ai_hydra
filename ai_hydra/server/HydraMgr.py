@@ -285,12 +285,9 @@ class HydraMgr(HydraServer):
                         train_mgr.trainer.train_long_memory()
 
                     # Loss, if available, is loaded into the telemetry here
-                    ep_loss = train_mgr.trainer.get_per_ep_loss()
-                    if ep_loss is not None:
-                        ep_payload[DNetField.EP_LOSS] = ep_loss
-                    step_loss = train_mgr.trainer.get_avg_per_step_loss()
-                    if step_loss is not None:
-                        ep_payload[DNetField.STEP_LOSS] = step_loss
+                    loss = train_mgr.trainer.get_avg_loss()
+                    if loss is not None:
+                        ep_payload[DNetField.LOSS] = loss
 
                 reward = state_dict[DGameField.REWARD]
                 new_state = state_dict[DNetField.NEXT_STATE]
@@ -404,7 +401,7 @@ class HydraMgr(HydraServer):
         """
         Update settings while a simulation is running
         """
-        self.log.debug(f"Received config update: {msg.payload}")
+        self.log.debug(f"Received config update")
         self.cfg = SimCfg.from_dict(msg.payload)
 
 

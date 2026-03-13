@@ -40,18 +40,14 @@ class LinearTrainer:
         self.log = HydraLog(
             client_id="LinearTrainer", log_level=log_level, to_console=True
         )
-        self._per_step_losses = []
-        self._per_ep_loss = None
+        self._losses = []
         self.log.debug("Initialized")
 
-    def get_per_ep_loss(self) -> float | None:
-        return self._per_ep_loss
-
-    def get_avg_per_step_loss(self) -> float | None:
-        if not self._per_step_losses:
+    def get_avg_loss(self) -> float | None:
+        if not self._losses:
             return None
-        avg_loss = sum(self._per_step_losses) / len(self._per_step_losses)
-        self._per_step_losses = []
+        avg_loss = sum(self._losses) / len(self._losses)
+        self._losses = []
         return avg_loss
 
     def train_long_memory(
@@ -96,7 +92,6 @@ class LinearTrainer:
         loss.backward()
         self.optimizer.step()
 
-        self._per_step_losses.append(loss.item())
-        self._per_ep_loss = loss.item()
+        self._losses.append(loss.item())
 
         return float(loss.item())

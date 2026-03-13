@@ -20,15 +20,13 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 32
-    SEQ_LENGTH: Final[int] = 16
-    HIDDEN_SIZE: Final[int] = 448  # 512 # 384
+    BATCH_SIZE: Final[int] = 20
+    SEQ_LENGTH: Final[int] = 20
+    HIDDEN_SIZE: Final[int] = 384
     RNN_LAYERS: Final[int] = 3
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
-    LOOKAHEAD_P_VALUE: Final[float] = 0.24
-    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.24
     INITIAL_EPSILON: Final[float] = 0.99
     MINIMUM_EPSILON: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.96  # 0.98
@@ -53,8 +51,6 @@ class DLinear:
     DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
-    LOOKAHEAD_P_VALUE: Final[float] = 0.05
-    LOOKAHEAD_SAMPLE_P_VALUE: Final[float] = 0.05
     INITIAL_EPSILON: Final[float] = 0.99
     MINIMUM_EPSILON: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.98
@@ -96,10 +92,7 @@ class DNetField:
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     MIN_EPSILON: Final[str] = "min_epsilon"
     LEARNING_RATE: Final[str] = "learning_rate"
-    LOOKAHEAD_ON: Final[str] = "lookahead_on"
-    LOOKAHEAD_P_VAL: Final[str] = "lookahead_p_val"
-    EP_LOSS: Final[str] = "ep_loss"
-    STEP_LOSS: Final[str] = "step_loss"
+    LOSS: Final[str] = "loss"
     MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"

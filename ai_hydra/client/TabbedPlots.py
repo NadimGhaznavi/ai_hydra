@@ -23,22 +23,18 @@ from ai_hydra.constants.DNNet import DNetField
 class TabbedPlots(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ep_epochs = []
-        self.ep_loss = []
-        self.step_epochs = []
-        self.step_loss = []
+        self.loss_epochs = []
+        self.losses = []
         self.scores = {}
         self.scatter_scores = []
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
-            DLabel.EP_LOSS,
-            DLabel.STEP_LOSS,
+            DLabel.LOSS,
             DLabel.SCORES,
             DLabel.SCORES_SCATTER,
         ):
-            yield PlotWidget(id=DField.LOSS_EP_PLOT)
-            yield PlotWidget(id=DField.LOSS_STEP_PLOT)
+            yield PlotWidget(id=DField.LOSS_PLOT)
             yield PlotWidget(id=DField.SCORES_PLOT)
             yield PlotWidget(id=DField.SCORES_SCATTER_PLOT)
 
@@ -52,12 +48,10 @@ class TabbedPlots(Widget):
 
     def _replot_active_tab(self, pane_id: str) -> None:
         if pane_id == "tab-1":
-            self._plot_loss(DNetField.EP_LOSS)
+            self._plot_loss()
         elif pane_id == "tab-2":
-            self._plot_loss(DNetField.STEP_LOSS)
-        elif pane_id == "tab-3":
             self._plot_scores(self.scores)
-        elif pane_id == "tab-4":
+        elif pane_id == "tab-3":
             self._plot_scatter_scores()
         else:
             raise ValueError(f"Unhandled tab: {pane_id}")
@@ -121,31 +115,17 @@ class TabbedPlots(Widget):
                 cur_median, "purple", f"Median: {cur_median:.2f}"
             )
 
-    def add_ep_loss(self, epoch, loss, plot=True):
-        self.ep_loss.append(loss)
-        self.ep_epochs.append(epoch)
+    def add_loss(self, epoch, loss, plot=True):
+        self.losses.append(loss)
+        self.loss_epochs.append(epoch)
         if plot:
-            self._plot_loss(type=DNetField.EP_LOSS)
+            self._plot_loss()
 
-    def add_step_loss(self, epoch, loss, plot=True):
-        self.step_loss.append(loss)
-        self.step_epochs.append(epoch)
-        if plot:
-            self._plot_loss(type=DNetField.STEP_LOSS)
-
-    def _plot_loss(self, type: str) -> None:
-        if type == DNetField.EP_LOSS:
-            line_style = DColor.GREEN
-            losses = self.ep_loss
-            plot_name = "Episode"
-            epochs = self.ep_epochs
-            loss_plot = self.query_one(f"#{DField.LOSS_EP_PLOT}", PlotWidget)
-        else:
-            line_style = DColor.RED
-            losses = self.step_loss
-            plot_name = "Step"
-            epochs = self.step_epochs
-            loss_plot = self.query_one(f"#{DField.LOSS_STEP_PLOT}", PlotWidget)
+    def _plot_loss(self) -> None:
+        line_style = DColor.GREEN
+        losses = self.losses
+        epochs = self.loss_epochs
+        loss_plot = self.query_one(f"#{DField.LOSS_PLOT}", PlotWidget)
 
         if len(losses) > DPlotDef.MAX_LOSS_DATA_POINTS:
             step = max(1, len(epochs) // DPlotDef.MAX_LOSS_DATA_POINTS)
@@ -168,7 +148,7 @@ class TabbedPlots(Widget):
                 y=losses,
                 hires_mode=HiResMode.BRAILLE,
                 line_style=line_style,
-                label=plot_name,
+                label=DLabel.LOSS,
             )
             loss_plot.set_ylimits()
             loss_plot.set_xlabel(DLabel.EPISODES)
@@ -176,14 +156,11 @@ class TabbedPlots(Widget):
             loss_plot.show_legend(location=LegendLocation.TOPRIGHT)
 
     def reset(self) -> None:
-        self.ep_loss = []
-        self.ep_epochs = []
-        self.step_loss = []
-        self.step_epochs = []
+        self.losses = []
+        self.loss_epochs = []
         self.scores = {}
         self.scatter_scores = []
 
-        self.query_one(f"#{DField.LOSS_EP_PLOT}", PlotWidget).clear()
-        self.query_one(f"#{DField.LOSS_STEP_PLOT}", PlotWidget).clear()
+        self.query_one(f"#{DField.LOSS_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_SCATTER_PLOT}", PlotWidget).clear()

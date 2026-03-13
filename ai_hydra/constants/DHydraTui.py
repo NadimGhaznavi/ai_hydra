@@ -65,8 +65,7 @@ class DField:
     LOOKAHEAD_P_VAL_LABEL: Final[str] = "lookahead_p_val_label"
     LOOKAHEAD_SAMPLE_P_VALUE_LABEL: Final[str] = "lookahead_sample_p_val_label"
     LOSS: Final[str] = "loss"
-    LOSS_EP_PLOT: Final[str] = "loss_ep_plot"
-    LOSS_STEP_PLOT: Final[str] = "loss_step_plot"
+    LOSS_PLOT: Final[str] = "loss_plot"
     MIN_EPSILON: Final[str] = "min_epsilon"
     MIN_EPSILON_INPUT: Final[str] = "min_epsilon_input"
     MIN_EPSILON_LABEL: Final[str] = "min_epsilon_label"
@@ -135,7 +134,6 @@ class DLabel:
     CUR_EPSILON: Final[str] = "Current Epsilon"
     DEBUG: Final[str] = "DEBUG"
     DISCONNECTED: Final[str] = "Disonnected"
-    EP_LOSS: Final[str] = "Epsiode Loss"
     EPISODE: Final[str] = "Episode"
     EPISODES: Final[str] = "Episodes"
     EPSILON_DECAY: Final[str] = "Epsilon Decay"
@@ -184,7 +182,6 @@ class DLabel:
     SPACE: Final[str] = " "
     START: Final[str] = "Start"
     STATUS: Final[str] = "Status"
-    STEP_LOSS: Final[str] = "Step Loss"
     STEPS: Final[str] = "Steps"
     STOP: Final[str] = "Stop"
     STATUS: Final[str] = "Status"
@@ -203,7 +200,7 @@ class DPlotDef:
     Default Textual plot settings.
     """
 
-    MAX_LOSS_DATA_POINTS: Final[int] = 100
+    MAX_LOSS_DATA_POINTS: Final[int] = 150
 
 
 class DStatus:

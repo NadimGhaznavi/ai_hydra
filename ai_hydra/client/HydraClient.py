@@ -469,15 +469,9 @@ class HydraClientTui(App):
                 self._cur_epsilon = epsilon
 
             # Loss
-            if DNetField.EP_LOSS in payload:
-                self._w_tabbed_plots.add_ep_loss(
-                    epoch=epoch,
-                    loss=payload[DNetField.EP_LOSS],
-                )
-            if DNetField.STEP_LOSS in payload:
-                self._w_tabbed_plots.add_step_loss(
-                    epoch=epoch,
-                    loss=payload[DNetField.STEP_LOSS],
+            if DNetField.LOSS in payload:
+                self._w_tabbed_plots.add_loss(
+                    epoch=epoch, loss=payload[DNetField.LOSS]
                 )
 
     def on_per_step(self, topic: str, payload: dict) -> None:
