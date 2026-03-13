@@ -37,9 +37,6 @@ class SnakeSession:
     episode_id: int = 0
     epoch: int = 0
     highscore: int = 0  # Actual highscore
-    highscore_lh: int = 0  # Lookahead highscore
-    highscore_nlh: int = 0  # No lookahead highscore
-    lookahead_on: bool = False
     reward_total: float = 0.0
     score: int = 0
     step_n: int = 0
@@ -130,10 +127,7 @@ class SnakeMgr:
 
         prev = self.sessions.get(client_id)
         prev_highscore = getattr(prev, "highscore", 0)
-        prev_highscore_lh = getattr(prev, "highscore_lh", 0)
-        prev_highscore_nlh = getattr(prev, "highscore_nlh", 0)
         prev_epoch = getattr(prev, "epoch", 0)
-        prev_lookahead_on = getattr(prev, "lookahead_on", False)
 
         session_seed, rng = self.new_rng(seed)
         episode_id = rng.getrandbits(32)
@@ -154,10 +148,7 @@ class SnakeMgr:
             episode_id=episode_id,
             # carry-over stats
             highscore=prev_highscore,
-            highscore_lh=prev_highscore_lh,
-            highscore_nlh=prev_highscore_nlh,
             epoch=prev_epoch,
-            lookahead_on=prev_lookahead_on,
         )
         self.sessions[client_id] = sess
         return sess
@@ -233,33 +224,21 @@ class SnakeMgr:
             DGameField.EPISODE_ID: sess.episode_id,
         }
 
-        if sess.score > sess.highscore:
-            sess.highscore = sess.score
-
         # ----- The payload for the ZeroMQ "scores" topic ---
         scores_payload = {
             DGameField.SCORE: sess.score,
             DGameField.HIGHSCORE: sess.highscore,
-            DNetField.LOOKAHEAD_ON: sess.lookahead_on,
         }
         # Create a "final score" field for the TUI
         if done:
             scores_payload[DNetField.FINAL_SCORE] = sess.score
-        # Add a "lookahead highscore" event
-        if sess.score > sess.highscore_lh and sess.lookahead_on:
-            sess.highscore_lh = sess.score
-            scores_payload[DGameField.HIGHSCORE_EVENT_LH] = [
-                sess.epoch,
-                sess.highscore_lh,
-                elapsed_str,
-            ]
 
-        # Add a new "no lookahead highscore" event
-        if sess.score > sess.highscore_nlh and not sess.lookahead_on:
-            sess.highscore_nlh = sess.score
-            scores_payload[DGameField.HIGHSCORE_EVENT_NLH] = [
+        # Add a "highscore" event
+        if sess.score > sess.highscore:
+            sess.highscore = sess.score
+            scores_payload[DGameField.HIGHSCORE_EVENT] = [
                 sess.epoch,
-                sess.highscore_nlh,
+                sess.highscore,
                 elapsed_str,
             ]
 

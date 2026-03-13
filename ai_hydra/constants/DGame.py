@@ -46,6 +46,7 @@ class DGameField:
     HIGHSCORE: Final[str] = "highscore"
     HIGHSCORE_NLH: Final[str] = "highscore_nlh"
     HIGHSCORE_LH: Final[str] = "highscore_lh"
+    HIGHSCORE_EVENT: Final[str] = "highscore_event"
     HIGHSCORE_EVENT_LH: Final[str] = "highscore_event_lh"
     HIGHSCORE_EVENT_NLH: Final[str] = "highscore_event_nlh"
     INFO: Final[str] = "info"

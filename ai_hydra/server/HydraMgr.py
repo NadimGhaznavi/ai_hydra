@@ -248,7 +248,6 @@ class HydraMgr(HydraServer):
                 old_state = sess.board.get_state()
                 action = train_mgr.policy.select_action(
                     old_state,
-                    board=sess.board,
                 )
 
                 # Advance sim
@@ -300,7 +299,9 @@ class HydraMgr(HydraServer):
                     done=bool(done),
                 )
 
-                if model_type != DField.RNN:
+                train_mgr.replay.append(t=t)
+
+                if model_type == DField.LINEAR:
                     if sess.step_n % train_every == 0:
                         for _ in range(grad_steps):
                             train_mgr.trainer.train_long_memory(batch_size)
