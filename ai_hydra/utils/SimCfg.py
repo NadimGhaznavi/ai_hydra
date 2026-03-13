@@ -14,7 +14,6 @@ from typing import Any, Callable, ClassVar
 from ai_hydra.constants.DNNet import (
     DNetField,
     DNetDef,
-    DEpsilonDef,
     DLinear,
 )
 from ai_hydra.constants.DHydraTui import DField
@@ -22,11 +21,11 @@ from ai_hydra.constants.DHydraTui import DField
 
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
-        DNetField.EPSILON_DECAY: DEpsilonDef.DECAY_RATE,
-        DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
+        DNetField.EPSILON_DECAY: DLinear.EPSILON_DECAY_RATE,
+        DNetField.INITIAL_EPSILON: DLinear.INITIAL_EPSILON,
         DNetField.LEARNING_RATE: DLinear.LEARNING_RATE,
         DNetField.LOOKAHEAD_P_VAL: DLinear.LOOKAHEAD_P_VALUE,
-        DNetField.MIN_EPSILON: DEpsilonDef.MINIMUM,
+        DNetField.MIN_EPSILON: DLinear.MINIMUM_EPSILON,
         DNetField.MODEL_TYPE: DField.LINEAR,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
         DNetField.PER_STEP: DNetDef.PER_STEP,
