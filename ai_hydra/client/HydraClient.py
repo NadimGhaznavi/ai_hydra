@@ -202,7 +202,6 @@ class HydraClientTui(App):
                 Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
                 classes=DField.INPUT_FIELD,
             ),
-            Label(),
             # Model type
             Horizontal(
                 Label(f"{DLabel.NN_MODEL}: "),
@@ -409,6 +408,18 @@ class HydraClientTui(App):
         self._w_learning_rate_label = self.query_one(
             f"#{DField.LEARNING_RATE_LABEL}", Label
         )
+        self._w_lookahead_enabled = self.query_one(
+            f"#{DField.LOOKAHEAD_STATUS}", Label
+        )
+        self._w_lookahead_p_val_input = self.query_one(
+            f"#{DField.LOOKAHEAD_P_VAL_INPUT}", Input
+        )
+        self._w_lookahead_p_val_label = self.query_one(
+            f"#{DField.LOOKAHEAD_P_VAL_LABEL}", Label
+        )
+        self._w_lookahead_sample_p_val_label = self.query_one(
+            f"#{DField.LOOKAHEAD_SAMPLE_P_VALUE_LABEL}", Label
+        )
         self._w_min_epsilon_input = self.query_one(
             f"#{DField.MIN_EPSILON_INPUT}", Input
         )
@@ -420,15 +431,6 @@ class HydraClientTui(App):
         )
         self._w_model_type_select = self.query_one(
             f"#{DField.MODEL_TYPE_SELECT}", Select
-        )
-        self._w_lookahead_enabled = self.query_one(
-            f"#{DField.LOOKAHEAD_STATUS}", Label
-        )
-        self._w_lookahead_p_val_input = self.query_one(
-            f"#{DField.LOOKAHEAD_P_VAL_INPUT}", Input
-        )
-        self._w_lookahead_p_val_label = self.query_one(
-            f"#{DField.LOOKAHEAD_P_VAL_LABEL}", Label
         )
         self._w_move_delay_input = self.query_one(
             f"#{DField.MOVE_DELAY_INPUT}", Input
@@ -653,6 +655,7 @@ class HydraClientTui(App):
             initial_epsilon = DLinear.INITIAL_EPSILON
             min_epsilon = DLinear.MINIMUM_EPSILON
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
+            sampling_lookahead = DLinear.LOOKAHEAD_SAMPLE_P_VALUE
 
         # RNN model defaults
         elif model_type == DField.RNN:
@@ -661,6 +664,7 @@ class HydraClientTui(App):
             initial_epsilon = DRNN.INITIAL_EPSILON
             min_epsilon = DRNN.MINIMUM_EPSILON
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
+            sampling_lookahead = DRNN.LOOKAHEAD_SAMPLE_P_VALUE
 
         else:
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
@@ -668,18 +672,13 @@ class HydraClientTui(App):
         # Update widgets with model specific defaults
         self._w_learning_rate_input.value = lr
         self._w_lookahead_p_val_input.value = str(lookahead)
+        self._w_lookahead_sample_p_val_label.update(str(sampling_lookahead))
         self._w_initial_epsilon_input.value = str(initial_epsilon)
         self._w_min_epsilon_input.value = str(min_epsilon)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
 
         if self._not_first_time_kludge:
-            self.console_msg(
-                f"Updated defaults: learning rate ({lr}), "
-                f"look ahead p-value (  {lookahead}), "
-                f"epsilon min ({min_epsilon}), decay ({epsilon_decay}), "
-                f"and initial ({initial_epsilon})",
-            )
-
+            self.console_msg("Updated defaults setting...")
         self._not_first_time_kludge = True
 
     async def _send_handshake(self):
