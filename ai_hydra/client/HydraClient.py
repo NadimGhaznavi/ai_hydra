@@ -42,7 +42,6 @@ from ai_hydra.constants.DGame import DGameField, DGameMethod
 from ai_hydra.constants.DNNet import (
     DNetField,
     DEpsilonDef,
-    DLookaheadDef,
     DNetDef,
     DLinear,
     DRNN,
@@ -293,14 +292,14 @@ class HydraClientTui(App):
             Horizontal(
                 Label(f"{DLabel.LOOKAHEAD_P_VAL:>18}: "),
                 Label(
-                    str(DLookaheadDef.PROBABILITY),
+                    str(DLinear.LOOKAHEAD_P_VALUE),
                     id=DField.LOOKAHEAD_P_VAL_LABEL,
                 ),
                 Input(
                     type=DField.NUMBER,
                     compact=True,
                     valid_empty=False,
-                    value=str(DLookaheadDef.PROBABILITY),
+                    value=str(DLinear.LOOKAHEAD_P_VALUE),
                     id=DField.LOOKAHEAD_P_VAL_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
@@ -548,6 +547,7 @@ class HydraClientTui(App):
             self.console_msg("WARNING: Score data is being dropped!!!")
 
         self._prev_scores_batch_num = self._cur_scores_batch_num
+        cur_epsilon = self._cur_epsilon or self._w_initial_epsilon_input.value
 
         for payload in messages[1:]:
 
@@ -574,11 +574,11 @@ class HydraClientTui(App):
                     highscore=hs_event[1],
                     event_time=hs_event[2],
                 )
+                self._w_tabbed_plots.add_scatter_score(
+                    score=(hs_event[0], hs_event[1]), lookahead=True
+                )
                 self.console_msg(
                     f"🎉 New (look ahead) highscore : {hs_event[1]}"
-                )
-                cur_epsilon = (
-                    self._cur_epsilon or self._w_initial_epsilon_input.value
                 )
                 self.metrics.add_highscore_event(
                     episode=hs_event[0],
@@ -596,9 +596,11 @@ class HydraClientTui(App):
                     highscore=hs_event[1],
                     event_time=hs_event[2],
                 )
-                self.console_msg(f"🎉 New highscore: {hs_event[1]}")
-                cur_epsilon = (
-                    self._cur_epsilon or self._w_initial_epsilon_input.value
+                self._w_tabbed_plots.add_scatter_score(
+                    score=(hs_event[0], hs_event[1]), lookahead=False
+                )
+                self.console_msg(
+                    f"🎉 New (no look ahead) highscore: {hs_event[1]}"
                 )
                 self.metrics.add_highscore_event(
                     episode=hs_event[0],
@@ -626,11 +628,11 @@ class HydraClientTui(App):
 
         if event.value == DField.LINEAR:
             lr = f"{DLinear.LEARNING_RATE:.5f}"
-            lookahead = DLookaheadDef.PROBABILITY
+            lookahead = DLinear.LOOKAHEAD_P_VALUE
 
         elif event.value == DField.RNN:
             lr = f"{DRNN.LEARNING_RATE:.5f}"
-            lookahead = 0
+            lookahead = DRNN.LOOKAHEAD_P_VALUE
 
         elif event.value == DField.RNN2:
             lr = f"{DRNN.LEARNING_RATE:.5f}"

@@ -7,7 +7,6 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-
 from __future__ import annotations
 from typing import Any
 import asyncio
@@ -284,8 +283,7 @@ class HydraMgr(HydraServer):
                     )
 
                     # Lookahead coinflip
-                    if sess.epoch % 10 == 0:
-                        sess.lookahead_on = sess.rng.random() < lookahead_p
+                    sess.lookahead_on = sess.rng.random() < lookahead_p
                     ep_payload[DNetField.LOOKAHEAD_ON] = sess.lookahead_on
 
                     if model_type == DField.RNN:
@@ -311,7 +309,7 @@ class HydraMgr(HydraServer):
                     done=bool(done),
                 )
 
-                train_mgr.replay.append(t=t)
+                train_mgr.replay.append(t=t, lookahead=sess.lookahead_on)
 
                 if model_type != DField.RNN:
                     if sess.step_n % train_every == 0:

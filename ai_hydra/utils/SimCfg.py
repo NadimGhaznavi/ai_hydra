@@ -15,7 +15,6 @@ from ai_hydra.constants.DNNet import (
     DNetField,
     DNetDef,
     DEpsilonDef,
-    DLookaheadDef,
     DLinear,
 )
 from ai_hydra.constants.DHydraTui import DField
@@ -26,7 +25,7 @@ class SimCfg:
         DNetField.EPSILON_DECAY: DEpsilonDef.DECAY_RATE,
         DNetField.INITIAL_EPSILON: DEpsilonDef.INITIAL,
         DNetField.LEARNING_RATE: DLinear.LEARNING_RATE,
-        DNetField.LOOKAHEAD_P_VAL: DLookaheadDef.PROBABILITY,
+        DNetField.LOOKAHEAD_P_VAL: DLinear.LOOKAHEAD_P_VALUE,
         DNetField.MIN_EPSILON: DEpsilonDef.MINIMUM,
         DNetField.MODEL_TYPE: DField.LINEAR,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,

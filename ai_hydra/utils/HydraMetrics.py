@@ -55,7 +55,7 @@ class HydraMetrics:
         self.rnn_model[DField.INPUT_SIZE] = DNetDef.INPUT_SIZE
         self.rnn_model[DField.HIDDEN_SIZE] = DRNN.HIDDEN_SIZE
         self.rnn_model[DField.RNN_LAYERS] = DRNN.RNN_LAYERS
-        self.rnn_model[DField.RNN_DROPOUT] = DRNN.P_VALUE
+        self.rnn_model[DField.RNN_DROPOUT] = DRNN.DROPOUT_P_VALUE
 
     def add_trainer(self):
         pass

@@ -141,6 +141,11 @@ TabbedScores {
     width: 125;
 }
 
+#scores_scatter_plot {
+    height: 18;
+    width: 125;
+}
+
 #status {
     column-span: 2;
     background: black;

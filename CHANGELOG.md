@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+### Added
+- Added a *current epsilon* column to the *high score event* table.
+- Added the *RNN sequence length* and *batch size* to the snapshot file.
+
+
+### Changed
+- Changed the TUI console *New highscore* message to *New (no look ahead) highscore*
+- Increased default RNN "sequence length* from 8 to 16, this resulted in learning earlier.
+
+---
+
 ## [0.14.1] = 2026-03012 10:29
 
 ### Fixed

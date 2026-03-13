@@ -20,13 +20,14 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 64
-    SEQ_LENGTH: Final[int] = 16
+    BATCH_SIZE: Final[int] = 32
+    SEQ_LENGTH: Final[int] = 20
     HIDDEN_SIZE: Final[int] = 384
     RNN_LAYERS: Final[int] = 3
     OUTPUT_SIZE: Final[int] = 3
-    P_VALUE: Final[float] = 0.1
+    DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
+    LOOKAHEAD_P_VALUE: Final[float] = 0.25
 
 
 class DEpsilonDef:
@@ -58,14 +59,7 @@ class DLinear:
     DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
-
-
-class DLookaheadDef:
-    """
-    Lookahead defaults.
-    """
-
-    PROBABILITY: Final[float] = 0.25
+    LOOKAHEAD_P_VALUE: Final[float] = 0.25
 
 
 class DNetDef:

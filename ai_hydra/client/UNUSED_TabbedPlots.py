@@ -7,8 +7,6 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-### ----- Version II ---
-
 from statistics import mean, median
 
 from textual import on
@@ -30,8 +28,6 @@ class TabbedPlots(Widget):
         self.scores = {}
         self.scores_lh = {}
         self.scores_nlh = {}
-        self.scatter_scores_lh = []
-        self.scatter_scores_nlh = []
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
@@ -40,14 +36,12 @@ class TabbedPlots(Widget):
             DLabel.SCORES_ALL,
             DLabel.SCORES_LH,
             DLabel.SCORES_NLH,
-            DLabel.SCORES_SCATTER,
         ):
             yield PlotWidget(id=DField.LOSS_EP_PLOT)
             yield PlotWidget(id=DField.LOSS_STEP_PLOT)
             yield PlotWidget(id=DField.SCORES_PLOT)
             yield PlotWidget(id=DField.SCORES_PLOT_LH)
             yield PlotWidget(id=DField.SCORES_PLOT_NLH)
-            yield PlotWidget(id=DField.SCORES_SCATTER_PLOT)
 
     def action_show_tab(self, tab: str) -> None:
         self.get_child_by_type(TabbedContent).active = tab
@@ -68,8 +62,6 @@ class TabbedPlots(Widget):
             self._plot_scores(self.scores_lh, "lh")
         elif pane_id == "tab-5":
             self._plot_scores(self.scores_nlh, "nlh")
-        elif pane_id == "tab-6":
-            self._plot_scatter_scores()
         else:
             raise ValueError(f"Unhandled tab: {pane_id}")
 
@@ -85,48 +77,6 @@ class TabbedPlots(Widget):
             self._plot_scores(self.scores, "all")
             self._plot_scores(self.scores_lh, "lh")
             self._plot_scores(self.scores_nlh, "nlh")
-
-    def add_scatter_score(
-        self, score: list[tuple[int, int]], lookahead: bool, plot=True
-    ):
-        # Each score is an (episode, score) tuple.
-        if lookahead:
-            self.scatter_scores_lh.append(score)
-        else:
-            self.scatter_scores_nlh.append(score)
-
-        if plot:
-            self._plot_scatter_scores()
-
-    def _plot_scatter_scores(self):
-        scatter_plot = self.query_one(
-            f"#{DField.SCORES_SCATTER_PLOT}", PlotWidget
-        )
-        scatter_plot.clear()
-
-        if self.scatter_scores_lh:
-            episode, score = zip(*self.scatter_scores_lh)
-            scatter_plot.scatter(
-                episode,
-                score,
-                marker_style=DColor.GREEN,
-                hires_mode=HiResMode.BRAILLE,
-                label="Look Ahead",
-            )
-
-        if self.scatter_scores_nlh:
-            episode, score = zip(*self.scatter_scores_nlh)
-            scatter_plot.scatter(
-                episode,
-                score,
-                marker_style=DColor.RED,
-                hires_mode=HiResMode.BRAILLE,
-                label="No Look Ahead",
-            )
-        scatter_plot.show_legend
-        scatter_plot.set_xlabel(DLabel.EPISODES)
-        scatter_plot.set_ylabel(DLabel.SCORES)
-        scatter_plot.show_legend(location=LegendLocation.TOPLEFT)
 
     def _plot_scores(self, scores_dict, scores_type):
         x = sorted(scores_dict.keys())
@@ -227,12 +177,9 @@ class TabbedPlots(Widget):
         self.scores = {}
         self.scores_lh = {}
         self.scores_nlh = {}
-        self.scatter_scores_lh = []
-        self.scatter_scores_nlh = []
 
         self.query_one(f"#{DField.LOSS_EP_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.LOSS_STEP_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT_LH}", PlotWidget).clear()
         self.query_one(f"#{DField.SCORES_PLOT_NLH}", PlotWidget).clear()
-        self.query_one(f"#{DField.SCORES_SCATTER_PLOT}", PlotWidget).clear()

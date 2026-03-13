@@ -23,7 +23,7 @@ class RNNModel(nn.Module):
         hidden_size = DRNN.HIDDEN_SIZE
         output_size = DRNN.OUTPUT_SIZE
         rnn_layers = DRNN.RNN_LAYERS
-        rnn_dropout = DRNN.P_VALUE
+        rnn_dropout = DRNN.DROPOUT_P_VALUE
 
         self.m_in = nn.Sequential(
             nn.Linear(input_size, hidden_size),
