@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [0.15.0] = 2026-03-14 16:23
+
 ### Added
 - Added a *current epsilon* column to the *high score event* table.
 - Added the *RNN sequence length* and *batch size* to the snapshot file.
@@ -40,7 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.14.1] = 2026-03012 10:29
+## [0.14.1] = 2026-03-12 10:29
 
 ### Fixed
 - Release glitch.
