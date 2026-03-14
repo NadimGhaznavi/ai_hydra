@@ -222,6 +222,9 @@ TabbedScores {
 .sim_stopped #rnn_layers_label {
     display: none;
 }
+.sim_stopped #rnn_tau_label {
+    display: none;
+}
 .sim_stopped #update_runtime_config {
     display: none;
 }
@@ -253,6 +256,9 @@ TabbedScores {
     display: none;
 }
 .sim_running #rnn_layers_input {
+    display: none;
+}
+.sim_running #rnn_tau_input {
     display: none;
 }
 .sim_running #start_run {
@@ -306,6 +312,12 @@ TabbedScores {
 .bad_handshake #rnn_layers_label {
     display: none;
 }
+.bad_handshake #rnn_tau_input {
+    display: none;
+}
+.bad_handshake #rnn_tau_label {
+    display: none;
+}
 .bad_handshake #min_epsilon_label {
     display: none;
 }
@@ -343,5 +355,14 @@ TabbedScores {
     display: none;
 }
 .linear #rnn_layers_input {
+    display: none;
+}
+.linear #rnn_tau_opt {
+    display: none;
+}
+.linear #rnn_tau_label {
+    display: none;
+}
+.linear #rnn_tau_input {
     display: none;
 }

@@ -1,4 +1,4 @@
-![HydraClient TUI](/images/HydraClient.png)
+![HydraClient TUI](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/HydraClient.png)
 
 # AI Hydra - Reinforcement Learning Platform
 
@@ -111,25 +111,25 @@ Other visualizations are shown below:
 
 The loss plotted over the duration of the running simulation.
 
-![Loss Plot](/images/overall-loss.png)
+![Loss Plot](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/overall-loss.png)
 
 ### Current Loss
 
 A sliding window showing 400 episodes of loss, averaged into 100 data points.
 
-![Current Loss](/images/cur_loss.png)
+![Current Loss](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/cur_loss.png)
 
 ### Scores Histogram
 
 The final game score distribution over the simulation run.
 
-![Score Distribution](/images/scores-histogram.png)
+![Score Distribution](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/scores-histogram.png)
 
 ### High Scores Scatterplot
 
 A scatterplot showing when highscores were achieved.
 
-![Highcores Scatterplot](/images//highscores-scatterplot.png)
+![Highcores Scatterplot](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/highscores-scatterplot.png)
 
 ## Snapshot Report
 

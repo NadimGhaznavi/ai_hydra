@@ -21,15 +21,16 @@ class DRNN:
     """
 
     BATCH_SIZE: Final[int] = 64
-    SEQ_LENGTH: Final[int] = 32
-    HIDDEN_SIZE: Final[int] = 320
-    RNN_LAYERS: Final[int] = 5
-    OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
-    LEARNING_RATE: Final[float] = 0.0002
-    INITIAL_EPSILON: Final[float] = 0.999
-    MINIMUM_EPSILON: Final[float] = 0.005
     EPSILON_DECAY_RATE: Final[float] = 0.993  # 0.98
+    HIDDEN_SIZE: Final[int] = 320
+    INITIAL_EPSILON: Final[float] = 0.999
+    LEARNING_RATE: Final[float] = 0.0002
+    MINIMUM_EPSILON: Final[float] = 0.005
+    OUTPUT_SIZE: Final[int] = 3
+    RNN_LAYERS: Final[int] = 5
+    SEQ_LENGTH: Final[int] = 32
+    TAU: Final[float] = 0.005
 
 
 class DEpsilonField:
@@ -102,6 +103,7 @@ class DNetField:
     RANDOM_SEED: Final[str] = "random_seed"
     REWARD: Final[str] = DGameField.REWARD
     RNN_LAYERS: Final[str] = "rnn_layers"
+    RNN_TAU: Final[str] = "rnn_tau"
     STATE: Final[str] = "state"
 
 

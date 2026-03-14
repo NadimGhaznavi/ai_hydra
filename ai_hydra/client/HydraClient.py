@@ -349,6 +349,22 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
+            # RNN Trainer Tau
+            Horizontal(
+                Label(f"{DLabel.RNN_TAU:>15s}: ", id=DField.RNN_TAU_OPT),
+                Label(
+                    f"{DRNN.TAU}",
+                    id=DField.RNN_TAU_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DRNN.TAU}",
+                    id=DField.RNN_TAU_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
             id=DField.MODEL,
         )
 
@@ -475,6 +491,12 @@ class HydraClientTui(App):
         )
         self._w_rnn_layers_label = self.query_one(
             f"#{DField.RNN_LAYERS_LABEL}", Label
+        )
+        self._w_rnn_tau_input = self.query_one(
+            f"#{DField.RNN_TAU_INPUT}", Input
+        )
+        self._w_rnn_tau_label = self.query_one(
+            f"#{DField.RNN_TAU_LABEL}", Label
         )
         self._w_tabbed_plots = self.query_one(
             f"#{DField.TABBED_PLOTS}", TabbedPlots
@@ -843,6 +865,9 @@ class HydraClientTui(App):
         # RNN layers
         rnn_layers = self._w_rnn_layers_input.value
         self._w_rnn_layers_label.update(rnn_layers)
+        # RNN Tau
+        rnn_tau = self._w_rnn_tau_input.value
+        self._w_rnn_tau_label.update(rnn_tau)
 
         self.cfg.apply(
             {
@@ -857,6 +882,7 @@ class HydraClientTui(App):
                 DNetField.MOVE_DELAY: move_delay,
                 DNetField.RANDOM_SEED: int(random_seed),
                 DNetField.RNN_LAYERS: int(rnn_layers),
+                DNetField.RNN_TAU: float(rnn_tau),
             }
         )
 

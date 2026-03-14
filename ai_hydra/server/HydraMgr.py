@@ -156,6 +156,7 @@ class HydraMgr(HydraServer):
                 gamma=0.9,
                 log_level=self.log_level,
             )
+            trainer.set_params(tau=self.cfg.get(DNetField.RNN_TAU))
 
         else:
             raise ValueError(f"Unsupported model type: {model_type}")

@@ -6,15 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Added
+- *RNN Tau* setting for the `RNNTrainer`. This is now configurable in the TUI.
+
+### Changed
+
+### Fixed
+
+- Images references in the README.md.
+
+---
+
 ## [0.15.0] = 2026-03-14 16:23
 
 ### Added
 - Added a *current epsilon* column to the *high score event* table.
 - Added the *RNN sequence length* and *batch size* to the snapshot file.
-- **More Simulaton Settings in the TUI**
-  - The model is set with a drop down menu (RNN or Linear)
+- **More Simulation Settings in the TUI**
+  - The model is set with a drop-down menu (RNN or Linear)
   - Settings are prepopulated with sane defaults
-  - Some defaults are model specific, so if the user changes the model, those settings are reset to the (Linear or RNN) model defaults.
+  - Some defaults are model-specific, so if the user changes the model, those settings are reset to the (Linear or RNN) model defaults.
   - New settings include:
     - Number of nodes in the model's hidden layers
     - The *p-value* of each model's dropout layer
@@ -28,7 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - The default RNN hyperparameters
 - With the *look ahead* feature removed, I rewrote the entire Plotting widget it now includes plots that show
   - Sliding window showing game score per episode - line plot
-  - Sliding window showing verage game score over a number of episodes - line plot
+  - Sliding window showing average game score over several episodes - line plot
   - Score distribution histogram - bar plot
   - Overall simulation loss - line plot
   - Sliding window showing loss - line plot
@@ -37,7 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Some work on a clean shutdown, I'm making progress (this is low on my priority list)
 
 ### Removed
-- I removed the *Look Ahead* feature. It goes against what Richard Sutton calls the *Bitter Lesson*: Don't inject human ideas about how the AI **should** behave. Instead trust the whole process and enrich the environment instead.
+- I removed the *Look Ahead* feature. It goes against what Richard Sutton calls the *Bitter Lesson*: Don't inject human ideas about how the AI **should** behave. Instead, trust the whole process and enrich the environment instead.
 
 
 ---

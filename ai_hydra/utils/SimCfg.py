@@ -34,6 +34,7 @@ class SimCfg:
         DNetField.PER_STEP: DNetDef.PER_STEP,
         DNetField.RANDOM_SEED: DHydra.RANDOM_SEED,
         DNetField.RNN_LAYERS: DRNN.RNN_LAYERS,
+        DNetField.RNN_TAU: DRNN.TAU,
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
@@ -48,6 +49,7 @@ class SimCfg:
         DNetField.PER_STEP: bool,
         DNetField.RANDOM_SEED: int,
         DNetField.RNN_LAYERS: int,
+        DNetField.RNN_TAU: float,
     }
 
     __slots__ = ("_values",)

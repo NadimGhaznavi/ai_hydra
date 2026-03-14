@@ -64,6 +64,7 @@ class HydraMetrics:
         learning_rate = cfg.get(DNetField.LEARNING_RATE)
         dropout_p = cfg.get(DNetField.DROPOUT_P)
         rnn_layers = cfg.get(DNetField.RNN_LAYERS)
+        rnn_tau = cfg.get(DNetField.RNN_TAU)
 
         with open(snap_file, "w") as f:
             f.write(
@@ -100,6 +101,7 @@ class HydraMetrics:
                     f"Hidden Size: {model_hidden_size}\n"
                     f"RNN Layers: {rnn_layers}\n"
                     f"Dropout Layer P-Value: {dropout_p}\n"
+                    f"RNN Tau: {rnn_tau}\n"
                     f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
                     f"Batch Size: {DRNN.BATCH_SIZE}\n"
                     f"Learning Rate: {learning_rate}\n\n"
