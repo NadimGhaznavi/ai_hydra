@@ -53,7 +53,7 @@ class HydraMetrics:
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-        model_type = cfg.get[DNetField.MODEL_TYPE]
+        model_type = cfg.get(DNetField.MODEL_TYPE)
         model_hidden_size = cfg.get(DNetField.HIDDEN_SIZE)
         model_input_size = DNetDef.INPUT_SIZE
 

@@ -210,9 +210,15 @@ TabbedScores {
 .sim_stopped #model_type_label {
     display: none;
 }
-.sim_stopped #random_seed_label {
+/* Temporary until I implement server side user defined seeds */
+.sim_stopped #UNUSED_random_seed_label {
     display: none;
 }
+.sim_stopped #random_seed_input {
+    display: none;
+}
+/* ------------------------------------- */
+
 .sim_stopped #rnn_layers_label {
     display: none;
 }

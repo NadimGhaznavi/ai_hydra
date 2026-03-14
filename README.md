@@ -1,4 +1,6 @@
-# AI Hydra - Reinforcement Learning Observatory Platform
+![HydraClient TUI](/images/HydraClient.png)
+
+# AI Hydra - Reinforcement Learning Platform
 
 ## Overview
 
@@ -91,36 +93,99 @@ This means that the **exact** same scores will be achieved at the exact same
 game number during a simulation run. This makes true comparisons between runs
 possible.
 
-## Look Ahead Feature
-
-The server includes a *lookahead* policy where the server checks to see if
-the move suggested by the neural network will result in a collision. If so,
-then it "looks ahead" at alternative moves. If a *look-ahead* move results
-in finding food, then that move is selected. If a move does **not** result in
-a collision, then that move is selected.
-
-The *look-ahead* policy is only enabled for a configurable probability of the
-time. The training of the neural network includes the moves and game state
-information that were executed. So when the *look-ahead* policy is used, the
-training data is enhanced. This leads to better neural network performance.
-
-## Visualizations
-
-The TUI includes real-time visualzations that show the loss and a histogram
-of the scores. The score histgrams also show the *mean* and *median* values.
-
 ## Supported Models: Linear and RNN
 
 This project includes a *Linear* and an *RNN* for the backend neural network.
 The choice of model is made available in the TUI with a simple drop down 
 menu.
 
+## Visualizations
+
+The TUI includes real-time visualzations. The screenshot at the top of this
+document shows the actual Snake Game, a *high scores* widget, and a sliding
+window that shows the final game score and an average as the AI plays.
+
+Other visualizations are shown below:
+
+### Overall Loss
+
+The loss plotted over the duration of the running simulation.
+
+![Loss Plot](/images/overall-loss.png)
+
+### Current Loss
+
+A sliding window showing 400 episodes of loss, averaged into 100 data points.
+
+![Current Loss](/images/cur_loss.png)
+
+### Scores Histogram
+
+The final game score distribution over the simulation run.
+
+![Score Distribution](/images/scores-histogram.png)
+
+### High Scores Scatterplot
+
+A scatterplot showing when highscores were achieved.
+
+![Highcores Scatterplot](/images//highscores-scatterplot.png)
+
+## Snapshot Report
+
+The *HydraClient TUI* includes a *Snapshot* button that creates a simple
+text file that captures the simulation settings. A sample is shows below.
+
+```
+📸 AI Hydra - Snapshot
+══════════════════════
+Timestamp: 2026-03-14 13:00:38
+Simulation Run Time: 1h  0m
+Episode Number: 7585
+AI Hydra Version: v0.14.1
+Random Seed: 129
+
+🎯 Epsilon Greedy
+═════════════════
+Initial Epsilon: 0.999
+Minimum Epsilon: 0.005
+Epsilon Decay Rate: 0.993
+
+🧠 RNN Model
+════════════
+Input Size: 16
+Hidden Size: 320
+RNN Layers: 5
+Dropout Layer P-Value: 0.1
+Sequence Length: 32
+Batch Size: 64
+
+🏆 Highscore Events
+═══════════════════
+Episode Highscore        Time Epsilon
+═══════ ═════════ ═══════════ ═══════
+      2         1          0s   0.999
+     91         2         10s  0.5235
+    118         3         15s  0.4423
+    189         4         33s  0.2705
+    189         5         33s   0.263
+    215         6         40s  0.2222
+    215         7         40s  0.2222
+    295         8      1m  1s  0.1267
+    324         9      1m  9s  0.1026
+    415        10      1m 39s  0.0545
+    428        11      1m 43s  0.0501
+    428        12      1m 43s  0.0501
+    428        13      1m 43s  0.0501
+    484        14      2m  1s  0.0336
+```
+
 ## Blazing Speed
 
 Simulations run **BLAZINGLY** fast on a consumer grade laptop without a GPU.
-This is due to careful architectural design decisions. In particular, the
+This is due to careful architectural design decisions. For the *RNN*, the
 `ReplayMemory`, `RNNModel`, and `RNNTrainer` work in a pipeline, minimizing
-data transformations.
+data transformations. The *Linear* model uses a similar strategy.
 
-On my consumer grade laptop (11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz),
-simulations are run at about 3.5 episodes per second.
+**On my consumer grade laptop (11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz),**
+**simulations are run at about 3.5 episodes per second.**
