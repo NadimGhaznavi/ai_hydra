@@ -61,6 +61,7 @@ class HydraMetrics:
         min_epsilon = cfg.get(DNetField.MIN_EPSILON)
         epsilon_delay = cfg.get(DNetField.EPSILON_DECAY)
         learning_rate = cfg.get(DNetField.LEARNING_RATE)
+        dropout_p = cfg.get(DNetField.DROPOUT_P)
 
         with open(snap_file, "w") as f:
             f.write(
@@ -86,7 +87,7 @@ class HydraMetrics:
                     "═══════════════\n"
                     f"Input Size: {model_input_size}\n"
                     f"Hidden Size: {model_hidden_size}\n"
-                    f"Dropout Layer P-Value: {DLinear.DROPOUT_P}\n"
+                    f"Dropout Layer P-Value: {dropout_p}\n"
                     f"Learning Rate: {learning_rate}\n\n"
                 )
             elif model_type == DField.RNN:
@@ -95,7 +96,7 @@ class HydraMetrics:
                     "════════════\n"
                     f"Input Size: {model_input_size}\n"
                     f"Hidden Size: {model_hidden_size}\n"
-                    f"RNN Layers: {DRNN.RNN_LAYERS}\n"
+                    f"RNN Layers: {dropout_p}\n"
                     f"Dropout Layer P-Value: {DRNN.DROPOUT_P_VALUE}\n"
                     f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
                     f"Batch Size: {DRNN.BATCH_SIZE}\n"
