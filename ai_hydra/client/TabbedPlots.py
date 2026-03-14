@@ -274,7 +274,7 @@ class TabbedPlots(Widget):
         plot.set_ylimits()
         plot.set_xlabel(DLabel.EPISODES)
         plot.set_ylabel(DLabel.LOSS)
-        plot.show_legend(location=LegendLocation.TOPRIGHT)
+        plot.show_legend(location=LegendLocation.TOPLEFT)
 
     def _plot_scatter_scores(self) -> None:
         plot = self.query_one(f"#{DField.SCORES_SCATTER_PLOT}", PlotWidget)
