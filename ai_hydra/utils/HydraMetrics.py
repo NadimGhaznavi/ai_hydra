@@ -20,6 +20,8 @@ from ai_hydra.constants.DNNet import (
     MODEL_TYPE_TABLE,
 )
 
+from ai_hydra.utils.SimCfg import SimCfg
+
 
 class HydraMetrics:
 
@@ -37,45 +39,28 @@ class HydraMetrics:
     def add_cur_epoch(self, cur_epoch):
         self.cur_epoch = cur_epoch
 
-    def add_epsilon(self, initial, minimum, decay):
-        self.epsilon[DField.INITIAL_EPSILON] = initial
-        self.epsilon[DField.MIN_EPSILON] = minimum
-        self.epsilon[DField.EPSILON_DECAY] = decay
-
-    def add_epsilon_depleted(self, episode):
-        self.epsilon[DField.EPSILON_DEPLETED] = episode
-
     def add_highscore_event(self, episode, highscore, event_time, cur_ep):
         self.highscore_events.append((episode, highscore, event_time, cur_ep))
 
     def add_mean_median(self, episode, mean, median):
         self.mean_median.append((episode, mean, median))
 
-    def add_linear_model(self):
-        self.linear_model[DField.INPUT_SIZE] = DNetDef.INPUT_SIZE
-        self.linear_model[DField.DROPOUT_P] = DLinear.DROPOUT_P
-
-    def add_rnn_model(self):
-        self.rnn_model[DField.INPUT_SIZE] = DNetDef.INPUT_SIZE
-        self.rnn_model[DField.RNN_LAYERS] = DRNN.RNN_LAYERS
-        self.rnn_model[DField.RNN_DROPOUT] = DRNN.DROPOUT_P_VALUE
-
     def add_trainer(self):
         pass
 
-    def create_snapshot(self, snap_file, model_type, model_hidden_size):
-
-        if model_type == DField.RNN:
-            self.rnn_model[DNetField.HIDDEN_SIZE] = model_hidden_size
-        elif model_type == DField.LINEAR:
-            self.linear_model[DNetField.HIDDEN_SIZE] = model_hidden_size
+    def create_snapshot(self, snap_file, cfg: SimCfg):
 
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-        if model_type == DField.LINEAR:
-            self.add_linear_model()
-        else:
-            self.add_rnn_model()
+
+        model_type = cfg.get[DNetField.MODEL_TYPE]
+        model_hidden_size = cfg.get[DNetField.HIDDEN_SIZE]
+        model_input_size = DNetDef.INPUT_SIZE
+
+        initial_epsilon = cfg.get(DNetField.INITIAL_EPSILON)
+        min_epsilon = cfg.get(DNetField.MIN_EPSILON)
+        epsilon_delay = cfg.get(DNetField.EPSILON_DECAY)
+        learning_rate = cfg.get(DNetField.LEARNING_RATE)
 
         with open(snap_file, "w") as f:
             f.write(
@@ -83,7 +68,7 @@ class HydraMetrics:
                 "══════════════════════\n"
                 f"Timestamp: {timestamp}\n"
                 f"Simulation Run Time: {self.elapsed_time}\n"
-                f"Episode Number: {self.cur_epoch}\n"
+                f"Current Episode Number: {self.cur_epoch}\n"
                 f"AI Hydra Version: v{DHydra.VERSION}\n"
                 f"Random Seed: {DHydra.RANDOM_SEED}\n\n"
             )
@@ -91,38 +76,40 @@ class HydraMetrics:
             f.write(
                 "🎯 Epsilon Greedy\n"
                 "═════════════════\n"
-                f"Initial Epsilon: {self.epsilon[DField.INITIAL_EPSILON]}\n"
-                f"Minimum Epsilon: {self.epsilon[DField.MIN_EPSILON]}\n"
-                f"Epsilon Decay Rate: {self.epsilon[DField.EPSILON_DECAY]}\n\n"
+                f"Initial Epsilon: {initial_epsilon}\n"
+                f"Minimum Epsilon: {min_epsilon}\n"
+                f"Epsilon Decay Rate: {epsilon_delay}\n\n"
             )
             if model_type == DField.LINEAR:
                 f.write(
                     "🧠 Linear Model\n"
                     "═══════════════\n"
-                    f"Input Size: {self.linear_model[DField.INPUT_SIZE]}\n"
-                    f"Hidden Size: {self.linear_model[DNetField.HIDDEN_SIZE]}\n"
-                    f"Dropout Layer P-Value: {self.linear_model[DField.DROPOUT_P]}\n\n"
+                    f"Input Size: {model_input_size}\n"
+                    f"Hidden Size: {model_hidden_size}\n"
+                    f"Dropout Layer P-Value: {DLinear.DROPOUT_P}\n"
+                    f"Learning Rate: {learning_rate}\n\n"
                 )
             elif model_type == DField.RNN:
                 f.write(
                     "🧠 RNN Model\n"
                     "════════════\n"
-                    f"Input Size: {self.rnn_model[DField.INPUT_SIZE]}\n"
-                    f"Hidden Size: {self.rnn_model[DNetField.HIDDEN_SIZE]}\n"
-                    f"RNN Layers: {self.rnn_model[DField.RNN_LAYERS]}\n"
-                    f"Dropout Layer P-Value: {self.rnn_model[DField.RNN_DROPOUT]}\n"
+                    f"Input Size: {model_input_size}\n"
+                    f"Hidden Size: {model_hidden_size}\n"
+                    f"RNN Layers: {DRNN.RNN_LAYERS}\n"
+                    f"Dropout Layer P-Value: {DRNN.DROPOUT_P_VALUE}\n"
                     f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
-                    f"Batch Size: {DRNN.BATCH_SIZE}\n\n"
+                    f"Batch Size: {DRNN.BATCH_SIZE}\n"
+                    f"Learning Rate: {learning_rate}\n\n"
                 )
             f.write(
                 "🏆 Highscore Events\n"
                 "═══════════════════\n"
-                f"{'Episode':8s}{'Highscore':10s}{'Time':>11s}{'Epsilon':>8s}\n"
-                "═══════ ═════════ ═══════════ ══════════ ═══════\n"
+                f"{'Episode':8s}{'Highscore':<10s}{'Time':>11s}{'Epsilon':>8s}\n"
+                "═══════ ═════════ ═══════════ ═══════\n"
             )
             for event in self.highscore_events:
                 episode, highscore, ev_time, cur_ep = event
                 cur_ep = str(round(float(cur_ep), 4))
                 f.write(
-                    f"{str(episode):>8s}{str(highscore):>10s}{ev_time:>11s}{cur_ep:>8s}\n"
+                    f"{str(episode):>7s}{str(highscore):>10s}{ev_time:>12s}{cur_ep:>8s}\n"
                 )

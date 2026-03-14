@@ -41,6 +41,7 @@ class LinearTrainer:
             client_id="LinearTrainer", log_level=log_level, to_console=True
         )
         self._losses = []
+        self._cold_memory = True
         self.log.debug("Initialized")
 
     def get_avg_loss(self) -> float | None:
@@ -57,6 +58,10 @@ class LinearTrainer:
         batch = self.replay.sample_transitions(batch_size)
         if batch is None:
             return None
+
+        if self._cold_memory:
+            self._cold_memory = False
+            self.log.debug(f"Training with {batch_size} transitions")
 
         states = torch.tensor(
             [t.old_state for t in batch],

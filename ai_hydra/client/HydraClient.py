@@ -134,7 +134,7 @@ class HydraClientTui(App):
                 status = DStatus.BAD
 
             self.query_one(f"#{DField.ROUTER_HB}", Label).update(
-                f"{DLabel.ROUTER:>11s}: {status}"
+                f"{DLabel.ROUTER}: {status}"
             )
 
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL)
@@ -166,17 +166,6 @@ class HydraClientTui(App):
         # ------ The Snake Game --- 2x1
         yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
-        # ------ Network ---
-        yield Vertical(
-            Label(f"{DLabel.TARGET_HOST:>11s}: {self._address}"),
-            Label(f"{DLabel.TARGET_PORT:>11s}: {self._port}"),
-            Label(f"{DLabel.ROUTER:>11s}", id=DField.ROUTER_HB),
-            id=DField.NETWORK,
-        )
-
-        # ----- Highscores widget ---
-        yield TabbedScores(id=DField.TABBED_SCORES)
-
         # ----- Settings ---
         yield Vertical(
             # Random seed
@@ -205,6 +194,9 @@ class HydraClientTui(App):
             ),
             id=DField.SETTINGS,
         )
+
+        # ----- Highscores widget ---
+        yield TabbedScores(id=DField.TABBED_SCORES)
 
         # ----- Epsilon ---
         yield Vertical(
@@ -265,6 +257,14 @@ class HydraClientTui(App):
             id=DField.EPSILON,
         )
 
+        # ------ Network ---
+        yield Vertical(
+            Label(f"{DLabel.TARGET_HOST}: {self._address}"),
+            Label(f"{DLabel.TARGET_PORT}: {self._port}"),
+            Label(f"{DLabel.ROUTER}", id=DField.ROUTER_HB),
+            id=DField.NETWORK,
+        )
+
         # ----- Model ---
         yield Vertical(
             # Model type
@@ -308,6 +308,22 @@ class HydraClientTui(App):
                     valid_empty=False,
                     value=f"{DLinear.LEARNING_RATE:.7f}",
                     id=DField.LEARNING_RATE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Dropout p-value
+            Horizontal(
+                Label(f"{DLabel.DROPOUT_P_VAL:>13s}: "),
+                Label(
+                    f"{DLinear.DROPOUT_P:.2f}",
+                    id=DField.DROPOUT_P_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.DROPOUT_P:.2f}",
+                    id=DField.DROPOUT_P_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
             ),
@@ -376,6 +392,12 @@ class HydraClientTui(App):
         )
         self._w_cur_epsilon_label = self.query_one(
             f"#{DField.CUR_EPSILON}", Label
+        )
+        self._w_dropout_p_input = self.query_one(
+            f"#{DField.DROPOUT_P_INPUT}", Input
+        )
+        self._w_dropout_p_label = self.query_one(
+            f"#{DField.DROPOUT_P_LABEL}", Label
         )
         self._w_epsilon_decay_input = self.query_one(
             f"#{DField.EPSILON_DECAY_INPUT}", Input
@@ -598,6 +620,7 @@ class HydraClientTui(App):
             min_epsilon = DLinear.MINIMUM_EPSILON
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
             hidden_size = DLinear.HIDDEN_SIZE
+            dropout_p = DLinear.DROPOUT_P
 
         # RNN model defaults
         elif model_type == DField.RNN:
@@ -606,6 +629,7 @@ class HydraClientTui(App):
             min_epsilon = DRNN.MINIMUM_EPSILON
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
             hidden_size = DRNN.HIDDEN_SIZE
+            dropout_p = DRNN.DROPOUT_P_VALUE
 
         else:
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
@@ -616,6 +640,7 @@ class HydraClientTui(App):
         self._w_min_epsilon_input.value = str(min_epsilon)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
         self._w_hidden_size_input.value = str(hidden_size)
+        self._w_dropout_p_input.value = str(dropout_p)
 
         if self._not_first_time_kludge:
             self.console_msg("Updated defaults setting...")
@@ -741,20 +766,7 @@ class HydraClientTui(App):
         timestamp = now.strftime("%Y-%m-%d_%H-%M.txt")
         snapshot_file = DFile.BASE_SNAPSHOT + timestamp
         fq_snapshot = os.path.join(self._hydra_dir, snapshot_file)
-        # Epsilon
-        self.metrics.add_epsilon(
-            initial=self._w_initial_epsilon_input.value,
-            minimum=self._w_min_epsilon_input.value,
-            decay=self._w_epsilon_decay_input.value,
-        )
-        # Model
-        model_type = self._w_model_type_select.value
-        hidden_size = self._w_hidden_size_input.value
-        self.metrics.create_snapshot(
-            snap_file=fq_snapshot,
-            model_type=model_type,
-            model_hidden_size=hidden_size,
-        )
+        self.metrics.create_snapshot(snap_file=fq_snapshot, cfg=self.cfg)
 
         self.console_msg(f"📸 Created snapshot file: {fq_snapshot}")
 
@@ -783,6 +795,9 @@ class HydraClientTui(App):
         # Learning rate
         learning_rate = self._w_learning_rate_input.value
         self._w_learning_rate_label.update(learning_rate)
+        # Dropout p-value
+        dropout_p = self._w_dropout_p_input.value
+        self._w_dropout_p_label.update(dropout_p)
 
         self.cfg.apply(
             {
@@ -794,6 +809,7 @@ class HydraClientTui(App):
                 DNetField.PER_STEP: per_step,
                 DNetField.MODEL_TYPE: model_type,
                 DNetField.MOVE_DELAY: move_delay,
+                DNetField.DROPOUT_P: dropout_p,
             }
         )
 

@@ -20,16 +20,16 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 56
-    SEQ_LENGTH: Final[int] = 20
-    HIDDEN_SIZE: Final[int] = 384
-    RNN_LAYERS: Final[int] = 4
+    BATCH_SIZE: Final[int] = 64
+    SEQ_LENGTH: Final[int] = 32
+    HIDDEN_SIZE: Final[int] = 320
+    RNN_LAYERS: Final[int] = 5
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
     INITIAL_EPSILON: Final[float] = 0.999
-    MINIMUM_EPSILON: Final[float] = 0.004
-    EPSILON_DECAY_RATE: Final[float] = 0.995  # 0.98
+    MINIMUM_EPSILON: Final[float] = 0.005
+    EPSILON_DECAY_RATE: Final[float] = 0.993  # 0.98
 
 
 class DEpsilonField:
@@ -87,12 +87,14 @@ class DNetField:
     ACTION: Final[str] = DGameField.ACTION
     DONE: Final[str] = DGameField.DONE
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    DROPOUT_P: Final[str] = "dropout_p"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
+    HIDDEN_SIZE: Final[str] = "hidden_size"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
-    MIN_EPSILON: Final[str] = "min_epsilon"
     LEARNING_RATE: Final[str] = "learning_rate"
     LOSS: Final[str] = "loss"
+    MIN_EPSILON: Final[str] = "min_epsilon"
     MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"

@@ -55,8 +55,8 @@ class RNNTrainer:
         )
 
         self._losses: list[float] = []
-        self.log.debug("Initialized")
         self._cold_memory = True
+        self.log.debug("Initialized")
 
     def get_avg_loss(self) -> float | None:
         if not self._losses:
@@ -73,7 +73,9 @@ class RNNTrainer:
 
         if self._cold_memory:
             self._cold_memory = False
-            self.log.debug("Training has warmed up...")
+            self.log.debug(
+                f"Training with {batch_size} batches with sequence length {len(chunks[0])}"
+            )
 
         # Shapes (B = batch_size, T = seq_length, F = feature/input size)
         # states      -> [B, T, F]

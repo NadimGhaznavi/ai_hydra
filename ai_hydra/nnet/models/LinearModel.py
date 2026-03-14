@@ -20,6 +20,7 @@ class LinearModel(nn.Module):
         torch.manual_seed(DHydra.RANDOM_SEED)
 
         self._hidden_size = None
+        self._dropout_p = None
 
     def forward(self, x):
         return self.net(x)
@@ -30,10 +31,11 @@ class LinearModel(nn.Module):
             nn.ReLU(),
             nn.Linear(self._hidden_size, self._hidden_size),
             nn.ReLU(),
-            nn.Dropout(p=DLinear.DROPOUT_P),
+            nn.Dropout(p=self._dropout_p),
             nn.Linear(self._hidden_size, DLinear.OUTPUT_SIZE),
         )
 
-    def set_params(self, hidden_size: int) -> None:
+    def set_params(self, hidden_size: int, dropout_p: float) -> None:
         self._hidden_size = hidden_size
+        self._dropout_p = dropout_p
         self._init_model()

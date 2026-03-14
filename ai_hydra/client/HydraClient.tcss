@@ -1,11 +1,12 @@
 Screen {
     layout: grid;
     grid-size: 4 7;
-    grid-rows: 3 5 5 6 6 22 3;
+    grid-rows: 3 5 6 11 22 3;
     grid-columns: 20 44 32 37;
 }
 
 Button {
+    row-span: 2;
     background: rgb(27, 55, 24);
     padding: 0 1;
     border: none;
@@ -23,7 +24,7 @@ TabbedPlots {
 }
 
 TabbedScores {
-    row-span: 4;
+    row-span: 3;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -34,7 +35,7 @@ TabbedScores {
 }
 
 #board_box {
-    row-span: 4;
+    row-span: 3;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -46,7 +47,7 @@ TabbedScores {
 }
 
 #buttons {
-    row-span: 4;
+    row-span: 2;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -185,6 +186,9 @@ TabbedScores {
 
 /* Simulation is NOT running */
 /* --------------------------*/
+.sim_stopped #dropout_p_label {
+    display: none;
+}
 .sim_stopped #epsilon_decay_label {
     display: none;
 }
@@ -215,6 +219,9 @@ TabbedScores {
 
 /* Simulation IS running */
 /* --------------------- */
+.sim_running #dropout_p_input {
+    display: none;
+}
 .sim_running #epsilon_decay_input {
     display: none;
 }
@@ -242,6 +249,12 @@ TabbedScores {
 
 /* Failed handshake with HydraMgr */
 /* ------------------------------ */
+.bad_handshake #dropout_p_input {
+    display: none;
+}
+.bad_handshake #dropout_p_label {
+    display: none;
+}
 .bad_handshake #epsilon_decay_input {
     display: none;
 }

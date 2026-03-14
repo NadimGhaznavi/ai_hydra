@@ -21,6 +21,7 @@ from ai_hydra.constants.DHydraTui import DField
 
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
+        DNetField.DROPOUT_P: DLinear.DROPOUT_P,
         DNetField.EPSILON_DECAY: DLinear.EPSILON_DECAY_RATE,
         DNetField.HIDDEN_SIZE: DLinear.HIDDEN_SIZE,
         DNetField.INITIAL_EPSILON: DLinear.INITIAL_EPSILON,
@@ -32,6 +33,7 @@ class SimCfg:
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
+        DNetField.DROPOUT_P: float,
         DNetField.EPSILON_DECAY: float,
         DNetField.HIDDEN_SIZE: int,
         DNetField.INITIAL_EPSILON: float,

@@ -123,7 +123,10 @@ class HydraMgr(HydraServer):
             self.log.debug("Using Linear Model")
             replay = ReplayMemory(rng=replay_rng, log_level=self.log_level)
             model = LinearModel()
-            model.set_params(hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE))
+            model.set_params(
+                hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
+                dropout_p=self.cfg.get(DNetField.DROPOUT_P),
+            )
             nnet_policy = LinearPolicy(model=model, device=device)
             trainer = LinearTrainer(
                 model=model,
@@ -140,7 +143,10 @@ class HydraMgr(HydraServer):
                 rng=replay_rng, log_level=self.log_level, rnn=True
             )
             model = RNNModel()
-            model.set_params(hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE))
+            model.set_params(
+                hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
+                dropout_p=self.cfg.get(DNetField.DROPOUT_P),
+            )
             nnet_policy = RNNPolicy(model=model, device=device)
             trainer = RNNTrainer(
                 model=model,
