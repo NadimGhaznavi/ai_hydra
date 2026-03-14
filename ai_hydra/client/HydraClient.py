@@ -531,7 +531,7 @@ class HydraClientTui(App):
                     event_time=hs_event[2],
                 )
                 self._w_tabbed_plots.add_scatter_score(
-                    score=(hs_event[0], hs_event[1])
+                    scores=(hs_event[0], hs_event[1])
                 )
                 self.console_msg(f"🎉 New highscore : {hs_event[1]}")
                 self.metrics.add_highscore_event(
@@ -545,6 +545,7 @@ class HydraClientTui(App):
             if DNetField.FINAL_SCORE in payload:
                 self._w_tabbed_plots.add_score(
                     cur_score=payload[DNetField.FINAL_SCORE],
+                    cur_epoch=payload[DGameField.EPOCH],
                 )
 
     async def on_shutdown_request(self) -> None:

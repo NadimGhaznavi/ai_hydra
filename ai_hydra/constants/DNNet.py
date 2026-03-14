@@ -20,7 +20,7 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 20
+    BATCH_SIZE: Final[int] = 32
     SEQ_LENGTH: Final[int] = 20
     HIDDEN_SIZE: Final[int] = 384
     RNN_LAYERS: Final[int] = 3

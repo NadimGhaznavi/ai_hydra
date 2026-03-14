@@ -40,11 +40,13 @@ class DField:
     CONSOLE_SCREEN: Final[str] = "console_screen"
     COUNT: Final[str] = "count"
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    CUR_LOSS: Final[str] = "cur_loss"
     DROPOUT_P: Final[str] = "dropout_p"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     EPSILON_DECAY_INPUT: Final[str] = "epsilon_decay_input"
     EPSILON_DECAY_LABEL: Final[str] = "epsilon_decay_label"
     EPSILON_DEPLETED: Final[str] = "epsilon_depleted"
+    GAME_SCORES: Final[str] = "game_scores"
     HANDSHAKE: Final[str] = "handshake"
     HIDDEN_SIZE: Final[str] = "hidden_size"
     HIDDEN_WIDGET: Final[str] = "hidden_widget"
@@ -125,13 +127,17 @@ class DLabel:
     """
 
     ACTIONS: Final[str] = "Actions"
+    AVERAGE: Final[str] = "Average"
     BOTH: Final[str] = "Both"
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
     CONFIG: Final[str] = "Configuration"
     CONSOLE: Final[str] = "Console"
+    CUR_LOSS: Final[str] = "Current Loss"
     NETWORK: Final[str] = "Network"
     CUR_EPSILON: Final[str] = "Current Epsilon"
+    CURRENT: Final[str] = "Current"
+    COUNT: Final[str] = "Count"
     DEBUG: Final[str] = "DEBUG"
     DISCONNECTED: Final[str] = "Disonnected"
     EPISODE: Final[str] = "Episode"
@@ -140,6 +146,7 @@ class DLabel:
     ERROR: Final[str] = "ERROR"
     EVENT_TIME: Final[str] = "Event"
     GAME: Final[str] = "Game"
+    GAME_SCORES: Final[str] = "Game Scores"
     HANDSHAKE: Final[str] = "Handshake"
     HIGHSCORE: Final[str] = "Highscore"
     HIGHSCORES: Final[str] = "Highscores"
@@ -200,7 +207,11 @@ class DPlotDef:
     Default Textual plot settings.
     """
 
+    # The average is calculated by dividing the MAX_DATA_POINTS by this number
+    AVG_DIVISOR: int = 50
     MAX_LOSS_DATA_POINTS: Final[int] = 150
+    MAX_CUR_DATA_POINTS: Final[int] = 200
+    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 300
 
 
 class DStatus:

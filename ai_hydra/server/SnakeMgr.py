@@ -231,6 +231,7 @@ class SnakeMgr:
             scores_payload = {
                 DGameField.SCORE: sess.score,
                 DGameField.HIGHSCORE: sess.highscore,
+                DGameField.EPOCH: sess.epoch,
             }
             # Create a "final score" field for the TUI
             if done:

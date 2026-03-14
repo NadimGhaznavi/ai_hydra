@@ -97,12 +97,12 @@ TabbedScores {
     width: 125;
 }
 
-#loss_ep_plot {
+#game_scores {
     height: 18;
     width: 125;
 }
 
-#loss_step_plot {
+#cur_loss {
     height: 18;
     width: 125;
 }

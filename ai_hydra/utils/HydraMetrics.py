@@ -75,7 +75,7 @@ class HydraMetrics:
                 f"Simulation Run Time: {self.elapsed_time}\n"
                 f"Episode Number: {self.cur_epoch}\n"
                 f"AI Hydra Version: v{DHydra.VERSION}\n"
-                f"Random Seed: {DHydra.RANDOM_SEED}\n"
+                f"Random Seed: {DHydra.RANDOM_SEED}\n\n"
             )
 
             f.write(
