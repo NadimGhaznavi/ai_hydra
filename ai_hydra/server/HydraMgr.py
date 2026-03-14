@@ -272,9 +272,7 @@ class HydraMgr(HydraServer):
                     count += 1
 
                     if count % 50 == 0:
-                        self.log.info(
-                            f"Epoch: {count} - Highscore: {sess.highscore}"
-                        )
+                        self.log.info(f"Epoch: {count}")
 
                     # Epsilon
                     train_mgr.policy.played_game()

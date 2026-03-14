@@ -253,7 +253,7 @@ class SnakeMgr:
                     sess.highscore,
                     elapsed_str,
                 ]
-                self.log.debug(
+                self.log.info(
                     f"Epoch: {sess.epoch} - New High Score: {sess.highscore}"
                 )
 
