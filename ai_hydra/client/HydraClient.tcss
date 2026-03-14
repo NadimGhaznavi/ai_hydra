@@ -79,7 +79,7 @@ TabbedScores {
     border-title-color: #5fc442;
     width: 44;
     text-style: bold;
-    padding: 0 1;
+    padding: 0 0;
     color: #54ac59;
 
 }
@@ -129,7 +129,7 @@ TabbedScores {
     color: #28ac59;
     width: 44;
     text-style: bold;
-    padding: 0 1;
+    padding: 0 0;
 }
 
 
@@ -192,6 +192,9 @@ TabbedScores {
 .sim_stopped #epsilon_decay_label {
     display: none;
 }
+.sim_stopped #handshake {
+    display: none;
+}
 .sim_stopped #initial_epsilon_label {
     display: none;
 }
@@ -207,13 +210,10 @@ TabbedScores {
 .sim_stopped #model_type_label {
     display: none;
 }
+.sim_stopped #rnn_layers_label {
+    display: none;
+}
 .sim_stopped #update_runtime_config {
-    display: none;
-}
-.sim_stopped #initial_epsilon_label {
-    display: none;
-}
-.sim_stopped #handshake {
     display: none;
 }
 
@@ -238,6 +238,9 @@ TabbedScores {
     display: none;
 }
 .sim_running #model_type_select {
+    display: none;
+}
+.sim_running #rnn_layers_input {
     display: none;
 }
 .sim_running #start_run {
@@ -279,6 +282,12 @@ TabbedScores {
 .bad_handshake #learning_rate_label {
     display: none;
 }
+.bad_handshake #rnn_layers_input {
+    display: none;
+}
+.bad_handshake #rnn_layers_label {
+    display: none;
+}
 .bad_handshake #min_epsilon_label {
     display: none;
 }
@@ -304,5 +313,17 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #update_runtime_config {
+    display: none;
+}
+
+/* Linear Model is Selected */
+/* ------------------------ */
+.linear #rnn_layers_opt {
+    display: none;
+}
+.linear #rnn_layers_label {
+    display: none;
+}
+.linear #rnn_layers_input {
     display: none;
 }

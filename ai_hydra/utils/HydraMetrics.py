@@ -54,14 +54,16 @@ class HydraMetrics:
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
         model_type = cfg.get[DNetField.MODEL_TYPE]
-        model_hidden_size = cfg.get[DNetField.HIDDEN_SIZE]
+        model_hidden_size = cfg.get(DNetField.HIDDEN_SIZE)
         model_input_size = DNetDef.INPUT_SIZE
 
         initial_epsilon = cfg.get(DNetField.INITIAL_EPSILON)
         min_epsilon = cfg.get(DNetField.MIN_EPSILON)
         epsilon_delay = cfg.get(DNetField.EPSILON_DECAY)
+
         learning_rate = cfg.get(DNetField.LEARNING_RATE)
         dropout_p = cfg.get(DNetField.DROPOUT_P)
+        rnn_layers = cfg.get(DNetField.RNN_LAYERS)
 
         with open(snap_file, "w") as f:
             f.write(
@@ -96,8 +98,8 @@ class HydraMetrics:
                     "════════════\n"
                     f"Input Size: {model_input_size}\n"
                     f"Hidden Size: {model_hidden_size}\n"
-                    f"RNN Layers: {dropout_p}\n"
-                    f"Dropout Layer P-Value: {DRNN.DROPOUT_P_VALUE}\n"
+                    f"RNN Layers: {rnn_layers}\n"
+                    f"Dropout Layer P-Value: {dropout_p}\n"
                     f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
                     f"Batch Size: {DRNN.BATCH_SIZE}\n"
                     f"Learning Rate: {learning_rate}\n\n"

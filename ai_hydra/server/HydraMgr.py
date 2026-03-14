@@ -146,6 +146,7 @@ class HydraMgr(HydraServer):
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
+                rnn_layers=self.cfg.get(DNetField.RNN_LAYERS),
             )
             nnet_policy = RNNPolicy(model=model, device=device)
             trainer = RNNTrainer(

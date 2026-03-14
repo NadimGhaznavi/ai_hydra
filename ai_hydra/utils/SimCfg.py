@@ -15,6 +15,7 @@ from ai_hydra.constants.DNNet import (
     DNetField,
     DNetDef,
     DLinear,
+    DRNN,
 )
 from ai_hydra.constants.DHydraTui import DField
 
@@ -30,6 +31,7 @@ class SimCfg:
         DNetField.MODEL_TYPE: DField.LINEAR,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
         DNetField.PER_STEP: DNetDef.PER_STEP,
+        DNetField.RNN_LAYERS: DRNN.RNN_LAYERS,
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
@@ -42,6 +44,7 @@ class SimCfg:
         DNetField.MODEL_TYPE: str,
         DNetField.MOVE_DELAY: float,
         DNetField.PER_STEP: bool,
+        DNetField.RNN_LAYERS: int,
     }
 
     __slots__ = ("_values",)

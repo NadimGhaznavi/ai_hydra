@@ -21,11 +21,11 @@ class RNNModel(nn.Module):
 
         self._hidden_size = None
         self._rnn_dropout = None
+        self._rnn_layers = None
 
     def _init_model(self):
         input_size = DNetDef.INPUT_SIZE
         output_size = DRNN.OUTPUT_SIZE
-        rnn_layers = DRNN.RNN_LAYERS
 
         self.m_in = nn.Sequential(
             nn.Linear(input_size, self._hidden_size),
@@ -35,7 +35,7 @@ class RNNModel(nn.Module):
             input_size=self._hidden_size,
             hidden_size=self._hidden_size,
             nonlinearity="tanh",
-            num_layers=rnn_layers,
+            num_layers=self._rnn_layers,
             dropout=self._rnn_dropout,
             batch_first=True,
         )
@@ -71,7 +71,10 @@ class RNNModel(nn.Module):
 
         self.apply(_reset)
 
-    def set_params(self, hidden_size: int, dropout_p: float) -> None:
+    def set_params(
+        self, hidden_size: int, dropout_p: float, rnn_layers: int
+    ) -> None:
         self._hidden_size = hidden_size
         self._rnn_dropout = dropout_p
+        self._rnn_layers = rnn_layers
         self._init_model()

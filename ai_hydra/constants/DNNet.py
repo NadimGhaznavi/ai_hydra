@@ -100,6 +100,7 @@ class DNetField:
     NEXT_STATE: Final[str] = "next_state"
     PER_STEP: Final[str] = "per_step"
     REWARD: Final[str] = DGameField.REWARD
+    RNN_LAYERS: Final[str] = "rnn_layers"
     STATE: Final[str] = "state"
 
 

@@ -47,7 +47,6 @@ from ai_hydra.constants.DNNet import (
     MODEL_TYPE_TABLE,
     MODEL_TYPES,
 )
-from ai_hydra.constants.DSimCfg import Phase
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
@@ -269,7 +268,7 @@ class HydraClientTui(App):
         yield Vertical(
             # Model type
             Horizontal(
-                Label(f"{DLabel.NN_MODEL:>13s}: "),
+                Label(f"{DLabel.NN_MODEL:>15s}: "),
                 Label(DLabel.LINEAR, id=DField.MODEL_TYPE_LABEL),
                 Select(
                     MODEL_TYPES,
@@ -281,7 +280,7 @@ class HydraClientTui(App):
             ),
             # Hidden Size
             Horizontal(
-                Label(f"{DLabel.HIDDEN_SIZE:>13s}: "),
+                Label(f"{DLabel.HIDDEN_SIZE:>15s}: "),
                 Label(
                     f"{DLinear.HIDDEN_SIZE:.7f}",
                     id=DField.HIDDEN_SIZE_LABEL,
@@ -297,7 +296,7 @@ class HydraClientTui(App):
             ),
             # Learning rate
             Horizontal(
-                Label(f"{DLabel.LEARNING_RATE:>13s}: "),
+                Label(f"{DLabel.LEARNING_RATE:>15s}: "),
                 Label(
                     f"{DLinear.LEARNING_RATE:.7f}",
                     id=DField.LEARNING_RATE_LABEL,
@@ -313,7 +312,7 @@ class HydraClientTui(App):
             ),
             # Dropout p-value
             Horizontal(
-                Label(f"{DLabel.DROPOUT_P_VAL:>13s}: "),
+                Label(f"{DLabel.DROPOUT_P_VAL:>15s}: "),
                 Label(
                     f"{DLinear.DROPOUT_P:.2f}",
                     id=DField.DROPOUT_P_LABEL,
@@ -324,6 +323,22 @@ class HydraClientTui(App):
                     valid_empty=False,
                     value=f"{DLinear.DROPOUT_P:.2f}",
                     id=DField.DROPOUT_P_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # RNN Layers
+            Horizontal(
+                Label(f"{DLabel.RNN_LAYERS:>15s}: ", id=DField.RNN_LAYERS_OPT),
+                Label(
+                    f"{DRNN.RNN_LAYERS}",
+                    id=DField.RNN_LAYERS_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DRNN.RNN_LAYERS}",
+                    id=DField.RNN_LAYERS_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
             ),
@@ -381,6 +396,7 @@ class HydraClientTui(App):
 
     def on_mount(self) -> None:
         self.add_class(DField.BAD_HANDSHAKE)
+        self.add_class(DField.LINEAR)
 
         # Create references to TUI elements that are being updated
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
@@ -440,6 +456,12 @@ class HydraClientTui(App):
         )
         self._w_move_delay_input = self.query_one(
             f"#{DField.MOVE_DELAY_INPUT}", Input
+        )
+        self._w_rnn_layers_input = self.query_one(
+            f"#{DField.RNN_LAYERS_INPUT}", Input
+        )
+        self._w_rnn_layers_label = self.query_one(
+            f"#{DField.RNN_LAYERS_LABEL}", Label
         )
         self._w_tabbed_plots = self.query_one(
             f"#{DField.TABBED_PLOTS}", TabbedPlots
@@ -621,6 +643,8 @@ class HydraClientTui(App):
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
             hidden_size = DLinear.HIDDEN_SIZE
             dropout_p = DLinear.DROPOUT_P
+            self.remove_class(DField.RNN)
+            self.add_class(DField.LINEAR)
 
         # RNN model defaults
         elif model_type == DField.RNN:
@@ -630,6 +654,8 @@ class HydraClientTui(App):
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
             hidden_size = DRNN.HIDDEN_SIZE
             dropout_p = DRNN.DROPOUT_P_VALUE
+            self.remove_class(DField.LINEAR)
+            self.add_class(DField.RNN)
 
         else:
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
@@ -798,6 +824,9 @@ class HydraClientTui(App):
         # Dropout p-value
         dropout_p = self._w_dropout_p_input.value
         self._w_dropout_p_label.update(dropout_p)
+        # RNN layers
+        rnn_layers = self._w_rnn_layers_input.value
+        self._w_rnn_layers_label.update(rnn_layers)
 
         self.cfg.apply(
             {
@@ -810,6 +839,7 @@ class HydraClientTui(App):
                 DNetField.MODEL_TYPE: model_type,
                 DNetField.MOVE_DELAY: move_delay,
                 DNetField.DROPOUT_P: dropout_p,
+                DNetField.RNN_LAYERS: int(rnn_layers),
             }
         )
 
