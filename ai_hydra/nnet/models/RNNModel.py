@@ -19,25 +19,27 @@ class RNNModel(nn.Module):
         super().__init__()
         torch.manual_seed(DHydra.RANDOM_SEED)
 
+        self._hidden_size = None
+
+    def _init_model(self):
         input_size = DNetDef.INPUT_SIZE
-        hidden_size = DRNN.HIDDEN_SIZE
         output_size = DRNN.OUTPUT_SIZE
         rnn_layers = DRNN.RNN_LAYERS
         rnn_dropout = DRNN.DROPOUT_P_VALUE
 
         self.m_in = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
+            nn.Linear(input_size, self._hidden_size),
             nn.ReLU(),
         )
         self.m_rnn = nn.RNN(
-            input_size=hidden_size,
-            hidden_size=hidden_size,
+            input_size=self._hidden_size,
+            hidden_size=self._hidden_size,
             nonlinearity="tanh",
             num_layers=rnn_layers,
             dropout=rnn_dropout,
             batch_first=True,
         )
-        self.m_out = nn.Linear(hidden_size, output_size)
+        self.m_out = nn.Linear(self._hidden_size, output_size)
 
     def forward(self, x):
         if x.dim() == 1:
@@ -68,3 +70,7 @@ class RNNModel(nn.Module):
                 m.reset_parameters()
 
         self.apply(_reset)
+
+    def set_params(self, hidden_size: int) -> None:
+        self._hidden_size = hidden_size
+        self._init_model()

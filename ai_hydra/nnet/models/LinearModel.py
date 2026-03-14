@@ -19,14 +19,21 @@ class LinearModel(nn.Module):
         super().__init__()
         torch.manual_seed(DHydra.RANDOM_SEED)
 
-        self.net = nn.Sequential(
-            nn.Linear(DNetDef.INPUT_SIZE, DLinear.HIDDEN_SIZE),
-            nn.ReLU(),
-            nn.Linear(DLinear.HIDDEN_SIZE, DLinear.HIDDEN_SIZE),
-            nn.ReLU(),
-            nn.Dropout(p=DLinear.DROPOUT_P),
-            nn.Linear(DLinear.HIDDEN_SIZE, DLinear.OUTPUT_SIZE),
-        )
+        self._hidden_size = None
 
     def forward(self, x):
         return self.net(x)
+
+    def _init_model(self):
+        self.net = nn.Sequential(
+            nn.Linear(DNetDef.INPUT_SIZE, self._hidden_size),
+            nn.ReLU(),
+            nn.Linear(self._hidden_size, self._hidden_size),
+            nn.ReLU(),
+            nn.Dropout(p=DLinear.DROPOUT_P),
+            nn.Linear(self._hidden_size, DLinear.OUTPUT_SIZE),
+        )
+
+    def set_params(self, hidden_size: int) -> None:
+        self._hidden_size = hidden_size
+        self._init_model()
