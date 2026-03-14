@@ -20,15 +20,15 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 48
+    BATCH_SIZE: Final[int] = 56
     SEQ_LENGTH: Final[int] = 20
     HIDDEN_SIZE: Final[int] = 384
-    RNN_LAYERS: Final[int] = 3
+    RNN_LAYERS: Final[int] = 4
     OUTPUT_SIZE: Final[int] = 3
     DROPOUT_P_VALUE: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.0002
     INITIAL_EPSILON: Final[float] = 0.999
-    MINIMUM_EPSILON: Final[float] = 0.002
+    MINIMUM_EPSILON: Final[float] = 0.004
     EPSILON_DECAY_RATE: Final[float] = 0.995  # 0.98
 
 
