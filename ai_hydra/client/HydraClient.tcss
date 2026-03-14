@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 4 5;
-    grid-rows: 3 5 17 22 3;
+    grid-size: 4 7;
+    grid-rows: 3 5 5 6 6 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -23,7 +23,7 @@ TabbedPlots {
 }
 
 TabbedScores {
-    row-span: 2;
+    row-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -34,7 +34,7 @@ TabbedScores {
 }
 
 #board_box {
-    row-span: 2;
+    row-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -46,7 +46,7 @@ TabbedScores {
 }
 
 #buttons {
-    row-span: 2;
+    row-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -70,6 +70,19 @@ TabbedScores {
     padding: 0 1;
 
 }
+
+#epsilon {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    width: 44;
+    text-style: bold;
+    padding: 0 1;
+    color: #54ac59;
+
+}
+
 
 #highscores {
     background: black;
@@ -107,11 +120,24 @@ TabbedScores {
     width: 125;
 }
 
+#model {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #28ac59;
+    border-title-color: #28ac59;
+    color: #28ac59;
+    width: 44;
+    text-style: bold;
+    padding: 0 1;
+}
+
+
+
 #network {
     background: black;
     border: round #0c323e;
-    border-subtitle-color: #acac59ff;
-    color: #acac59ff;
+    border-subtitle-color: #acac59;
+    color: #acac59;
     text-style: bold;
     width: 100%;
     padding: 0 1;
@@ -120,8 +146,8 @@ TabbedScores {
 #settings {
     background: black;
     border: round #0c323e;
-    border-subtitle-color: #5fc442;
-    color: #8dc97dff;
+    border-subtitle-color: #80ac59;
+    color: #80ac59;
     text-style: bold;
     height: 18;
 }
@@ -165,6 +191,9 @@ TabbedScores {
 .sim_stopped #initial_epsilon_label {
     display: none;
 }
+.sim_stopped #hidden_size_label {
+    display: none;
+}
 .sim_stopped #learning_rate_label {
     display: none;
 }
@@ -187,6 +216,9 @@ TabbedScores {
 /* Simulation IS running */
 /* --------------------- */
 .sim_running #epsilon_decay_input {
+    display: none;
+}
+.sim_running #hidden_size_input {
     display: none;
 }
 .sim_running #initial_epsilon_input {
@@ -214,6 +246,12 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #epsilon_decay_label {
+    display: none;
+}
+.bad_handshake #hidden_size_input {
+    display: none;
+}
+.bad_handshake #hidden_size_label {
     display: none;
 }
 .bad_handshake #initial_epsilon_label {

@@ -166,7 +166,7 @@ class HydraClientTui(App):
         # ------ The Snake Game --- 2x1
         yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
-        # ------ Network --- 1x1
+        # ------ Network ---
         yield Vertical(
             Label(f"{DLabel.TARGET_HOST:>11s}: {self._address}"),
             Label(f"{DLabel.TARGET_PORT:>11s}: {self._port}"),
@@ -174,10 +174,10 @@ class HydraClientTui(App):
             id=DField.NETWORK,
         )
 
-        # ----- Highscores widget --- 2x1
+        # ----- Highscores widget ---
         yield TabbedScores(id=DField.TABBED_SCORES)
 
-        # ----- Runtime Settings ---1x1
+        # ----- Settings ---
         yield Vertical(
             # Random seed
             Horizontal(
@@ -203,35 +203,11 @@ class HydraClientTui(App):
                 Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
                 classes=DField.INPUT_FIELD,
             ),
-            # Model type
-            Horizontal(
-                Label(f"{DLabel.NN_MODEL}: "),
-                Label(DLabel.LINEAR, id=DField.MODEL_TYPE_LABEL),
-                Select(
-                    MODEL_TYPES,
-                    compact=True,
-                    id=DField.MODEL_TYPE_SELECT,
-                    allow_blank=False,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            Label(),
-            # Learning rate
-            Horizontal(
-                Label(f"{DLabel.LEARNING_RATE:>15s}: "),
-                Label(
-                    f"{DLinear.LEARNING_RATE:.7f}",
-                    id=DField.LEARNING_RATE_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.LEARNING_RATE:.7f}",
-                    id=DField.LEARNING_RATE_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
+            id=DField.SETTINGS,
+        )
+
+        # ----- Epsilon ---
+        yield Vertical(
             # Initial epsilon
             Horizontal(
                 Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
@@ -286,7 +262,56 @@ class HydraClientTui(App):
                 Label(id=DField.CUR_EPSILON),
                 classes=DField.INPUT_FIELD,
             ),
-            id=DField.SETTINGS,
+            id=DField.EPSILON,
+        )
+
+        # ----- Model ---
+        yield Vertical(
+            # Model type
+            Horizontal(
+                Label(f"{DLabel.NN_MODEL:>13s}: "),
+                Label(DLabel.LINEAR, id=DField.MODEL_TYPE_LABEL),
+                Select(
+                    MODEL_TYPES,
+                    compact=True,
+                    id=DField.MODEL_TYPE_SELECT,
+                    allow_blank=False,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Hidden Size
+            Horizontal(
+                Label(f"{DLabel.HIDDEN_SIZE:>13s}: "),
+                Label(
+                    f"{DLinear.HIDDEN_SIZE:.7f}",
+                    id=DField.HIDDEN_SIZE_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.HIDDEN_SIZE:.7f}",
+                    id=DField.HIDDEN_SIZE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Learning rate
+            Horizontal(
+                Label(f"{DLabel.LEARNING_RATE:>13s}: "),
+                Label(
+                    f"{DLinear.LEARNING_RATE:.7f}",
+                    id=DField.LEARNING_RATE_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.LEARNING_RATE:.7f}",
+                    id=DField.LEARNING_RATE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            id=DField.MODEL,
         )
 
         # Plots
@@ -358,6 +383,12 @@ class HydraClientTui(App):
         self._w_epsilon_decay_label = self.query_one(
             f"#{DField.EPSILON_DECAY_LABEL}", Label
         )
+        self._w_hidden_size_input = self.query_one(
+            f"#{DField.HIDDEN_SIZE_INPUT}", Input
+        )
+        self._w_hidden_size_label = self.query_one(
+            f"#{DField.HIDDEN_SIZE_LABEL}", Label
+        )
         self._w_hidden_widget = self.query_one(
             f"#{DField.HIDDEN_WIDGET}", Checkbox
         )
@@ -416,6 +447,8 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
         self._w_console_box.border_subtitle = DLabel.CONSOLE
         self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
+        self.query_one(f"#{DField.MODEL}").border_subtitle = DLabel.MODEL
+        self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
 
         # Switch focus to a hidden widget
         self._w_hidden_widget.focus()
@@ -564,13 +597,15 @@ class HydraClientTui(App):
             initial_epsilon = DLinear.INITIAL_EPSILON
             min_epsilon = DLinear.MINIMUM_EPSILON
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
+            hidden_size = DLinear.HIDDEN_SIZE
 
         # RNN model defaults
         elif model_type == DField.RNN:
-            lr = f"{DRNN.LEARNING_RATE:.5f}"
+            lr = f"{DRNN.LEARNING_RATE:.4f}"
             initial_epsilon = DRNN.INITIAL_EPSILON
             min_epsilon = DRNN.MINIMUM_EPSILON
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
+            hidden_size = DRNN.HIDDEN_SIZE
 
         else:
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
@@ -580,6 +615,7 @@ class HydraClientTui(App):
         self._w_initial_epsilon_input.value = str(initial_epsilon)
         self._w_min_epsilon_input.value = str(min_epsilon)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
+        self._w_hidden_size_input.value = str(hidden_size)
 
         if self._not_first_time_kludge:
             self.console_msg("Updated defaults setting...")
@@ -616,6 +652,12 @@ class HydraClientTui(App):
                 )
                 self._w_move_delay_input.value = str(
                     self.cfg.get(DNetField.MOVE_DELAY)
+                )
+                self._w_model_type_select.value = self.cfg.get(
+                    DNetField.MODEL_TYPE
+                )
+                self._w_hidden_size_input.value = str(
+                    self.cfg.get(DNetField.HIDDEN_SIZE)
                 )
                 self._update_tui_labels()
                 self.console_msg("Connecting to running simulation...")
@@ -707,8 +749,11 @@ class HydraClientTui(App):
         )
         # Model
         model_type = self._w_model_type_select.value
+        hidden_size = self._w_hidden_size_input.value
         self.metrics.create_snapshot(
-            snap_file=fq_snapshot, model_type=model_type
+            snap_file=fq_snapshot,
+            model_type=model_type,
+            model_hidden_size=hidden_size,
         )
 
         self.console_msg(f"📸 Created snapshot file: {fq_snapshot}")
@@ -732,6 +777,9 @@ class HydraClientTui(App):
         model_type = self._w_model_type_select.value
         model_type_label = MODEL_TYPE_TABLE[model_type]
         self._w_model_type_label.update(model_type_label)
+        # Hidden size
+        hidden_size = self._w_hidden_size_input.value
+        self._w_hidden_size_label.update(str(hidden_size))
         # Learning rate
         learning_rate = self._w_learning_rate_input.value
         self._w_learning_rate_label.update(learning_rate)
@@ -739,6 +787,7 @@ class HydraClientTui(App):
         self.cfg.apply(
             {
                 DNetField.EPSILON_DECAY: epsilon_decay,
+                DNetField.HIDDEN_SIZE: hidden_size,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
                 DNetField.LEARNING_RATE: float(learning_rate),
                 DNetField.MIN_EPSILON: min_epsilon,

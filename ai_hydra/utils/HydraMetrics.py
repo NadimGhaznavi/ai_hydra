@@ -12,7 +12,13 @@ from datetime import datetime
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DLabel, DField
-from ai_hydra.constants.DNNet import DNetDef, DLinear, DRNN, MODEL_TYPE_TABLE
+from ai_hydra.constants.DNNet import (
+    DNetDef,
+    DLinear,
+    DRNN,
+    DNetField,
+    MODEL_TYPE_TABLE,
+)
 
 
 class HydraMetrics:
@@ -47,19 +53,23 @@ class HydraMetrics:
 
     def add_linear_model(self):
         self.linear_model[DField.INPUT_SIZE] = DNetDef.INPUT_SIZE
-        self.linear_model[DField.HIDDEN_SIZE] = DLinear.HIDDEN_SIZE
         self.linear_model[DField.DROPOUT_P] = DLinear.DROPOUT_P
 
     def add_rnn_model(self):
         self.rnn_model[DField.INPUT_SIZE] = DNetDef.INPUT_SIZE
-        self.rnn_model[DField.HIDDEN_SIZE] = DRNN.HIDDEN_SIZE
         self.rnn_model[DField.RNN_LAYERS] = DRNN.RNN_LAYERS
         self.rnn_model[DField.RNN_DROPOUT] = DRNN.DROPOUT_P_VALUE
 
     def add_trainer(self):
         pass
 
-    def create_snapshot(self, snap_file, model_type):
+    def create_snapshot(self, snap_file, model_type, model_hidden_size):
+
+        if model_type == DField.RNN:
+            self.rnn_model[DNetField.HIDDEN_SIZE] = model_hidden_size
+        elif model_type == DField.LINEAR:
+            self.linear_model[DNetField.HIDDEN_SIZE] = model_hidden_size
+
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
         if model_type == DField.LINEAR:
@@ -90,7 +100,7 @@ class HydraMetrics:
                     "🧠 Linear Model\n"
                     "═══════════════\n"
                     f"Input Size: {self.linear_model[DField.INPUT_SIZE]}\n"
-                    f"Hidden Size: {self.linear_model[DField.HIDDEN_SIZE]}\n"
+                    f"Hidden Size: {self.linear_model[DNetField.HIDDEN_SIZE]}\n"
                     f"Dropout Layer P-Value: {self.linear_model[DField.DROPOUT_P]}\n\n"
                 )
             elif model_type == DField.RNN:
@@ -98,7 +108,7 @@ class HydraMetrics:
                     "🧠 RNN Model\n"
                     "════════════\n"
                     f"Input Size: {self.rnn_model[DField.INPUT_SIZE]}\n"
-                    f"Hidden Size: {self.rnn_model[DField.HIDDEN_SIZE]}\n"
+                    f"Hidden Size: {self.rnn_model[DNetField.HIDDEN_SIZE]}\n"
                     f"RNN Layers: {self.rnn_model[DField.RNN_LAYERS]}\n"
                     f"Dropout Layer P-Value: {self.rnn_model[DField.RNN_DROPOUT]}\n"
                     f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
