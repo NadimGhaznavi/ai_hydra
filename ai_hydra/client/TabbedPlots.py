@@ -124,9 +124,10 @@ class TabbedPlots(Widget):
 
         self.game_scores: deque[int] = deque(maxlen=max_points)
         self.game_epochs: deque[int] = deque(maxlen=max_points)
+        self.avg_game_score: list[float] = []
 
-        self._cur_losses_batch = []
-        self._cur_epochs_batch = []
+        self._cur_losses_batch: list[float] = []
+        self._cur_epochs_batch: list[float] = []
         self.cur_losses: deque[float] = deque(maxlen=max_loss_points)
         self.cur_epochs: deque[int] = deque(maxlen=max_loss_points)
 
