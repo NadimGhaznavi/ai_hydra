@@ -211,7 +211,7 @@ class DPlotDef:
     AVG_DIVISOR: int = 50
     MAX_LOSS_DATA_POINTS: Final[int] = 150
     MAX_CUR_DATA_POINTS: Final[int] = 200
-    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 300
+    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 100
 
 
 class DStatus:

@@ -54,8 +54,20 @@ class TabbedPlots(Widget):
         self.loss_epochs.append(epoch)
         self.losses.append(loss)
 
-        self.cur_epochs.append(epoch)
-        self.cur_losses.append(loss)
+        self._cur_losses_batch.append(loss)
+        self._cur_epochs_batch.append(epoch)
+
+        if len(self._cur_losses_batch) == 4:
+            avg_loss = sum(self._cur_losses_batch) / len(
+                self._cur_losses_batch
+            )
+            avg_epoch = self._cur_epochs_batch[-1]
+
+            self.cur_losses.append(avg_loss)
+            self.cur_epochs.append(avg_epoch)
+
+            self._cur_losses_batch.clear()
+            self._cur_epochs_batch.clear()
 
         if plot:
             self._plot_loss()
@@ -113,6 +125,8 @@ class TabbedPlots(Widget):
         self.game_scores: deque[int] = deque(maxlen=max_points)
         self.game_epochs: deque[int] = deque(maxlen=max_points)
 
+        self._cur_losses_batch = []
+        self._cur_epochs_batch = []
         self.cur_losses: deque[float] = deque(maxlen=max_loss_points)
         self.cur_epochs: deque[int] = deque(maxlen=max_loss_points)
 
@@ -247,9 +261,12 @@ class TabbedPlots(Widget):
         if not self.cur_epochs or not self.cur_losses:
             return
 
+        epochs = list(self.cur_epochs)
+        losses = list(self.cur_losses)
+
         plot.plot(
-            x=list(self.cur_epochs),
-            y=list(self.cur_losses),
+            x=epochs,
+            y=losses,
             hires_mode=HiResMode.BRAILLE,
             line_style=DColor.GREEN,
             label=DLabel.LOSS,
