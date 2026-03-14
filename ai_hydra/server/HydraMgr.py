@@ -225,7 +225,9 @@ class HydraMgr(HydraServer):
         try:
             model_type = self.cfg.get(DNetField.MODEL_TYPE)
 
-            snake = self.snake = SnakeMgr(cfg=self.cfg)
+            snake = self.snake = SnakeMgr(
+                cfg=self.cfg, log_level=self.log_level
+            )
             mq = self.mq
             train_mgr = self._ensure_train_mgr()
             train_mgr.policy.reset_episode()

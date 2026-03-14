@@ -22,6 +22,7 @@ from ai_hydra.constants.DNNet import DNetField
 from ai_hydra.game.GameLogic import GameLogic
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.utils.SimCfg import SimCfg
+from ai_hydra.utils.HydraLog import HydraLog
 
 
 @dataclass
@@ -60,11 +61,18 @@ class SnakeMgr:
     def __init__(
         self,
         cfg: SimCfg,
+        log_level: HydraLog,
         master_seed: int = DHydra.RANDOM_SEED,
     ) -> None:
         if cfg is None:
             raise TypeError("SnakeMgr requires cfg (SimCfg)")
         self.cfg = cfg
+        self.log = HydraLog(
+            client_id="SnakeMgr",
+            log_level=log_level,
+            to_console=True,
+        )
+
         self.master_seed = int(master_seed)
 
         self.seed_rng = random.Random(self.master_seed)
@@ -245,6 +253,9 @@ class SnakeMgr:
                     sess.highscore,
                     elapsed_str,
                 ]
+                self.log.debug(
+                    f"Epoch: {sess.epoch} - New High Score: {sess.highscore}"
+                )
 
             # ----- The payload for the ZeroMQ "per step" topic ---
             step_payload = None
