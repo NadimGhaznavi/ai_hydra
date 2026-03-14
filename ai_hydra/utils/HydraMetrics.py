@@ -101,8 +101,8 @@ class HydraMetrics:
                     f"Hidden Size: {self.rnn_model[DField.HIDDEN_SIZE]}\n"
                     f"RNN Layers: {self.rnn_model[DField.RNN_LAYERS]}\n"
                     f"Dropout Layer P-Value: {self.rnn_model[DField.RNN_DROPOUT]}\n"
-                    f"Batch Size: {DRNN.BATCH_SIZE}\n"
-                    f"Sequence Length: {DRNN.SEQ_LENGTH}\n\n"
+                    f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
+                    f"Batch Size: {DRNN.BATCH_SIZE}\n\n"
                 )
             f.write(
                 "🏆 Highscore Events\n"
