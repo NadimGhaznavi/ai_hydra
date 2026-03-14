@@ -170,6 +170,13 @@ class HydraClientTui(App):
             # Random seed
             Horizontal(
                 Label(f"{DLabel.RANDOM_SEED:>11s}: "),
+                Input(
+                    type=DField.INTEGER,
+                    compact=True,
+                    valid_empty=False,
+                    value=str(DHydra.RANDOM_SEED),
+                    id=DField.RANDOM_SEED_INPUT,
+                ),
                 Label(str(DHydra.RANDOM_SEED), id=DField.RANDOM_SEED_LABEL),
                 classes=DField.INPUT_FIELD,
             ),
@@ -286,7 +293,7 @@ class HydraClientTui(App):
                     id=DField.HIDDEN_SIZE_LABEL,
                 ),
                 Input(
-                    type=DField.NUMBER,
+                    type=DField.INTEGER,
                     compact=True,
                     valid_empty=False,
                     value=f"{DLinear.HIDDEN_SIZE:.7f}",
@@ -334,7 +341,7 @@ class HydraClientTui(App):
                     id=DField.RNN_LAYERS_LABEL,
                 ),
                 Input(
-                    type=DField.NUMBER,
+                    type=DField.INTEGER,
                     compact=True,
                     valid_empty=False,
                     value=f"{DRNN.RNN_LAYERS}",
@@ -456,6 +463,12 @@ class HydraClientTui(App):
         )
         self._w_move_delay_input = self.query_one(
             f"#{DField.MOVE_DELAY_INPUT}", Input
+        )
+        self._w_random_seed_input = self.query_one(
+            f"#{DField.RANDOM_SEED_INPUT}", Input
+        )
+        self._w_random_seed_label = self.query_one(
+            f"#{DField.RANDOM_SEED_LABEL}", Label
         )
         self._w_rnn_layers_input = self.query_one(
             f"#{DField.RNN_LAYERS_INPUT}", Input
@@ -800,6 +813,9 @@ class HydraClientTui(App):
         """
         Update the SimCfg settings and the TUI labels
         """
+        # Random Seed
+        random_seed = self._w_random_seed_input.value
+        self._w_random_seed_label.update(random_seed)
         # Epsilon values
         epsilon_decay = self._w_epsilon_decay_input.value
         initial_epsilon = self._w_initial_epsilon_input.value
@@ -830,6 +846,7 @@ class HydraClientTui(App):
 
         self.cfg.apply(
             {
+                DNetField.DROPOUT_P: dropout_p,
                 DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.HIDDEN_SIZE: hidden_size,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
@@ -838,7 +855,7 @@ class HydraClientTui(App):
                 DNetField.PER_STEP: per_step,
                 DNetField.MODEL_TYPE: model_type,
                 DNetField.MOVE_DELAY: move_delay,
-                DNetField.DROPOUT_P: dropout_p,
+                DNetField.RANDOM_SEED: int(random_seed),
                 DNetField.RNN_LAYERS: int(rnn_layers),
             }
         )

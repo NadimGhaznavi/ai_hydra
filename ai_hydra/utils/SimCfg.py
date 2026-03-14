@@ -18,6 +18,7 @@ from ai_hydra.constants.DNNet import (
     DRNN,
 )
 from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.constants.DHydra import DHydra
 
 
 class SimCfg:
@@ -31,6 +32,7 @@ class SimCfg:
         DNetField.MODEL_TYPE: DField.LINEAR,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
         DNetField.PER_STEP: DNetDef.PER_STEP,
+        DNetField.RANDOM_SEED: DHydra.RANDOM_SEED,
         DNetField.RNN_LAYERS: DRNN.RNN_LAYERS,
     }
 
@@ -44,6 +46,7 @@ class SimCfg:
         DNetField.MODEL_TYPE: str,
         DNetField.MOVE_DELAY: float,
         DNetField.PER_STEP: bool,
+        DNetField.RANDOM_SEED: int,
         DNetField.RNN_LAYERS: int,
     }
 

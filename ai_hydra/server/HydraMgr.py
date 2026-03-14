@@ -8,7 +8,6 @@
 #    License: GPL 3.0
 
 from __future__ import annotations
-from typing import Any
 import asyncio
 import argparse
 import traceback
@@ -23,7 +22,7 @@ from ai_hydra.constants.DHydra import (
     DHydraServerDef,
     DHydra,
 )
-from ai_hydra.constants.DNNet import DNetField, DRNN, DLinear
+from ai_hydra.constants.DNNet import DNetField
 from ai_hydra.constants.DHydra import DMethod
 from ai_hydra.constants.DHydraTui import DField
 

@@ -210,6 +210,9 @@ TabbedScores {
 .sim_stopped #model_type_label {
     display: none;
 }
+.sim_stopped #random_seed_label {
+    display: none;
+}
 .sim_stopped #rnn_layers_label {
     display: none;
 }
@@ -238,6 +241,9 @@ TabbedScores {
     display: none;
 }
 .sim_running #model_type_select {
+    display: none;
+}
+.sim_running #random_seed_input {
     display: none;
 }
 .sim_running #rnn_layers_input {
@@ -280,6 +286,12 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #learning_rate_label {
+    display: none;
+}
+.bad_handshake #random_seed_input {
+    display: none;
+}
+.bad_handshake #random_seed_label {
     display: none;
 }
 .bad_handshake #rnn_layers_input {
