@@ -86,7 +86,6 @@ class HydraServer:
             return
 
         def _request_stop() -> None:
-            self.mq.quit()
             if not stop_event.is_set():
                 self.log.info("Shutdown requested (signal)")
                 stop_event.set()
@@ -105,6 +104,9 @@ class HydraServer:
         self.log = HydraLog(
             client_id=self.identity, log_level=log_level, to_console=True
         )
+
+    async def quit(self):
+        await self.mq.quit()
 
     async def _main_loop(self, stop_event: asyncio.Event) -> None:
         self.mq = HydraServerMQ(
