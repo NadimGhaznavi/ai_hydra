@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 from datetime import datetime
 
-from textual import work
+from textual import work, on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
@@ -183,6 +183,7 @@ class HydraClientTui(App):
             # Move delay
             Horizontal(
                 Label(f"{DLabel.MOVE_DELAY:>11s}: "),
+                Label(f"0.0", id=DField.MOVE_DELAY_LABEL),
                 Input(
                     type=DField.NUMBER,
                     compact=True,
@@ -438,9 +439,24 @@ class HydraClientTui(App):
             await self._send_update_config()
         self._w_hidden_widget.focus()
 
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+        if event.control.id != DField.TURBO_MODE:
+            return
+
+        # Turbo enabled, replaces the Input with a Label showing "0.0"
+        if event.value:
+            self.remove_class(DField.TURBO_OFF)
+            self.add_class(DField.TURBO_ON)
+
+        # Turbo disabled
+        else:
+            self.remove_class(DField.TURBO_ON)
+            self.add_class(DField.TURBO_OFF)
+
     def on_mount(self) -> None:
         self.add_class(DField.BAD_HANDSHAKE)
         self.add_class(DField.LINEAR)
+        self.add_class(DField.TURBO_OFF)
 
         # Create references to TUI elements that are being updated
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)

@@ -356,6 +356,9 @@ TabbedScores {
 .bad_handshake #move_delay_input {
     display: none;
 }
+.bad_handshake #move_delay_label {
+    display: none;
+}
 .bad_handshake #random_seed_label {
     display: none;
 }
@@ -387,5 +390,13 @@ TabbedScores {
     display: none;
 }
 .linear #rnn_tau_input {
+    display: none;
+}
+
+/* Turbo mode is on/off */
+.turbo_on #move_delay_input {
+    display: none;
+}
+.turbo_off #move_delay_label {
     display: none;
 }
