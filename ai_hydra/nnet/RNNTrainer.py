@@ -21,6 +21,9 @@ from ai_hydra.constants.DNNet import DRNNTrainer
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.utils.HydraLog import HydraLog
 
+GRAD_CLIPPING = True
+DQN_WITH_TARGET = True
+
 
 class RNNTrainer:
     def __init__(
@@ -33,11 +36,12 @@ class RNNTrainer:
     ):
         self.device = device or torch.device("cpu")
         self.model = model.to(self.device)
-        self.target_model = deepcopy(model).to(self.device)
-        self.target_model.eval()
+
+        if DQN_WITH_TARGET:
+            self.target_model = deepcopy(model).to(self.device)
+            self.target_model.eval()
 
         self.replay = replay
-        self._update_counter = 0
         self._tau = None
         self._gamma = None
 
@@ -61,10 +65,12 @@ class RNNTrainer:
         self._losses = []
         return avg_loss
 
-    def train_long_memory(self, batch_size=DRNN.BATCH_SIZE) -> None:
+    def train_long_memory(
+        self, batch_size: int = DRNN.BATCH_SIZE
+    ) -> float | None:
+
         chunks = self.replay.sample_chunks(batch_size=batch_size)
         if chunks is None:
-            self._per_ep_loss = None
             return
 
         if self._cold_memory:
@@ -120,30 +126,39 @@ class RNNTrainer:
 
         self.model.train()
 
-        # Online network Q(s_t, ·)
         q_pred_all = self.model.forward_sequence(states)  # [B, T, A]
         q_pred = q_pred_all.gather(2, actions.unsqueeze(-1)).squeeze(
             -1
         )  # [B, T]
 
         with torch.no_grad():
-            # Target network max_a Q_target(s_{t+1}, a)
-            q_next_all = self.target_model.forward_sequence(
-                next_states
-            )  # [B, T, A]
-            q_next_max = q_next_all.max(dim=2).values  # [B, T]
+            if DQN_WITH_TARGET:
+                next_q = self.target_model.forward_sequence(
+                    next_states
+                )  # [B, T, A]
+            else:
+                # Don't include dropout noise (eval()/train() toggle)
+                self.model.eval()
+                next_q = self.model.forward_sequence(next_states)
+                self.model.train()
 
-            q_target = rewards + self._gamma * q_next_max * (1.0 - dones)
+            max_next_q = next_q.max(dim=2).values  # [B, T]
+            q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
 
         loss = self.criterion(q_pred, q_target)
 
         self.optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
+        if GRAD_CLIPPING:
+            torch.nn.utils.clip_grad_norm_(
+                self.model.parameters(), max_norm=1.0
+            )
+
         self.optimizer.step()
 
-        self.model.eval()
-        self._soft_update_target()
+        if DQN_WITH_TARGET:
+            self._soft_update_target()
         self._losses.append(loss.item())
         return float(loss.item())
 
