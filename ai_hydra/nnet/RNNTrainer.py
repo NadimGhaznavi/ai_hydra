@@ -23,6 +23,7 @@ from ai_hydra.utils.HydraLog import HydraLog
 
 GRAD_CLIPPING = True
 DQN_WITH_TARGET = True
+DOUBLE_DQN = False
 
 
 class RNNTrainer:
@@ -37,7 +38,7 @@ class RNNTrainer:
         self.device = device or torch.device("cpu")
         self.model = model.to(self.device)
 
-        if DQN_WITH_TARGET:
+        if DQN_WITH_TARGET or DOUBLE_DQN:
             self.target_model = deepcopy(model).to(self.device)
             self.target_model.eval()
 
@@ -57,6 +58,10 @@ class RNNTrainer:
 
         self._losses: list[float] = []
         self._cold_memory = True
+        if DQN_WITH_TARGET and DOUBLE_DQN:
+            raise ValueError(
+                "You cannot enable both DQN_WITH_TARGET and DOUBLE_DQN"
+            )
         self.log.debug("Initialized")
 
     def get_avg_loss(self) -> float | None:
@@ -131,17 +136,35 @@ class RNNTrainer:
         )  # [B, T]
 
         with torch.no_grad():
-            if DQN_WITH_TARGET:
-                next_q = self.target_model.forward_sequence(
+            if DOUBLE_DQN:
+                self.model.eval()  # Don't include dropout noise
+                # [B, T, A]
+                online_next_q = self.model.forward_sequence(next_states)
+                self.model.train()
+                next_actions = online_next_q.argmax(
+                    dim=2, keepdim=True
+                )  # [B, T, 1]
+
+                # target net evaluates those actions
+                target_next_q = self.target_model.forward_sequence(
                     next_states
                 )  # [B, T, A]
+                max_next_q = target_next_q.gather(2, next_actions).squeeze(
+                    -1
+                )  # [B, T]
+
+            elif DQN_WITH_TARGET:
+                # [B, T, A]
+                next_q = self.target_model.forward_sequence(next_states)
+                max_next_q = next_q.max(dim=2).values  # [B, T]
+
             else:
                 # Don't include dropout noise (eval()/train() toggle)
                 self.model.eval()
                 next_q = self.model.forward_sequence(next_states)
                 self.model.train()
+                max_next_q = next_q.max(dim=2).values  # [B, T]
 
-            max_next_q = next_q.max(dim=2).values  # [B, T]
             q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
 
         loss = self.criterion(q_pred, q_target)
@@ -156,8 +179,9 @@ class RNNTrainer:
 
         self.optimizer.step()
 
-        if DQN_WITH_TARGET:
+        if DQN_WITH_TARGET or DOUBLE_DQN:
             self._soft_update_target()
+
         self._losses.append(loss.item())
         return float(loss.item())
 
