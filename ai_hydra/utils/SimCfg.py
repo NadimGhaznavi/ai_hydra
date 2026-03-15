@@ -25,6 +25,7 @@ class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
         DNetField.DROPOUT_P: DLinear.DROPOUT_P,
         DNetField.EPSILON_DECAY: DLinear.EPSILON_DECAY_RATE,
+        DNetField.GAMMA: DLinear.GAMMA,
         DNetField.HIDDEN_SIZE: DLinear.HIDDEN_SIZE,
         DNetField.INITIAL_EPSILON: DLinear.INITIAL_EPSILON,
         DNetField.LEARNING_RATE: DLinear.LEARNING_RATE,
@@ -40,6 +41,7 @@ class SimCfg:
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
         DNetField.DROPOUT_P: float,
         DNetField.EPSILON_DECAY: float,
+        DNetField.GAMMA: float,
         DNetField.HIDDEN_SIZE: int,
         DNetField.INITIAL_EPSILON: float,
         DNetField.LEARNING_RATE: float,

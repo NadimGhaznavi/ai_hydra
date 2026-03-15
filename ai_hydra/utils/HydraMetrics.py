@@ -62,6 +62,7 @@ class HydraMetrics:
         epsilon_delay = cfg.get(DNetField.EPSILON_DECAY)
 
         learning_rate = cfg.get(DNetField.LEARNING_RATE)
+        gamma = cfg.get(DNetField.GAMMA)
         dropout_p = cfg.get(DNetField.DROPOUT_P)
         rnn_layers = cfg.get(DNetField.RNN_LAYERS)
         rnn_tau = cfg.get(DNetField.RNN_TAU)
@@ -91,7 +92,8 @@ class HydraMetrics:
                     f"Input Size: {model_input_size}\n"
                     f"Hidden Size: {model_hidden_size}\n"
                     f"Dropout Layer P-Value: {dropout_p}\n"
-                    f"Learning Rate: {learning_rate}\n\n"
+                    f"Learning Rate: {learning_rate}\n"
+                    f"Discount/Gamma: {gamma}\n\n"
                 )
             elif model_type == DField.RNN:
                 f.write(
@@ -104,7 +106,8 @@ class HydraMetrics:
                     f"RNN Tau: {rnn_tau}\n"
                     f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
                     f"Batch Size: {DRNN.BATCH_SIZE}\n"
-                    f"Learning Rate: {learning_rate}\n\n"
+                    f"Learning Rate: {learning_rate}\n"
+                    f"Discount/Gamma: {gamma}\n\n"
                 )
             f.write(
                 "🏆 Highscore Events\n"

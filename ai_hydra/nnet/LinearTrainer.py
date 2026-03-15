@@ -27,12 +27,11 @@ class LinearTrainer:
         lr: float,
         log_level: DHydraLog,
         device: torch.device | None = None,
-        gamma: float = DNetDef.GAMMA,
     ):
         self.device = device or torch.device("cpu")
         self.model = model.to(self.device)
         self.replay = replay
-        self.gamma = gamma
+        self._gamma = None
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.criterion = nn.SmoothL1Loss()  # nn.MSELoss()
@@ -89,7 +88,7 @@ class LinearTrainer:
         with torch.no_grad():
             next_q = self.model(next_states)
             max_next_q = next_q.max(dim=1).values
-            target = rewards + self.gamma * max_next_q * (1.0 - dones)
+            target = rewards + self._gamma * max_next_q * (1.0 - dones)
 
         loss = self.criterion(q_selected, target)
 
@@ -100,3 +99,7 @@ class LinearTrainer:
         self._losses.append(loss.item())
 
         return float(loss.item())
+
+    def set_params(self, gamma: float):
+        self._gamma = gamma
+        self.log.debug(f"Setting the Discount/Gamma to {gamma}")

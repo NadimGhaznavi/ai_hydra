@@ -285,22 +285,6 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
-            # Hidden Size
-            Horizontal(
-                Label(f"{DLabel.HIDDEN_SIZE:>15s}: "),
-                Label(
-                    f"{DLinear.HIDDEN_SIZE:.7f}",
-                    id=DField.HIDDEN_SIZE_LABEL,
-                ),
-                Input(
-                    type=DField.INTEGER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.HIDDEN_SIZE:.7f}",
-                    id=DField.HIDDEN_SIZE_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
             # Learning rate
             Horizontal(
                 Label(f"{DLabel.LEARNING_RATE:>15s}: "),
@@ -314,6 +298,38 @@ class HydraClientTui(App):
                     valid_empty=False,
                     value=f"{DLinear.LEARNING_RATE:.7f}",
                     id=DField.LEARNING_RATE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Discount/Gamma
+            Horizontal(
+                Label(f"{DLabel.GAMMA:>15s}: "),
+                Label(
+                    f"{DLinear.GAMMA:.2f}",
+                    id=DField.GAMMA_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.GAMMA:.2f}",
+                    id=DField.GAMMA_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Hidden Size
+            Horizontal(
+                Label(f"{DLabel.HIDDEN_SIZE:>15s}: "),
+                Label(
+                    f"{DLinear.HIDDEN_SIZE:.7f}",
+                    id=DField.HIDDEN_SIZE_LABEL,
+                ),
+                Input(
+                    type=DField.INTEGER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.HIDDEN_SIZE:.7f}",
+                    id=DField.HIDDEN_SIZE_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
             ),
@@ -444,6 +460,8 @@ class HydraClientTui(App):
         self._w_epsilon_decay_label = self.query_one(
             f"#{DField.EPSILON_DECAY_LABEL}", Label
         )
+        self._w_gamma_input = self.query_one(f"#{DField.GAMMA_INPUT}", Input)
+        self._w_gamma_label = self.query_one(f"#{DField.GAMMA_LABEL}", Label)
         self._w_hidden_size_input = self.query_one(
             f"#{DField.HIDDEN_SIZE_INPUT}", Input
         )
@@ -676,6 +694,7 @@ class HydraClientTui(App):
             initial_epsilon = DLinear.INITIAL_EPSILON
             min_epsilon = DLinear.MINIMUM_EPSILON
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
+            gamma = DLinear.GAMMA
             hidden_size = DLinear.HIDDEN_SIZE
             dropout_p = DLinear.DROPOUT_P
             self.remove_class(DField.RNN)
@@ -687,6 +706,7 @@ class HydraClientTui(App):
             initial_epsilon = DRNN.INITIAL_EPSILON
             min_epsilon = DRNN.MINIMUM_EPSILON
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
+            gamma = DRNN.GAMMA
             hidden_size = DRNN.HIDDEN_SIZE
             dropout_p = DRNN.DROPOUT_P_VALUE
             self.remove_class(DField.LINEAR)
@@ -859,6 +879,9 @@ class HydraClientTui(App):
         # Learning rate
         learning_rate = self._w_learning_rate_input.value
         self._w_learning_rate_label.update(learning_rate)
+        # Discount/Gamma
+        gamma = self._w_gamma_input.value
+        self._w_gamma_label.update(gamma)
         # Dropout p-value
         dropout_p = self._w_dropout_p_input.value
         self._w_dropout_p_label.update(dropout_p)
@@ -873,6 +896,7 @@ class HydraClientTui(App):
             {
                 DNetField.DROPOUT_P: dropout_p,
                 DNetField.EPSILON_DECAY: epsilon_decay,
+                DNetField.GAMMA: gamma,
                 DNetField.HIDDEN_SIZE: hidden_size,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
                 DNetField.LEARNING_RATE: float(learning_rate),

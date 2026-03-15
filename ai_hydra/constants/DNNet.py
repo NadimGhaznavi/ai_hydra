@@ -20,16 +20,17 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 64
+    BATCH_SIZE: Final[int] = 48
     DROPOUT_P_VALUE: Final[float] = 0.1
-    EPSILON_DECAY_RATE: Final[float] = 0.993  # 0.98
+    EPSILON_DECAY_RATE: Final[float] = 0.993
+    GAMMA: Final[float] = 0.9
     HIDDEN_SIZE: Final[int] = 320
     INITIAL_EPSILON: Final[float] = 0.999
     LEARNING_RATE: Final[float] = 0.0002
     MINIMUM_EPSILON: Final[float] = 0.005
     OUTPUT_SIZE: Final[int] = 3
     RNN_LAYERS: Final[int] = 5
-    SEQ_LENGTH: Final[int] = 32
+    SEQ_LENGTH: Final[int] = 64
     TAU: Final[float] = 0.005
 
 
@@ -48,6 +49,7 @@ class DLinear:
     Constants for the Linear neural network
     """
 
+    GAMMA: Final[float] = 0.9
     HIDDEN_SIZE: Final[int] = 192
     DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
@@ -66,7 +68,6 @@ class DNetDef:
     DANGER_FEATURES: Final[int] = 3
     DIRECTION_FEATURES: Final[int] = 4
     FOOD_FEATURES: Final[int] = 2
-    GAMMA: Final[float] = 0.9
     MOVE_DELAY: Final[float] = 0.02
     PER_STEP: Final[bool] = True
     STATE_LENGTH_BITS: Final[int] = 7
@@ -91,6 +92,7 @@ class DNetField:
     DROPOUT_P: Final[str] = "dropout_p"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
+    GAMMA: Final[str] = "gamma"
     HIDDEN_SIZE: Final[str] = "hidden_size"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     LEARNING_RATE: Final[str] = "learning_rate"

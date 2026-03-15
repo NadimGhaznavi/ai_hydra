@@ -195,6 +195,9 @@ TabbedScores {
 .sim_stopped #handshake {
     display: none;
 }
+.sim_stopped #gamma_label {
+    display: none;
+}
 .sim_stopped #initial_epsilon_label {
     display: none;
 }
@@ -235,6 +238,9 @@ TabbedScores {
     display: none;
 }
 .sim_running #epsilon_decay_input {
+    display: none;
+}
+.sim_running #gamma_input {
     display: none;
 }
 .sim_running #hidden_size_input {
@@ -280,6 +286,12 @@ TabbedScores {
     display: none;
 }
 .bad_handshake #epsilon_decay_label {
+    display: none;
+}
+.bad_handshake #gamma_input {
+    display: none;
+}
+.bad_handshake #gamma_label {
     display: none;
 }
 .bad_handshake #hidden_size_input {

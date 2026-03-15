@@ -30,7 +30,6 @@ class RNNTrainer:
         lr: float,
         log_level: DHydraLog,
         device: torch.device | None = None,
-        gamma: float = DNetDef.GAMMA,
     ):
         self.device = device or torch.device("cpu")
         self.model = model.to(self.device)
@@ -38,9 +37,9 @@ class RNNTrainer:
         self.target_model.eval()
 
         self.replay = replay
-        self.gamma = gamma
         self._update_counter = 0
-        self._tau = None  # 0.005
+        self._tau = None
+        self._gamma = None
 
         self.optimizer = DRNNTrainer.OPTIM(self.model.parameters(), lr=lr)
         self.criterion = DRNNTrainer.CRITERION()
@@ -134,7 +133,7 @@ class RNNTrainer:
             )  # [B, T, A]
             q_next_max = q_next_all.max(dim=2).values  # [B, T]
 
-            q_target = rewards + self.gamma * q_next_max * (1.0 - dones)
+            q_target = rewards + self._gamma * q_next_max * (1.0 - dones)
 
         loss = self.criterion(q_pred, q_target)
 
@@ -157,6 +156,8 @@ class RNNTrainer:
                 self._tau * param.data + (1.0 - self._tau) * target_param.data
             )
 
-    def set_params(self, tau: float):
+    def set_params(self, tau: float, gamma: float):
         self._tau = tau
         self.log.debug(f"Setting Tau to {tau}")
+        self._gamma = gamma
+        self.log.debug(f"Setting the Discount/Gamma to {gamma}")

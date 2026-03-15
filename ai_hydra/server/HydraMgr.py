@@ -132,9 +132,9 @@ class HydraMgr(HydraServer):
                 replay=replay,
                 lr=self.cfg.get(DNetField.LEARNING_RATE),
                 device=device,
-                gamma=0.9,
                 log_level=self.log_level,
             )
+            trainer.set_params(gamma=self.cfg.get(DNetField.GAMMA))
 
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
@@ -153,10 +153,12 @@ class HydraMgr(HydraServer):
                 replay=replay,
                 lr=self.cfg.get(DNetField.LEARNING_RATE),
                 device=device,
-                gamma=0.9,
                 log_level=self.log_level,
             )
-            trainer.set_params(tau=self.cfg.get(DNetField.RNN_TAU))
+            trainer.set_params(
+                tau=self.cfg.get(DNetField.RNN_TAU),
+                gamma=self.cfg.get(DNetField.GAMMA),
+            )
 
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
@@ -281,7 +283,7 @@ class HydraMgr(HydraServer):
                     sess.epoch += 1
                     count += 1
 
-                    if count % 50 == 0:
+                    if count % 100 == 0:
                         self.log.info(f"Epoch: {count}")
 
                     # Epsilon
