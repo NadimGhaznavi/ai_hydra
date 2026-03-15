@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
-    grid-size: 4 7;
-    grid-rows: 3 5 6 11 22 3;
+    grid-size: 4 8;
+    grid-rows: 3 5 6 6 7 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -24,7 +24,7 @@ TabbedPlots {
 }
 
 TabbedScores {
-    row-span: 3;
+    row-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -35,7 +35,7 @@ TabbedScores {
 }
 
 #board_box {
-    row-span: 3;
+    row-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -43,11 +43,15 @@ TabbedScores {
     color: #5fc442;
     width: 44;
     text-style: bold;
-    padding: 0 1;
+    padding: 1 1;
+}
+
+#both {
+    background: black;
 }
 
 #buttons {
-    row-span: 2;
+    row-span: 3;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
@@ -93,10 +97,6 @@ TabbedScores {
     background: black;
 }
 
-#both {
-    background: black;
-}
-
 .highscores_box {
     background: black;
 }
@@ -105,6 +105,8 @@ TabbedScores {
     height: 1;
     padding: 0 1;
 }
+
+/* Textual Plot's PlotWidget settings */
 
 #loss_plot {
     height: 18;
@@ -121,6 +123,18 @@ TabbedScores {
     width: 125;
 }
 
+#scores_plot {
+    height: 18;
+    width: 125;
+}
+
+#scores_scatter_plot {
+    height: 18;
+    width: 125;
+}
+
+/* ----------------------------------- */
+
 #model {
     background: black;
     border: round #0c323e;
@@ -131,8 +145,6 @@ TabbedScores {
     text-style: bold;
     padding: 0 0;
 }
-
-
 
 #network {
     background: black;
@@ -153,22 +165,21 @@ TabbedScores {
     height: 18;
 }
 
-#scores_plot {
-    height: 18;
-    width: 125;
-}
-
-#scores_scatter_plot {
-    height: 18;
-    width: 125;
-}
-
 #title {
     column-span: 4;
     background: black;
     border: round #0c323e;
     border-subtitle-color: #5fc442;
     color: #5fc442;
+    text-style: bold;
+    width: 100%;
+}
+
+#training_box {
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #218847;
+    color: #218847;
     text-style: bold;
     width: 100%;
 }

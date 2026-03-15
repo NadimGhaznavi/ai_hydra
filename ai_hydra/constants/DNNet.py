@@ -20,18 +20,18 @@ class DRNN:
     RNN Model defaults
     """
 
-    BATCH_SIZE: Final[int] = 48
+    BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
     EPSILON_DECAY_RATE: Final[float] = 0.993
-    GAMMA: Final[float] = 0.9
-    HIDDEN_SIZE: Final[int] = 320
+    GAMMA: Final[float] = 0.95
+    HIDDEN_SIZE: Final[int] = 384
     INITIAL_EPSILON: Final[float] = 0.999
-    LEARNING_RATE: Final[float] = 0.0002
+    LEARNING_RATE: Final[float] = 0.0003
     MINIMUM_EPSILON: Final[float] = 0.005
     OUTPUT_SIZE: Final[int] = 3
     RNN_LAYERS: Final[int] = 5
-    SEQ_LENGTH: Final[int] = 64
-    TAU: Final[float] = 0.005
+    SEQ_LENGTH: Final[int] = 40
+    TAU: Final[float] = 0.01
 
 
 class DEpsilonField:
@@ -49,6 +49,7 @@ class DLinear:
     Constants for the Linear neural network
     """
 
+    BATCH_SIZE: Final[int] = 64
     GAMMA: Final[float] = 0.9
     HIDDEN_SIZE: Final[int] = 192
     DROPOUT_P: Final[float] = 0.1

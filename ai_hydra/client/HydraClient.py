@@ -18,7 +18,7 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label, Input, Checkbox, Select
+from textual.widgets import Button, Label, Input, Checkbox, Select, Switch
 from textual.message import Message
 
 from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
@@ -143,10 +143,10 @@ class HydraClientTui(App):
 
         ## We're using a Textual "grid" layout...
 
-        # ----- Title --- 1 row x 4 cols
+        # ----- Title ---
         yield Label(DLabel.CLIENT_TITLE, id=DField.TITLE)
 
-        # ----- Buttons --- 2x1
+        # ----- Buttons ---
         yield Vertical(
             Button(label=DLabel.HANDSHAKE, id=DField.HANDSHAKE, compact=True),
             Button(label=DLabel.START, id=DField.START_RUN, compact=True),
@@ -162,7 +162,7 @@ class HydraClientTui(App):
             id=DField.BUTTONS,
         )
 
-        # ------ The Snake Game --- 2x1
+        # ------ The Snake Game ---
         yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
         # ----- Settings ---
@@ -263,14 +263,6 @@ class HydraClientTui(App):
             id=DField.EPSILON,
         )
 
-        # ------ Network ---
-        yield Vertical(
-            Label(f"{DLabel.TARGET_HOST}: {self._address}"),
-            Label(f"{DLabel.TARGET_PORT}: {self._port}"),
-            Label(f"{DLabel.ROUTER}", id=DField.ROUTER_HB),
-            id=DField.NETWORK,
-        )
-
         # ----- Model ---
         yield Vertical(
             # Model type
@@ -282,38 +274,6 @@ class HydraClientTui(App):
                     compact=True,
                     id=DField.MODEL_TYPE_SELECT,
                     allow_blank=False,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Learning rate
-            Horizontal(
-                Label(f"{DLabel.LEARNING_RATE:>15s}: "),
-                Label(
-                    f"{DLinear.LEARNING_RATE:.7f}",
-                    id=DField.LEARNING_RATE_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.LEARNING_RATE:.7f}",
-                    id=DField.LEARNING_RATE_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Discount/Gamma
-            Horizontal(
-                Label(f"{DLabel.GAMMA:>15s}: "),
-                Label(
-                    f"{DLinear.GAMMA:.2f}",
-                    id=DField.GAMMA_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.GAMMA:.2f}",
-                    id=DField.GAMMA_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
             ),
@@ -365,6 +325,51 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
+            id=DField.MODEL,
+        )
+
+        # ------ Network ---
+        yield Vertical(
+            Label(f"{DLabel.TARGET_HOST}: {self._address}"),
+            Label(f"{DLabel.TARGET_PORT}: {self._port}"),
+            Label(f"{DLabel.ROUTER}", id=DField.ROUTER_HB),
+            id=DField.NETWORK,
+        )
+
+        # ----- Training ---
+        yield Vertical(
+            # Learning rate
+            Horizontal(
+                Label(f"{DLabel.LEARNING_RATE:>15s}: "),
+                Label(
+                    f"{DLinear.LEARNING_RATE:.7f}",
+                    id=DField.LEARNING_RATE_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.LEARNING_RATE:.7f}",
+                    id=DField.LEARNING_RATE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # Discount/Gamma
+            Horizontal(
+                Label(f"{DLabel.GAMMA:>15s}: "),
+                Label(
+                    f"{DLinear.GAMMA:.2f}",
+                    id=DField.GAMMA_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.GAMMA:.2f}",
+                    id=DField.GAMMA_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
             # RNN Trainer Tau
             Horizontal(
                 Label(f"{DLabel.RNN_TAU:>15s}: ", id=DField.RNN_TAU_OPT),
@@ -381,7 +386,7 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
-            id=DField.MODEL,
+            id=DField.TRAINING_BOX,
         )
 
         # Plots
@@ -532,7 +537,7 @@ class HydraClientTui(App):
         # Monitor the connection to the server in the background
         self.check_heartbeat()
 
-        ## Add some text to the borders around the widgets
+        # ----- Add some text to the borders around the widgets
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
@@ -546,6 +551,10 @@ class HydraClientTui(App):
         self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
         self.query_one(f"#{DField.MODEL}").border_subtitle = DLabel.MODEL
         self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
+        self.query_one(f"#{DField.TRAINING_BOX}").border_subtitle = (
+            DLabel.TRAINING
+        )
+        # --------------------------------------------------------------
 
         # Switch focus to a hidden widget
         self._w_hidden_widget.focus()
@@ -720,6 +729,7 @@ class HydraClientTui(App):
         self._w_initial_epsilon_input.value = str(initial_epsilon)
         self._w_min_epsilon_input.value = str(min_epsilon)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
+        self._w_gamma_input.value = str(gamma)
         self._w_hidden_size_input.value = str(hidden_size)
         self._w_dropout_p_input.value = str(dropout_p)
 
