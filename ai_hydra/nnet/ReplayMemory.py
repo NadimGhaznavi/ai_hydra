@@ -118,10 +118,7 @@ class ReplayMemory:
 
         return self._rng.sample(self._chunks, batch_size)
 
-    def sample_transitions(
-        self,
-        batch_size: int = DMemory.BATCH_SIZE,
-    ) -> list[Transition] | None:
+    def sample_transitions(self, batch_size: int) -> list[Transition] | None:
         """Sample random transitions for a linear model."""
 
         # This only checks whether a full batch is possible in aggregate.
