@@ -53,18 +53,21 @@ class HydraMetrics:
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
+        # Model info
         model_type = cfg.get(DNetField.MODEL_TYPE)
         model_hidden_size = cfg.get(DNetField.HIDDEN_SIZE)
         model_input_size = DNetDef.INPUT_SIZE
-
+        dropout_p = cfg.get(DNetField.DROPOUT_P)
+        rnn_layers = cfg.get(DNetField.RNN_LAYERS)
+        # Epsilon info
         initial_epsilon = cfg.get(DNetField.INITIAL_EPSILON)
         min_epsilon = cfg.get(DNetField.MIN_EPSILON)
         epsilon_delay = cfg.get(DNetField.EPSILON_DECAY)
-
+        # Training info
         learning_rate = cfg.get(DNetField.LEARNING_RATE)
         gamma = cfg.get(DNetField.GAMMA)
-        dropout_p = cfg.get(DNetField.DROPOUT_P)
-        rnn_layers = cfg.get(DNetField.RNN_LAYERS)
+        batch_size = cfg.get(DNetField.BATCH_SIZE)
+        seq_length = cfg.get(DNetField.SEQ_LENGTH)
         rnn_tau = cfg.get(DNetField.RNN_TAU)
 
         with open(snap_file, "w") as f:
@@ -91,9 +94,12 @@ class HydraMetrics:
                     "═══════════════\n"
                     f"Input Size: {model_input_size}\n"
                     f"Hidden Size: {model_hidden_size}\n"
-                    f"Dropout Layer P-Value: {dropout_p}\n"
+                    f"Dropout Layer P-Value: {dropout_p}\n\n"
+                    "🧙 Training\n"
+                    "═══════════\n"
                     f"Learning Rate: {learning_rate}\n"
-                    f"Discount/Gamma: {gamma}\n\n"
+                    f"Discount/Gamma: {gamma}\n"
+                    f"Batch Size: {batch_size}\n\n"
                 )
             elif model_type == DField.RNN:
                 f.write(
@@ -101,13 +107,16 @@ class HydraMetrics:
                     "════════════\n"
                     f"Input Size: {model_input_size}\n"
                     f"Hidden Size: {model_hidden_size}\n"
-                    f"RNN Layers: {rnn_layers}\n"
                     f"Dropout Layer P-Value: {dropout_p}\n"
-                    f"RNN Tau: {rnn_tau}\n"
-                    f"Sequence Length: {DRNN.SEQ_LENGTH}\n"
-                    f"Batch Size: {DRNN.BATCH_SIZE}\n"
+                    f"RNN Layers: {rnn_layers}\n"
+                    f"RNN Tau: {rnn_tau}\n\n"
+                    "🧙 Training\n"
+                    "═══════════\n"
                     f"Learning Rate: {learning_rate}\n"
-                    f"Discount/Gamma: {gamma}\n\n"
+                    f"Discount/Gamma: {gamma}\n"
+                    f"Batch Size: {batch_size}\n"
+                    f"Sequence Length: {seq_length}\n"
+                    f"RNN Tau: {rnn_tau}\n\n"
                 )
             f.write(
                 "🏆 Highscore Events\n"
