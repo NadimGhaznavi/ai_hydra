@@ -40,6 +40,42 @@ class GameLogic:
     """
 
     @staticmethod
+    def _food_direction_reward(
+        head: Position,
+        food: Position,
+        move_dx: int,
+        move_dy: int,
+    ) -> str:
+        """
+        Return the reward field based on whether the move direction points
+        toward or away from the food.
+        """
+        food_dx = food.x - head.x
+        food_dy = food.y - head.y
+
+        if move_dx != 0:
+            if food_dx == 0:
+                return DGameField.FURTHER_FROM_FOOD
+            return (
+                DGameField.CLOSER_TO_FOOD
+                if (food_dx > 0 and move_dx > 0)
+                or (food_dx < 0 and move_dx < 0)
+                else DGameField.FURTHER_FROM_FOOD
+            )
+
+        if move_dy != 0:
+            if food_dy == 0:
+                return DGameField.FURTHER_FROM_FOOD
+            return (
+                DGameField.CLOSER_TO_FOOD
+                if (food_dy > 0 and move_dy > 0)
+                or (food_dy < 0 and move_dy < 0)
+                else DGameField.FURTHER_FROM_FOOD
+            )
+
+        return DGameField.EMPTY
+
+    @staticmethod
     def _manhattan_distance(a: Position, b: Position) -> int:
         return abs(a.x - b.x) + abs(a.y - b.y)
 
@@ -72,11 +108,6 @@ class GameLogic:
                 action = MoveAction.RIGHT_TURN
             else:
                 raise ValueError(f"Invalid action index: {action}")
-
-        # Calculate the manhattan distance to the food
-        old_distance = GameLogic._manhattan_distance(
-            board.snake_head, board.food_position
-        )
 
         # Build the move (fixes the undefined 'move' bug)
         move = GameLogic.create_move(board.direction, action)
@@ -189,16 +220,14 @@ class GameLogic:
 
         # Empty move....
 
-        new_distance = GameLogic._manhattan_distance(
-            new_head, board.food_position
+        # Reward based on move direction relative to the food
+        reward_field = GameLogic._food_direction_reward(
+            head=board.snake_head,
+            food=board.food_position,
+            move_dx=move.resulting_direction.dx,
+            move_dy=move.resulting_direction.dy,
         )
-
-        if new_distance < old_distance:
-            reward = GameLogic.calculate_reward(DGameField.CLOSER_TO_FOOD)
-        elif new_distance > old_distance:
-            reward = GameLogic.calculate_reward(DGameField.FURTHER_FROM_FOOD)
-        else:
-            reward = GameLogic.calculate_reward(DGameField.EMPTY)
+        reward = GameLogic.calculate_reward(reward_field)
 
         # Empty move: shift body (drop tail)
         new_body = (board.snake_head,) + board.snake_body[:-1]
