@@ -255,6 +255,11 @@ class TabbedPlots(Widget):
         plot.set_ylabel(DLabel.LOSS)
         plot.show_legend(location=LegendLocation.TOPLEFT)
 
+        # Add vertical lines to mark high score events
+        # for event in self.scatter_scores:
+        #    episode, score = event
+        #    plot.add_v_line(episode, DColor.GREEN)
+
     def _plot_current_loss(self) -> None:
         plot = self.query_one(f"#{DField.CUR_LOSS}", PlotWidget)
         plot.clear()
