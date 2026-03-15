@@ -59,6 +59,7 @@ class DField:
     HIDDEN_SIZE_LABEL: Final[str] = "hidden_size_label"
     HIDDEN_WIDGET: Final[str] = "hidden_widget"
     HIGHSCORES: Final[str] = "highscores"
+    HIGHSCORES_LOG: Final[str] = "highscores_log"
     HIGHSCORES_BOX: Final[str] = "highscores_box"
     HIGHSCORES_LH: Final[str] = "highscores_lh"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
@@ -120,7 +121,6 @@ class DField:
     STOP: Final[str] = "stop"
     STOPPED: Final[str] = "stopped"
     TABBED_PLOTS: Final[str] = "tabbed_plots"
-    TABBED_SCORES: Final[str] = "tabbed_scores"
     TITLE: Final[str] = "title"
     TRAINING_BOX: Final[str] = "training_box"
     TURBO_MODE: Final[str] = "turbo_mode"
@@ -152,10 +152,10 @@ class DLabel:
     BOTH: Final[str] = "Both"
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
+    COMPLETE: Final[str] = "Complete"
     CONFIG: Final[str] = "Configuration"
     CONSOLE: Final[str] = "Console"
     CUR_LOSS: Final[str] = "Current Loss"
-    NETWORK: Final[str] = "Network"
     CUR_EPSILON: Final[str] = "Current Epsilon"
     CURRENT: Final[str] = "Current"
     COUNT: Final[str] = "Count"
@@ -190,6 +190,7 @@ class DLabel:
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
     MODEL: Final[str] = "Model"
     MOVE_DELAY: Final[str] = "Move Delay"
+    NETWORK: Final[str] = "Network"
     NN_MODEL: Final[str] = "NN Model"
     NORMAL: Final[str] = "Normal"
     P_VALUE: Final[str] = "P-Value"
@@ -238,9 +239,10 @@ class DPlotDef:
 
     # The average is calculated by dividing the MAX_DATA_POINTS by this number
     AVG_DIVISOR: int = 50
-    MAX_LOSS_DATA_POINTS: Final[int] = 150
+
+    MAX_LOSS_DATA_POINTS: Final[int] = 125
     MAX_CUR_DATA_POINTS: Final[int] = 200
-    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 100
+    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 75
 
 
 class DStatus:

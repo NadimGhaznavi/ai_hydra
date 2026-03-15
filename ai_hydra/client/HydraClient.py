@@ -26,7 +26,7 @@ from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
-from ai_hydra.client.TabbedScores import TabbedScores
+from ai_hydra.client.HighScoresLog import HighScoresLog
 from ai_hydra.client.TabbedPlots import TabbedPlots
 
 from ai_hydra.constants.DHydra import (
@@ -203,7 +203,7 @@ class HydraClientTui(App):
         )
 
         # ----- Highscores widget ---
-        yield TabbedScores(id=DField.TABBED_SCORES)
+        yield HighScoresLog(id=DField.HIGHSCORES_LOG)
 
         # ----- Epsilon ---
         yield Vertical(
@@ -482,11 +482,17 @@ class HydraClientTui(App):
         if event.value:
             self.remove_class(DField.TURBO_OFF)
             self.add_class(DField.TURBO_ON)
+            self.console_msg(
+                f"⚡ Turbo mode: Game rendering disabled. Click 'Update Config' to update the server"
+            )
 
         # Turbo disabled
         else:
             self.remove_class(DField.TURBO_ON)
             self.add_class(DField.TURBO_OFF)
+            self.console_msg(
+                f"⚡ Turbo mode: Game rendering enabled. Click 'Update Config' to update the server"
+            )
 
     def on_mount(self) -> None:
         self.add_class(DField.BAD_HANDSHAKE)
@@ -587,8 +593,8 @@ class HydraClientTui(App):
         self._w_tabbed_plots = self.query_one(
             f"#{DField.TABBED_PLOTS}", TabbedPlots
         )
-        self._w_tabbed_scores = self.query_one(
-            f"#{DField.TABBED_SCORES}", TabbedScores
+        self._w_highscores_log = self.query_one(
+            f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         )
         self._w_turbo_mode = self.query_one(f"#{DField.TURBO_MODE}", Checkbox)
 
@@ -606,9 +612,7 @@ class HydraClientTui(App):
         )
         self.query_one(f"#{DField.SETTINGS}").border_subtitle = DLabel.SETTINGS
         self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
-        self.query_one(f"#{DField.TABBED_SCORES}").border_subtitle = (
-            DLabel.HIGHSCORES
-        )
+        self._w_highscores_log.border_subtitle = DLabel.HIGHSCORES
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
         self._w_console_box.border_subtitle = DLabel.CONSOLE
         self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
@@ -711,7 +715,7 @@ class HydraClientTui(App):
 
             # Current highscore
             highscore = payload[DGameField.HIGHSCORE]
-            self._w_tabbed_scores.border_subtitle = (
+            self._w_highscores_log.border_subtitle = (
                 f"{DLabel.HIGHSCORE}: {highscore}"
             )
 
@@ -727,7 +731,7 @@ class HydraClientTui(App):
             # Highscore event
             if DGameField.HIGHSCORE_EVENT in payload:
                 hs_event = payload[DGameField.HIGHSCORE_EVENT]
-                self._w_tabbed_scores.add_highscore(
+                self._w_highscores_log.add_highscore(
                     epoch=hs_event[0],
                     highscore=hs_event[1],
                     event_time=hs_event[2],

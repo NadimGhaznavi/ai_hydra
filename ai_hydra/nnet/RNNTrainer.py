@@ -22,8 +22,8 @@ from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.utils.HydraLog import HydraLog
 
 GRAD_CLIPPING = True
-DQN_WITH_TARGET = True
-DOUBLE_DQN = False
+DQN_WITH_TARGET = False
+DOUBLE_DQN = True
 
 
 class RNNTrainer:

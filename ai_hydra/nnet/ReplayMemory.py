@@ -26,6 +26,9 @@ MAX_CHUNKS = DMemory.MAX_CHUNKS
 MIN_CHUNKS = DMemory.MIN_CHUNKS
 SEQ_LENGTH = DRNN.SEQ_LENGTH
 
+MAX_MEM_SIZE = DMemory.MAX_MEM_SIZE  # Max Linear transitions
+MIN_FRAMES = DMemory.MIN_FRAMES  # Min transitions before returning samples
+
 T = TypeVar("T")
 
 
@@ -54,13 +57,20 @@ class ReplayMemory:
         self._max_chunks = MAX_CHUNKS
         self._seq_len = seq_length
         self._memory_cold = True
+        self._memory_not_full = True
         if self._rnn:
             if seq_length is None:
                 raise ValueError("Sequence length must be set")
             self.log.info("Initialized for RNN model training")
             self.log.info(f"Setting sequence length to {seq_length}")
+            self.log.info(
+                f"Setting maximum number of stored sequence to {MAX_CHUNKS}"
+            )
         else:
             self.log.info("Initialized for Linear model training")
+            self.log.info(
+                f"Setting maximum number of stored transitions to {MAX_MEM_SIZE}"
+            )
 
     def append(self, t: Transition) -> None:
         """Add a transition into memory"""
@@ -73,6 +83,12 @@ class ReplayMemory:
         ### the training sequences.
         if not self._rnn:
             self._memory.append(t)
+            if len(self._memory) >= MAX_MEM_SIZE:
+                if self._memory_not_full:
+                    self.log.info(
+                        f"Memory has been filled to capacity: {MAX_MEM_SIZE} transitions"
+                    )
+                    self._memory_not_full = False
             return
 
         self._cur_game.append(t)
@@ -86,6 +102,11 @@ class ReplayMemory:
         if len(game) >= self._seq_len:
             self._chunks.extend(self._chunk_from_end(game))
             if len(self._chunks) > self._max_chunks:
+                if self._memory_not_full:
+                    self.log.info(
+                        f"Memory has been filled to capacity: {self._max_chunks}"
+                    )
+                    self._memory_not_full = False
                 overflow = len(self._chunks) - self._max_chunks
                 del self._chunks[:overflow]
 
@@ -128,7 +149,7 @@ class ReplayMemory:
         # This only checks whether a full batch is possible in aggregate.
         # The requested LH/NLH ratio is best-effort and is resolved in
         # _sample_mixed().
-        if len(self._memory) < max(DMemory.MIN_FRAMES, batch_size):
+        if len(self._memory) < max(MIN_FRAMES, batch_size):
             return None
 
         if self._memory_cold:

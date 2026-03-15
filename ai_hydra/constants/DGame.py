@@ -20,7 +20,7 @@ class DGameDef:
     FOOD_REWARD: Final[int] = 10
     COLLISION_PENALTY: Final[int] = -10
     EMPTY_MOVE_REWARD: Final[int] = 0
-    CLOSER_TO_FOOD: Final[float] = 1.0
+    CLOSER_TO_FOOD: Final[float] = 1.5
     FURTHER_FROM_FOOD: Final[float] = -1.0
 
 

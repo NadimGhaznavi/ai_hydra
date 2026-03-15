@@ -16,6 +16,7 @@ from typing import Iterable
 from textual import on
 from textual.app import ComposeResult, Widget
 from textual.widgets import TabbedContent
+from textual.containers import Horizontal
 from textual_plot import HiResMode, LegendLocation, PlotWidget
 
 from ai_hydra.constants.DHydraTui import DColor, DField, DLabel, DPlotDef
@@ -33,13 +34,13 @@ class TabbedPlots(Widget):
             DLabel.GAME_SCORES,
             DLabel.SCORES,
             DLabel.LOSS,
-            DLabel.CUR_LOSS,
             DLabel.HIGHSCORES,
         ):
             yield PlotWidget(id=DField.GAME_SCORES)
             yield PlotWidget(id=DField.SCORES_PLOT)
-            yield PlotWidget(id=DField.LOSS_PLOT)
-            yield PlotWidget(id=DField.CUR_LOSS)
+            yield Horizontal(
+                PlotWidget(id=DField.LOSS_PLOT), PlotWidget(id=DField.CUR_LOSS)
+            )
             yield PlotWidget(id=DField.SCORES_SCATTER_PLOT)
 
     def action_show_tab(self, tab: str) -> None:
@@ -54,20 +55,8 @@ class TabbedPlots(Widget):
         self.loss_epochs.append(epoch)
         self.losses.append(loss)
 
-        self._cur_losses_batch.append(loss)
-        self._cur_epochs_batch.append(epoch)
-
-        if len(self._cur_losses_batch) == 4:
-            avg_loss = sum(self._cur_losses_batch) / len(
-                self._cur_losses_batch
-            )
-            avg_epoch = self._cur_epochs_batch[-1]
-
-            self.cur_losses.append(avg_loss)
-            self.cur_epochs.append(avg_epoch)
-
-            self._cur_losses_batch.clear()
-            self._cur_epochs_batch.clear()
+        self.cur_losses.append(loss)
+        self.cur_epochs.append(epoch)
 
         if plot:
             self._plot_loss()
@@ -126,8 +115,6 @@ class TabbedPlots(Widget):
         self.game_epochs: deque[int] = deque(maxlen=max_points)
         self.avg_game_score: list[float] = []
 
-        self._cur_losses_batch: list[float] = []
-        self._cur_epochs_batch: list[float] = []
         self.cur_losses: deque[float] = deque(maxlen=max_loss_points)
         self.cur_epochs: deque[int] = deque(maxlen=max_loss_points)
 
@@ -139,8 +126,6 @@ class TabbedPlots(Widget):
         elif pane_id == "tab-3":
             self._plot_loss()
         elif pane_id == "tab-4":
-            self._plot_loss()
-        elif pane_id == "tab-5":
             self._plot_scatter_scores()
         else:
             raise ValueError(f"Unhandled tab: {pane_id}")
@@ -248,7 +233,7 @@ class TabbedPlots(Widget):
             y=losses,
             hires_mode=HiResMode.BRAILLE,
             line_style=DColor.GREEN,
-            label=DLabel.LOSS,
+            label=DLabel.COMPLETE,
         )
         plot.set_ylimits()
         plot.set_xlabel(DLabel.EPISODES)
@@ -275,12 +260,12 @@ class TabbedPlots(Widget):
             y=losses,
             hires_mode=HiResMode.BRAILLE,
             line_style=DColor.GREEN,
-            label=DLabel.LOSS,
+            label=DLabel.CURRENT,
         )
         plot.set_ylimits()
         plot.set_xlabel(DLabel.EPISODES)
         plot.set_ylabel(DLabel.LOSS)
-        plot.show_legend(location=LegendLocation.TOPLEFT)
+        plot.show_legend(location=LegendLocation.BOTTOMLEFT)
 
     def _plot_scatter_scores(self) -> None:
         plot = self.query_one(f"#{DField.SCORES_SCATTER_PLOT}", PlotWidget)

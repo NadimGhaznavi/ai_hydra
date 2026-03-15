@@ -23,7 +23,7 @@ TabbedPlots {
     width: 100%;
 }
 
-TabbedScores {
+HighScoresLog {
     row-span: 4;
     background: black;
     border: round #0c323e;
@@ -106,11 +106,10 @@ TabbedScores {
     padding: 0 1;
 }
 
-/* Textual Plot's PlotWidget settings */
-
+/* ---------- Textual Plot's PlotWidget settings */
 #loss_plot {
     height: 18;
-    width: 125;
+    width: 75;
 }
 
 #game_scores {
@@ -120,7 +119,7 @@ TabbedScores {
 
 #cur_loss {
     height: 18;
-    width: 125;
+    width: 50;
 }
 
 #scores_plot {
@@ -132,8 +131,7 @@ TabbedScores {
     height: 18;
     width: 125;
 }
-
-/* ----------------------------------- */
+/* -------------------------------------------- */
 
 #model {
     background: black;

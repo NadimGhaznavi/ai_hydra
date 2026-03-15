@@ -11,7 +11,7 @@ from typing import Final
 
 
 class DMemory:
-    MAX_CHUNKS: Final[int] = 20000  # Used by RNN II
-    MIN_CHUNKS: Final[int] = 100  # Used by RNN II
+    MAX_CHUNKS: Final[int] = 2000  # Used by RNN
+    MIN_CHUNKS: Final[int] = 100  # Used by RNN
     MIN_FRAMES: Final[int] = 1500  # Used by Linear
     MAX_MEM_SIZE: Final[int] = 50000  # Used by Linear

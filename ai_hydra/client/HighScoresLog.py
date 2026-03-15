@@ -1,4 +1,4 @@
-# ai_hydra/client/TabbedScores.py
+# ai_hydra/client/HighScoresLog.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi
@@ -14,17 +14,16 @@ from textual.app import ComposeResult, Widget
 from ai_hydra.constants.DHydraTui import DField, DLabel, DStatus
 
 
-class TabbedScores(Widget):
+class HighScoresLog(Widget):
 
     def compose(self) -> ComposeResult:
-        with TabbedContent(DLabel.HIGHSCORES):
-            yield Vertical(
-                Label(
-                    f"[b #3e99af]{DLabel.GAME:>7s}{DLabel.SCORE:>7s}{DLabel.TIME:>13s}[/]"
-                ),
-                Log(highlight=False, auto_scroll=True, id=DField.HIGHSCORES),
-                classes=DField.HIGHSCORES_BOX,
-            )
+        yield Vertical(
+            Label(
+                f"[b #3e99af]{DLabel.GAME:>7s}{DLabel.SCORE:>7s}{DLabel.TIME:>13s}[/]"
+            ),
+            Log(highlight=False, auto_scroll=True, id=DField.HIGHSCORES),
+            classes=DField.HIGHSCORES_BOX,
+        )
 
     def add_highscore(self, epoch, highscore, event_time):
         self.query_one(f"#{DField.HIGHSCORES}", Log).write_line(
