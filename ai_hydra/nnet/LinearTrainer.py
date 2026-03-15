@@ -11,8 +11,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from ai_hydra.constants.DReplayMemory import DMemory
-from ai_hydra.constants.DNNet import DNetDef
+from ai_hydra.constants.DNNet import DLinear
 from ai_hydra.constants.DHydra import DHydra, DHydraLog
 
 from ai_hydra.nnet.ReplayMemory import ReplayMemory
@@ -51,7 +50,7 @@ class LinearTrainer:
         return avg_loss
 
     def train_long_memory(
-        self, batch_size: int = DMemory.BATCH_SIZE
+        self, batch_size: int = DLinear.BATCH_SIZE
     ) -> float | None:
 
         batch = self.replay.sample_transitions(batch_size)
@@ -82,15 +81,18 @@ class LinearTrainer:
             [t.done for t in batch], dtype=torch.float32, device=self.device
         )
 
-        q_values = self.model(states)
-        q_selected = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
+        self.model.train()
 
+        q_values = self.model(states)
+        q_pred = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
+
+        self.model.eval()
         with torch.no_grad():
             next_q = self.model(next_states)
             max_next_q = next_q.max(dim=1).values
-            target = rewards + self._gamma * max_next_q * (1.0 - dones)
+            q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
 
-        loss = self.criterion(q_selected, target)
+        loss = self.criterion(q_pred, q_target)
 
         self.optimizer.zero_grad()
         loss.backward()
