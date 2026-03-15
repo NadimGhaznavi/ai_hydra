@@ -44,6 +44,7 @@ class RNNTrainer:
         self.replay = replay
         self._tau = None
         self._gamma = None
+        self._batch_size = None
 
         self.optimizer = DRNNTrainer.OPTIM(self.model.parameters(), lr=lr)
         self.criterion = DRNNTrainer.CRITERION()
@@ -65,18 +66,16 @@ class RNNTrainer:
         self._losses = []
         return avg_loss
 
-    def train_long_memory(
-        self, batch_size: int = DRNN.BATCH_SIZE
-    ) -> float | None:
+    def train_long_memory(self) -> float | None:
 
-        chunks = self.replay.sample_chunks(batch_size=batch_size)
+        chunks = self.replay.sample_chunks(batch_size=self._batch_size)
         if chunks is None:
             return
 
         if self._cold_memory:
             self._cold_memory = False
             self.log.debug(
-                f"Training with {batch_size} batches with sequence length {len(chunks[0])}"
+                f"Training with {self._batch_size} batches with sequence length {len(chunks[0])}"
             )
 
         # Shapes (B = batch_size, T = seq_length, F = feature/input size)
@@ -171,8 +170,10 @@ class RNNTrainer:
                 self._tau * param.data + (1.0 - self._tau) * target_param.data
             )
 
-    def set_params(self, tau: float, gamma: float):
+    def set_params(self, tau: float, gamma: float, batch_size: int):
         self._tau = tau
-        self.log.debug(f"Setting Tau to {tau}")
+        self.log.info(f"Setting Tau to {tau}")
         self._gamma = gamma
-        self.log.debug(f"Setting the Discount/Gamma to {gamma}")
+        self.log.info(f"Setting the Discount/Gamma to {gamma}")
+        self._batch_size = batch_size
+        self.log.info(f"Setting Batch Size to {batch_size}")

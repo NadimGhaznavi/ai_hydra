@@ -23,6 +23,7 @@ from ai_hydra.constants.DHydra import DHydra
 
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
+        DNetField.BATCH_SIZE: DLinear.BATCH_SIZE,
         DNetField.DROPOUT_P: DLinear.DROPOUT_P,
         DNetField.EPSILON_DECAY: DLinear.EPSILON_DECAY_RATE,
         DNetField.GAMMA: DLinear.GAMMA,
@@ -36,9 +37,11 @@ class SimCfg:
         DNetField.RANDOM_SEED: DHydra.RANDOM_SEED,
         DNetField.RNN_LAYERS: DRNN.RNN_LAYERS,
         DNetField.RNN_TAU: DRNN.TAU,
+        DNetField.SEQ_LENGTH: DRNN.SEQ_LENGTH,
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
+        DNetField.BATCH_SIZE: int,
         DNetField.DROPOUT_P: float,
         DNetField.EPSILON_DECAY: float,
         DNetField.GAMMA: float,
@@ -52,6 +55,7 @@ class SimCfg:
         DNetField.RANDOM_SEED: int,
         DNetField.RNN_LAYERS: int,
         DNetField.RNN_TAU: float,
+        DNetField.SEQ_LENGTH: int,
     }
 
     __slots__ = ("_values",)

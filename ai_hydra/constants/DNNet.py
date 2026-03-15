@@ -88,8 +88,9 @@ class DNetField:
     """
 
     ACTION: Final[str] = DGameField.ACTION
-    DONE: Final[str] = DGameField.DONE
+    BATCH_SIZE: Final[str] = "batch_size"
     CUR_EPSILON: Final[str] = "cur_epsilon"
+    DONE: Final[str] = DGameField.DONE
     DROPOUT_P: Final[str] = "dropout_p"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
@@ -107,6 +108,7 @@ class DNetField:
     REWARD: Final[str] = DGameField.REWARD
     RNN_LAYERS: Final[str] = "rnn_layers"
     RNN_TAU: Final[str] = "rnn_tau"
+    SEQ_LENGTH: Final[str] = "sequence_length"
     STATE: Final[str] = "state"
 
 

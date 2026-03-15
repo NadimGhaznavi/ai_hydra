@@ -197,6 +197,9 @@ TabbedScores {
 
 /* Simulation is NOT running */
 /* --------------------------*/
+.sim_stopped #batch_size_label {
+    display: none;
+}
 .sim_stopped #dropout_p_label {
     display: none;
 }
@@ -225,6 +228,7 @@ TabbedScores {
     display: none;
 }
 /* Temporary until I implement server side user defined seeds */
+
 .sim_stopped #UNUSED_random_seed_label {
     display: none;
 }
@@ -239,12 +243,18 @@ TabbedScores {
 .sim_stopped #rnn_tau_label {
     display: none;
 }
+.sim_stopped #seq_length_label {
+    display: none;
+}
 .sim_stopped #update_runtime_config {
     display: none;
 }
 
 /* Simulation IS running */
 /* --------------------- */
+.sim_running #batch_size_input {
+    display: none;
+}
 .sim_running #dropout_p_input {
     display: none;
 }
@@ -278,6 +288,9 @@ TabbedScores {
 .sim_running #rnn_tau_input {
     display: none;
 }
+.sim_running #seq_length_input {
+    display: none;
+}
 .sim_running #start_run {
     display: none;
 }
@@ -287,6 +300,12 @@ TabbedScores {
 
 /* Failed handshake with HydraMgr */
 /* ------------------------------ */
+.bad_handshake #batch_size_input {
+    display: none;
+}
+.bad_handshake #batch_size_label {
+    display: none;
+}
 .bad_handshake #dropout_p_input {
     display: none;
 }
@@ -362,6 +381,15 @@ TabbedScores {
 .bad_handshake #random_seed_label {
     display: none;
 }
+.bad_handshake #seq_length_input {
+    display: none;
+}
+.bad_handshake #seq_length_label {
+    display: none;
+}
+.bad_handshake #seq_length_opt {
+    display: none;
+}
 .bad_handshake #start_run {
     display: none;
 }
@@ -374,6 +402,15 @@ TabbedScores {
 
 /* Linear Model is Selected */
 /* ------------------------ */
+.linear #seq_length_input {
+    display: none;
+}
+.linear #seq_length_label {
+    display: none;
+}
+.linear #seq_length_opt {
+    display: none;
+}
 .linear #rnn_layers_opt {
     display: none;
 }
@@ -393,10 +430,15 @@ TabbedScores {
     display: none;
 }
 
-/* Turbo mode is on/off */
+/* Turbo mode is ON */
 .turbo_on #move_delay_input {
     display: none;
 }
+.turbo_on #board {
+    display: none;
+}
+
+/* Turbo mode is OFF */
 .turbo_off #move_delay_label {
     display: none;
 }

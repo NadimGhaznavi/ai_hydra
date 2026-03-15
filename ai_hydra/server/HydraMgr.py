@@ -134,12 +134,18 @@ class HydraMgr(HydraServer):
                 device=device,
                 log_level=self.log_level,
             )
-            trainer.set_params(gamma=self.cfg.get(DNetField.GAMMA))
+            trainer.set_params(
+                gamma=self.cfg.get(DNetField.GAMMA),
+                batch_size=self.cfg.get(DNetField.BATCH_SIZE),
+            )
 
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
             replay = ReplayMemory(
-                rng=replay_rng, log_level=self.log_level, rnn=True
+                rng=replay_rng,
+                log_level=self.log_level,
+                rnn=True,
+                seq_length=self.cfg.get(DNetField.SEQ_LENGTH),
             )
             model = RNNModel()
             model.set_params(
@@ -158,6 +164,7 @@ class HydraMgr(HydraServer):
             trainer.set_params(
                 tau=self.cfg.get(DNetField.RNN_TAU),
                 gamma=self.cfg.get(DNetField.GAMMA),
+                batch_size=self.cfg.get(DNetField.BATCH_SIZE),
             )
 
         else:
@@ -318,7 +325,7 @@ class HydraMgr(HydraServer):
                 if model_type == DField.LINEAR:
                     if sess.step_n % train_every == 0:
                         for _ in range(grad_steps):
-                            train_mgr.trainer.train_long_memory(batch_size)
+                            train_mgr.trainer.train_long_memory()
 
                 # Publish
                 if mq is not None:
@@ -414,7 +421,15 @@ class HydraMgr(HydraServer):
         Update settings while a simulation is running
         """
         self.log.debug(f"Received config update")
-        self.cfg = SimCfg.from_dict(msg.payload)
+        # Currently only per_step (on/off) and move_delay are settable
+        # from the TUI when a sim is running. Also, the TUI can only
+        # send the update when the sim is running.
+        self.cfg.set(
+            key=DNetField.PER_STEP, value=msg.payload[DNetField.PER_STEP]
+        )
+        self.cfg.set(
+            key=DNetField.MOVE_DELAY, value=msg.payload[DNetField.MOVE_DELAY]
+        )
 
 
 async def amain() -> None:

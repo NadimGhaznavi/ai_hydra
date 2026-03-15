@@ -35,6 +35,7 @@ class ReplayMemory:
         rng: Random,
         log_level: DHydraLog,
         rnn: bool = False,
+        seq_length=None,
     ):
         self.log = HydraLog(
             client_id="ReplayMemory",
@@ -51,12 +52,15 @@ class ReplayMemory:
         self._chunks: list[list[Transition]] = []
         self._cur_game: list[Transition] = []
         self._max_chunks = MAX_CHUNKS
-        self._seq_len = SEQ_LENGTH
+        self._seq_len = seq_length
         self._memory_cold = True
         if self._rnn:
-            self.log.debug("Initialized for RNN model training")
+            if seq_length is None:
+                raise ValueError("Sequence length must be set")
+            self.log.info("Initialized for RNN model training")
+            self.log.info(f"Setting sequence length to {seq_length}")
         else:
-            self.log.debug("Initialized for Linear model training")
+            self.log.info("Initialized for Linear model training")
 
     def append(self, t: Transition) -> None:
         """Add a transition into memory"""

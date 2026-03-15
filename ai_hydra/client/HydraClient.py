@@ -371,6 +371,41 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
+            # Batch size
+            Horizontal(
+                Label(f"{DLabel.BATCH_SIZE:>15s}: "),
+                Label(
+                    f"{DLinear.BATCH_SIZE}",
+                    id=DField.BATCH_SIZE_LABEL,
+                ),
+                Input(
+                    type=DField.INTEGER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DLinear.BATCH_SIZE}",
+                    id=DField.BATCH_SIZE_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
+            # RNN Sequence Length
+            Horizontal(
+                Label(
+                    f"{DLabel.SEQUENCE_LENGTH:>15s}: ",
+                    id=DField.SEQ_LENGTH_OPT,
+                ),
+                Label(
+                    f"{DRNN.SEQ_LENGTH}",
+                    id=DField.SEQ_LENGTH_LABEL,
+                ),
+                Input(
+                    type=DField.NUMBER,
+                    compact=True,
+                    valid_empty=False,
+                    value=f"{DRNN.SEQ_LENGTH}",
+                    id=DField.SEQ_LENGTH_INPUT,
+                ),
+                classes=DField.INPUT_FIELD,
+            ),
             # RNN Trainer Tau
             Horizontal(
                 Label(f"{DLabel.RNN_TAU:>15s}: ", id=DField.RNN_TAU_OPT),
@@ -459,6 +494,12 @@ class HydraClientTui(App):
         self.add_class(DField.TURBO_OFF)
 
         # Create references to TUI elements that are being updated
+        self._w_batch_size_input = self.query_one(
+            f"#{DField.BATCH_SIZE_INPUT}", Input
+        )
+        self._w_batch_size_label = self.query_one(
+            f"#{DField.BATCH_SIZE_LABEL}", Label
+        )
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
         self._w_console_box = self.query_one(
             f"#{DField.CONSOLE_BOX}", Vertical
@@ -536,6 +577,12 @@ class HydraClientTui(App):
         )
         self._w_rnn_tau_label = self.query_one(
             f"#{DField.RNN_TAU_LABEL}", Label
+        )
+        self._w_seq_length_input = self.query_one(
+            f"#{DField.SEQ_LENGTH_INPUT}", Input
+        )
+        self._w_seq_length_label = self.query_one(
+            f"#{DField.SEQ_LENGTH_LABEL}", Label
         )
         self._w_tabbed_plots = self.query_one(
             f"#{DField.TABBED_PLOTS}", TabbedPlots
@@ -715,25 +762,27 @@ class HydraClientTui(App):
         model_type = event.value
         # Linear model defaults
         if model_type == DField.LINEAR:
-            lr = f"{DLinear.LEARNING_RATE:.5f}"
-            initial_epsilon = DLinear.INITIAL_EPSILON
-            min_epsilon = DLinear.MINIMUM_EPSILON
+            batch_size = DLinear.BATCH_SIZE
+            dropout_p = DLinear.DROPOUT_P
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
             gamma = DLinear.GAMMA
             hidden_size = DLinear.HIDDEN_SIZE
-            dropout_p = DLinear.DROPOUT_P
+            initial_epsilon = DLinear.INITIAL_EPSILON
+            lr = f"{DLinear.LEARNING_RATE:.5f}"
+            min_epsilon = DLinear.MINIMUM_EPSILON
             self.remove_class(DField.RNN)
             self.add_class(DField.LINEAR)
 
         # RNN model defaults
         elif model_type == DField.RNN:
-            lr = f"{DRNN.LEARNING_RATE:.4f}"
-            initial_epsilon = DRNN.INITIAL_EPSILON
-            min_epsilon = DRNN.MINIMUM_EPSILON
+            batch_size = DRNN.BATCH_SIZE
+            dropout_p = DRNN.DROPOUT_P_VALUE
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
             gamma = DRNN.GAMMA
             hidden_size = DRNN.HIDDEN_SIZE
-            dropout_p = DRNN.DROPOUT_P_VALUE
+            initial_epsilon = DRNN.INITIAL_EPSILON
+            lr = f"{DRNN.LEARNING_RATE:.4f}"
+            min_epsilon = DRNN.MINIMUM_EPSILON
             self.remove_class(DField.LINEAR)
             self.add_class(DField.RNN)
 
@@ -741,13 +790,14 @@ class HydraClientTui(App):
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
 
         # Update widgets with model specific defaults
-        self._w_learning_rate_input.value = lr
-        self._w_initial_epsilon_input.value = str(initial_epsilon)
-        self._w_min_epsilon_input.value = str(min_epsilon)
+        self._w_batch_size_input.value = str(batch_size)
+        self._w_dropout_p_input.value = str(dropout_p)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
         self._w_gamma_input.value = str(gamma)
         self._w_hidden_size_input.value = str(hidden_size)
-        self._w_dropout_p_input.value = str(dropout_p)
+        self._w_initial_epsilon_input.value = str(initial_epsilon)
+        self._w_learning_rate_input.value = lr
+        self._w_min_epsilon_input.value = str(min_epsilon)
 
         if self._not_first_time_kludge:
             self.console_msg("Updated defaults setting...")
@@ -764,6 +814,8 @@ class HydraClientTui(App):
         try:
             reply = await self.mq.recv()
             sim_running = reply.payload.pop(DGameField.SIM_RUNNING)
+
+            # ----- Simulation is running ---
             if sim_running:
                 # Always receive per-episode updates
                 self.mq.enable_per_episode_sub()
@@ -773,8 +825,12 @@ class HydraClientTui(App):
                 self.cfg = SimCfg.from_dict(reply.payload)
                 if self.cfg.get(DNetField.PER_STEP):
                     self.mq.enable_per_step_sub()
+                    self.remove_class(DField.TURBO_ON)
+                    self.add_class(DField.TURBO_OFF)
                 else:
                     self.mq.disable_per_step_sub()
+                    self.remove_class(DField.TURBO_OFF)
+                    self.add_class(DField.TURBO_ON)
                 # Load configurable TUI settings from the running sim config
                 self._w_initial_epsilon_input.value = str(
                     self.cfg.get(DNetField.INITIAL_EPSILON)
@@ -794,11 +850,13 @@ class HydraClientTui(App):
                 self._update_tui_labels()
                 self.console_msg("Connecting to running simulation...")
 
+            # ----- Simulation is not running ---
             else:
                 self.add_class(DField.SIM_STOPPED)
                 self.console_msg("Connected to simulation server...")
             self.remove_class(DField.BAD_HANDSHAKE)
 
+        # ----- Cannot connect to Simulation Server (HydraMgr)
         except asyncio.TimeoutError:
             self.console_msg("Unable to connect to simulation server...")
 
@@ -881,6 +939,9 @@ class HydraClientTui(App):
         """
         Update the SimCfg settings and the TUI labels
         """
+        # Batch size
+        batch_size = self._w_batch_size_input.value
+        self._w_batch_size_label.update(batch_size)
         # Random Seed
         random_seed = self._w_random_seed_input.value
         self._w_random_seed_label.update(random_seed)
@@ -917,9 +978,13 @@ class HydraClientTui(App):
         # RNN Tau
         rnn_tau = self._w_rnn_tau_input.value
         self._w_rnn_tau_label.update(rnn_tau)
+        # Sequence length
+        seq_length = self._w_seq_length_input.value
+        self._w_seq_length_label.update(seq_length)
 
         self.cfg.apply(
             {
+                DNetField.BATCH_SIZE: int(batch_size),
                 DNetField.DROPOUT_P: dropout_p,
                 DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.GAMMA: gamma,
@@ -933,6 +998,7 @@ class HydraClientTui(App):
                 DNetField.RANDOM_SEED: int(random_seed),
                 DNetField.RNN_LAYERS: int(rnn_layers),
                 DNetField.RNN_TAU: float(rnn_tau),
+                DNetField.SEQ_LENGTH: int(seq_length),
             }
         )
 
