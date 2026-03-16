@@ -91,6 +91,9 @@ class DField:
     NETWORK: Final[str] = "network"
     NORMAL: Final[str] = "normal"
     NUMBER: Final[str] = "number"
+    PLOT_HIGHSCORES: Final[str] = "plot_highscores"
+    PLOT_CUR_SCORE: Final[str] = "plot_cur_score"
+
     QUIT: Final[str] = "quit"
     RANDOM_SEED_INPUT: Final[str] = "random_seed_input"
     RANDOM_SEED_LABEL: Final[str] = "random_seed_label"

@@ -137,6 +137,7 @@ class SnakeMgr:
         prev = self.sessions.get(client_id)
         prev_highscore = getattr(prev, "highscore", 0)
         prev_epoch = getattr(prev, "epoch", 0)
+        next_step_n = getattr(prev, "step_n", 0) + 1
 
         session_seed, rng = self.new_rng(seed)
         episode_id = rng.getrandbits(32)
@@ -152,12 +153,12 @@ class SnakeMgr:
             rng=rng,
             board=board,
             done=False,
-            step_n=0,
             score=0,
             episode_id=episode_id,
             # carry-over stats
             highscore=prev_highscore,
             epoch=prev_epoch,
+            step_n=next_step_n,
         )
         self.sessions[client_id] = sess
         return sess
@@ -195,7 +196,6 @@ class SnakeMgr:
         - state_dict
         """
         try:
-
             # The previous session....
             sess = self.get_session(client_id)
 
@@ -206,7 +206,6 @@ class SnakeMgr:
             result = GameLogic.step(sess.board, int(action), sess.rng)
 
             sess.board = result.new_board
-            sess.step_n += 1
 
             reward = int(result.reward)
             done = bool(result.is_terminal)
@@ -237,9 +236,7 @@ class SnakeMgr:
 
             # ----- The payload for the ZeroMQ "scores" topic ---
             scores_payload = {
-                DGameField.SCORE: sess.score,
-                DGameField.HIGHSCORE: sess.highscore,
-                DGameField.EPOCH: sess.epoch,
+                DGameField.CUR_SCORE: sess.score,
             }
             # Create a "final score" field for the TUI
             if done:
@@ -248,11 +245,7 @@ class SnakeMgr:
             # Add a "highscore" event
             if sess.score > sess.highscore:
                 sess.highscore = sess.score
-                scores_payload[DGameField.HIGHSCORE_EVENT] = [
-                    sess.epoch,
-                    sess.highscore,
-                    elapsed_str,
-                ]
+                scores_payload[DGameField.HIGHSCORE] = sess.highscore
                 self.log.info(
                     f"Epoch: {sess.epoch} - New High Score: {sess.highscore}"
                 )
@@ -268,7 +261,6 @@ class SnakeMgr:
                 ep_payload: dict[str, Any] = {
                     DGameField.EPOCH: sess.epoch,
                     DGameField.REASON: outcome,
-                    DGameField.STEP_N: sess.step_n,
                     DGameField.ELAPSED_TIME: elapsed_str,
                 }
 

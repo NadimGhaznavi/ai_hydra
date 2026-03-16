@@ -7,6 +7,7 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
+# General Python Modules
 import asyncio
 import sys
 import time
@@ -14,21 +15,23 @@ from pathlib import Path
 import os
 from datetime import datetime
 
+# Textual Modules
 from textual import work, on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
-from textual.widgets import Button, Label, Input, Checkbox, Select, Switch
+from textual.widgets import (
+    Button,
+    Label,
+    Input,
+    Checkbox,
+    Select,
+    TabbedContent,
+    TabPane,
+)
 from textual.message import Message
 
-from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
-from ai_hydra.zmq.HydraMsg import HydraMsg
-from ai_hydra.utils.SimCfg import SimCfg
-from ai_hydra.utils.HydraMetrics import HydraMetrics
-from ai_hydra.client.ClientGameBoard import ClientGameBoard
-from ai_hydra.client.HighScoresLog import HighScoresLog
-from ai_hydra.client.TabbedPlots import TabbedPlots
-
+# AI Hydra Constants
 from ai_hydra.constants.DHydra import (
     DHydra,
     DHydraRouterDef,
@@ -47,6 +50,17 @@ from ai_hydra.constants.DNNet import (
     MODEL_TYPE_TABLE,
     MODEL_TYPES,
 )
+
+# AI Hydra Modules
+from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
+from ai_hydra.zmq.HydraMsg import HydraMsg
+from ai_hydra.utils.SimCfg import SimCfg
+from ai_hydra.utils.HydraSnapshot import HydraSnapshot
+from ai_hydra.utils.HydraMetrics import HydraMetrics
+from ai_hydra.client.ClientGameBoard import ClientGameBoard
+from ai_hydra.client.HighScoresLog import HighScoresLog
+from ai_hydra.client.HydraTelemetry import HydraTelemetry
+
 
 HYDRA_THEME = Theme(
     name="hydra_theme",
@@ -101,8 +115,12 @@ class HydraClientTui(App):
         self._running = False
         self._wgt = None
 
-        # Metrics to hold config and runtime sim data
-        self.metrics = HydraMetrics()
+        # Metrics to telemetry data
+        self.metrics = HydraMetrics(initial_epsilon=DLinear.INITIAL_EPSILON)
+
+        # Snapshot class to create a snapshot file.
+        self.snapshot = HydraSnapshot()
+
         self._cur_epsilon = None
 
         # Ahem...
@@ -425,8 +443,8 @@ class HydraClientTui(App):
             id=DField.TRAINING_BOX,
         )
 
-        # Plots
-        yield TabbedPlots(id=DField.TABBED_PLOTS)
+        # Realtime Telemetry (plots and event log)
+        yield HydraTelemetry(metrics=self.metrics)
 
         # Console
         yield Vertical(Label(id=DField.CONSOLE_SCREEN), id=DField.CONSOLE_BOX)
@@ -590,9 +608,6 @@ class HydraClientTui(App):
         self._w_seq_length_label = self.query_one(
             f"#{DField.SEQ_LENGTH_LABEL}", Label
         )
-        self._w_tabbed_plots = self.query_one(
-            f"#{DField.TABBED_PLOTS}", TabbedPlots
-        )
         self._w_highscores_log = self.query_one(
             f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         )
@@ -615,7 +630,6 @@ class HydraClientTui(App):
         self._w_highscores_log.border_subtitle = DLabel.HIGHSCORES
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
         self._w_console_box.border_subtitle = DLabel.CONSOLE
-        self._w_tabbed_plots.border_subtitle = DLabel.VISUALIZATIONS
         self.query_one(f"#{DField.MODEL}").border_subtitle = DLabel.MODEL
         self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
         self.query_one(f"#{DField.TRAINING_BOX}").border_subtitle = (
@@ -626,6 +640,7 @@ class HydraClientTui(App):
         # Switch focus to a hidden widget
         self._w_hidden_widget.focus()
 
+        # Initialize ZeroMQ
         self.mq = HydraClientMQ(
             router_address=self._address,
             router_port=self._port,
@@ -645,42 +660,41 @@ class HydraClientTui(App):
         self.console_msg("Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
+        # Unbatch messages
         batch_msg = HydraMsg.from_dict(payload)
         messages = batch_msg.payload[DHydraMQ.MSGS]
         self._cur_per_ep_batch_num = messages[0]["payload"]["count"]
         if self._first_per_ep_batch:
             self._first_per_ep_batch_num = False
             self._prev_per_ep_batch_num = self._cur_per_ep_batch_num - 1
-
         if (self._cur_per_ep_batch_num - self._prev_per_ep_batch_num) != 1:
             self.console_msg("WARNING: Per episode data is being dropped!!!")
-
         self._prev_per_ep_batch_num = self._cur_per_ep_batch_num
 
+        metrics = self.metrics
+
+        # Process messages
         for payload in messages[1:]:
-            # Epoch
-            epoch = payload[DGameField.EPOCH]
+
+            # Get the data from the payload
+            epoch = payload.get(DGameField.EPOCH)
+            elapsed_time = payload.get(DGameField.ELAPSED_TIME)
+            cur_epsilon = payload.get(DNetField.CUR_EPSILON)
+            cur_loss = payload.get(DNetField.LOSS, None)
+
+            # Load the data into the metrics object
+            metrics.add_cur_epoch(epoch)
+            metrics.add_elapsed_time(elapsed_time)
+            metrics.add_cur_epsilon(cur_epsilon)
+            metrics.add_cur_loss(cur_loss)
+
+            # Update the TUI
             self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
-            self.metrics.add_cur_epoch(epoch)
-
-            # Elapsed time
-            elapsed_time = payload[DGameField.ELAPSED_TIME]
             self._w_console_box.border_subtitle = elapsed_time
-            self.metrics.add_elapsed_time(elapsed_time)
-
-            # Current epsilon value
-            epsilon = payload.get(DNetField.CUR_EPSILON)
-            if epsilon is not None:
-                self._w_cur_epsilon_label.update(str(round(epsilon, 4)))
-                self._cur_epsilon = epsilon
-
-            # Loss
-            if DNetField.LOSS in payload:
-                self._w_tabbed_plots.add_loss(
-                    epoch=epoch, loss=payload[DNetField.LOSS]
-                )
+            self._w_cur_epsilon_label.update(str(round(cur_epsilon, 4)))
 
     def on_per_step(self, topic: str, payload: dict) -> None:
+        # These messages are not batched (there's a MOVE_DELAY)
         board = payload.get(DGameField.BOARD)
         self.game_board.apply_board_dict(board)
 
@@ -698,60 +712,47 @@ class HydraClientTui(App):
         self.exit()
 
     def on_scores(self, topic: str, payload) -> None:
+        # Unpack message batch
         batch_msg = HydraMsg.from_dict(payload)
         messages = batch_msg.payload[DHydraMQ.MSGS]
         self._cur_scores_batch_num = messages[0]["payload"]["count"]
         if self._first_scores_batch:
             self._first_scores_batch_num = False
             self._prev_scores_batch_num = self._cur_scores_batch_num - 1
-
         if (self._cur_scores_batch_num - self._prev_scores_batch_num) != 1:
             self.console_msg("WARNING: Score data is being dropped!!!")
-
         self._prev_scores_batch_num = self._cur_scores_batch_num
-        cur_epsilon = self._cur_epsilon or self._w_initial_epsilon_input.value
+
+        metrics = self.metrics
 
         for payload in messages[1:]:
 
-            # Current highscore
-            highscore = payload[DGameField.HIGHSCORE]
-            self._w_highscores_log.border_subtitle = (
-                f"{DLabel.HIGHSCORE}: {highscore}"
-            )
+            # Get the data from the payload
+            cur_score = payload.get(DGameField.CUR_SCORE)
+            highscore = payload.get(DGameField.HIGHSCORE)
 
-            # current score
-            score = payload[DGameField.SCORE]
+            # Load the data into the metrics object
+            metrics.add_cur_score(cur_score)
+            is_new_highscore = metrics.add_highscore(highscore)
+
+            ## Update the TUI
+
+            # Only update if the highscore is new
+            if is_new_highscore:
+                highscore_log = self.query_one(
+                    f"#{DField.HIGHSCORES_LOG}", HighScoresLog
+                )
+                highscore_log.border_subtitle = (
+                    f"{DLabel.HIGHSCORE}: {highscore}"
+                )
+                highscore_event = metrics.get_last_highscore_event()
+                highscore_log.add_highscore(highscore_event)
+                self.console_msg(f"🎉 New highscore : {highscore}")
+
+            # Only update the score, if "per_step" is enabled.
             if self.cfg.get(DNetField.PER_STEP):
                 self._w_board_box.border_subtitle = (
-                    f"{DLabel.SCORE}: {score:<2}"
-                )
-            else:
-                self._w_board_box.border_subtitle = ""
-
-            # Highscore event
-            if DGameField.HIGHSCORE_EVENT in payload:
-                hs_event = payload[DGameField.HIGHSCORE_EVENT]
-                self._w_highscores_log.add_highscore(
-                    epoch=hs_event[0],
-                    highscore=hs_event[1],
-                    event_time=hs_event[2],
-                )
-                self._w_tabbed_plots.add_scatter_score(
-                    scores=(hs_event[0], hs_event[1])
-                )
-                self.console_msg(f"🎉 New highscore : {hs_event[1]}")
-                self.metrics.add_highscore_event(
-                    episode=hs_event[0],
-                    highscore=hs_event[1],
-                    event_time=hs_event[2],
-                    cur_ep=cur_epsilon,
-                )
-
-            # Final score
-            if DNetField.FINAL_SCORE in payload:
-                self._w_tabbed_plots.add_score(
-                    cur_score=payload[DNetField.FINAL_SCORE],
-                    cur_epoch=payload[DGameField.EPOCH],
+                    f"{DLabel.SCORE}: {cur_score:<2}"
                 )
 
     async def on_shutdown_request(self) -> None:
@@ -802,6 +803,9 @@ class HydraClientTui(App):
         self._w_initial_epsilon_input.value = str(initial_epsilon)
         self._w_learning_rate_input.value = lr
         self._w_min_epsilon_input.value = str(min_epsilon)
+
+        # Update HydraMetrics
+        self.metrics.set_initial_epsilon(initial_epsilon)
 
         if self._not_first_time_kludge:
             self.console_msg("Updated defaults setting...")
@@ -935,7 +939,7 @@ class HydraClientTui(App):
         timestamp = now.strftime("%Y-%m-%d_%H-%M.txt")
         snapshot_file = DFile.BASE_SNAPSHOT + timestamp
         fq_snapshot = os.path.join(self._hydra_dir, snapshot_file)
-        self.metrics.create_snapshot(snap_file=fq_snapshot, cfg=self.cfg)
+        self.snapshot.create_snapshot(snap_file=fq_snapshot, cfg=self.cfg)
 
         self.console_msg(f"📸 Created snapshot file: {fq_snapshot}")
 

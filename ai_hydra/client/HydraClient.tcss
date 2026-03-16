@@ -12,7 +12,7 @@ Button {
     border: none;
 }
 
-TabbedPlots {
+#tabbed_plots {
     column-span: 4;
     background: black;
     border: round #0c323e;
@@ -106,17 +106,31 @@ HighScoresLog {
     padding: 0 1;
 }
 
-/* ---------- Textual Plot's PlotWidget settings */
+/* ---------- HydraTelemetry --- */
 
 /* --- GameScorePlot Widget --- */
-#game_scores {
+HydraTelemetry {
+    column-span: 4;
+    background: black;
+    border: round #0c323e;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    text-style: bold;
+    padding: 0 1;
+    color: #54ac59;}
+
+GameScorePlot {
     height: 18;
-    width: 50;
 }
-#highscores_plot {
+#plot_highscores {
     height: 18;
     width: 75;
 }
+#plot_cur_score {
+    height: 18;
+    width: 50;
+}
+
 /* ---------------------------- */
 
 #loss_plot {

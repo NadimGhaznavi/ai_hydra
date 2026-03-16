@@ -12,6 +12,7 @@ from textual.widgets import TabbedContent, Label, Log
 from textual.app import ComposeResult, Widget
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DStatus
+from ai_hydra.utils.HighscoreEvent import HighscoreEvent
 
 
 class HighScoresLog(Widget):
@@ -25,7 +26,7 @@ class HighScoresLog(Widget):
             classes=DField.HIGHSCORES_BOX,
         )
 
-    def add_highscore(self, epoch, highscore, event_time):
+    def add_highscore(self, event: HighscoreEvent):
         self.query_one(f"#{DField.HIGHSCORES}", Log).write_line(
-            f"{epoch:7d}{highscore:7d}{event_time:>13s}"
+            f"{event.epoch:7d}{event.highscore:7d}{event.elapsed_time:>13s}"
         )

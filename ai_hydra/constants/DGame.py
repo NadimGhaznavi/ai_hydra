@@ -28,6 +28,8 @@ class DGameField:
     ACTION: Final[str] = "action"
     BOARD: Final[str] = "board"
     CLOSER_TO_FOOD: Final[str] = "closer_to_food"
+    CUR_SCORE: Final[str] = "cur_score"
+    CUR_EPOCH: Final[str] = "cur_epoch"
     DIRECTION: Final[str] = "direction"
     DONE: Final[str] = "done"
     DX: Final[str] = "dx"
