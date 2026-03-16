@@ -236,6 +236,7 @@ class SnakeMgr:
 
             # ----- The payload for the ZeroMQ "scores" topic ---
             scores_payload = {
+                DGameField.EPOCH: sess.epoch,
                 DGameField.CUR_SCORE: sess.score,
             }
             # Create a "final score" field for the TUI

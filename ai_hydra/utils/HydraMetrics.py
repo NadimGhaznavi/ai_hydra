@@ -15,10 +15,10 @@ class HydraMetrics:
 
     def __init__(self, initial_epsilon: float) -> None:
         self._cur_epsilon = initial_epsilon
-        self._cur_epoch: int | None = None
+        self._cur_epoch: int = 0
         self._cur_loss: float | None = None
-        self._cur_score: int | None = None
-        self._elapsed_time: str | None = None
+        self._cur_score: int = 0
+        self._elapsed_time: str = "0s"
 
         self._highscore_events: list[HighscoreEvent] = []
 

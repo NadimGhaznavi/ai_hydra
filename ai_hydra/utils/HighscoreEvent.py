@@ -15,5 +15,5 @@ from dataclasses import dataclass
 class HighscoreEvent:
     epoch: int
     highscore: int
-    epsilon: float
-    elapsed_time: str
+    epsilon: float | None
+    elapsed_time: str | None

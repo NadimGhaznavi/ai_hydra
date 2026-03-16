@@ -444,7 +444,7 @@ class HydraClientTui(App):
         )
 
         # Realtime Telemetry (plots and event log)
-        yield HydraTelemetry(metrics=self.metrics)
+        yield HydraTelemetry(metrics=self.metrics, id=DField.HYDRA_TELEMETRY)
 
         # Console
         yield Vertical(Label(id=DField.CONSOLE_SCREEN), id=DField.CONSOLE_BOX)
@@ -728,10 +728,12 @@ class HydraClientTui(App):
         for payload in messages[1:]:
 
             # Get the data from the payload
+            cur_epoch = payload.get(DGameField.EPOCH)
             cur_score = payload.get(DGameField.CUR_SCORE)
             highscore = payload.get(DGameField.HIGHSCORE)
 
             # Load the data into the metrics object
+            metrics.add_cur_epoch(cur_epoch)
             metrics.add_cur_score(cur_score)
             is_new_highscore = metrics.add_highscore(highscore)
 
@@ -748,6 +750,10 @@ class HydraClientTui(App):
                 highscore_event = metrics.get_last_highscore_event()
                 highscore_log.add_highscore(highscore_event)
                 self.console_msg(f"🎉 New highscore : {highscore}")
+                hydra_telemetry = self.query_one(
+                    f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
+                )
+                hydra_telemetry.game_score_plot.plot_all()
 
             # Only update the score, if "per_step" is enabled.
             if self.cfg.get(DNetField.PER_STEP):

@@ -64,6 +64,7 @@ class DField:
     HIGHSCORES_LOG: Final[str] = "highscores_log"
     HIGHSCORES_PLOT: Final[str] = "highscores_plot"
     HIGHSCORES_LH: Final[str] = "highscores_lh"
+    HYDRA_TELEMETRY: Final[str] = "hydra_telemetry"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     INITIAL_EPSILON_INPUT: Final[str] = "initial_epsilon_input"
     INITIAL_EPSILON_LABEL: Final[str] = "initial_epsilon_label"

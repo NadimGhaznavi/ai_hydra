@@ -24,11 +24,12 @@ class HydraTelemetry(Widget):
     def __init__(self, metrics: HydraMetrics, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.metrics = metrics
+        self.game_score_plot = GameScorePlot(
+            id=DField.GAME_SCORE_PLOT, metrics=self.metrics
+        )
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
             DLabel.GAME_SCORES,
         ):
-            yield GameScorePlot(
-                id=DField.GAME_SCORE_PLOT, metrics=self.metrics
-            )
+            yield self.game_score_plot
