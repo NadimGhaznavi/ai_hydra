@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import traceback
 from collections import deque
 from random import Random
 from typing import Deque, TypeVar
@@ -24,10 +25,17 @@ from ai_hydra.utils.HydraLog import HydraLog
 
 MAX_CHUNKS = DMemory.MAX_CHUNKS
 MIN_CHUNKS = DMemory.MIN_CHUNKS
-SEQ_LENGTH = DRNN.SEQ_LENGTH
 
 MAX_MEM_SIZE = DMemory.MAX_MEM_SIZE  # Max Linear transitions
 MIN_FRAMES = DMemory.MIN_FRAMES  # Min transitions before returning samples
+# Bucket all chunks at or above this chunk index into one final bucket.
+# Example with 4:
+#   0 -> first chunk in a game
+#   1 -> second chunk
+#   2 -> third chunk
+#   3 -> fourth chunk
+#   4 -> fifth and beyond
+MAX_CHUNK_BUCKET = 19
 
 T = TypeVar("T")
 
@@ -38,7 +46,7 @@ class ReplayMemory:
         rng: Random,
         log_level: DHydraLog,
         rnn: bool = False,
-        seq_length=None,
+        seq_length: int | None = None,
     ):
         self.log = HydraLog(
             client_id="ReplayMemory",
@@ -52,12 +60,25 @@ class ReplayMemory:
 
         ### RNN model settings
         self._rnn = rnn
-        self._chunks: list[list[Transition]] = []
         self._cur_game: list[Transition] = []
-        self._max_chunks = MAX_CHUNKS
+        self._chunks: list[tuple[int, list[Transition]]] = []
         self._seq_len = seq_length
         self._memory_cold = True
         self._memory_not_full = True
+        self._memory_not_balanced = True
+
+        # Global cap across all RNN buckets
+        self._max_chunks = MAX_CHUNKS
+        self._num_chunks = 0
+
+        # Counter
+        self._samples_delivered = 0
+
+        # bucket_idx -> rolling list of chunks
+        self._chunks_by_idx: dict[int, list[list[Transition]]] = {
+            idx: [] for idx in range(MAX_CHUNK_BUCKET + 1)
+        }
+
         if self._rnn:
             if seq_length is None:
                 raise ValueError("Sequence length must be set")
@@ -65,6 +86,9 @@ class ReplayMemory:
             self.log.info(f"Setting sequence length to {seq_length}")
             self.log.info(
                 f"Setting maximum number of stored sequence to {MAX_CHUNKS}"
+            )
+            self.log.info(
+                f"Setting maximum chunk bucket index to {MAX_CHUNK_BUCKET}"
             )
         else:
             self.log.info("Initialized for Linear model training")
@@ -83,12 +107,11 @@ class ReplayMemory:
         ### the training sequences.
         if not self._rnn:
             self._memory.append(t)
-            if len(self._memory) >= MAX_MEM_SIZE:
-                if self._memory_not_full:
-                    self.log.info(
-                        f"Memory has been filled to capacity: {MAX_MEM_SIZE} transitions"
-                    )
-                    self._memory_not_full = False
+            if len(self._memory) >= MAX_MEM_SIZE and self._memory_not_full:
+                self.log.info(
+                    f"Memory has been filled to capacity: {MAX_MEM_SIZE} transitions"
+                )
+                self._memory_not_full = False
             return
 
         self._cur_game.append(t)
@@ -99,49 +122,172 @@ class ReplayMemory:
         game = self._cur_game
         self._cur_game = []
 
-        if len(game) >= self._seq_len:
-            self._chunks.extend(self._chunk_from_end(game))
-            if len(self._chunks) > self._max_chunks:
-                if self._memory_not_full:
-                    self.log.info(
-                        f"Memory has been filled to capacity: {self._max_chunks}"
-                    )
-                    self._memory_not_full = False
-                overflow = len(self._chunks) - self._max_chunks
-                del self._chunks[:overflow]
+        if len(game) < self._seq_len:
+            return
+
+        new_chunks = self._chunk_from_end(game)
+
+        for bucket_idx, chunk in new_chunks:
+            self._chunks_by_idx[bucket_idx].append(chunk)
+            self._num_chunks += 1
+
+        self._prune_if_needed()
+
+    def _prune_if_needed(self) -> None:
+        if self._num_chunks <= self._max_chunks:
+            return
+
+        if self._memory_not_full:
+            self.log.info(
+                f"Memory has been filled to capacity: {self._max_chunks} sequences"
+            )
+            self._memory_not_full = False
+
+        overflow = self._num_chunks - self._max_chunks
+
+        # Simple pruning policy:
+        # prune oldest chunks from the most overrepresented non-empty bucket first
+        for _ in range(overflow):
+            bucket_to_prune = self._largest_bucket_idx()
+            if bucket_to_prune is None:
+                break
+            del self._chunks_by_idx[bucket_to_prune][0]
+            self._num_chunks -= 1
+
+    def _log_chuck_distro(self):
+        is_balanced = True
+        log_str = "Sequence distribution [idx:size]: "
+        for idx in self._chunks_by_idx.keys():
+            bucket_size = len(self._chunks_by_idx[idx])
+            log_str += f"[{idx}:{bucket_size}], "
+            if bucket_size != (MAX_CHUNKS // (MAX_CHUNK_BUCKET + 1)):
+                is_balanced = False
+        self.log.debug(log_str[:-2])
+        if is_balanced:
+            self._memory_not_balanced = False
+            self.log.info("Memory buckets are balanced")
+
+    def _largest_bucket_idx(self) -> int | None:
+        largest_idx: int | None = None
+        largest_size = 0
+        for idx, chunks in self._chunks_by_idx.items():
+            size = len(chunks)
+            if size > largest_size:
+                largest_size = size
+                largest_idx = idx
+        return largest_idx
 
     def _chunk_from_end(
-        self, game: list[Transition]
-    ) -> list[list[Transition]]:
+        self,
+        game: list[Transition],
+    ) -> list[tuple[int, list[Transition]]]:
+        """
+        Split a completed game into fixed-length chunks aligned from the end.
+
+        Returns:
+            List of (bucket_idx, chunk)
+        """
         n = len(game)
         rem = n % self._seq_len
         start = rem if rem != 0 else 0
-        chunks: list[list[Transition]] = []
+
+        chunks: list[tuple[int, list[Transition]]] = []
+        chunk_idx = 0
+
         for i in range(start, n, self._seq_len):
             chunk = game[i : i + self._seq_len]
             if len(chunk) == self._seq_len:
-                chunks.append(chunk)
+                bucket_idx = min(chunk_idx, MAX_CHUNK_BUCKET)
+                chunks.append((bucket_idx, chunk))
+                chunk_idx += 1
+
         return chunks
 
     def num_chunks(self) -> int:
         return len(self._chunks)
 
+    def chunk_bucket_counts(self) -> dict[int, int]:
+        return {
+            idx: len(chunks) for idx, chunks in self._chunks_by_idx.items()
+        }
+
+    def _warmed_bucket_indices(self) -> list[int]:
+        warmed: list[int] = []
+        for idx, chunks in self._chunks_by_idx.items():
+            if len(chunks) > 0:
+                warmed.append(idx)
+        return warmed
+
     def sample_chunks(
         self,
         batch_size: int,
     ) -> list[list[Transition]] | None:
+        """
+        Sample chunks across warmed chunk-index buckets.
 
-        # This only checks whether a full batch is possible in aggregate.
-        # The requested LH/NLH ratio is best-effort and is resolved in
-        # _sample_mixed().
-        if len(self._chunks) < max(batch_size, MIN_CHUNKS):
+        Sampling policy:
+          - require enough chunks in aggregate
+          - divide batch approximately evenly across non-empty buckets
+          - redistribute remainder to buckets with spare capacity
+        """
+        if self._num_chunks < max(batch_size, MIN_CHUNKS):
+            return None
+
+        warmed = self._warmed_bucket_indices()
+        if not warmed:
             return None
 
         if self._memory_cold:
             self.log.debug("Memory has warmed up")
             self._memory_cold = False
 
-        return self._rng.sample(self._chunks, batch_size)
+        samples: list[list[Transition]] = []
+
+        # First pass: even split across warmed buckets
+        base = batch_size // len(warmed)
+        remainder = batch_size % len(warmed)
+
+        requested: dict[int, int] = {}
+        for idx in warmed:
+            requested[idx] = base
+
+        # distribute remainder from later buckets backward so late-game buckets
+        # get slight preference when possible
+        warmed_desc = sorted(warmed, reverse=True)
+        for i in range(remainder):
+            requested[warmed_desc[i % len(warmed_desc)]] += 1
+
+        # Sample what we can from each bucket
+        shortage = 0
+        for idx in warmed:
+            bucket = self._chunks_by_idx[idx]
+            want = requested[idx]
+            take = min(want, len(bucket))
+            if take > 0:
+                samples.extend(self._rng.sample(bucket, take))
+            shortage += want - take
+
+        if shortage > 0:
+            # Fallback pool from all unused capacity
+            flat_pool: list[list[Transition]] = []
+            already_selected_ids = {id(chunk) for chunk in samples}
+
+            for idx in warmed:
+                for chunk in self._chunks_by_idx[idx]:
+                    if id(chunk) not in already_selected_ids:
+                        flat_pool.append(chunk)
+
+            if len(flat_pool) < shortage:
+                return None
+
+            samples.extend(self._rng.sample(flat_pool, shortage))
+
+        self._samples_delivered += 1
+
+        if self._memory_not_balanced and self._samples_delivered % 100 == 0:
+            self._log_chuck_distro()
+
+        return samples
 
     def sample_transitions(self, batch_size: int) -> list[Transition] | None:
         """Sample random transitions for a linear model."""
