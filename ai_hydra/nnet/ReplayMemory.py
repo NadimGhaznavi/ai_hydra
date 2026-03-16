@@ -156,13 +156,13 @@ class ReplayMemory:
 
     def _log_chuck_distro(self):
         is_balanced = True
-        log_str = "Sequence distribution [idx:size]: "
+        log_str = "Sequence distribution: ["
         for idx in self._chunks_by_idx.keys():
             bucket_size = len(self._chunks_by_idx[idx])
-            log_str += f"[{idx}:{bucket_size}], "
+            log_str += f"{bucket_size}|"
             if bucket_size != (MAX_CHUNKS // (MAX_CHUNK_BUCKET + 1)):
                 is_balanced = False
-        self.log.debug(log_str[:-2])
+        self.log.debug(log_str[:-1] + "]")
         if is_balanced:
             self._memory_not_balanced = False
             self.log.info("Memory buckets are balanced")
@@ -284,7 +284,7 @@ class ReplayMemory:
 
         self._samples_delivered += 1
 
-        if self._memory_not_balanced and self._samples_delivered % 100 == 0:
+        if self._memory_not_balanced and self._samples_delivered % 500 == 0:
             self._log_chuck_distro()
 
         return samples

@@ -1,0 +1,45 @@
+What could drop into Hydra later
+
+Because of how you separated concerns, you could slot in very different brains.
+
+1️⃣ Transformer policy
+
+Instead of an RNN:
+
+state history → transformer → Q values
+
+
+That would let the model reason about long temporal patterns better.
+
+2️⃣ World-model RL
+
+Hydra could evolve into something like:
+
+policy network
++
+environment predictor
+
+
+The agent learns a model of the world and plans ahead.
+
+3️⃣ Monte-Carlo tree search hybrid
+
+Very interesting for snake.
+
+NN policy
++
+MCTS lookahead
+
+
+Kind of an AlphaZero snake.
+
+4️⃣ Evolutionary algorithms
+
+Hydra could run population training:
+
+many networks
+mutation
+selection
+
+
+That would actually fit your Hydra name nicely.

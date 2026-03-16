@@ -51,16 +51,18 @@ class DField:
     EPSILON_DECAY_INPUT: Final[str] = "epsilon_decay_input"
     EPSILON_DECAY_LABEL: Final[str] = "epsilon_decay_label"
     EPSILON_DEPLETED: Final[str] = "epsilon_depleted"
-    GAMMA_INPUT: Final[float] = "gamma_input"
-    GAMMA_LABEL: Final[float] = "gamma_label"
+    GAMMA_INPUT: Final[str] = "gamma_input"
+    GAMMA_LABEL: Final[str] = "gamma_label"
+    GAME_SCORE_PLOT: Final[str] = "game_score_plot"
     GAME_SCORES: Final[str] = "game_scores"
     HANDSHAKE: Final[str] = "handshake"
     HIDDEN_SIZE_INPUT: Final[str] = "hidden_size_input"
     HIDDEN_SIZE_LABEL: Final[str] = "hidden_size_label"
     HIDDEN_WIDGET: Final[str] = "hidden_widget"
     HIGHSCORES: Final[str] = "highscores"
-    HIGHSCORES_LOG: Final[str] = "highscores_log"
     HIGHSCORES_BOX: Final[str] = "highscores_box"
+    HIGHSCORES_LOG: Final[str] = "highscores_log"
+    HIGHSCORES_PLOT: Final[str] = "highscores_plot"
     HIGHSCORES_LH: Final[str] = "highscores_lh"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     INITIAL_EPSILON_INPUT: Final[str] = "initial_epsilon_input"
@@ -243,6 +245,10 @@ class DPlotDef:
     MAX_LOSS_DATA_POINTS: Final[int] = 125
     MAX_CUR_DATA_POINTS: Final[int] = 200
     MAX_CUR_LOSS_DATA_POINTS: Final[int] = 75
+
+    # GameScorePlot widget settings
+    MAX_GAMES = 75
+    MAX_GAMES_AVG_DIVISOR: int = 50
 
 
 class DStatus:

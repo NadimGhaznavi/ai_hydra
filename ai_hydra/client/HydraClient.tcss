@@ -107,14 +107,21 @@ HighScoresLog {
 }
 
 /* ---------- Textual Plot's PlotWidget settings */
-#loss_plot {
+
+/* --- GameScorePlot Widget --- */
+#game_scores {
+    height: 18;
+    width: 50;
+}
+#highscores_plot {
     height: 18;
     width: 75;
 }
+/* ---------------------------- */
 
-#game_scores {
+#loss_plot {
     height: 18;
-    width: 125;
+    width: 75;
 }
 
 #cur_loss {

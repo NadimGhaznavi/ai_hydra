@@ -38,6 +38,7 @@ class EpsilonAlgo:
         self._cur_epsilon = None
         self._injected = 0
         self._depleted = False
+        self._epsilon_not_depleted = True
         self.log = HydraLog(
             client_id="EpsilonAlgo", log_level=log_level, to_console=True
         )
@@ -86,6 +87,10 @@ class EpsilonAlgo:
             self._min_epsilon, self._cur_epsilon * self._decay_rate
         )
         self._depleted = self._cur_epsilon <= self._min_epsilon
+        if self._epsilon_not_depleted and self._depleted:
+            self.log.info(f"Epsilon is at the minimum: {self._min_epsilon}")
+            self._epsilon_not_depleted = False
+
         self.reset_injected()
 
     def reset(self) -> None:
