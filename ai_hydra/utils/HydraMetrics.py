@@ -11,12 +11,13 @@ from collections import deque
 from statistics import mean, median
 
 from ai_hydra.constants.DHydraTui import DPlotDef
-from ai_hydra.utils.MetricEvent import HighscoreEvent, ScoreEvent
+from ai_hydra.utils.MetricEvent import HighscoreEvent, ScoreEvent, LossEvent
 
 MAX_CUR_SCORES = DPlotDef.MAX_CUR_SCORES
 RECENT_SCORES_MAX = DPlotDef.RECENT_SCORES_MAX
-AVG_DIVISOR = 5
+RECENT_LOSS_MAX = DPlotDef.RECENT_LOSS_MAX
 
+AVG_DIVISOR = 5
 AVG_CUR_SCORES = MAX_CUR_SCORES // AVG_DIVISOR
 
 
@@ -43,6 +44,10 @@ class HydraMetrics:
         self._scores_dist_list: list[int] = []
         self._recent_scores_dist_list: list[int] = []
 
+        # Loss events
+        self._losses: list[LossEvent] = []
+        self._recent_losses: deque[LossEvent] = deque(maxlen=RECENT_LOSS_MAX)
+
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
 
@@ -50,8 +55,17 @@ class HydraMetrics:
         self._cur_epsilon = epsilon
 
     def add_cur_loss(self, loss: float) -> None:
-        if loss is not None:
-            self._cur_loss = loss
+        if loss is None:
+            return False
+
+        # Don't insert dupes
+        if self._losses and self._cur_epoch == self._losses[-1].epoch:
+            return False
+
+        self._cur_loss = loss
+        self._losses.append(LossEvent(epoch=self._cur_epoch, loss=loss))
+        self._recent_losses.append(LossEvent(epoch=self._cur_epoch, loss=loss))
+        return True
 
     def add_cur_score(self, score: int) -> None:
         self._cur_score = score
@@ -151,6 +165,12 @@ class HydraMetrics:
     def get_last_highscore_event(self) -> HighscoreEvent:
         if self._highscore_events:
             return self._highscore_events[-1]
+
+    def get_loss_plot_points(self) -> list[tuple[int, float]]:
+        return [(e.epoch, e.loss) for e in self._losses]
+
+    def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:
+        return [(e.epoch, e.loss) for e in self._recent_losses]
 
     def get_scores_dist_plot_points(self) -> tuple[list[int], list[int]]:
         scores = sorted(self._scores_dist.keys())

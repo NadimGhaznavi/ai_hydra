@@ -96,8 +96,10 @@ class DField:
     NUMBER: Final[str] = "number"
     PLOT_CUR_SCORE: Final[str] = "plot_cur_score"
     PLOT_HIGHSCORES: Final[str] = "plot_highscores"
-    PLOT_SCORES_DIST: Final[str] = "plot_scores_dist"
+    PLOT_LOSS: Final[str] = "plot_loss"
+    PLOT_RECENT_LOSS: Final[str] = "plot_recent_loss"
     PLOT_RECENT_SCORES_DIST: Final[str] = "plot_recent_scores_dist"
+    PLOT_SCORES_DIST: Final[str] = "plot_scores_dist"
     QUIT: Final[str] = "quit"
     RECENT: Final[str] = "recent"
     RANDOM_SEED_INPUT: Final[str] = "random_seed_input"
@@ -211,6 +213,7 @@ class DLabel:
     QUIT: Final[str] = "Quit"
     RANDOM_SEED: Final[str] = "Random Seed"
     RECENT_COUNT: Final[str] = "Recent Scores"
+    RECENT_LOSS: Final[str] = "Recent Loss"
     RESET: Final[str] = "Reset"
     RIGHT: Final[str] = "Right"
     RNN: Final[str] = "RNN"
@@ -267,6 +270,9 @@ class DPlotDef:
 
     # The number of "recent" games in the score distribution histogram
     RECENT_SCORES_MAX = 500
+
+    # The number of "recent" loss data points in the "Recent Loss" plot
+    RECENT_LOSS_MAX = 75
 
 
 class DStatus:

@@ -121,6 +121,9 @@ class HydraClientTui(App):
         # Snapshot class to create a snapshot file.
         self.snapshot = HydraSnapshot(metrics=self.metrics)
 
+        # Telemetric Widget
+        self.telemtry: HydraTelemetry | None = None
+
         self._cur_epsilon = None
 
         # Ahem...
@@ -518,6 +521,9 @@ class HydraClientTui(App):
         self.add_class(DField.TURBO_OFF)
 
         # Create references to TUI elements that are being updated
+        self.telemtry = self.query_one(
+            f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
+        )
         self._w_batch_size_input = self.query_one(
             f"#{DField.BATCH_SIZE_INPUT}", Input
         )
@@ -686,7 +692,9 @@ class HydraClientTui(App):
             metrics.add_cur_epoch(epoch)
             metrics.add_elapsed_time(elapsed_time)
             metrics.add_cur_epsilon(cur_epsilon)
-            metrics.add_cur_loss(cur_loss)
+            is_new_data = metrics.add_cur_loss(cur_loss)
+            if is_new_data:
+                self.telemtry.loss_plot.plot_all()
 
             # Update the TUI
             self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
@@ -725,10 +733,6 @@ class HydraClientTui(App):
 
         metrics = self.metrics
 
-        hydra_telemetry = self.query_one(
-            f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
-        )
-
         for payload in messages[1:]:
 
             # Get the data from the payload
@@ -744,8 +748,8 @@ class HydraClientTui(App):
             if final_score is not None:
                 is_new_final_score = metrics.add_final_score(final_score)
                 if is_new_final_score:
-                    hydra_telemetry.game_score_plot.plot_cur_scores()
-                    hydra_telemetry.scores_dist.plot_all()
+                    self.telemtry.game_score_plot.plot_cur_scores()
+                    self.telemtry.scores_dist_plot.plot_all()
 
             ## Update the TUI
 
@@ -760,7 +764,7 @@ class HydraClientTui(App):
                 highscore_event = metrics.get_last_highscore_event()
                 highscore_log.add_highscore(highscore_event)
                 self.console_msg(f"🎉 New highscore: {highscore}")
-                hydra_telemetry.game_score_plot.plot_highscores()
+                self.telemtry.game_score_plot.plot_highscores()
 
             # Only update the score, if "per_step" is enabled.
             if self.cfg.get(DNetField.PER_STEP):

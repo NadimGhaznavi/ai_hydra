@@ -7,15 +7,18 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
+
 import numpy as np
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
+import torch.optim as optim
 from copy import deepcopy
 
-from ai_hydra.constants.DNNet import DRNNTrainer
+from ai_hydra.constants.DNNet import DNetDef, DRNN
 from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.constants.DNNet import DRNNTrainer
 
-from ai_hydra.nnet.ReplayMemory import ReplayMemory, RNNChunk
+from ai_hydra.nnet.ReplayMemory import ReplayMemory
 from ai_hydra.utils.HydraLog import HydraLog
 
 GRAD_CLIPPING = True
@@ -55,12 +58,10 @@ class RNNTrainer:
 
         self._losses: list[float] = []
         self._cold_memory = True
-
         if DQN_WITH_TARGET and DOUBLE_DQN:
             raise ValueError(
                 "You cannot enable both DQN_WITH_TARGET and DOUBLE_DQN"
             )
-
         self.log.info(f"Setting the learning rate to {lr}")
         self.log.debug("Initialized")
 
@@ -72,106 +73,62 @@ class RNNTrainer:
         return avg_loss
 
     def train_long_memory(self) -> float | None:
+
         chunks = self.replay.sample_chunks(batch_size=self._batch_size)
         if chunks is None:
-            return None
-
-        seq_length = len(chunks[0].transitions)
+            return
 
         if self._cold_memory:
             self._cold_memory = False
             self.log.debug(
-                f"Training with {self._batch_size} batches with sequence length {seq_length}"
+                f"Training with {self._batch_size} batches with sequence length {len(chunks[0])}"
             )
 
-        # Fast path: all chunks are full, no masking needed
-        if all(chunk.valid_len == seq_length for chunk in chunks):
-            return self._train_full_chunks_fast(chunks)
-
-        # Cold-start path: one or more chunks are padded
-        return self._train_padded_chunks_masked(chunks)
-
-    def _build_batch_tensors(
-        self,
-        chunks: list[RNNChunk],
-    ) -> tuple[torch.Tensor, ...]:
-        """
-        Build batched tensors from replay chunks.
-
-        Returns:
-            states:      [B, T, F]
-            actions:     [B, T]
-            rewards:     [B, T]
-            next_states: [B, T, F]
-            dones:       [B, T]
-            valid_lens:  [B]
-        """
+        # Shapes (B = batch_size, T = seq_length, F = feature/input size)
+        # states      -> [B, T, F]
+        # actions     -> [B, T]
+        # rewards     -> [B, T]
+        # next_states -> [B, T, F]
+        # dones       -> [B, T]
         states = torch.tensor(
             np.array(
-                [[t.old_state for t in chunk.transitions] for chunk in chunks],
+                [[t.old_state for t in chunk] for chunk in chunks],
                 dtype=np.float32,
             ),
             dtype=torch.float32,
             device=self.device,
         )
-
         actions = torch.tensor(
             np.array(
-                [[t.action for t in chunk.transitions] for chunk in chunks],
-                dtype=np.int64,
+                [[t.action for t in chunk] for chunk in chunks], dtype=np.int64
             ),
             dtype=torch.long,
             device=self.device,
         )
-
         rewards = torch.tensor(
             np.array(
-                [[t.reward for t in chunk.transitions] for chunk in chunks],
+                [[t.reward for t in chunk] for chunk in chunks],
                 dtype=np.float32,
             ),
             dtype=torch.float32,
             device=self.device,
         )
-
         next_states = torch.tensor(
             np.array(
-                [[t.new_state for t in chunk.transitions] for chunk in chunks],
+                [[t.new_state for t in chunk] for chunk in chunks],
                 dtype=np.float32,
             ),
             dtype=torch.float32,
             device=self.device,
         )
-
         dones = torch.tensor(
             np.array(
-                [[t.done for t in chunk.transitions] for chunk in chunks],
-                dtype=np.float32,
+                [[t.done for t in chunk] for chunk in chunks], dtype=np.float32
             ),
             dtype=torch.float32,
             device=self.device,
         )
 
-        valid_lens = torch.tensor(
-            [chunk.valid_len for chunk in chunks],
-            dtype=torch.long,
-            device=self.device,
-        )
-
-        return states, actions, rewards, next_states, dones, valid_lens
-
-    def _compute_q_pred_and_target(
-        self,
-        states: torch.Tensor,
-        actions: torch.Tensor,
-        rewards: torch.Tensor,
-        next_states: torch.Tensor,
-        dones: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """
-        Compute:
-            q_pred   [B, T]
-            q_target [B, T]
-        """
         self.model.train()
 
         q_pred_all = self.model.forward_sequence(states)  # [B, T, A]
@@ -181,16 +138,15 @@ class RNNTrainer:
 
         with torch.no_grad():
             if DOUBLE_DQN:
-                self.model.eval()  # avoid dropout noise in action selection
-                online_next_q = self.model.forward_sequence(
-                    next_states
-                )  # [B, T, A]
+                self.model.eval()  # Don't include dropout noise
+                # [B, T, A]
+                online_next_q = self.model.forward_sequence(next_states)
                 self.model.train()
-
                 next_actions = online_next_q.argmax(
                     dim=2, keepdim=True
                 )  # [B, T, 1]
 
+                # target net evaluates those actions
                 target_next_q = self.target_model.forward_sequence(
                     next_states
                 )  # [B, T, A]
@@ -199,40 +155,18 @@ class RNNTrainer:
                 )  # [B, T]
 
             elif DQN_WITH_TARGET:
-                next_q = self.target_model.forward_sequence(
-                    next_states
-                )  # [B, T, A]
+                # [B, T, A]
+                next_q = self.target_model.forward_sequence(next_states)
                 max_next_q = next_q.max(dim=2).values  # [B, T]
 
             else:
+                # Don't include dropout noise (eval()/train() toggle)
                 self.model.eval()
                 next_q = self.model.forward_sequence(next_states)
                 self.model.train()
                 max_next_q = next_q.max(dim=2).values  # [B, T]
 
             q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
-
-        return q_pred, q_target
-
-    def _train_full_chunks_fast(
-        self,
-        chunks: list[RNNChunk],
-    ) -> float:
-        """
-        Hot path:
-        all chunks are full-length, so we keep the simple fully-vectorized loss.
-        """
-        states, actions, rewards, next_states, dones, _valid_lens = (
-            self._build_batch_tensors(chunks)
-        )
-
-        q_pred, q_target = self._compute_q_pred_and_target(
-            states=states,
-            actions=actions,
-            rewards=rewards,
-            next_states=next_states,
-            dones=dones,
-        )
 
         loss = self.criterion(q_pred, q_target)
 
@@ -241,8 +175,7 @@ class RNNTrainer:
 
         if GRAD_CLIPPING:
             torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(),
-                max_norm=1.0,
+                self.model.parameters(), max_norm=1.0
             )
 
         self.optimizer.step()
@@ -250,66 +183,8 @@ class RNNTrainer:
         if DQN_WITH_TARGET or DOUBLE_DQN:
             self._soft_update_target()
 
-        loss_value = float(loss.item())
-        self._losses.append(loss_value)
-        return loss_value
-
-    def _train_padded_chunks_masked(
-        self,
-        chunks: list[RNNChunk],
-    ) -> float:
-        """
-        Cold-start path:
-        one or more chunks are padded on the LEFT. Only the real suffix
-        (last valid_len timesteps) contributes to loss.
-        """
-        states, actions, rewards, next_states, dones, valid_lens = (
-            self._build_batch_tensors(chunks)
-        )
-
-        q_pred, q_target = self._compute_q_pred_and_target(
-            states=states,
-            actions=actions,
-            rewards=rewards,
-            next_states=next_states,
-            dones=dones,
-        )
-
-        # Build mask: padded prefix = False, real suffix = True
-        # mask shape: [B, T]
-        seq_length = states.shape[1]
-        time_idx = torch.arange(seq_length, device=self.device).unsqueeze(
-            0
-        )  # [1, T]
-        start_idx = (seq_length - valid_lens).unsqueeze(1)  # [B, 1]
-        mask = time_idx >= start_idx  # [B, T]
-
-        # Elementwise MSE, then reduce only over valid timesteps
-        loss_per_timestep = F.mse_loss(
-            q_pred, q_target, reduction="none"
-        )  # [B, T]
-        masked_loss = loss_per_timestep * mask.float()
-
-        valid_count = mask.sum().clamp_min(1).float()
-        loss = masked_loss.sum() / valid_count
-
-        self.optimizer.zero_grad()
-        loss.backward()
-
-        if GRAD_CLIPPING:
-            torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(),
-                max_norm=1.0,
-            )
-
-        self.optimizer.step()
-
-        if DQN_WITH_TARGET or DOUBLE_DQN:
-            self._soft_update_target()
-
-        loss_value = float(loss.item())
-        self._losses.append(loss_value)
-        return loss_value
+        self._losses.append(loss.item())
+        return float(loss.item())
 
     def _soft_update_target(self) -> None:
         for target_param, param in zip(
@@ -320,12 +195,10 @@ class RNNTrainer:
                 self._tau * param.data + (1.0 - self._tau) * target_param.data
             )
 
-    def set_params(self, tau: float, gamma: float, batch_size: int) -> None:
+    def set_params(self, tau: float, gamma: float, batch_size: int):
         self._tau = tau
         self.log.info(f"Setting Tau to {tau}")
-
         self._gamma = gamma
         self.log.info(f"Setting the Discount/Gamma to {gamma}")
-
         self._batch_size = batch_size
         self.log.info(f"Setting Batch Size to {batch_size}")

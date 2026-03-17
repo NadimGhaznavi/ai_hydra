@@ -135,28 +135,19 @@ ScoresDistPlot {
     width: 50;
 }
 
-
-/* ---------------------------- */
-
-#loss_plot {
+/* --- LossPlot --- */
+LossPlot {
+    height: 18;
+}
+#plot_loss {
     height: 18;
     width: 75;
 }
-
-#cur_loss {
+#plot_recent_loss {
     height: 18;
     width: 50;
 }
 
-#scores_plot {
-    height: 18;
-    width: 125;
-}
-
-#scores_scatter_plot {
-    height: 18;
-    width: 125;
-}
 /* -------------------------------------------- */
 
 #model {

@@ -23,3 +23,9 @@ class HighscoreEvent:
 class ScoreEvent:
     epoch: int
     score: int
+
+
+@dataclass(slots=True, frozen=True)
+class LossEvent:
+    epoch: int
+    loss: float

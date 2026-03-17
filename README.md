@@ -1,4 +1,4 @@
-![HydraClient TUI](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/HydraClient.png)
+![HydraClient TUI](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/hydra-client.png)
 
 # AI Hydra - Reinforcement Learning Platform
 
@@ -33,6 +33,8 @@ algorithm to encourage exploration at the beginning of a simulation run.
 ```
 
 ## Distributed Architecture
+
+![Architecture](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/architecture.png)
 
 The *HydraClient*, *HydraRouter*, and *HydraMgr* are run in three different
 terminals. The project supports running the client, router, and server on
@@ -102,34 +104,24 @@ menu.
 ## Visualizations
 
 The TUI includes real-time visualzations. The screenshot at the top of this
-document shows the actual Snake Game, a *high scores* widget, and a sliding
-window that shows the final game score and an average as the AI plays.
+document shows the actual Snake Game, a *high scores* widget, and two plots
+at the bottom; a *high score* plot and a *current score* plot.
 
 Other visualizations are shown below:
 
-### Overall Loss
+### Loss
 
-The loss plotted over the duration of the running simulation.
+The loss plotted over the duration of the running simulation and a short, 
+75 episode, sliding window showing recent loss.
 
-![Loss Plot](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/overall-loss.png)
-
-### Current Loss
-
-A sliding window showing 400 episodes of loss, averaged into 100 data points.
-
-![Current Loss](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/cur_loss.png)
+![Loss Plot](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/loss-plot.png)
 
 ### Scores Histogram
 
-The final game score distribution over the simulation run.
+This plot shows the score distribution over the simulation run and a second plot 
+with a sliding window showing a histogram of the scores over the previous 500 games.
 
 ![Score Distribution](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/scores-histogram.png)
-
-### High Scores Scatterplot
-
-A scatterplot showing when highscores were achieved.
-
-![Highcores Scatterplot](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/highscores-scatterplot.png)
 
 ## Snapshot Report
 
@@ -186,6 +178,3 @@ Simulations run **BLAZINGLY** fast on a consumer grade laptop without a GPU.
 This is due to careful architectural design decisions. For the *RNN*, the
 `ReplayMemory`, `RNNModel`, and `RNNTrainer` work in a pipeline, minimizing
 data transformations. The *Linear* model uses a similar strategy.
-
-**On my consumer grade laptop (11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz),**
-**simulations are run at about 3.5 episodes per second.**

@@ -9,13 +9,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [Unreleased]
 
 ### Added
-- *RNN Tau* setting for the `RNNTrainer`. This is now configurable in the TUI.
+- Updated documentation and screenshots.
+- **More Simulation Settings in the TUI**
+  - *RNN Tau* for the `RNNTrainer`.
+  - *Discount/Gamma* for the `RNNTrainer` and `LinearTrainer`.
+  - *Batch Size* for the `RNNTrainer` and `LinearTrainer`.
+  - *Sequence Length* for the `ReplayMemory` when the *RNN* model is selected.
+- **Metrics Class**
+  - Renamed the old `HydraMetrics` to `HydraSnapshot` and created a new `HydraMetrics`
+  - When telemetry data arrives on the client, it is loaded into this object.
+  - The class is used by the new `GameScorePlot`, `LossPlot`, `ScoresDistPlot` plots, and the `HydraSnapshot` class.
 
 ### Changed
+- The layout of the TUI.
+- **Complete Rewrite of Plotting**
+  - Replaced the monolithic `TabbedPlot` with `GameScorePlot`, `LossPlot`, and `ScoresDistPlot`.
+  - The old `TabbedPlot` also managed the data used by the plots; this functionality has been moved into the `HydraMetrics` class.
+  - The new architecture is cleaner, clearer, and easily extensible.
 
 ### Fixed
 
-- Images references in the README.md.
+- Images referenced in the README.md.
+- **Structural ReplayMemory Bug**
+  - The `ReplayMemory` that houses the training data needs a *warm-up* time to build a diverse training data set.
+  - For performance reasons, the *RNN's* training data is stored in *chunks* that correspond to the RNN's *sequence_length*.
+  - Previously, if an entire game's transitions did not make a complete *sequence*, then it was discarded. For a *heavy* RNN (large hidden layer size), which is slow to train, this resulted in a scenario where the replay memory never *warmed up*.
+  - This change stores these short sequences and pads them, and it also includes changes to the `RNNTrainer` to enable handling of padded training sequences. For performance reasons, this only happens during startup, when the replay memory is cold.
 
 ---
 
