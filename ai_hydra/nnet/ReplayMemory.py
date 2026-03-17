@@ -7,7 +7,6 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-### ----- Version II -----
 
 from __future__ import annotations
 
@@ -45,7 +44,6 @@ class ReplayMemory:
         self,
         rng: Random,
         log_level: DHydraLog,
-        rnn: bool = False,
         seq_length: int | None = None,
     ):
         self.log = HydraLog(
@@ -55,11 +53,7 @@ class ReplayMemory:
         )
         self._rng = rng
 
-        # Linear model settings
-        self._memory: Deque[Transition] = deque(maxlen=DMemory.MAX_MEM_SIZE)
-
         ### RNN model settings
-        self._rnn = rnn
         self._cur_game: list[Transition] = []
         self._chunks: list[tuple[int, list[Transition]]] = []
         self._seq_len = seq_length
@@ -79,40 +73,19 @@ class ReplayMemory:
             idx: [] for idx in range(MAX_CHUNK_BUCKET + 1)
         }
 
-        if self._rnn:
-            if seq_length is None:
-                raise ValueError("Sequence length must be set")
-            self.log.info("Initialized for RNN model training")
-            self.log.info(f"Setting sequence length to {seq_length}")
-            self.log.info(
-                f"Setting maximum number of stored sequence to {MAX_CHUNKS}"
-            )
-            self.log.info(
-                f"Setting maximum chunk bucket index to {MAX_CHUNK_BUCKET}"
-            )
-        else:
-            self.log.info("Initialized for Linear model training")
-            self.log.info(
-                f"Setting maximum number of stored transitions to {MAX_MEM_SIZE}"
-            )
+        if seq_length is None:
+            raise ValueError("Sequence length must be set")
+        self.log.info("Initialized for RNN model training")
+        self.log.info(f"Setting sequence length to {seq_length}")
+        self.log.info(
+            f"Setting maximum number of stored sequence to {MAX_CHUNKS}"
+        )
+        self.log.info(
+            f"Setting maximum chunk bucket index to {MAX_CHUNK_BUCKET}"
+        )
 
     def append(self, t: Transition) -> None:
         """Add a transition into memory"""
-
-        ### IMPORTANT NOTE
-        ###
-        ### In RNN mode, lookahead must be fixed for the whole episode.
-        ### If lookahead were allowed to change per step, an episode could be
-        ### split across LH and NLH buffers, breaking temporal continuity of
-        ### the training sequences.
-        if not self._rnn:
-            self._memory.append(t)
-            if len(self._memory) >= MAX_MEM_SIZE and self._memory_not_full:
-                self.log.info(
-                    f"Memory has been filled to capacity: {MAX_MEM_SIZE} transitions"
-                )
-                self._memory_not_full = False
-            return
 
         self._cur_game.append(t)
         if t.done:

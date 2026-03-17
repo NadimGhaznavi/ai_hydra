@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [Unreleased]
+
+### Changed
+- Split the `ReplayMemory` into `ReplayMemory` and `SimpleReplayMemory`.
+  - `SimpleReplayMemory` is used with the *Linear* model and
+  - `ReplayMemory` is used with the *RNN*.
+
 ---
 
 ## [v0.16.0] - 2026-03-17 16:13
@@ -41,7 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.15.0] = 2026-03-14 16:23
+## [0.15.0] - 2026-03-14 16:23
 
 ### Added
 - Added a *current epsilon* column to the *high score event* table.

@@ -88,6 +88,7 @@ class HydraMgr(HydraServer):
 
         from ai_hydra.nnet.TrainMgr import TrainMgr
         from ai_hydra.nnet.ReplayMemory import ReplayMemory
+        from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
 
         # from ai_hydra.nnet.UNUSED_RNNTrainer import RNNTrainer
@@ -120,7 +121,9 @@ class HydraMgr(HydraServer):
 
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
-            replay = ReplayMemory(rng=replay_rng, log_level=self.log_level)
+            replay = SimpleReplayMemory(
+                rng=replay_rng, log_level=self.log_level
+            )
             model = LinearModel(log_level=self.log_level)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
@@ -144,7 +147,6 @@ class HydraMgr(HydraServer):
             replay = ReplayMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
-                rnn=True,
                 seq_length=self.cfg.get(DNetField.SEQ_LENGTH),
             )
             model = RNNModel(log_level=self.log_level)

@@ -142,6 +142,7 @@ class DModule(StrEnum):
     HYDRA_MQ = "HydraMQ"
     HYDRA_ROUTER = "HydraRouter"
     HYDRA_SERVER = "HydraServer"
+    SIMPLE_REPLAY_MEMORY = "SimpleReplayMemory"
 
 
 LOG_LEVELS: Mapping[DHydraLog, int] = {
