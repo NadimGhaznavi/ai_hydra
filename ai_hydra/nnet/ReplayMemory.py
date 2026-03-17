@@ -204,7 +204,7 @@ class ReplayMemory:
         return chunks
 
     def num_chunks(self) -> int:
-        return len(self._chunks)
+        return self._num_chunks
 
     def chunk_bucket_counts(self) -> dict[int, int]:
         return {

@@ -90,3 +90,9 @@ class RNNModel(nn.Module):
         self.log.info(f"Setting dropout layer p-value to {dropout_p}")
         self.log.info(f"Setting the number of RNN layers to {rnn_layers}")
         self._init_model()
+
+        x = torch.randn(2, 8, DNetDef.INPUT_SIZE)
+        y = self.forward(x)
+        loss = y.mean()
+        loss.backward()
+        self.log.critical(f"Smoke test passed with hidden size {hidden_size}")
