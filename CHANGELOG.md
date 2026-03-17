@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [v0.16.0] - 2026-03-17 16:13
 
 ### Added
 - Updated documentation and screenshots.
@@ -30,11 +30,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Fixed
 
 - Images referenced in the README.md.
+
+## Known Issue
+
 - **Structural ReplayMemory Bug**
   - The `ReplayMemory` that houses the training data needs a *warm-up* time to build a diverse training data set.
   - For performance reasons, the *RNN's* training data is stored in *chunks* that correspond to the RNN's *sequence_length*.
   - Previously, if an entire game's transitions did not make a complete *sequence*, then it was discarded. For a *heavy* RNN (large hidden layer size), which is slow to train, this resulted in a scenario where the replay memory never *warmed up*.
-  - This change stores these short sequences and pads them, and it also includes changes to the `RNNTrainer` to enable handling of padded training sequences. For performance reasons, this only happens during startup, when the replay memory is cold.
+  - This will be addressed in the next release.
 
 ---
 
