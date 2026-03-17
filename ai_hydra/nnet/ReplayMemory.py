@@ -7,18 +7,16 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-### ----- Version II -----
 
 from __future__ import annotations
 
-import traceback
 from collections import deque
+from dataclasses import dataclass
 from random import Random
 from typing import Deque, TypeVar
 
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydra import DHydraLog
-from ai_hydra.constants.DNNet import DRNN
 
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
@@ -28,6 +26,7 @@ MIN_CHUNKS = DMemory.MIN_CHUNKS
 
 MAX_MEM_SIZE = DMemory.MAX_MEM_SIZE  # Max Linear transitions
 MIN_FRAMES = DMemory.MIN_FRAMES  # Min transitions before returning samples
+
 # Bucket all chunks at or above this chunk index into one final bucket.
 # Example with 4:
 #   0 -> first chunk in a game
@@ -38,6 +37,25 @@ MIN_FRAMES = DMemory.MIN_FRAMES  # Min transitions before returning samples
 MAX_CHUNK_BUCKET = 19
 
 T = TypeVar("T")
+
+
+@dataclass(frozen=True, slots=True)
+class RNNChunk:
+    """
+    A fixed-length training chunk for RNN training.
+
+    Attributes:
+        transitions:
+            Always exactly seq_length transitions.
+        valid_len:
+            Number of real timesteps in the chunk.
+            For normal chunks this equals seq_length.
+            For cold-start padded chunks this is < seq_length, and the
+            real transitions are RIGHT-aligned in the chunk.
+    """
+
+    transitions: list[Transition]
+    valid_len: int
 
 
 class ReplayMemory:
@@ -58,10 +76,9 @@ class ReplayMemory:
         # Linear model settings
         self._memory: Deque[Transition] = deque(maxlen=DMemory.MAX_MEM_SIZE)
 
-        ### RNN model settings
+        # RNN model settings
         self._rnn = rnn
         self._cur_game: list[Transition] = []
-        self._chunks: list[tuple[int, list[Transition]]] = []
         self._seq_len = seq_length
         self._memory_cold = True
         self._memory_not_full = True
@@ -75,7 +92,7 @@ class ReplayMemory:
         self._samples_delivered = 0
 
         # bucket_idx -> rolling list of chunks
-        self._chunks_by_idx: dict[int, list[list[Transition]]] = {
+        self._chunks_by_idx: dict[int, list[RNNChunk]] = {
             idx: [] for idx in range(MAX_CHUNK_BUCKET + 1)
         }
 
@@ -97,7 +114,7 @@ class ReplayMemory:
             )
 
     def append(self, t: Transition) -> None:
-        """Add a transition into memory"""
+        """Add a transition into memory."""
 
         ### IMPORTANT NOTE
         ###
@@ -109,7 +126,8 @@ class ReplayMemory:
             self._memory.append(t)
             if len(self._memory) >= MAX_MEM_SIZE and self._memory_not_full:
                 self.log.info(
-                    f"Memory has been filled to capacity: {MAX_MEM_SIZE} transitions"
+                    f"Memory has been filled to capacity: "
+                    f"{MAX_MEM_SIZE} transitions"
                 )
                 self._memory_not_full = False
             return
@@ -119,13 +137,23 @@ class ReplayMemory:
             self._finalize_game()
 
     def _finalize_game(self) -> None:
+        """
+        Finalize one completed episode.
+
+        Cold-start policy:
+          - while memory is still cold, accept short games by left-padding
+          - once memory has warmed up, revert to strict full-chunk behavior
+        """
         game = self._cur_game
         self._cur_game = []
 
-        if len(game) < self._seq_len:
+        if not game:
             return
 
-        new_chunks = self._chunk_from_end(game)
+        new_chunks = self._chunk_from_end(
+            game,
+            allow_padding=self._memory_cold,
+        )
 
         for bucket_idx, chunk in new_chunks:
             self._chunks_by_idx[bucket_idx].append(chunk)
@@ -139,7 +167,8 @@ class ReplayMemory:
 
         if self._memory_not_full:
             self.log.info(
-                f"Memory has been filled to capacity: {self._max_chunks} sequences"
+                f"Memory has been filled to capacity: "
+                f"{self._max_chunks} sequences"
             )
             self._memory_not_full = False
 
@@ -154,15 +183,19 @@ class ReplayMemory:
             del self._chunks_by_idx[bucket_to_prune][0]
             self._num_chunks -= 1
 
-    def _log_chuck_distro(self):
+    def _log_chunk_distro(self) -> None:
         is_balanced = True
         log_str = "Sequence distribution: ["
+        target = MAX_CHUNKS // (MAX_CHUNK_BUCKET + 1)
+
         for idx in self._chunks_by_idx.keys():
             bucket_size = len(self._chunks_by_idx[idx])
             log_str += f"{bucket_size}|"
-            if bucket_size != (MAX_CHUNKS // (MAX_CHUNK_BUCKET + 1)):
+            if bucket_size != target:
                 is_balanced = False
+
         self.log.debug(log_str[:-1] + "]")
+
         if is_balanced:
             self._memory_not_balanced = False
             self.log.info("Memory buckets are balanced")
@@ -170,38 +203,91 @@ class ReplayMemory:
     def _largest_bucket_idx(self) -> int | None:
         largest_idx: int | None = None
         largest_size = 0
+
         for idx, chunks in self._chunks_by_idx.items():
             size = len(chunks)
             if size > largest_size:
                 largest_size = size
                 largest_idx = idx
+
         return largest_idx
 
     def _chunk_from_end(
         self,
         game: list[Transition],
-    ) -> list[tuple[int, list[Transition]]]:
+        *,
+        allow_padding: bool,
+    ) -> list[tuple[int, RNNChunk]]:
         """
         Split a completed game into fixed-length chunks aligned from the end.
 
+        Behavior:
+          - If len(game) >= seq_len:
+              split into full seq_len chunks aligned from the end
+          - If len(game) < seq_len:
+              * while memory is cold: left-pad into one chunk in bucket 0
+              * once warm: discard
+
         Returns:
-            List of (bucket_idx, chunk)
+            List of (bucket_idx, RNNChunk)
         """
         n = len(game)
+        chunks: list[tuple[int, RNNChunk]] = []
+
+        if n < self._seq_len:
+            if not allow_padding:
+                return []
+
+            padded = self._left_pad_game(game)
+            chunks.append(
+                (
+                    0,
+                    RNNChunk(
+                        transitions=padded,
+                        valid_len=n,
+                    ),
+                )
+            )
+            return chunks
+
         rem = n % self._seq_len
         start = rem if rem != 0 else 0
-
-        chunks: list[tuple[int, list[Transition]]] = []
         chunk_idx = 0
 
         for i in range(start, n, self._seq_len):
             chunk = game[i : i + self._seq_len]
             if len(chunk) == self._seq_len:
                 bucket_idx = min(chunk_idx, MAX_CHUNK_BUCKET)
-                chunks.append((bucket_idx, chunk))
+                chunks.append(
+                    (
+                        bucket_idx,
+                        RNNChunk(
+                            transitions=chunk,
+                            valid_len=self._seq_len,
+                        ),
+                    )
+                )
                 chunk_idx += 1
 
         return chunks
+
+    def _left_pad_game(self, game: list[Transition]) -> list[Transition]:
+        """
+        Left-pad a short game to seq_len by repeating the first transition.
+
+        The real game remains RIGHT-aligned, which fits the existing
+        end-aligned chunk semantics.
+        """
+        if not game:
+            raise ValueError("Cannot pad an empty game")
+
+        pad_count = self._seq_len - len(game)
+        first = game[0]
+
+        # Cheap bootstrap padding.
+        # This reuses the same Transition reference, which is fine as long as
+        # Transition objects are treated as immutable after creation.
+        return [first] * pad_count + game
 
     def num_chunks(self) -> int:
         return self._num_chunks
@@ -221,7 +307,7 @@ class ReplayMemory:
     def sample_chunks(
         self,
         batch_size: int,
-    ) -> list[list[Transition]] | None:
+    ) -> list[RNNChunk] | None:
         """
         Sample chunks across warmed chunk-index buckets.
 
@@ -241,7 +327,7 @@ class ReplayMemory:
             self.log.debug("Memory has warmed up")
             self._memory_cold = False
 
-        samples: list[list[Transition]] = []
+        samples: list[RNNChunk] = []
 
         # First pass: even split across warmed buckets
         base = batch_size // len(warmed)
@@ -269,7 +355,7 @@ class ReplayMemory:
 
         if shortage > 0:
             # Fallback pool from all unused capacity
-            flat_pool: list[list[Transition]] = []
+            flat_pool: list[RNNChunk] = []
             already_selected_ids = {id(chunk) for chunk in samples}
 
             for idx in warmed:
@@ -285,16 +371,16 @@ class ReplayMemory:
         self._samples_delivered += 1
 
         if self._memory_not_balanced and self._samples_delivered % 500 == 0:
-            self._log_chuck_distro()
+            self._log_chunk_distro()
 
         return samples
 
-    def sample_transitions(self, batch_size: int) -> list[Transition] | None:
+    def sample_transitions(
+        self,
+        batch_size: int,
+    ) -> list[Transition] | None:
         """Sample random transitions for a linear model."""
 
-        # This only checks whether a full batch is possible in aggregate.
-        # The requested LH/NLH ratio is best-effort and is resolved in
-        # _sample_mixed().
         if len(self._memory) < max(MIN_FRAMES, batch_size):
             return None
 
