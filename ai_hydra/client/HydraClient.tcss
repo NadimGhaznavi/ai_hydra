@@ -7,7 +7,7 @@ Screen {
 
 Button {
     row-span: 2;
-    background: rgb(27, 55, 24);
+    background: #082641;
     padding: 0 1;
     border: none;
 }

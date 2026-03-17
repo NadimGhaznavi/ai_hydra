@@ -96,14 +96,20 @@ class HydraMetrics:
         )
         return True
 
+    def get_avg_cur_score_plot_points(self) -> list[tuple[int, float]]:
+        return [(e.epoch, e.score) for e in self._avg_cur_scores]
+
+    def get_cur_epoch(self) -> int:
+        return self._cur_epoch
+
     def get_cur_score(self) -> int:
         return self._cur_score
 
     def get_cur_score_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.score) for e in self._cur_scores]
 
-    def get_avg_cur_score_plot_points(self) -> list[tuple[int, float]]:
-        return [(e.epoch, e.score) for e in self._avg_cur_scores]
+    def get_elapsed_time(self) -> str:
+        return self._elapsed_time
 
     def get_highscore_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.highscore) for e in self._highscore_events]

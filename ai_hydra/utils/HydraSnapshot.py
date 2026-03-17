@@ -21,32 +21,13 @@ from ai_hydra.constants.DNNet import (
 )
 
 from ai_hydra.utils.SimCfg import SimCfg
+from ai_hydra.utils.HydraMetrics import HydraMetrics
 
 
 class HydraSnapshot:
 
-    def __init__(self):
-        self.epsilon = {}
-        self.highscore_events = []
-        self.linear_model = {}
-        self.rnn_model = {}
-        self.mean_median = []
-        self.elapsed_time = None
-
-    def add_elapsed_time(self, elapsed_time):
-        self.elapsed_time = elapsed_time
-
-    def add_cur_epoch(self, cur_epoch):
-        self.cur_epoch = cur_epoch
-
-    def add_highscore_event(self, episode, highscore, event_time, cur_ep):
-        self.highscore_events.append((episode, highscore, event_time, cur_ep))
-
-    def add_mean_median(self, episode, mean, median):
-        self.mean_median.append((episode, mean, median))
-
-    def add_trainer(self):
-        pass
+    def __init__(self, metrics: HydraMetrics):
+        self.metrics = metrics
 
     def create_snapshot(self, snap_file, cfg: SimCfg):
 
@@ -70,13 +51,17 @@ class HydraSnapshot:
         seq_length = cfg.get(DNetField.SEQ_LENGTH)
         rnn_tau = cfg.get(DNetField.RNN_TAU)
 
+        # Metrics data
+        elapsed_time = self.metrics.get_elapsed_time()
+        cur_epoch = self.metrics.get_cur_epoch()
+
         with open(snap_file, "w") as f:
             f.write(
                 "📸 AI Hydra - Snapshot\n"
                 "══════════════════════\n"
                 f"Timestamp: {timestamp}\n"
-                f"Simulation Run Time: {self.elapsed_time}\n"
-                f"Current Episode Number: {self.cur_epoch}\n"
+                f"Simulation Run Time: {elapsed_time}\n"
+                f"Current Episode Number: {cur_epoch}\n"
                 f"AI Hydra Version: v{DHydra.VERSION}\n"
                 f"Random Seed: {DHydra.RANDOM_SEED}\n\n"
             )
@@ -124,9 +109,11 @@ class HydraSnapshot:
                 f"{'Episode':8s}{'Highscore':<10s}{'Time':>11s}{'Epsilon':>8s}\n"
                 "═══════ ═════════ ═══════════ ═══════\n"
             )
-            for event in self.highscore_events:
-                episode, highscore, ev_time, cur_ep = event
-                cur_ep = str(round(float(cur_ep), 4))
+            rows = self.metrics.get_highscore_snapshot_rows()
+            for row in rows:
+                epoch, highscore, epsilon, ev_time = row
+                cur_ep = str(round(float(epsilon), 4))
+
                 f.write(
-                    f"{str(episode):>7s}{str(highscore):>10s}{ev_time:>12s}{cur_ep:>8s}\n"
+                    f"{str(epoch):>7s}{str(highscore):>10s}{ev_time:>12s}{cur_ep:>8s}\n"
                 )

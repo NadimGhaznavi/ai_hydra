@@ -119,7 +119,7 @@ class HydraClientTui(App):
         self.metrics = HydraMetrics(initial_epsilon=DLinear.INITIAL_EPSILON)
 
         # Snapshot class to create a snapshot file.
-        self.snapshot = HydraSnapshot()
+        self.snapshot = HydraSnapshot(metrics=self.metrics)
 
         self._cur_epsilon = None
 
