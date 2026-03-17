@@ -9,12 +9,9 @@
 
 from textual.app import ComposeResult, Widget
 from textual.containers import Horizontal
-from textual.widgets import Static, Label
 from textual_plot import HiResMode, LegendLocation, PlotWidget
 
-
 from ai_hydra.constants.DHydraTui import DField, DLabel, DColor
-
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
 
@@ -45,7 +42,7 @@ class GameScorePlot(Widget):
             y=scores,
             line_style=DColor.GREEN,
             hires_mode=HiResMode.BRAILLE,
-            label=DLabel.SCORES,
+            label=DLabel.SCORE,
         )
 
         avg_score_events = self.metrics.get_avg_cur_score_plot_points()
@@ -77,7 +74,7 @@ class GameScorePlot(Widget):
             y=scores,
             line_style=DColor.GREEN,
             hires_mode=HiResMode.BRAILLE,
-            label=DLabel.HIGHSCORES,
+            label=DLabel.HIGHSCORE,
         )
         plot.set_xlabel(DLabel.EPISODES)
         plot.set_ylabel(DLabel.HIGHSCORES)

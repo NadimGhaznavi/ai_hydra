@@ -745,6 +745,7 @@ class HydraClientTui(App):
                 is_new_final_score = metrics.add_final_score(final_score)
                 if is_new_final_score:
                     hydra_telemetry.game_score_plot.plot_cur_scores()
+                    hydra_telemetry.scores_dist.plot_all()
 
             ## Update the TUI
 
@@ -1004,21 +1005,21 @@ class HydraClientTui(App):
 
         self.cfg.apply(
             {
-                DNetField.BATCH_SIZE: int(batch_size),
+                DNetField.BATCH_SIZE: batch_size,
                 DNetField.DROPOUT_P: dropout_p,
                 DNetField.EPSILON_DECAY: epsilon_decay,
                 DNetField.GAMMA: gamma,
                 DNetField.HIDDEN_SIZE: hidden_size,
                 DNetField.INITIAL_EPSILON: initial_epsilon,
-                DNetField.LEARNING_RATE: float(learning_rate),
+                DNetField.LEARNING_RATE: learning_rate,
                 DNetField.MIN_EPSILON: min_epsilon,
                 DNetField.PER_STEP: per_step,
                 DNetField.MODEL_TYPE: model_type,
                 DNetField.MOVE_DELAY: move_delay,
-                DNetField.RANDOM_SEED: int(random_seed),
-                DNetField.RNN_LAYERS: int(rnn_layers),
-                DNetField.RNN_TAU: float(rnn_tau),
-                DNetField.SEQ_LENGTH: int(seq_length),
+                DNetField.RANDOM_SEED: random_seed,
+                DNetField.RNN_LAYERS: rnn_layers,
+                DNetField.RNN_TAU: rnn_tau,
+                DNetField.SEQ_LENGTH: seq_length,
             }
         )
 

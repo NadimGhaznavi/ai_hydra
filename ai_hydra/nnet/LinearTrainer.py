@@ -41,7 +41,8 @@ class LinearTrainer:
         )
         self._losses = []
         self._cold_memory = True
-        self.log.debug("Initialized")
+        self.log.info(f"Setting the learning rate to {lr}")
+        self.log.info("Initialized")
 
     def get_avg_loss(self) -> float | None:
         if not self._losses:

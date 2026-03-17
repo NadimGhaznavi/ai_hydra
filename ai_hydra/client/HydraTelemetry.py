@@ -16,6 +16,7 @@ from ai_hydra.constants.DHydraTui import DField, DLabel
 
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.client.plots.GameScorePlot import GameScorePlot
+from ai_hydra.client.plots.ScoresDistPlot import ScoresDistPlot
 
 
 class HydraTelemetry(Widget):
@@ -27,9 +28,11 @@ class HydraTelemetry(Widget):
         self.game_score_plot = GameScorePlot(
             id=DField.GAME_SCORE_PLOT, metrics=self.metrics
         )
+        self.scores_dist = ScoresDistPlot(
+            id=DField.SCORES_DIST_PLOT, metrics=self.metrics
+        )
 
     def compose(self) -> ComposeResult:
-        with TabbedContent(
-            DLabel.GAME_SCORES,
-        ):
+        with TabbedContent(DLabel.GAME_SCORES, DLabel.SCORE_DISTRIBUTION):
             yield self.game_score_plot
+            yield self.scores_dist

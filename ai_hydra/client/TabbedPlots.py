@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from collections import deque
-from statistics import median
+from statistics import median, mean
 from typing import Iterable
 
 from textual import on
@@ -196,8 +196,8 @@ class TabbedPlots(Widget):
         plot.set_ylabel(DLabel.COUNT)
         plot.show_legend(location=LegendLocation.TOPRIGHT)
 
-        mean_score = weighted_mean(self.score_counts)
-        median_score = weighted_median(self.score_counts)
+        mean_score = mean(self.score_counts)
+        median_score = median(self.score_counts)
 
         plot.add_v_line(mean_score, DColor.GREEN, f"Mean  : {mean_score:.2f}")
         plot.add_v_line(median_score, "purple", f"Median: {median_score:.2f}")

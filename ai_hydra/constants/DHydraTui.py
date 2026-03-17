@@ -17,6 +17,7 @@ class DColor:
     BLUE: Final[str] = "blue"
     DARK_RED: Final[str] = "dark_red"
     GREEN: Final[str] = "green"
+    PURPLE: Final[str] = "purple"
     RED: Final[str] = "red"
     WHITE: Final[str] = "white"
     YELLOW: Final[str] = "yellow"
@@ -27,6 +28,7 @@ class DField:
     Machine readable field names.
     """
 
+    ALL: Final[str] = "all"
     BAD_HANDSHAKE: Final[str] = "bad_handshake"
     BATCH_SIZE_INPUT: Final[str] = "batch_size_input"
     BATCH_SIZE_LABEL: Final[str] = "batch_size_label"
@@ -92,9 +94,12 @@ class DField:
     NETWORK: Final[str] = "network"
     NORMAL: Final[str] = "normal"
     NUMBER: Final[str] = "number"
-    PLOT_HIGHSCORES: Final[str] = "plot_highscores"
     PLOT_CUR_SCORE: Final[str] = "plot_cur_score"
+    PLOT_HIGHSCORES: Final[str] = "plot_highscores"
+    PLOT_SCORES_DIST: Final[str] = "plot_scores_dist"
+    PLOT_RECENT_SCORES_DIST: Final[str] = "plot_recent_scores_dist"
     QUIT: Final[str] = "quit"
+    RECENT: Final[str] = "recent"
     RANDOM_SEED_INPUT: Final[str] = "random_seed_input"
     RANDOM_SEED_LABEL: Final[str] = "random_seed_label"
     RESET: Final[str] = "reset"
@@ -109,6 +114,7 @@ class DField:
     RNN_LAYERS: Final[str] = "rnn_layers"
     ROUTER_HB: Final[str] = "router_hb"
     RUNNING: Final[str] = "running"
+    SCORES_DIST_PLOT: Final[str] = "scores_list_plot"
     SETTINGS: Final[str] = "settings"
     SEQ_LENGTH_INPUT: Final[str] = "seq_length_input"
     SEQ_LENGTH_LABEL: Final[str] = "seq_length_label"
@@ -204,6 +210,7 @@ class DLabel:
     PING_SERVER: Final[str] = "Ping Server"
     QUIT: Final[str] = "Quit"
     RANDOM_SEED: Final[str] = "Random Seed"
+    RECENT_COUNT: Final[str] = "Recent Scores"
     RESET: Final[str] = "Reset"
     RIGHT: Final[str] = "Right"
     RNN: Final[str] = "RNN"
@@ -214,6 +221,7 @@ class DLabel:
     SETTINGS: Final[str] = "Settings"
     SAMPLING_P_VALUE: Final[str] = "Sampling P-Value"
     SCORE: Final[str] = "Score"
+    SCORE_DISTRIBUTION: Final[str] = "Score Distribution"
     SCORES: Final[str] = "Scores"
     SCORES_ALL: Final[str] = "Scores/All"
     SCORES_LH: Final[str] = "Scores/L.A."
@@ -256,6 +264,9 @@ class DPlotDef:
 
     # Maximum number of scores stored in the metrics object
     MAX_CUR_SCORES = 75
+
+    # The number of "recent" games in the score distribution histogram
+    RECENT_SCORES_MAX = 500
 
 
 class DStatus:

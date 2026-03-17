@@ -8,13 +8,16 @@
 #    License: GPL 3.0
 
 from collections import deque
-from statistics import mean
+from statistics import mean, median
 
 from ai_hydra.constants.DHydraTui import DPlotDef
 from ai_hydra.utils.MetricEvent import HighscoreEvent, ScoreEvent
 
 MAX_CUR_SCORES = DPlotDef.MAX_CUR_SCORES
-AVG_CUR_SCORES = MAX_CUR_SCORES // 5
+RECENT_SCORES_MAX = DPlotDef.RECENT_SCORES_MAX
+AVG_DIVISOR = 5
+
+AVG_CUR_SCORES = MAX_CUR_SCORES // AVG_DIVISOR
 
 
 class HydraMetrics:
@@ -26,11 +29,19 @@ class HydraMetrics:
         self._cur_score: int = 0
         self._elapsed_time: str = "0s"
 
+        # Current scores data
         self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
         self._avg_cur_scores: deque[ScoreEvent] = deque(maxlen=AVG_CUR_SCORES)
         self._avg_cur_scores_buf: list = []
 
+        # Highscore events
         self._highscore_events: list[HighscoreEvent] = []
+
+        # Score distribution
+        self._scores_dist: dict[int, int] = {}
+        self._recent_scores_dist: dict[int, int] = {}
+        self._scores_dist_list: list[int] = []
+        self._recent_scores_dist_list: list[int] = []
 
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
@@ -55,18 +66,35 @@ class HydraMetrics:
         if cur_scores and self._cur_epoch == cur_scores[-1].epoch:
             return False
 
+        # Current Scores plot data
         score_event = ScoreEvent(epoch=self._cur_epoch, score=score)
         cur_scores.append(score_event)
 
         avg_buf = self._avg_cur_scores_buf
         avg_buf.append(score_event)
-        if len(avg_buf) == 5:
+        if len(avg_buf) == AVG_DIVISOR:
             avg_epoch = avg_buf[-1].epoch
             avg_score = mean(e.score for e in avg_buf)
             self._avg_cur_scores.append(
                 ScoreEvent(epoch=avg_epoch, score=avg_score)
             )
             self._avg_cur_scores_buf = []
+
+        # All time score distribution data
+        self._scores_dist[score] = self._scores_dist.get(score, 0) + 1
+        self._scores_dist_list.append(score)
+
+        # Recent time score distribution data
+        self._recent_scores_dist[score] = (
+            self._recent_scores_dist.get(score, 0) + 1
+        )
+        self._recent_scores_dist_list.append(score)
+
+        if len(self._recent_scores_dist_list) > RECENT_SCORES_MAX:
+            old_score = self._recent_scores_dist_list.pop(0)
+            self._recent_scores_dist[old_score] -= 1
+            if self._recent_scores_dist[old_score] == 0:
+                del self._recent_scores_dist[old_score]
 
         return True
 
@@ -114,15 +142,39 @@ class HydraMetrics:
     def get_highscore_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.highscore) for e in self._highscore_events]
 
-    def get_last_highscore_event(self) -> HighscoreEvent:
-        if self._highscore_events:
-            return self._highscore_events[-1]
-
     def get_highscore_snapshot_rows(self) -> list[tuple[int, int, float, str]]:
         return [
             (e.epoch, e.highscore, e.epsilon, e.elapsed_time)
             for e in self._highscore_events
         ]
+
+    def get_last_highscore_event(self) -> HighscoreEvent:
+        if self._highscore_events:
+            return self._highscore_events[-1]
+
+    def get_scores_dist_plot_points(self) -> tuple[list[int], list[int]]:
+        scores = sorted(self._scores_dist.keys())
+        counts = [self._scores_dist[score] for score in scores]
+        return scores, counts
+
+    def get_recent_scores_dist_plot_points(
+        self,
+    ) -> tuple[list[int], list[int]]:
+        scores = sorted(self._recent_scores_dist.keys())
+        counts = [self._recent_scores_dist[score] for score in scores]
+        return scores, counts
+
+    def get_scores_dist_stats(self) -> tuple[float, float] | None:
+        if not self._scores_dist_list:
+            return None
+        return mean(self._scores_dist_list), median(self._scores_dist_list)
+
+    def get_recent_scores_dist_stats(self) -> tuple[float, float] | None:
+        if not self._recent_scores_dist_list:
+            return None
+        return mean(self._recent_scores_dist_list), median(
+            self._recent_scores_dist_list
+        )
 
     def set_initial_epsilon(self, value: float) -> None:
         self._cur_epsilon = value

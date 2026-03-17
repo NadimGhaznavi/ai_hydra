@@ -62,6 +62,7 @@ class RNNTrainer:
             raise ValueError(
                 "You cannot enable both DQN_WITH_TARGET and DOUBLE_DQN"
             )
+        self.log.info(f"Setting the learning rate to {lr}")
         self.log.debug("Initialized")
 
     def get_avg_loss(self) -> float | None:

@@ -121,7 +121,7 @@ class HydraMgr(HydraServer):
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
             replay = ReplayMemory(rng=replay_rng, log_level=self.log_level)
-            model = LinearModel()
+            model = LinearModel(log_level=self.log_level)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
@@ -147,7 +147,7 @@ class HydraMgr(HydraServer):
                 rnn=True,
                 seq_length=self.cfg.get(DNetField.SEQ_LENGTH),
             )
-            model = RNNModel()
+            model = RNNModel(log_level=self.log_level)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),

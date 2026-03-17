@@ -97,7 +97,7 @@ HighScoresLog {
 
 /* ---------- HydraTelemetry --- */
 
-/* --- GameScorePlot Widget --- */
+/* --- HydraTelemetry --- */
 HydraTelemetry {
     column-span: 4;
     background: black;
@@ -106,8 +106,10 @@ HydraTelemetry {
     border-title-color: #5fc442;
     text-style: bold;
     padding: 0 1;
-    color: #54ac59;}
+    color: #54ac59;
+}
 
+/* --- GameScorePlot --- */
 GameScorePlot {
     height: 18;
 }
@@ -119,6 +121,20 @@ GameScorePlot {
     height: 18;
     width: 50;
 }
+
+/* --- ScoreDistPlot --- */
+ScoresDistPlot {
+    height: 18;
+}
+#plot_scores_dist {
+    height: 18;
+    width: 75;    
+}
+#plot_recent_scores_dist {
+    height: 18;
+    width: 50;
+}
+
 
 /* ---------------------------- */
 

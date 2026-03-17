@@ -12,12 +12,21 @@ import torch.nn as nn
 
 from ai_hydra.constants.DNNet import DNetDef, DRNN
 from ai_hydra.constants.DHydra import DHydra
+from ai_hydra.constants.DHydra import DHydraLog
+
+from ai_hydra.utils.HydraLog import HydraLog
 
 
 class RNNModel(nn.Module):
-    def __init__(self):
+    def __init__(self, log_level: DHydraLog):
         super().__init__()
         torch.manual_seed(DHydra.RANDOM_SEED)
+
+        self.log = HydraLog(
+            client_id="RNNModel",
+            log_level=log_level,
+            to_console=True,
+        )
 
         self._hidden_size = None
         self._rnn_dropout = None
@@ -77,4 +86,7 @@ class RNNModel(nn.Module):
         self._hidden_size = hidden_size
         self._rnn_dropout = dropout_p
         self._rnn_layers = rnn_layers
+        self.log.info(f"Setting hidden size to {hidden_size}")
+        self.log.info(f"Setting dropout layer p-value to {dropout_p}")
+        self.log.info(f"Setting the number of RNN layers to {rnn_layers}")
         self._init_model()
