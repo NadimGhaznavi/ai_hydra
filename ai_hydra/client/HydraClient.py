@@ -65,14 +65,14 @@ from ai_hydra.client.HydraTelemetry import HydraTelemetry
 HYDRA_THEME = Theme(
     name="hydra_theme",
     primary="#0E191C",
-    secondary="#1f6a83ff",
+    secondary="#2aa5ceff",
     accent="#B48EAD",
     foreground="#31b8e6",
     background="black",
     success="#A3BE8C",
     warning="#EBCB8B",
     error="#BF616A",
-    surface="#111111",
+    surface="#2aa5ce",
     panel="#000000",
     dark=True,
     variables={
@@ -725,17 +725,26 @@ class HydraClientTui(App):
 
         metrics = self.metrics
 
+        hydra_telemetry = self.query_one(
+            f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
+        )
+
         for payload in messages[1:]:
 
             # Get the data from the payload
             cur_epoch = payload.get(DGameField.EPOCH)
             cur_score = payload.get(DGameField.CUR_SCORE)
             highscore = payload.get(DGameField.HIGHSCORE)
+            final_score = payload.get(DNetField.FINAL_SCORE)
 
             # Load the data into the metrics object
             metrics.add_cur_epoch(cur_epoch)
             metrics.add_cur_score(cur_score)
             is_new_highscore = metrics.add_highscore(highscore)
+            if final_score is not None:
+                is_new_final_score = metrics.add_final_score(final_score)
+                if is_new_final_score:
+                    hydra_telemetry.game_score_plot.plot_cur_scores()
 
             ## Update the TUI
 
@@ -749,11 +758,8 @@ class HydraClientTui(App):
                 )
                 highscore_event = metrics.get_last_highscore_event()
                 highscore_log.add_highscore(highscore_event)
-                self.console_msg(f"🎉 New highscore : {highscore}")
-                hydra_telemetry = self.query_one(
-                    f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
-                )
-                hydra_telemetry.game_score_plot.plot_all()
+                self.console_msg(f"🎉 New highscore: {highscore}")
+                hydra_telemetry.game_score_plot.plot_highscores()
 
             # Only update the score, if "per_step" is enabled.
             if self.cfg.get(DNetField.PER_STEP):

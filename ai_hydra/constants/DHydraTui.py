@@ -94,7 +94,6 @@ class DField:
     NUMBER: Final[str] = "number"
     PLOT_HIGHSCORES: Final[str] = "plot_highscores"
     PLOT_CUR_SCORE: Final[str] = "plot_cur_score"
-
     QUIT: Final[str] = "quit"
     RANDOM_SEED_INPUT: Final[str] = "random_seed_input"
     RANDOM_SEED_LABEL: Final[str] = "random_seed_label"
@@ -164,6 +163,7 @@ class DLabel:
     CUR_LOSS: Final[str] = "Current Loss"
     CUR_EPSILON: Final[str] = "Current Epsilon"
     CURRENT: Final[str] = "Current"
+    CUR_SCORES: Final[str] = "Current Scores"
     COUNT: Final[str] = "Count"
     DEBUG: Final[str] = "DEBUG"
     DISCONNECTED: Final[str] = "Disonnected"
@@ -253,6 +253,9 @@ class DPlotDef:
     # GameScorePlot widget settings
     MAX_GAMES = 75
     MAX_GAMES_AVG_DIVISOR: int = 50
+
+    # Maximum number of scores stored in the metrics object
+    MAX_CUR_SCORES = 75
 
 
 class DStatus:

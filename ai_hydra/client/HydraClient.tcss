@@ -12,21 +12,10 @@ Button {
     border: none;
 }
 
-#tabbed_plots {
-    column-span: 4;
-    background: black;
-    border: round #0c323e;
-    border-subtitle-color: #5fc442;
-    color: #5fc442;
-    text-style: bold;
-    height: 22;
-    width: 100%;
-}
-
 HighScoresLog {
     row-span: 4;
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ce;
     border-subtitle-color: #5fc442;
 }
 
@@ -37,7 +26,7 @@ HighScoresLog {
 #board_box {
     row-span: 4;
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     border-title-color: #5fc442;
     color: #5fc442;
@@ -53,7 +42,7 @@ HighScoresLog {
 #buttons {
     row-span: 3;
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     color: #5fc442;
     text-style: bold;
@@ -67,7 +56,7 @@ HighScoresLog {
 #console_box {
     column-span: 4;
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     border-title-color: #5fc442;
     color: #5fc442;
@@ -78,13 +67,13 @@ HighScoresLog {
 
 #epsilon {
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     border-title-color: #5fc442;
     width: 44;
     text-style: bold;
     padding: 0 0;
-    color: #54ac59;
+    color: #72af75;
 
 }
 
@@ -112,7 +101,7 @@ HighScoresLog {
 HydraTelemetry {
     column-span: 4;
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ceff;
     border-subtitle-color: #5fc442;
     border-title-color: #5fc442;
     text-style: bold;
@@ -156,10 +145,10 @@ GameScorePlot {
 
 #model {
     background: black;
-    border: round #0c323e;
-    border-subtitle-color: #28ac59;
-    border-title-color: #28ac59;
-    color: #28ac59;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    border-title-color: #72af75;
+    color: #72af75;
     width: 44;
     text-style: bold;
     padding: 0 0;
@@ -167,9 +156,9 @@ GameScorePlot {
 
 #network {
     background: black;
-    border: round #0c323e;
-    border-subtitle-color: #acac59;
-    color: #acac59;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
     text-style: bold;
     width: 100%;
     padding: 0 1;
@@ -177,9 +166,9 @@ GameScorePlot {
 
 #settings {
     background: black;
-    border: round #0c323e;
-    border-subtitle-color: #80ac59;
-    color: #80ac59;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
     text-style: bold;
     height: 18;
 }
@@ -187,18 +176,19 @@ GameScorePlot {
 #title {
     column-span: 4;
     background: black;
-    border: round #0c323e;
+    border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     color: #5fc442;
     text-style: bold;
     width: 100%;
+    padding: 0 1;
 }
 
 #training_box {
     background: black;
-    border: round #0c323e;
-    border-subtitle-color: #218847;
-    color: #218847;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
     text-style: bold;
     width: 100%;
 }

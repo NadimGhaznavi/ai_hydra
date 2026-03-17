@@ -30,19 +30,43 @@ class GameScorePlot(Widget):
             PlotWidget(id=DField.PLOT_CUR_SCORE),
         )
 
-    def plot_all(self):
-        self._plot_highscores()
-        self._plot_cur_score()
+    def plot_cur_scores(self):
+        score_events = self.metrics.get_cur_score_plot_points()
+        if not score_events:
+            return
 
-    def _plot_cur_score(self):
+        episodes, scores = zip(*score_events)
+
         plot = self.query_one(f"#{DField.PLOT_CUR_SCORE}", PlotWidget)
         plot.clear()
 
-        plot.set_xlabel(DLabel.EPISODES)
-        plot.set_ylabel(DLabel.SCORE)
+        plot.plot(
+            x=episodes,
+            y=scores,
+            line_style=DColor.GREEN,
+            hires_mode=HiResMode.BRAILLE,
+            label=DLabel.SCORES,
+        )
 
-    def _plot_highscores(self):
+        avg_score_events = self.metrics.get_avg_cur_score_plot_points()
+        if avg_score_events:
+            avg_episodes, avg_scores = zip(*avg_score_events)
+            plot.plot(
+                x=avg_episodes,
+                y=avg_scores,
+                line_style=DColor.RED,
+                hires_mode=HiResMode.BRAILLE,
+                label=DLabel.AVERAGE,
+            )
+
+        plot.set_xlabel(DLabel.EPISODES)
+        plot.set_ylabel(DLabel.CUR_SCORES)
+        plot.show_legend(location=LegendLocation.TOPLEFT)
+
+    def plot_highscores(self):
         plot_points = self.metrics.get_highscore_plot_points()
+        if not plot_points:
+            return
         episodes, scores = zip(*plot_points)
 
         plot = self.query_one(f"#{DField.PLOT_HIGHSCORES}", PlotWidget)
@@ -51,9 +75,9 @@ class GameScorePlot(Widget):
         plot.plot(
             x=episodes,
             y=scores,
-            line_style=DColor.RED,
+            line_style=DColor.GREEN,
             hires_mode=HiResMode.BRAILLE,
-            label=DLabel.HIGHSCORE,
+            label=DLabel.HIGHSCORES,
         )
         plot.set_xlabel(DLabel.EPISODES)
         plot.set_ylabel(DLabel.HIGHSCORES)

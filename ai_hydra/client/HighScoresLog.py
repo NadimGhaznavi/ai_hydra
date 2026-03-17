@@ -12,7 +12,7 @@ from textual.widgets import TabbedContent, Label, Log
 from textual.app import ComposeResult, Widget
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DStatus
-from ai_hydra.utils.HighscoreEvent import HighscoreEvent
+from ai_hydra.utils.MetricEvent import HighscoreEvent
 
 
 class HighScoresLog(Widget):

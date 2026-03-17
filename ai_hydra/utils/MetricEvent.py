@@ -17,3 +17,9 @@ class HighscoreEvent:
     highscore: int
     epsilon: float | None
     elapsed_time: str | None
+
+
+@dataclass(slots=True, frozen=True)
+class ScoreEvent:
+    epoch: int
+    score: int

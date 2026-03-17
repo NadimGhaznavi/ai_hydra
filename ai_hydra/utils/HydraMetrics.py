@@ -7,8 +7,14 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
+from collections import deque
+from statistics import mean
 
-from ai_hydra.utils.HighscoreEvent import HighscoreEvent
+from ai_hydra.constants.DHydraTui import DPlotDef
+from ai_hydra.utils.MetricEvent import HighscoreEvent, ScoreEvent
+
+MAX_CUR_SCORES = DPlotDef.MAX_CUR_SCORES
+AVG_CUR_SCORES = MAX_CUR_SCORES // 5
 
 
 class HydraMetrics:
@@ -19,6 +25,10 @@ class HydraMetrics:
         self._cur_loss: float | None = None
         self._cur_score: int = 0
         self._elapsed_time: str = "0s"
+
+        self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
+        self._avg_cur_scores: deque[ScoreEvent] = deque(maxlen=AVG_CUR_SCORES)
+        self._avg_cur_scores_buf: list = []
 
         self._highscore_events: list[HighscoreEvent] = []
 
@@ -37,6 +47,28 @@ class HydraMetrics:
 
     def add_elapsed_time(self, elapsed_time: str) -> None:
         self._elapsed_time = elapsed_time
+
+    def add_final_score(self, score: int) -> None:
+        cur_scores = self._cur_scores
+
+        # Don't insert dupes
+        if cur_scores and self._cur_epoch == cur_scores[-1].epoch:
+            return False
+
+        score_event = ScoreEvent(epoch=self._cur_epoch, score=score)
+        cur_scores.append(score_event)
+
+        avg_buf = self._avg_cur_scores_buf
+        avg_buf.append(score_event)
+        if len(avg_buf) == 5:
+            avg_epoch = avg_buf[-1].epoch
+            avg_score = mean(e.score for e in avg_buf)
+            self._avg_cur_scores.append(
+                ScoreEvent(epoch=avg_epoch, score=avg_score)
+            )
+            self._avg_cur_scores_buf = []
+
+        return True
 
     def add_highscore(self, highscore: int) -> bool:
         """
@@ -67,6 +99,12 @@ class HydraMetrics:
     def get_cur_score(self) -> int:
         return self._cur_score
 
+    def get_cur_score_plot_points(self) -> list[tuple[int, int]]:
+        return [(e.epoch, e.score) for e in self._cur_scores]
+
+    def get_avg_cur_score_plot_points(self) -> list[tuple[int, float]]:
+        return [(e.epoch, e.score) for e in self._avg_cur_scores]
+
     def get_highscore_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.highscore) for e in self._highscore_events]
 
@@ -81,4 +119,4 @@ class HydraMetrics:
         ]
 
     def set_initial_epsilon(self, value: float) -> None:
-        self._initial_epsilon = value
+        self._cur_epsilon = value
