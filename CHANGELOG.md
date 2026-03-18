@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [v0.16.1 - 2026-03-17 23:11
+
+### Fixed
+- Fixed image references in the README.md.
+
+---
+
 ## [v0.16.0] - 2026-03-17 16:13
 
 ### Added
