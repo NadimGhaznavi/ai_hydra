@@ -43,12 +43,12 @@ class DRNN:
     DROPOUT_P_VALUE: Final[float] = 0.05
     EPSILON_DECAY_RATE: Final[float] = 0.993
     GAMMA: Final[float] = 0.96  # Discount
-    HIDDEN_SIZE: Final[int] = 192
+    HIDDEN_SIZE: Final[int] = 224
     INITIAL_EPSILON: Final[float] = 0.999
     LEARNING_RATE: Final[float] = 0.0008
     MINIMUM_EPSILON: Final[float] = 0.005
     OUTPUT_SIZE: Final[int] = 3
-    RNN_LAYERS: Final[int] = 2
+    RNN_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 40
     TAU: Final[float] = 0.01
 

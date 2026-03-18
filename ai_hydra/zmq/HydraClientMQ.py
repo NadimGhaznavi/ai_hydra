@@ -117,6 +117,9 @@ class HydraClientMQ(HydraBaseMQ):
         except asyncio.CancelledError:
             raise
 
+    def disable_events_sub(self) -> None:
+        self._sub_set(False, self.topic(DHydraMQDef.EVENTS_TOPIC))
+
     def disable_per_step_sub(self) -> None:
         self._sub_set(False, self.topic(DHydraMQDef.PER_STEP_TOPIC))
 
@@ -125,6 +128,9 @@ class HydraClientMQ(HydraBaseMQ):
 
     def disable_scores_sub(self) -> None:
         self._sub_set(False, self.topic(DHydraMQDef.SCORES_TOPIC))
+
+    def enable_events_sub(self) -> None:
+        self._sub_set(True, self.topic(DHydraMQDef.EVENTS_TOPIC))
 
     def enable_per_step_sub(self) -> None:
         self._sub_set(True, self.topic(DHydraMQDef.PER_STEP_TOPIC))

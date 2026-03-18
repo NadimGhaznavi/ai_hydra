@@ -240,6 +240,13 @@ class HydraServerMQ(HydraBaseMQ):
                 payload=local_storage,
             )
 
+    async def publish_events(self, payload: dict) -> None:
+        topic = self.topic(DHydraMQDef.EVENTS_TOPIC).encode(DHydraMQ.UTF_8)
+        data = json.dumps(payload, separators=(",", ":")).encode(
+            DHydraMQ.UTF_8
+        )
+        await self.pub_socket.send_multipart([topic, data])
+
     async def publish_per_episode(self, payload: dict) -> None:
         """
         Received a new message to publish.
@@ -311,21 +318,6 @@ class HydraServerMQ(HydraBaseMQ):
                 DHydraMQ.UTF_8
             )
             await self.pub_socket.send_multipart([topic, data])
-
-    async def UNUSED_publish(
-        self, topic: str, method: str, payload: dict
-    ) -> None:
-        payload = {
-            DHydraMsg.SENDER: DModule.HYDRA_MGR,
-            DHydraMsg.METHOD: method,
-            DHydraMsg.PAYLOAD: payload,
-            DHydraMsg.PROTOCOL_VERSION: DHydra.PROTOCOL_VERSION,
-        }
-        topic = self.topic(topic).encode(DHydraMQ.UTF_8)
-        data = json.dumps(payload, separators=(",", ":")).encode(
-            DHydraMQ.UTF_8
-        )
-        await self.pub_socket.send_multipart([topic, data])
 
     def start(self) -> None:
         super().start()
