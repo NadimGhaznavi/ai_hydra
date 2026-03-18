@@ -103,7 +103,7 @@ class EpsilonAlgo:
         self._depleted = self._cur_epsilon <= self._min_epsilon
 
         if self._epsilon_not_depleted and self._depleted:
-            msg = f"Exploration complete (ε = {self._min_epsilon})"
+            msg = f"Exploration complete: ε = {self._min_epsilon}"
             self.log.info(msg)
             await self.event.publish(
                 EventMsg(level=DHydraLog.INFO, message=msg)
