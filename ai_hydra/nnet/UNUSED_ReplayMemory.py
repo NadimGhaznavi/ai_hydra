@@ -261,3 +261,18 @@ class ReplayMemory:
             self._log_chuck_distro()
 
         return samples
+
+    def sample_transitions(self, batch_size: int) -> list[Transition] | None:
+        """Sample random transitions for a linear model."""
+
+        # This only checks whether a full batch is possible in aggregate.
+        # The requested LH/NLH ratio is best-effort and is resolved in
+        # _sample_mixed().
+        if len(self._memory) < max(MIN_FRAMES, batch_size):
+            return None
+
+        if self._memory_cold:
+            self.log.debug("Memory has warmed up")
+            self._memory_cold = False
+
+        return self._rng.sample(self._memory, batch_size)
