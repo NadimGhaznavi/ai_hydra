@@ -74,14 +74,14 @@ class RNNTrainer:
 
     def train_long_memory(self) -> float | None:
 
-        chunks = self.replay.sample_chunks(batch_size=self._batch_size)
+        chunks = self.replay.sample_chunks()
         if chunks is None:
             return
 
         if self._cold_memory:
             self._cold_memory = False
             self.log.debug(
-                f"Training with {self._batch_size} batches with sequence length {len(chunks[0])}"
+                f"Training with {len(chunks)} batches with sequence length {len(chunks[0])}"
             )
 
         # Shapes (B = batch_size, T = seq_length, F = feature/input size)

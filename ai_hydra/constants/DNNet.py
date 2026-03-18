@@ -15,7 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 
-class DRNN:
+class DRNN2:
     """
     RNN Model defaults
     """
@@ -30,6 +30,25 @@ class DRNN:
     MINIMUM_EPSILON: Final[float] = 0.005
     OUTPUT_SIZE: Final[int] = 3
     RNN_LAYERS: Final[int] = 5
+    SEQ_LENGTH: Final[int] = 40
+    TAU: Final[float] = 0.01
+
+
+class DRNN:
+    """
+    RNN Model defaults
+    """
+
+    BATCH_SIZE: Final[int] = 24
+    DROPOUT_P_VALUE: Final[float] = 0.05
+    EPSILON_DECAY_RATE: Final[float] = 0.993
+    GAMMA: Final[float] = 0.96  # Discount
+    HIDDEN_SIZE: Final[int] = 192
+    INITIAL_EPSILON: Final[float] = 0.999
+    LEARNING_RATE: Final[float] = 0.0008
+    MINIMUM_EPSILON: Final[float] = 0.005
+    OUTPUT_SIZE: Final[int] = 3
+    RNN_LAYERS: Final[int] = 2
     SEQ_LENGTH: Final[int] = 40
     TAU: Final[float] = 0.01
 

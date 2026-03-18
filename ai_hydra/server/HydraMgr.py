@@ -87,7 +87,7 @@ class HydraMgr(HydraServer):
         import torch
 
         from ai_hydra.nnet.TrainMgr import TrainMgr
-        from ai_hydra.nnet.ReplayMemory import ReplayMemory
+        from ai_hydra.nnet.ATHReplayMemory import ATHReplayMemory
         from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
 
@@ -144,10 +144,9 @@ class HydraMgr(HydraServer):
 
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
-            replay = ReplayMemory(
+            replay = ATHReplayMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
-                seq_length=self.cfg.get(DNetField.SEQ_LENGTH),
             )
             model = RNNModel(log_level=self.log_level)
             model.set_params(
@@ -302,7 +301,7 @@ class HydraMgr(HydraServer):
                     )
 
                     if model_type == DField.RNN:
-                        train_mgr.replay.append(t=t)
+                        # train_mgr.replay.append(t=t, final_score=sess.score)
                         train_mgr.trainer.train_long_memory()
 
                     # Loss, if available, is loaded into the telemetry here
@@ -322,7 +321,10 @@ class HydraMgr(HydraServer):
                     done=bool(done),
                 )
 
-                train_mgr.replay.append(t=t)
+                if model_type == DField.RNN:
+                    train_mgr.replay.append(t=t, final_score=sess.score)
+                else:
+                    train_mgr.replay.append(t=t)
 
                 if model_type == DField.LINEAR:
                     if sess.step_n % train_every == 0:
