@@ -19,12 +19,11 @@ from zmq.sugar.frame import Frame
 
 from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
-    DHydraMQ,
-    DHydraMQDef,
     DModule,
     DMethod,
     DHydra,
 )
+from ai_hydra.constants.DHydraMQ import DHydraMQ, DHydraMQDef
 from ai_hydra.zmq.HydraMsg import HydraMsg
 
 MsgHandler = Callable[[HydraMsg], Any | Awaitable[Any]]

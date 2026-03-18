@@ -26,9 +26,9 @@ class EventLog(Widget):
     def compose(self) -> ComposeResult:
         yield Vertical(
             Label(
-                f"[b #3e99af]   {DLabel.TYPE:<13s}{DLabel.TIME:>7s}  {DLabel.EVENT}[/]"
+                f"[b #3e99af]   {DLabel.TYPE:<14s}{DLabel.TIME:>10s}  {DLabel.EVENT}[/]"
             ),
-            Log(highlight=False, auto_scroll=True, id=DField.EVENT_LOG_LOG),
+            Log(highlight=True, auto_scroll=True, id=DField.EVENT_LOG_LOG),
         )
 
     def add_event(self, ev_type: str, event: str):
@@ -37,5 +37,5 @@ class EventLog(Widget):
         ev_type_str = EVENT_MAP[ev_type]
 
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).write_line(
-            f"{ev_type_str:15s}{elap_time:>7s}  {event}"
+            f"{ev_type_str:<17s}{elap_time:>9s}  {event}"
         )

@@ -11,7 +11,7 @@
 import asyncio
 import time
 
-from ai_hydra.constants.DHydra import DHydraMQDef
+from ai_hydra.constants.DHydraMQ import DHydraMQDef
 
 
 class HydraMsgBatch:

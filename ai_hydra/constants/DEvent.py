@@ -8,12 +8,14 @@
 #    License: GPL 3.0
 
 from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.constants.DHydra import DModule
 
 
 EVENT_MAP = {
-    DField.HIGHSCORE: "🎉 HIGH-SCORE",
-    DField.SIM_LOOP: "⚡ SIM-LOOP",
-    DField.SNAPSHOT: "📸 SNAPSHOT",
-    DField.TUI: "💻 T.U.I.",
-    DField.WARNING: "⚠️ WARNING",
+    DField.HIGHSCORE: "🎉 High Score",
+    DField.SIM_LOOP: "⚡ Simulation Loop",
+    DField.SNAPSHOT: "📸 Snapshot",
+    DField.TUI: "💻 Hydra Client",
+    DField.WARNING: "⚠️ Warning",
+    DModule.EPSILON_ALGO: "🎲 Epsilon",
 }

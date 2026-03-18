@@ -26,10 +26,9 @@ from ai_hydra.constants.DHydra import (
     DHydra,
     DHydraRouterDef,
     DModule,
-    DHydraMQDef,
-    DHydraMQ,
     DHydraServerDef,
 )
+from ai_hydra.constants.DHydraMQ import DHydraMQDef, DHydraMQ
 from ai_hydra.zmq.HydraBaseMQ import HydraBaseMQ
 from ai_hydra.zmq.HydraMsg import HydraMsg
 

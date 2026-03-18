@@ -28,8 +28,8 @@ class EpsilonPolicy(HydraPolicy):
             return a
         return self._base_policy.select_action(state)
 
-    def played_game(self) -> None:
-        self._epsilon.played_game()
+    async def played_game(self) -> None:
+        await self._epsilon.played_game()
 
     def cur_epsilon(self) -> float:
         return self._epsilon.cur_epsilon()

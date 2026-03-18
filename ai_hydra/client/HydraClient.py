@@ -36,9 +36,8 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DMethod,
     DModule,
-    DHydraMQDef,
-    DHydraMQ,
 )
+from ai_hydra.constants.DHydraMQ import DHydraMQDef, DHydraMQ, DEvent
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
 from ai_hydra.constants.DNNet import (
@@ -302,7 +301,7 @@ class HydraClientTui(App):
                     type=DField.INTEGER,
                     compact=True,
                     valid_empty=False,
-                    value=f"{DLinear.HIDDEN_SIZE:.7f}",
+                    value=f"{DLinear.HIDDEN_SIZE}",
                     id=DField.HIDDEN_SIZE_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
@@ -467,6 +466,7 @@ class HydraClientTui(App):
             self._update_tui_labels()
             self.mq.enable_per_episode_sub()
             self.mq.enable_scores_sub()
+            self.mq.enable_events_sub()
             if self.cfg.get(DNetField.PER_STEP):
                 self.mq.enable_per_step_sub()
             else:
@@ -627,11 +627,13 @@ class HydraClientTui(App):
             srv_host=self._address,
         )
         self.mq.sub_methods = {
+            self.mq.topic(DHydraMQDef.EVENTS_TOPIC): self._on_sim_event,
             self.mq.topic(DHydraMQDef.PER_STEP_TOPIC): self.on_per_step,
             self.mq.topic(DHydraMQDef.PER_EPISODE_TOPIC): self.on_per_episode,
             self.mq.topic(DHydraMQDef.SCORES_TOPIC): self.on_scores,
         }
         self.mq.start()
+        self.mq.disable_events_sub()
         self.mq.disable_per_episode_sub()
         self.mq.disable_per_step_sub()
         self.mq.disable_scores_sub()
@@ -745,7 +747,7 @@ class HydraClientTui(App):
                 highscore_log.add_highscore(highscore_event)
                 self.event_log.add_event(
                     ev_type=DField.HIGHSCORE,
-                    event=f"🎉 New highscore: {highscore}",
+                    event=f"New highscore: {highscore}",
                 )
                 self.telemtry.game_score_plot.plot_highscores()
 
@@ -807,6 +809,11 @@ class HydraClientTui(App):
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
 
+    async def _on_sim_event(self, topic: str, payload) -> None:
+        self.event_log.add_event(
+            ev_type=payload[DEvent.SENDER], event=payload[DEvent.MESSAGE]
+        )
+
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:
             return
@@ -854,8 +861,9 @@ class HydraClientTui(App):
 
             # ----- Simulation is running ---
             if sim_running:
-                # Always receive per-episode updates
+                # Always receive per-episode and event updates
                 self.mq.enable_per_episode_sub()
+                self.mq.enable_events_sub()
 
                 # Always receive score updates
                 self.mq.enable_scores_sub()
@@ -1067,8 +1075,8 @@ class HydraClientTui(App):
 
 
 def main() -> None:
-    router = HydraClientTui()
-    router.run()
+    tui = HydraClientTui()
+    tui.run()
 
 
 if __name__ == "__main__":

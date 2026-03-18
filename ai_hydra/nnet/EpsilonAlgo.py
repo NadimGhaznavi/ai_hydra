@@ -9,12 +9,15 @@
 
 from __future__ import annotations
 
+import zmq.asyncio
+
 import random
-from typing import Optional
+from typing import Optional, Callable, Awaitable
 
 from ai_hydra.constants.DNNet import DEpsilonField
-from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.utils.HydraLog import HydraLog
+from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 
 
 class EpsilonAlgo:
@@ -28,8 +31,17 @@ class EpsilonAlgo:
     - Call played_game() at end of episode to decay epsilon.
     """
 
-    def __init__(self, rng: random.Random, log_level: DHydraLog):
+    def __init__(
+        self,
+        rng: random.Random,
+        log_level: DHydraLog,
+        pub_func,
+    ):
         self._rng = rng
+
+        self.event = HydraEventMQ(
+            client_id=DModule.EPSILON_ALGO, pub_func=pub_func
+        )
 
         self._initial_epsilon = None
         self._min_epsilon = None
@@ -40,7 +52,9 @@ class EpsilonAlgo:
         self._depleted = False
         self._epsilon_not_depleted = True
         self.log = HydraLog(
-            client_id="EpsilonAlgo", log_level=log_level, to_console=True
+            client_id=DModule.EPSILON_ALGO,
+            log_level=log_level,
+            to_console=True,
         )
 
     def cur_epsilon(self) -> float:
@@ -79,7 +93,7 @@ class EpsilonAlgo:
         self._min_epsilon = value
         self.log.debug(f"Minimum epsilon set: {value}")
 
-    def played_game(self) -> None:
+    async def played_game(self) -> None:
         """
         Decay epsilon at the end of an episode.
         """
@@ -87,8 +101,13 @@ class EpsilonAlgo:
             self._min_epsilon, self._cur_epsilon * self._decay_rate
         )
         self._depleted = self._cur_epsilon <= self._min_epsilon
+
         if self._epsilon_not_depleted and self._depleted:
-            self.log.info(f"Epsilon is at the minimum: {self._min_epsilon}")
+            msg = f"Epsilon is at the minimum: {self._min_epsilon}"
+            self.log.info(msg)
+            await self.event.publish(
+                EventMsg(level=DHydraLog.INFO, message=msg)
+            )
             self._epsilon_not_depleted = False
 
         self.reset_injected()

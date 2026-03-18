@@ -24,6 +24,8 @@ from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraLog import HydraLog
 
+from ai_hydra.utils.HydraHelper import minutes_to_uptime
+
 
 @dataclass
 class SnakeSession:
@@ -270,40 +272,3 @@ class SnakeMgr:
         except Exception as e:
             self.log.critical(f"ERROR: {e}")
             self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
-
-
-# Helper function
-def minutes_to_uptime(seconds: int):
-    # Return a string like:
-    # 45s
-    # 7h 23m
-    # 1d 7h 32m
-    days, minutes = divmod(int(seconds), 86400)
-    hours, minutes = divmod(minutes, 3600)
-    minutes, seconds = divmod(minutes, 60)
-
-    if days > 0:
-        if seconds < 10:
-            seconds = f" {seconds}"
-        if minutes < 10:
-            minutes = f" {minutes}"
-        if hours < 10:
-            hours = f" {hours}"
-        return f"{days}d {hours}h {minutes}m"
-
-    elif hours > 0:
-        if seconds < 10:
-            seconds = f" {seconds}"
-        if minutes < 10:
-            minutes = f" {minutes}"
-        return f"{hours}h {minutes}m"
-
-    elif minutes > 0:
-        if seconds < 10:
-            seconds = f" {seconds}"
-        if minutes < 10:
-            return f" {minutes}m {seconds}s"
-        return f"{minutes}m {seconds}s"
-
-    else:
-        return f"{seconds}s"

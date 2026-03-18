@@ -175,7 +175,11 @@ class HydraMgr(HydraServer):
         print(model)
 
         # Policy stack
-        epsilon_algo = EpsilonAlgo(rng=policy_rng, log_level=self.log_level)
+        epsilon_algo = EpsilonAlgo(
+            rng=policy_rng,
+            log_level=self.log_level,
+            pub_func=self.mq.publish_events,
+        )
         epsilon_algo.initial_epsilon(self.cfg.get(DNetField.INITIAL_EPSILON))
         epsilon_algo.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))
         epsilon_algo.decay_rate(self.cfg.get(DNetField.EPSILON_DECAY))
@@ -295,7 +299,7 @@ class HydraMgr(HydraServer):
                         self.log.info(f"Epoch: {count}")
 
                     # Epsilon
-                    train_mgr.policy.played_game()
+                    await train_mgr.policy.played_game()
                     ep_payload[DNetField.CUR_EPSILON] = (
                         train_mgr.policy.cur_epsilon()
                     )

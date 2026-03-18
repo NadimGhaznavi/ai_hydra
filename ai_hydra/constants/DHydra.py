@@ -61,26 +61,6 @@ class DHydraMsg(StrEnum):
     PROTOCOL_VERSION = "protocol_version"
 
 
-class DHydraMQ:
-    HEARTBEAT: Final[str] = "heartbeat"
-    MSGS: Final[str] = "msgs"
-    PER_EP: Final[str] = "per_ep"
-    PER_STEP: Final[str] = "per_step"
-    SCORES: Final[str] = "scores"
-    TIMER: Final[str] = "timer"
-    UTF_8: Final[str] = "utf-8"
-
-
-class DHydraMQDef:
-    TOPIC_PREFIX: Final[str] = "ai_hydra"
-    PER_STEP_TOPIC: Final[str] = "per_step_topic"
-    PER_EPISODE_TOPIC: Final[str] = "per_episode_topic"
-    EVENTS_TOPIC: Final[str] = "events_topic"
-    SCORES_TOPIC: Final[str] = "scores_topic"
-    MAX_BATCH_TIME: Final[float] = 0.5
-    MAX_BATCH_SIZE: Final[int] = 100
-
-
 class DHydraRouterDef:
     """
     Hydra Router defaults.
@@ -138,6 +118,7 @@ class DModule(StrEnum):
     modules, used in logging and component identification.
     """
 
+    EPSILON_ALGO = "EpsilonAlgo"
     HYDRA_CLIENT = "HydraClient"
     HYDRA_MGR = "HydraMgr"
     HYDRA_MQ = "HydraMQ"
