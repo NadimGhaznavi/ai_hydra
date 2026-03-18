@@ -26,8 +26,7 @@ from textual.widgets import (
     Input,
     Checkbox,
     Select,
-    TabbedContent,
-    TabPane,
+    Switch,
 )
 from textual.message import Message
 
@@ -126,9 +125,6 @@ class HydraClientTui(App):
 
         self._cur_epsilon = None
 
-        # Ahem...
-        self._not_first_time_kludge = False
-
         # ZeroMQ batching support at this app layer it checks for lost
         # messages. PUB/SUB does not guarantee delivery, batching  aims to
         # mitigate that.
@@ -171,12 +167,7 @@ class HydraClientTui(App):
         yield Vertical(
             Button(label=DLabel.HANDSHAKE, id=DField.HANDSHAKE, compact=True),
             Button(label=DLabel.START, id=DField.START_RUN, compact=True),
-            Button(
-                label=DLabel.UPDATE_CONFIG,
-                id=DField.UPDATE_RUNTIME_CONFIG,
-                compact=True,
-            ),
-            Label(),
+            Label(id=DField.START_RUN_DIVIDER),
             Button(label=DLabel.SNAPSHOT, id=DField.SNAPSHOT, compact=True),
             Label(),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
@@ -217,7 +208,8 @@ class HydraClientTui(App):
             # Turbo mode
             Horizontal(
                 Label(f"{DLabel.TURBO_MODE:>11s}: "),
-                Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
+                # Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
+                Switch(value=False, id=DField.TURBO_MODE),
                 classes=DField.INPUT_FIELD,
             ),
             id=DField.SETTINGS,
@@ -449,15 +441,9 @@ class HydraClientTui(App):
         # Realtime Telemetry (plots and event log)
         yield HydraTelemetry(metrics=self.metrics, id=DField.HYDRA_TELEMETRY)
 
-        # Console
-        yield Vertical(Label(id=DField.CONSOLE_SCREEN), id=DField.CONSOLE_BOX)
-
         # Focus widget: This is hidden, but it allows me to move focus away
         # from the selected button when a button is clicked.
         yield Checkbox(id=DField.HIDDEN_WIDGET)
-
-    def console_msg(self, value: str) -> None:
-        self._w_console_label.update(str(value))
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
@@ -495,25 +481,19 @@ class HydraClientTui(App):
             await self._send_update_config()
         self._w_hidden_widget.focus()
 
-    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
-        if event.control.id != DField.TURBO_MODE:
+    async def on_input_changed(self, event: Input.Changed) -> None:
+        input_id = event.input.id
+        if input_id != DField.MOVE_DELAY_INPUT:
             return
 
-        # Turbo enabled, replaces the Input with a Label showing "0.0"
-        if event.value:
-            self.remove_class(DField.TURBO_OFF)
-            self.add_class(DField.TURBO_ON)
-            self.console_msg(
-                f"⚡ Turbo mode: Game rendering disabled. Click 'Update Config' to update the server"
-            )
-
-        # Turbo disabled
-        else:
-            self.remove_class(DField.TURBO_ON)
-            self.add_class(DField.TURBO_OFF)
-            self.console_msg(
-                f"⚡ Turbo mode: Game rendering enabled. Click 'Update Config' to update the server"
-            )
+        self._update_tui_labels()
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.UPDATE_CONFIG,
+            payload=self.cfg.to_dict(),
+        )
+        await self.mq.send(msg)
 
     def on_mount(self) -> None:
         self.add_class(DField.BAD_HANDSHAKE)
@@ -524,6 +504,7 @@ class HydraClientTui(App):
         self.telemtry = self.query_one(
             f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
         )
+        self.event_log = self.telemtry.event_log
         self._w_batch_size_input = self.query_one(
             f"#{DField.BATCH_SIZE_INPUT}", Input
         )
@@ -531,12 +512,6 @@ class HydraClientTui(App):
             f"#{DField.BATCH_SIZE_LABEL}", Label
         )
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
-        self._w_console_box = self.query_one(
-            f"#{DField.CONSOLE_BOX}", Vertical
-        )
-        self._w_console_label = self.query_one(
-            f"#{DField.CONSOLE_SCREEN}", Label
-        )
         self._w_cur_epsilon_label = self.query_one(
             f"#{DField.CUR_EPSILON}", Label
         )
@@ -617,7 +592,6 @@ class HydraClientTui(App):
         self._w_highscores_log = self.query_one(
             f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         )
-        self._w_turbo_mode = self.query_one(f"#{DField.TURBO_MODE}", Checkbox)
 
         # Network
         self.query_one(f"#{DField.ROUTER_HB}", Label).update(
@@ -635,7 +609,6 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
         self._w_highscores_log.border_subtitle = DLabel.HIGHSCORES
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
-        self._w_console_box.border_subtitle = DLabel.CONSOLE
         self.query_one(f"#{DField.MODEL}").border_subtitle = DLabel.MODEL
         self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
         self.query_one(f"#{DField.TRAINING_BOX}").border_subtitle = (
@@ -663,7 +636,7 @@ class HydraClientTui(App):
         self.mq.disable_per_step_sub()
         self.mq.disable_scores_sub()
 
-        self.console_msg("Initialized...")
+        self.event_log.add_event(ev_type=DField.TUI, event="Initialized...")
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
         # Unbatch messages
@@ -674,7 +647,10 @@ class HydraClientTui(App):
             self._first_per_ep_batch_num = False
             self._prev_per_ep_batch_num = self._cur_per_ep_batch_num - 1
         if (self._cur_per_ep_batch_num - self._prev_per_ep_batch_num) != 1:
-            self.console_msg("WARNING: Per episode data is being dropped!!!")
+            self.event_log.add_event(
+                ev_type=DField.WARNING,
+                event="Per episode data is being dropped",
+            )
         self._prev_per_ep_batch_num = self._cur_per_ep_batch_num
 
         metrics = self.metrics
@@ -698,7 +674,9 @@ class HydraClientTui(App):
 
             # Update the TUI
             self._w_board_box.border_title = f"{DLabel.GAME}: {epoch}"
-            self._w_console_box.border_subtitle = elapsed_time
+            self.query_one(f"#{DField.HYDRA_TELEMETRY}").border_subtitle = (
+                elapsed_time
+            )
             self._w_cur_epsilon_label.update(str(round(cur_epsilon, 4)))
 
     def on_per_step(self, topic: str, payload: dict) -> None:
@@ -728,7 +706,9 @@ class HydraClientTui(App):
             self._first_scores_batch_num = False
             self._prev_scores_batch_num = self._cur_scores_batch_num - 1
         if (self._cur_scores_batch_num - self._prev_scores_batch_num) != 1:
-            self.console_msg("WARNING: Score data is being dropped!!!")
+            self.event_log.add_event(
+                ev_type=DField.WARNING, event="Score data is being dropped"
+            )
         self._prev_scores_batch_num = self._cur_scores_batch_num
 
         metrics = self.metrics
@@ -763,7 +743,10 @@ class HydraClientTui(App):
                 )
                 highscore_event = metrics.get_last_highscore_event()
                 highscore_log.add_highscore(highscore_event)
-                self.console_msg(f"🎉 New highscore: {highscore}")
+                self.event_log.add_event(
+                    ev_type=DField.HIGHSCORE,
+                    event=f"🎉 New highscore: {highscore}",
+                )
                 self.telemtry.game_score_plot.plot_highscores()
 
             # Only update the score, if "per_step" is enabled.
@@ -824,9 +807,38 @@ class HydraClientTui(App):
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
 
-        if self._not_first_time_kludge:
-            self.console_msg("Updated defaults setting...")
-        self._not_first_time_kludge = True
+    async def on_switch_changed(self, event: Switch.Changed) -> None:
+        if event.control.id != DField.TURBO_MODE:
+            return
+
+        # Turbo enabled, replaces the Input with a Label showing "0.0"
+        if event.value:
+            self.remove_class(DField.TURBO_OFF)
+            self.add_class(DField.TURBO_ON)
+            self.event_log.add_event(
+                ev_type=DField.SIM_LOOP,
+                event="Turbo mode enabled: Game rendering disabled, move delay set to 0.0",
+            )
+            self.mq.disable_per_step_sub()
+        # Turbo disabled
+        else:
+            self.remove_class(DField.TURBO_ON)
+            self.add_class(DField.TURBO_OFF)
+            move_delay = self.query_one(f"#{DField.MOVE_DELAY_INPUT}").value
+            self.event_log.add_event(
+                ev_type=DField.SIM_LOOP,
+                event=f"Turbo mode disabled: Game rendering enabled, move delay set to {move_delay}",
+            )
+            self.mq.enable_per_step_sub()
+
+        self._update_tui_labels()
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.UPDATE_CONFIG,
+            payload=self.cfg.to_dict(),
+        )
+        await self.mq.send(msg)
 
     async def _send_handshake(self):
         msg = HydraMsg(
@@ -844,18 +856,30 @@ class HydraClientTui(App):
             if sim_running:
                 # Always receive per-episode updates
                 self.mq.enable_per_episode_sub()
+
                 # Always receive score updates
                 self.mq.enable_scores_sub()
                 self.add_class(DField.SIM_RUNNING)
                 self.cfg = SimCfg.from_dict(reply.payload)
+
+                # Turbo mode disabled
                 if self.cfg.get(DNetField.PER_STEP):
                     self.mq.enable_per_step_sub()
                     self.remove_class(DField.TURBO_ON)
                     self.add_class(DField.TURBO_OFF)
+                    self.query_one(f"#{DField.TURBO_MODE}", Switch).value = (
+                        False
+                    )
+
+                # Turbo mode enabled
                 else:
                     self.mq.disable_per_step_sub()
                     self.remove_class(DField.TURBO_OFF)
                     self.add_class(DField.TURBO_ON)
+                    self.query_one(f"#{DField.TURBO_MODE}", Switch).value = (
+                        True
+                    )
+
                 # Load configurable TUI settings from the running sim config
                 self._w_initial_epsilon_input.value = str(
                     self.cfg.get(DNetField.INITIAL_EPSILON)
@@ -873,17 +897,26 @@ class HydraClientTui(App):
                     self.cfg.get(DNetField.HIDDEN_SIZE)
                 )
                 self._update_tui_labels()
-                self.console_msg("Connecting to running simulation...")
+                self.event_log.add_event(
+                    ev_type=DField.SIM_LOOP,
+                    event="Connecting to running simulation",
+                )
 
             # ----- Simulation is not running ---
             else:
                 self.add_class(DField.SIM_STOPPED)
-                self.console_msg("Connected to simulation server...")
+                self.event_log.add_event(
+                    ev_type=DField.SIM_LOOP,
+                    event="Connected to simulation server",
+                )
             self.remove_class(DField.BAD_HANDSHAKE)
 
         # ----- Cannot connect to Simulation Server (HydraMgr)
         except asyncio.TimeoutError:
-            self.console_msg("Unable to connect to simulation server...")
+            self.event_log.add_event(
+                ev_type=DField.SIM_LOOP,
+                event="Unable to connect to simulation server",
+            )
 
     async def _send_reset(self):
         msg = HydraMsg(
@@ -919,7 +952,9 @@ class HydraClientTui(App):
                 # Sim was already running
                 self.remove_class(DField.SIM_STOPPED)
                 self.add_class(DField.SIM_RUNNING)
-            self.console_msg("Simulation started...")
+            self.event_log.add_event(
+                ev_type=DField.SIM_LOOP, event="Simulation started"
+            )
 
         except asyncio.TimeoutError:
             pass
@@ -945,7 +980,7 @@ class HydraClientTui(App):
             payload=self.cfg.to_dict(),
         )
         await self.mq.send(msg)
-        if self._w_turbo_mode.value:
+        if self.query_one(f"#{DField.TURBO_MODE}", Switch).value:
             self.mq.disable_per_step_sub()
         else:
             self.mq.enable_per_step_sub()
@@ -958,7 +993,10 @@ class HydraClientTui(App):
         fq_snapshot = os.path.join(self._hydra_dir, snapshot_file)
         self.snapshot.create_snapshot(snap_file=fq_snapshot, cfg=self.cfg)
 
-        self.console_msg(f"📸 Created snapshot file: {fq_snapshot}")
+        self.event_log.add_event(
+            ev_type=DField.SNAPSHOT,
+            event=f"Created snapshot file: {fq_snapshot}",
+        )
 
     def _update_tui_labels(self):
         """
@@ -978,7 +1016,7 @@ class HydraClientTui(App):
         self._w_initial_epsilon_label.update(str(initial_epsilon))
         self._w_min_epsilon_label.update(str(min_epsilon))
         # Turbo mode == Not per_step
-        per_step = not self._w_turbo_mode.value
+        per_step = not self.query_one(f"#{DField.TURBO_MODE}", Switch).value
         # Move delay
         move_delay = self._w_move_delay_input.value
         # Model type

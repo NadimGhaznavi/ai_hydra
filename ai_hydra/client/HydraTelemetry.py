@@ -18,6 +18,7 @@ from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.client.plots.GameScorePlot import GameScorePlot
 from ai_hydra.client.plots.ScoresDistPlot import ScoresDistPlot
 from ai_hydra.client.plots.LossPlot import LossPlot
+from ai_hydra.client.EventLog import EventLog
 
 
 class HydraTelemetry(Widget):
@@ -33,11 +34,16 @@ class HydraTelemetry(Widget):
             id=DField.SCORES_DIST_PLOT, metrics=self.metrics
         )
         self.loss_plot = LossPlot(id=DField.LOSS_PLOT, metrics=self.metrics)
+        self.event_log = EventLog(id=DField.EVENT_LOG, metrics=self.metrics)
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
-            DLabel.GAME_SCORES, DLabel.SCORE_DISTRIBUTION, DLabel.LOSS
+            DLabel.GAME_SCORES,
+            DLabel.SCORE_DISTRIBUTION,
+            DLabel.LOSS,
+            DLabel.EVENT_LOG,
         ):
             yield self.game_score_plot
             yield self.scores_dist_plot
             yield self.loss_plot
+            yield self.event_log

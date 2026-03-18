@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
     grid-size: 4 8;
-    grid-rows: 3 5 6 6 7 22 3;
+    grid-rows: 3 5 6 6 5 2 22;
     grid-columns: 20 44 32 37;
 }
 
@@ -13,10 +13,15 @@ Button {
 }
 
 HighScoresLog {
-    row-span: 4;
+    row-span: 5;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
+}
+
+Switch {
+    border: none;
+    padding: 0;
 }
 
 #both {
@@ -32,7 +37,7 @@ HighScoresLog {
     color: #5fc442;
     width: 44;
     text-style: bold;
-    padding: 1 1;
+    padding: 0 1;
 }
 
 #both {
@@ -47,22 +52,6 @@ HighScoresLog {
     color: #5fc442;
     text-style: bold;
     padding: 0 1;
-}
-
-#console_screen {
-    column-span: 4;
-}
-
-#console_box {
-    column-span: 4;
-    background: black;
-    border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
-    border-title-color: #5fc442;
-    color: #5fc442;
-    text-style: bold;
-    padding: 0 1;
-
 }
 
 #epsilon {
@@ -96,8 +85,6 @@ HighScoresLog {
 }
 
 /* ---------- HydraTelemetry --- */
-
-/* --- HydraTelemetry --- */
 HydraTelemetry {
     column-span: 4;
     background: black;
@@ -148,6 +135,14 @@ LossPlot {
     width: 50;
 }
 
+/* --- EventLog --- */
+EventLog {
+    height: 18;
+}
+#event_log_log {
+    background: black;
+}
+
 /* -------------------------------------------- */
 
 #model {
@@ -162,6 +157,7 @@ LossPlot {
 }
 
 #network {
+    row-span: 2;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #72af75;
@@ -192,6 +188,7 @@ LossPlot {
 }
 
 #training_box {
+    row-span: 2;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #72af75;
@@ -308,6 +305,9 @@ LossPlot {
     display: none;
 }
 .sim_running #start_run {
+    display: none;
+}
+.sim_running #start_run_divider {
     display: none;
 }
 .sim_running #handshake {

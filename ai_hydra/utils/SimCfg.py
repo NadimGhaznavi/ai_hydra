@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from typing import Any, Callable, ClassVar
+import traceback
 
 from ai_hydra.constants.DNNet import (
     DNetField,
@@ -86,4 +87,8 @@ class SimCfg:
             raise KeyError(f"Unknown cfg key: {key}")
 
         coerce = self._COERCE.get(key)
-        self._values[key] = coerce(value) if coerce else value
+        try:
+            self._values[key] = coerce(value) if coerce else value
+        except Exception as e:
+            print(f"ERROR: {e}")
+            print(f"STACKTRACE: {traceback.format_exc()}")
