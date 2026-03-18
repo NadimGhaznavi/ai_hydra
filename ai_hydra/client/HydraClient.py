@@ -37,6 +37,7 @@ from ai_hydra.constants.DHydra import (
     DMethod,
     DModule,
 )
+from ai_hydra.constants.DEvent import EV_TYPE
 from ai_hydra.constants.DHydraMQ import DHydraMQDef, DHydraMQ, DEvent
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
@@ -390,6 +391,10 @@ class HydraClientTui(App):
                     f"{DLinear.BATCH_SIZE}",
                     id=DField.BATCH_SIZE_LABEL,
                 ),
+                Label(
+                    f"{DRNN.BATCH_SIZE}",
+                    id=DField.RNN_BATCH_SIZE_LABEL,
+                ),
                 Input(
                     type=DField.INTEGER,
                     compact=True,
@@ -408,13 +413,6 @@ class HydraClientTui(App):
                 Label(
                     f"{DRNN.SEQ_LENGTH}",
                     id=DField.SEQ_LENGTH_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DRNN.SEQ_LENGTH}",
-                    id=DField.SEQ_LENGTH_INPUT,
                 ),
                 classes=DField.INPUT_FIELD,
             ),
@@ -583,9 +581,6 @@ class HydraClientTui(App):
         self._w_rnn_tau_label = self.query_one(
             f"#{DField.RNN_TAU_LABEL}", Label
         )
-        self._w_seq_length_input = self.query_one(
-            f"#{DField.SEQ_LENGTH_INPUT}", Input
-        )
         self._w_seq_length_label = self.query_one(
             f"#{DField.SEQ_LENGTH_LABEL}", Label
         )
@@ -745,10 +740,6 @@ class HydraClientTui(App):
                 )
                 highscore_event = metrics.get_last_highscore_event()
                 highscore_log.add_highscore(highscore_event)
-                self.event_log.add_event(
-                    ev_type=DField.HIGHSCORE,
-                    event=f"New highscore: {highscore}",
-                )
                 self.telemtry.game_score_plot.plot_highscores()
 
             # Only update the score, if "per_step" is enabled.
@@ -779,10 +770,12 @@ class HydraClientTui(App):
             min_epsilon = DLinear.MINIMUM_EPSILON
             self.remove_class(DField.RNN)
             self.add_class(DField.LINEAR)
+            self.query_one(f"#{DField.BATCH_SIZE_INPUT}", Input).value = str(
+                batch_size
+            )
 
         # RNN model defaults
         elif model_type == DField.RNN:
-            batch_size = DRNN.BATCH_SIZE
             dropout_p = DRNN.DROPOUT_P_VALUE
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
             gamma = DRNN.GAMMA
@@ -792,12 +785,13 @@ class HydraClientTui(App):
             min_epsilon = DRNN.MINIMUM_EPSILON
             self.remove_class(DField.LINEAR)
             self.add_class(DField.RNN)
-
+            self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(
+                str(DRNN.BATCH_SIZE)
+            )
         else:
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
 
         # Update widgets with model specific defaults
-        self._w_batch_size_input.value = str(batch_size)
         self._w_dropout_p_input.value = str(dropout_p)
         self._w_epsilon_decay_input.value = str(epsilon_decay)
         self._w_gamma_input.value = str(gamma)
@@ -810,9 +804,26 @@ class HydraClientTui(App):
         self.metrics.set_initial_epsilon(initial_epsilon)
 
     async def _on_sim_event(self, topic: str, payload) -> None:
-        self.event_log.add_event(
-            ev_type=payload[DEvent.SENDER], event=payload[DEvent.MESSAGE]
-        )
+        print(payload)
+        sender = payload.get(DEvent.SENDER)
+        message = payload.get(DEvent.MESSAGE)
+        ev_type = payload.get(DEvent.EV_TYPE)
+        ev_payload = payload.get(DEvent.PAYLOAD)
+
+        # Send event to be displayed in the EventLog widget
+        self.event_log.add_event(ev_type=sender, event=message)
+
+        # Check for additional data
+        if sender == DModule.ATH_REPLAY_MEMORY:
+            if ev_type == EV_TYPE.SHIFTING:
+                batch_size = ev_payload[DField.BATCH_SIZE]
+                seq_length = ev_payload[DField.SEQ_LENGTH]
+                self.query_one(
+                    f"#{DField.RNN_BATCH_SIZE_LABEL}", Label
+                ).update(str(batch_size))
+                self.query_one(f"#{DField.SEQ_LENGTH_LABEL}", Label).update(
+                    str(seq_length)
+                )
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:
@@ -1049,9 +1060,6 @@ class HydraClientTui(App):
         # RNN Tau
         rnn_tau = self._w_rnn_tau_input.value
         self._w_rnn_tau_label.update(rnn_tau)
-        # Sequence length
-        seq_length = self._w_seq_length_input.value
-        self._w_seq_length_label.update(seq_length)
 
         self.cfg.apply(
             {
@@ -1069,7 +1077,6 @@ class HydraClientTui(App):
                 DNetField.RANDOM_SEED: random_seed,
                 DNetField.RNN_LAYERS: rnn_layers,
                 DNetField.RNN_TAU: rnn_tau,
-                DNetField.SEQ_LENGTH: seq_length,
             }
         )
 

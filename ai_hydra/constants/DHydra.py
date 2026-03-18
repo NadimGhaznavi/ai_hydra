@@ -118,6 +118,7 @@ class DModule(StrEnum):
     modules, used in logging and component identification.
     """
 
+    ATH_REPLAY_MEMORY = "ATHReplayMemory"
     EPSILON_ALGO = "EpsilonAlgo"
     HYDRA_CLIENT = "HydraClient"
     HYDRA_MGR = "HydraMgr"

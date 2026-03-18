@@ -34,8 +34,8 @@ class EventLog(Widget):
     def add_event(self, ev_type: str, event: str):
         elap_time = self.metrics.get_elapsed_time()
 
-        ev_type_str = EVENT_MAP[ev_type]
+        ev_icon, ev_type_str = EVENT_MAP[ev_type]
 
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).write_line(
-            f"{ev_type_str:<17s}{elap_time:>9s}  {event}"
+            f"{ev_icon:<2s}{ev_type_str:<15s}{elap_time:>9s}  {event}"
         )

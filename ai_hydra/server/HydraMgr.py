@@ -147,6 +147,7 @@ class HydraMgr(HydraServer):
             replay = ATHReplayMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
+                pub_func=self.mq.publish_events,
             )
             model = RNNModel(log_level=self.log_level)
             model.set_params(
@@ -326,7 +327,7 @@ class HydraMgr(HydraServer):
                 )
 
                 if model_type == DField.RNN:
-                    train_mgr.replay.append(t=t, final_score=sess.score)
+                    await train_mgr.replay.append(t=t, final_score=sess.score)
                 else:
                     train_mgr.replay.append(t=t)
 

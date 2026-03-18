@@ -14,10 +14,13 @@ from random import Random
 from dataclasses import dataclass, field
 
 from ai_hydra.constants.DReplayMemory import DMemory
-from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.constants.DHydra import DHydraLog, DModule
+from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.constants.DEvent import EV_TYPE
 
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
+from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 
 MAX_FRAMES = DMemory.MAX_MEM_SIZE  # Max Linear transitions
 MAX_BUCKETS = 20
@@ -60,15 +63,14 @@ class Episode:
 
 
 class ATHReplayMemory:
-    def __init__(
-        self,
-        rng: Random,
-        log_level: DHydraLog,
-    ):
+    def __init__(self, rng: Random, log_level: DHydraLog, pub_func):
         self.log = HydraLog(
-            client_id="ReplayMemory",
+            client_id=DModule.ATH_REPLAY_MEMORY,
             log_level=log_level,
             to_console=True,
+        )
+        self.event = HydraEventMQ(
+            client_id=DModule.ATH_REPLAY_MEMORY, pub_func=pub_func
         )
         self._rng = rng
 
@@ -92,7 +94,9 @@ class ATHReplayMemory:
         self.log.info(f"Setting max_frames to {MAX_FRAMES}")
         self.log.info(f"Setting max_buckets to {MAX_BUCKETS}")
 
-    def append(self, t: Transition, final_score: int | None = None) -> None:
+    async def append(
+        self, t: Transition, final_score: int | None = None
+    ) -> None:
         self._cur_game.append(t)
 
         if t.done:
@@ -102,9 +106,9 @@ class ATHReplayMemory:
                 )
 
             self._finalize_game()
-            self._prune_if_needed()
+            await self._prune_if_needed()
 
-            shifted = self._check_gear(final_score)
+            await self._check_gear(final_score)
             self._rebuild_bucket_index()
 
     def _build_episode_gear_meta(
@@ -150,7 +154,7 @@ class ATHReplayMemory:
             ranges=tuple(ranges),
         )
 
-    def _check_gear(self, final_score: int) -> bool:
+    async def _check_gear(self, final_score: int) -> bool:
         if self._cur_gear == max(GEARBOX):
             return False
 
@@ -168,9 +172,22 @@ class ATHReplayMemory:
         self._threshold_achieved_count = 0
         _, self._cur_seq_length, self._batch_size = GEARBOX[self._cur_gear]
 
-        self.log.info(
-            f"Shifting into higher gear: {self._cur_gear} "
-            f"(seq_length={self._cur_seq_length}, batch_size={self._batch_size})"
+        msg1 = f"Shifting into higher gear: {self._cur_gear}"
+        msg2 = f"(seq_length={self._cur_seq_length}, batch_size={self._batch_size})"
+
+        self.log.info(msg1)
+        self.log.info(msg2)
+        await self.event.publish(
+            EventMsg(
+                level=DHydraLog.INFO,
+                message=msg1,
+                ev_type=EV_TYPE.SHIFTING,
+                payload={
+                    DField.GEAR: self._cur_gear,
+                    DField.SEQ_LENGTH: self._cur_seq_length,
+                    DField.BATCH_SIZE: self._batch_size,
+                },
+            )
         )
 
         return True
@@ -212,13 +229,17 @@ class ATHReplayMemory:
     def _num_chunks_for_episode(self, ep_size: int, seq_length: int) -> int:
         return ep_size // seq_length
 
-    def _prune_if_needed(self) -> None:
+    async def _prune_if_needed(self) -> None:
         while self._stored_frames > MAX_FRAMES:
             episode = self._games.pop(0)
             self._stored_frames -= episode.size
 
             if not self._has_logged_pruning:
-                self.log.info("Memory is full, pruning initiated")
+                msg = "Memory is full, pruning initiated"
+                self.log.info(msg)
+                await self.event.publish(
+                    EventMsg(level=DHydraLog.INFO, message=msg)
+                )
                 self._has_logged_pruning = True
 
     def _rebuild_bucket_index(self) -> None:

@@ -256,9 +256,6 @@ EventLog {
 .sim_stopped #rnn_tau_label {
     display: none;
 }
-.sim_stopped #seq_length_label {
-    display: none;
-}
 .sim_stopped #update_runtime_config {
     display: none;
 }
@@ -299,9 +296,6 @@ EventLog {
     display: none;
 }
 .sim_running #rnn_tau_input {
-    display: none;
-}
-.sim_running #seq_length_input {
     display: none;
 }
 .sim_running #start_run {
@@ -364,6 +358,9 @@ EventLog {
 .bad_handshake #random_seed_label {
     display: none;
 }
+.bad_handshake #rnn_batch_size_label {
+    display: none;
+}
 .bad_handshake #rnn_layers_input {
     display: none;
 }
@@ -416,6 +413,15 @@ EventLog {
     display: none;
 }
 
+/* RNN Model is Selected */
+/* --------------------- */
+.rnn #batch_size_input {
+    display: none;
+}
+.rnn #batch_size_label {
+    display: none;
+}
+
 /* Linear Model is Selected */
 /* ------------------------ */
 .linear #seq_length_input {
@@ -425,6 +431,9 @@ EventLog {
     display: none;
 }
 .linear #seq_length_opt {
+    display: none;
+}
+.linear #rnn_batch_size_label {
     display: none;
 }
 .linear #rnn_layers_opt {

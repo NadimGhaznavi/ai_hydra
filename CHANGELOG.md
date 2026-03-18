@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## [Unreleased]
+
+### Added
+- An *event type* field to the *Hydra MQ* `EventMsg`, used by `HydraEventMQ`.
+
+### Fixed
+- Batch size and sequence length are now correct in the TUI.
+  - For RNNs these are set on the server size by the *Adaptive Replay Memory*
+  - The *Adaptive Replay Memory* changes these as the game proceeds. These changes are published on the ZeroMQ *Events* topic. The client is a subscriber to this topic. The client correctly updates the values in the TUI when they change on the server.
+
+
+---
 
 ## [0.17.0] - 2026-03-18 14:41
 

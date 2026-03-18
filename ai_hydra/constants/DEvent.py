@@ -7,14 +7,21 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
+from typing import Final
+
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DHydra import DModule
 
 
 EVENT_MAP = {
-    DField.SIM_LOOP: "⚡ Simulation",
-    DField.SNAPSHOT: "📸 Snapshot",
-    DField.TUI: "💻 Hydra Client",
-    DField.WARNING: "⚠️ Warning",
-    DModule.EPSILON_ALGO: "🎲 Epsilon",
+    DModule.ATH_REPLAY_MEMORY: ("💾", "Replay Memory"),
+    DField.SIM_LOOP: ("⚡", "Simulation"),
+    DField.SNAPSHOT: ("📸", "Snapshot"),
+    DField.TUI: ("💻", "Hydra Client"),
+    DField.WARNING: ("⚠️", "Warning"),
+    DModule.EPSILON_ALGO: ("🎲", "Epsilon"),
 }
+
+
+class EV_TYPE:
+    SHIFTING: Final[str] = "shifting"

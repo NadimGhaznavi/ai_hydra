@@ -23,6 +23,7 @@ from ai_hydra.constants.DHydraMQ import DEvent, DHydraMQ, DHydraMQDef
 class EventMsg:
     level: DHydraLog
     message: str
+    ev_type: str | None = None
     payload: dict[Any, Any] = field(default_factory=dict)
 
 
@@ -37,6 +38,7 @@ class HydraEventMQ:
             DEvent.SENDER: self._client_id,
             DEvent.LEVEL: event.level,
             DEvent.MESSAGE: event.message,
+            DEvent.EV_TYPE: event.ev_type,
             DEvent.PAYLOAD: event.payload,
         }
         await self._pub_event(msg_dict)
