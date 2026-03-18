@@ -1,4 +1,4 @@
-![HydraClient TUI](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/hydra-client.png)
+![HydraClient TUI](https://aihydra.osoyalce.com/images/hydra-client.png)
 
 # AI Hydra - Reinforcement Learning Platform
 
@@ -34,7 +34,7 @@ algorithm to encourage exploration at the beginning of a simulation run.
 
 ## Distributed Architecture
 
-![Architecture](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/architecture.png)
+![Architecture](https://aihydra.osoyalce.com/images/architecture.png)
 
 The *HydraClient*, *HydraRouter*, and *HydraMgr* are run in three different
 terminals. The project supports running the client, router, and server on
@@ -114,14 +114,14 @@ Other visualizations are shown below:
 The loss plotted over the duration of the running simulation and a short, 
 75 episode, sliding window showing recent loss.
 
-![Loss Plot](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/loss-plot.png)
+![Loss Plot](https://aihydra.osoyalce.com/images//loss-plot.png)
 
 ### Scores Histogram
 
 This plot shows the score distribution over the simulation run and a second plot 
 with a sliding window showing a histogram of the scores over the previous 500 games.
 
-![Score Distribution](https://github.com/NadimGhaznavi/ai_hydra/blob/main/images/scores-histogram.png)
+![Score Distribution](https://aihydra.osoyalce.com/images//scores-histogram.png)
 
 ## Snapshot Report
 
