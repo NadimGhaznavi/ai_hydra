@@ -8,26 +8,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [Unreleased]
 
 ### Added
+- **HydraClient TUI Updates and Additions**
+  - Removed the *Update Config* button; changes to settings are instant now.
+  - Replace the *Turbo Mode* checkbox with a *Switch* widget.
+  - Tweaked the TUI layout.
+  - Moved the one line status widget into an *Event Log* tab.
 - **ZeroMQ Events Topic**
   - Added another publishing topic. This topic is a PUB/SUB ZMQ topic that publishes events (e.g. *Epsilon depleted*, *ATHReplayMemory gear change*)
   - These events are displayed in the new *HydraClient* `EventLog` tab.
+    - **HydraEventMQ** and **EventMsg** classes
+      - This class has been deployed in the `EpsilonAlgo` as a simple use case.
+      - The class encapsulates all of the ZeroMQ code from the application.
+      - Modules can now simply `self.event.publish(EventMsg(level=DHydraLog.INFO, message=msg))`
+        - Messages are published on a ZeroMQ PUB/SUB socket
+        - The `HydraClient` now subscribe to the new *Events Topic* and publishes them  in the new *Event Log*
+  - This opens the door for enhanced reporting and event correlation.
 - **Adaptive Temporal Horizon Replay Memory**
   - This addresses the *structural limitation* in the previous `ReplayMemory`.
   - The `ATHReplayMemory` is used by temporally aware models such as the *RNN*.
   - This replay memory implements an *adaptive* scaling feature:
     - The initial `sequence_length/batch_size` is set to `4/128`.
     - When a threshold is reached, `ATHReplayMemory` *gears up* to `8/64`, `16/32`, `32/16`, and finally to a `sequence_length/batch_size` of `64/8`.
-- **HydraClient TUI Updates and Additions**
-  - Removed the *Update Config* button; changes to settings are instant now.
-  - Replace the *Turbo Mode* checkbox with a *Switch* widget.
-  - Tweaked the TUI layout.
-  - Moved the one line status widget into an *Event Log* tab.
 
 ### Changed
 - Split the `ReplayMemory` into `ATHReplayMemory` and `SimpleReplayMemory`.
   - `SimpleReplayMemory` is used with the *Linear* model and
   - `ATHReplayMemory` is used with the *RNN*.
 - Moved *ZeroMQ* constant definitions out of `DHydra` and into a new `DHydraMQ` module.
+
+
+### Known Issues
+- The introduction of the `ATPReplayMemory` is a significant architectural shift.
+- The *Replay Memory* and the *RNN* now need to be (re)tuned.
+- The next release will include more TUI side visibility into the *Replay Memory*
 
 ---
 

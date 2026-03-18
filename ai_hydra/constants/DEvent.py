@@ -12,8 +12,7 @@ from ai_hydra.constants.DHydra import DModule
 
 
 EVENT_MAP = {
-    DField.HIGHSCORE: "🎉 High Score",
-    DField.SIM_LOOP: "⚡ Simulation Loop",
+    DField.SIM_LOOP: "⚡ Simulation",
     DField.SNAPSHOT: "📸 Snapshot",
     DField.TUI: "💻 Hydra Client",
     DField.WARNING: "⚠️ Warning",
