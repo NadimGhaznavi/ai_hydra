@@ -51,6 +51,10 @@ class HydraMetrics:
         # EventLog events
         self._eventlog_msgs = []
 
+        # Epoch, mean and median values
+        self._mean_and_median: list[tuple[int, float, float]] = []
+        self._recent_mean_and_median: list[tuple[int, float, float]] = []
+
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
 
@@ -144,6 +148,12 @@ class HydraMetrics:
         )
         return True
 
+    def add_mean_median(self, epoch, mean, median):
+        self._mean_and_median.append((epoch, mean, median))
+
+    def add_recent_mean_and_median(self, epoch, mean, median):
+        self._recent_mean_and_median.append((epoch, mean, median))
+
     def get_avg_cur_score_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.score) for e in self._avg_cur_scores]
 
@@ -204,6 +214,31 @@ class HydraMetrics:
         return mean(self._recent_scores_dist_list), median(
             self._recent_scores_dist_list
         )
+
+    def get_mean_median_snapshots(
+        self,
+    ) -> list[
+        tuple[int, float | None, float | None, float | None, float | None]
+    ]:
+        all_stats = {
+            epoch: (mean, median)
+            for epoch, mean, median in self._mean_and_median
+        }
+
+        recent_stats = {
+            epoch: (mean, median)
+            for epoch, mean, median in self._recent_mean_and_median
+        }
+
+        all_epochs = sorted(set(all_stats) | set(recent_stats))
+
+        combined = []
+        for epoch in all_epochs:
+            mean, median = all_stats.get(epoch, (None, None))
+            recent_mean, recent_median = recent_stats.get(epoch, (None, None))
+            combined.append((epoch, mean, median, recent_mean, recent_median))
+
+        return combined
 
     def set_initial_epsilon(self, value: float) -> None:
         self._cur_epsilon = value
