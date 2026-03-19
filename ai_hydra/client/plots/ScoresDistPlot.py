@@ -83,3 +83,14 @@ class ScoresDistPlot(Widget):
         plot.add_v_line(
             median_score, DColor.PURPLE, f"{DLabel.MEDIAN}: {median_score:.2f}"
         )
+
+        if len(scores) % 500 == 0:
+            cur_epoch = len(scores)
+            if tag == DField.ALL:
+                self.metrics.add_mean_median(
+                    epoch=cur_epoch, mean=mean_score, median=median_score
+                )
+            elif tag == DField.RECENT:
+                self.metrics.add_recent_mean_and_median(
+                    epoch=cur_epoch, mean=mean_score, median=median_score
+                )
