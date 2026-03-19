@@ -24,15 +24,15 @@ from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 
 MAX_FRAMES = DMemory.MAX_FRAMES  # Max Linear transitions
 MAX_BUCKETS = 20
-THRESHOLDS_REQUIRED = 5
+THRESHOLDS_REQUIRED = 10
 
 # Gear => (promotion_score, seq_length, batch_size)
 GEARBOX = {
     1: (8, 4, 128),
     2: (15, 8, 64),
-    3: (30, 16, 32),
-    4: (45, 32, 16),
-    5: (50, 64, 8),
+    3: (33, 16, 32),
+    4: (65, 32, 16),
+    5: (999, 64, 8),
 }
 
 
@@ -89,17 +89,29 @@ class ATHReplayMemory:
         self._threshold_achieved_count = 0
 
         self._has_logged_pruning = False
+        self._has_logged_startup = False
 
         self._samples_served = 0
 
+    async def _log_startup(self):
         self.log.info("Initialized")
-        self.log.info(f"Setting max_frames to {MAX_FRAMES}")
-        self.log.info(f"Setting max_buckets to {MAX_BUCKETS}")
+
+        msg = f"Setting max_frames to {MAX_FRAMES}"
+        self.log.info(msg)
+        await self.event.publish(EventMsg(level=DHydraLog.INFO, message=msg))
+
+        msg = f"Setting max_buckets to {MAX_BUCKETS}"
+        self.log.info(msg)
+        await self.event.publish(EventMsg(level=DHydraLog.INFO, message=msg))
 
     async def append(
         self, t: Transition, final_score: int | None = None
     ) -> None:
         self._cur_game.append(t)
+
+        if not self._has_logged_startup:
+            await self._log_startup()
+            self._has_logged_startup = True
 
         if t.done:
             if final_score is None:

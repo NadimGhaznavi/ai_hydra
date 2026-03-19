@@ -122,7 +122,9 @@ class HydraMgr(HydraServer):
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
             replay = SimpleReplayMemory(
-                rng=replay_rng, log_level=self.log_level
+                rng=replay_rng,
+                log_level=self.log_level,
+                pub_func=self.mq.publish_events,
             )
             model = LinearModel(log_level=self.log_level)
             model.set_params(
@@ -329,12 +331,12 @@ class HydraMgr(HydraServer):
                 if model_type == DField.RNN:
                     await train_mgr.replay.append(t=t, final_score=sess.score)
                 else:
-                    train_mgr.replay.append(t=t)
+                    await train_mgr.replay.append(t=t)
 
                 if model_type == DField.LINEAR:
                     if sess.step_n % train_every == 0:
                         for _ in range(grad_steps):
-                            train_mgr.trainer.train_long_memory()
+                            await train_mgr.trainer.train_long_memory()
 
                 # Publish
                 if mq is not None:

@@ -51,9 +51,9 @@ class LinearTrainer:
         self._losses = []
         return avg_loss
 
-    def train_long_memory(self) -> float | None:
+    async def train_long_memory(self) -> float | None:
 
-        batch = self.replay.sample_transitions(self._batch_size)
+        batch = await self.replay.sample_transitions(self._batch_size)
         if batch is None:
             return None
 

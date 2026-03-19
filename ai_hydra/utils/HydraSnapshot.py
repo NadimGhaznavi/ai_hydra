@@ -103,8 +103,14 @@ class HydraSnapshot:
                     f"Sequence Length: {seq_length}\n"
                     f"RNN Tau: {rnn_tau}\n\n"
                 )
+
+            f.write("📚 Event Log Messages\n" "═════════════════════\n")
+            rows = self.metrics.get_eventlog_msgs()
+            for row in rows:
+                f.write(f"{row}\n")
+
             f.write(
-                "🏆 Highscore Events\n"
+                "\n🏆 Highscore Events\n"
                 "═══════════════════\n"
                 f"{'Episode':8s}{'Highscore':<10s}{'Time':>11s}{'Epsilon':>8s}\n"
                 "═══════ ═════════ ═══════════ ═══════\n"

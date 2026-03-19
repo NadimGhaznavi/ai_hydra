@@ -815,7 +815,10 @@ class HydraClientTui(App):
 
         # Send event to be displayed in the EventLog widget
         if message is not None:
-            self.event_log.add_event(ev_type=sender, event=message)
+            cur_epoch = self.metrics.get_cur_epoch()
+            self.event_log.add_event(
+                ev_type=sender, event=f"Epoch {cur_epoch}: {message}"
+            )
 
         ## Check for additional data
 
@@ -1023,14 +1026,10 @@ class HydraClientTui(App):
         # Snapshot file
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d_%H-%M.txt")
-        snapshot_file = DFile.BASE_SNAPSHOT + timestamp
+        model_type = self.cfg.get(DNetField.MODEL_TYPE)
+        snapshot_file = DFile.BASE_SNAPSHOT + f"{model_type}_" + timestamp
         fq_snapshot = os.path.join(self._hydra_dir, snapshot_file)
         self.snapshot.create_snapshot(snap_file=fq_snapshot, cfg=self.cfg)
-
-        self.event_log.add_event(
-            ev_type=DField.SNAPSHOT,
-            event=f"Created snapshot file: {fq_snapshot}",
-        )
 
     def _update_tui_labels(self):
         """

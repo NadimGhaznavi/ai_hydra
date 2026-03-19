@@ -48,6 +48,9 @@ class HydraMetrics:
         self._losses: list[LossEvent] = []
         self._recent_losses: deque[LossEvent] = deque(maxlen=RECENT_LOSS_MAX)
 
+        # EventLog events
+        self._eventlog_msgs = []
+
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
 
@@ -72,6 +75,9 @@ class HydraMetrics:
 
     def add_elapsed_time(self, elapsed_time: str) -> None:
         self._elapsed_time = elapsed_time
+
+    def add_event_log_msg(self, msg):
+        self._eventlog_msgs.append(msg)
 
     def add_final_score(self, score: int) -> None:
         cur_scores = self._cur_scores
@@ -152,6 +158,9 @@ class HydraMetrics:
 
     def get_elapsed_time(self) -> str:
         return self._elapsed_time
+
+    def get_eventlog_msgs(self) -> list:
+        return self._eventlog_msgs
 
     def get_highscore_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.highscore) for e in self._highscore_events]
