@@ -13,7 +13,7 @@ from __future__ import annotations
 from random import Random
 from dataclasses import dataclass, field
 
-from ai_hydra.constants.DReplayMemory import DMemory
+from ai_hydra.constants.DReplayMemory import DMemory, GEARBOX
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DEvent import EV_TYPE
@@ -23,17 +23,8 @@ from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 
 MAX_FRAMES = DMemory.MAX_FRAMES  # Max Linear transitions
-MAX_BUCKETS = 20
-THRESHOLDS_REQUIRED = 10
-
-# Gear => (promotion_score, seq_length, batch_size)
-GEARBOX = {
-    1: (8, 4, 128),
-    2: (15, 8, 64),
-    3: (33, 16, 32),
-    4: (65, 32, 16),
-    5: (999, 64, 8),
-}
+MAX_BUCKETS = DMemory.MAX_BUCKETS
+THRESHOLDS_REQUIRED = DMemory.THRESHOLDS_REQUIRED
 
 
 @dataclass(slots=True, frozen=True)

@@ -11,8 +11,33 @@ from typing import Final
 
 
 class DMemory:
-    MAX_CHUNKS: Final[int] = 3000  # Used by RNN
-    MIN_CHUNKS: Final[int] = 100  # Used by RNN
-    MIN_FRAMES: Final[int] = 1500  # Used by Linear
-    MAX_MEM_SIZE: Final[int] = 75000  # Used by Linear
-    MAX_FRAMES: Final[int] = 100000  # Used by RNN
+    # ATH Replay Memory - RNN model
+    MAX_CHUNKS: Final[int] = 3000
+    MIN_CHUNKS: Final[int] = 100
+    MAX_FRAMES: Final[int] = 100000
+    MAX_BUCKETS: Final[int] = 20
+    THRESHOLDS_REQUIRED: Final[int] = 10
+
+    # Simple Replay Memory - Linear model
+    MIN_FRAMES: Final[int] = 1500
+    MAX_MEM_SIZE: Final[int] = 75000
+
+
+"""
+Defines the threshold score for changing "gears". A gear change results
+in a longer sequence length and smaller batch size.
+
+GEAR => { ( THRESHOLD, SEQ_LENGTH, BATCH_SIZE ), ... }
+
+- ATH Replay Memory starts in gear 0
+  - seq_length is 4, batch_size is 128
+- When the AI achieves a score of 8 ten times, it shifts up a gear
+  - seq_length is now 8, batch_size i 64
+"""
+GEARBOX = {
+    1: (8, 4, 128),
+    2: (15, 8, 64),
+    3: (35, 16, 32),
+    4: (65, 32, 16),
+    5: (999, 64, 8),
+}
