@@ -481,7 +481,8 @@ class HydraClientTui(App):
         elif button_id == DField.UPDATE_RUNTIME_CONFIG:
             self._update_tui_labels()
             await self._send_update_config()
-        self._w_hidden_widget.focus()
+        # Remove focus from the clicked button (looks nicer)
+        self.query_one(f"#{DField.HIDDEN_WIDGET}", Checkbox).focus()
 
     async def on_input_changed(self, event: Input.Changed) -> None:
         input_id = event.input.id
@@ -502,94 +503,17 @@ class HydraClientTui(App):
         self.add_class(DField.LINEAR)
         self.add_class(DField.TURBO_OFF)
 
-        # Create references to TUI elements that are being updated
+        # Handy references
         self.telemtry = self.query_one(
             f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
         )
         self.event_log = self.telemtry.event_log
-        self._w_batch_size_input = self.query_one(
-            f"#{DField.BATCH_SIZE_INPUT}", Input
-        )
-        self._w_batch_size_label = self.query_one(
-            f"#{DField.BATCH_SIZE_LABEL}", Label
-        )
+
+        # Create references to some TUI element that are frequently updated
+        # in the ZeroMQ listening loop.
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
         self._w_cur_epsilon_label = self.query_one(
             f"#{DField.CUR_EPSILON}", Label
-        )
-        self._w_dropout_p_input = self.query_one(
-            f"#{DField.DROPOUT_P_INPUT}", Input
-        )
-        self._w_dropout_p_label = self.query_one(
-            f"#{DField.DROPOUT_P_LABEL}", Label
-        )
-        self._w_epsilon_decay_input = self.query_one(
-            f"#{DField.EPSILON_DECAY_INPUT}", Input
-        )
-        self._w_epsilon_decay_label = self.query_one(
-            f"#{DField.EPSILON_DECAY_LABEL}", Label
-        )
-        self._w_gamma_input = self.query_one(f"#{DField.GAMMA_INPUT}", Input)
-        self._w_gamma_label = self.query_one(f"#{DField.GAMMA_LABEL}", Label)
-        self._w_hidden_size_input = self.query_one(
-            f"#{DField.HIDDEN_SIZE_INPUT}", Input
-        )
-        self._w_hidden_size_label = self.query_one(
-            f"#{DField.HIDDEN_SIZE_LABEL}", Label
-        )
-        self._w_hidden_widget = self.query_one(
-            f"#{DField.HIDDEN_WIDGET}", Checkbox
-        )
-        self._w_initial_epsilon_input = self.query_one(
-            f"#{DField.INITIAL_EPSILON_INPUT}", Input
-        )
-        self._w_initial_epsilon_label = self.query_one(
-            f"#{DField.INITIAL_EPSILON_LABEL}", Label
-        )
-        self._w_learning_rate_input = self.query_one(
-            f"#{DField.LEARNING_RATE_INPUT}", Input
-        )
-        self._w_learning_rate_label = self.query_one(
-            f"#{DField.LEARNING_RATE_LABEL}", Label
-        )
-        self._w_min_epsilon_input = self.query_one(
-            f"#{DField.MIN_EPSILON_INPUT}", Input
-        )
-        self._w_min_epsilon_label = self.query_one(
-            f"#{DField.MIN_EPSILON_LABEL}", Label
-        )
-        self._w_model_type_label = self.query_one(
-            f"#{DField.MODEL_TYPE_LABEL}", Label
-        )
-        self._w_model_type_select = self.query_one(
-            f"#{DField.MODEL_TYPE_SELECT}", Select
-        )
-        self._w_move_delay_input = self.query_one(
-            f"#{DField.MOVE_DELAY_INPUT}", Input
-        )
-        self._w_random_seed_input = self.query_one(
-            f"#{DField.RANDOM_SEED_INPUT}", Input
-        )
-        self._w_random_seed_label = self.query_one(
-            f"#{DField.RANDOM_SEED_LABEL}", Label
-        )
-        self._w_rnn_layers_input = self.query_one(
-            f"#{DField.RNN_LAYERS_INPUT}", Input
-        )
-        self._w_rnn_layers_label = self.query_one(
-            f"#{DField.RNN_LAYERS_LABEL}", Label
-        )
-        self._w_rnn_tau_input = self.query_one(
-            f"#{DField.RNN_TAU_INPUT}", Input
-        )
-        self._w_rnn_tau_label = self.query_one(
-            f"#{DField.RNN_TAU_LABEL}", Label
-        )
-        self._w_seq_length_label = self.query_one(
-            f"#{DField.SEQ_LENGTH_LABEL}", Label
-        )
-        self._w_highscores_log = self.query_one(
-            f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         )
 
         # Network
@@ -606,7 +530,9 @@ class HydraClientTui(App):
         )
         self.query_one(f"#{DField.SETTINGS}").border_subtitle = DLabel.SETTINGS
         self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
-        self._w_highscores_log.border_subtitle = DLabel.HIGHSCORES
+        self.query_one(
+            f"#{DField.HIGHSCORES_LOG}", HighScoresLog
+        ).border_subtitle = DLabel.HIGHSCORES
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
         self.query_one(f"#{DField.MODEL}").border_subtitle = DLabel.MODEL
         self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
@@ -616,7 +542,7 @@ class HydraClientTui(App):
         # --------------------------------------------------------------
 
         # Switch focus to a hidden widget
-        self._w_hidden_widget.focus()
+        self.query_one(f"#{DField.HIDDEN_WIDGET}", Checkbox).focus()
 
         # Initialize ZeroMQ
         self.mq = HydraClientMQ(
@@ -796,13 +722,23 @@ class HydraClientTui(App):
             raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
 
         # Update widgets with model specific defaults
-        self._w_dropout_p_input.value = str(dropout_p)
-        self._w_epsilon_decay_input.value = str(epsilon_decay)
-        self._w_gamma_input.value = str(gamma)
-        self._w_hidden_size_input.value = str(hidden_size)
-        self._w_initial_epsilon_input.value = str(initial_epsilon)
-        self._w_learning_rate_input.value = lr
-        self._w_min_epsilon_input.value = str(min_epsilon)
+        self.query_one(f"#{DField.DROPOUT_P_INPUT}", Input).value = str(
+            dropout_p
+        )
+        self.query_one(f"#{DField.EPSILON_DECAY_INPUT}", Input).value = str(
+            epsilon_decay
+        )
+        self.query_one(f"#{DField.GAMMA_INPUT}", Input).value = str(gamma)
+        self.query_one(f"#{DField.HIDDEN_SIZE_INPUT}", Input).value = str(
+            hidden_size
+        )
+        self.query_one(f"#{DField.INITIAL_EPSILON_INPUT}", Input).value = str(
+            initial_epsilon
+        )
+        self.query_one(f"#{DField.LEARNING_RATE_INPUT}", Input).value = lr
+        self.query_one(f"#{DField.MIN_EPSILON_INPUT}", Input).value = str(
+            min_epsilon
+        )
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
@@ -918,20 +854,20 @@ class HydraClientTui(App):
                     )
 
                 # Load configurable TUI settings from the running sim config
-                self._w_initial_epsilon_input.value = str(
-                    self.cfg.get(DNetField.INITIAL_EPSILON)
+                self.query_one(
+                    f"#{DField.INITIAL_EPSILON_INPUT}", Input
+                ).value = str(self.cfg.get(DNetField.INITIAL_EPSILON))
+                self.query_one(f"#{DField.MIN_EPSILON_INPUT}", Input).value = (
+                    str(self.cfg.get(DNetField.MIN_EPSILON))
                 )
-                self._w_min_epsilon_input.value = str(
-                    self.cfg.get(DNetField.MIN_EPSILON)
+                self.query_one(f"#{DField.MOVE_DELAY_INPUT}", Input).value = (
+                    str(self.cfg.get(DNetField.MOVE_DELAY))
                 )
-                self._w_move_delay_input.value = str(
-                    self.cfg.get(DNetField.MOVE_DELAY)
-                )
-                self._w_model_type_select.value = self.cfg.get(
-                    DNetField.MODEL_TYPE
-                )
-                self._w_hidden_size_input.value = str(
-                    self.cfg.get(DNetField.HIDDEN_SIZE)
+                self.query_one(
+                    f"#{DField.MODEL_TYPE_SELECT}", Select
+                ).value = self.cfg.get(DNetField.MODEL_TYPE)
+                self.query_one(f"#{DField.HIDDEN_SIZE_INPUT}", Input).value = (
+                    str(self.cfg.get(DNetField.HIDDEN_SIZE))
                 )
                 self._update_tui_labels()
                 self.event_log.add_event(
@@ -1036,44 +972,68 @@ class HydraClientTui(App):
         Update the SimCfg settings and the TUI labels
         """
         # Batch size
-        batch_size = self._w_batch_size_input.value
-        self._w_batch_size_label.update(batch_size)
+        batch_size = self.query_one(f"#{DField.BATCH_SIZE_INPUT}", Input).value
+        self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(batch_size)
         # Random Seed
-        random_seed = self._w_random_seed_input.value
-        self._w_random_seed_label.update(random_seed)
+        random_seed = self.query_one(
+            f"#{DField.RANDOM_SEED_INPUT}", Input
+        ).value
+        self.query_one(f"#{DField.RANDOM_SEED_LABEL}", Label).update(
+            random_seed
+        )
         # Epsilon values
-        epsilon_decay = self._w_epsilon_decay_input.value
-        initial_epsilon = self._w_initial_epsilon_input.value
-        min_epsilon = self._w_min_epsilon_input.value
-        self._w_epsilon_decay_label.update(str(epsilon_decay))
-        self._w_initial_epsilon_label.update(str(initial_epsilon))
-        self._w_min_epsilon_label.update(str(min_epsilon))
+        epsilon_decay = self.query_one(f"#{DField.MIN_EPSILON_INPUT}").value
+        initial_epsilon = self.query_one(
+            f"#{DField.INITIAL_EPSILON_INPUT}", Input
+        ).value
+        min_epsilon = self.query_one(f"#{DField.MIN_EPSILON_INPUT}").value
+        self.query_one(f"#{DField.EPSILON_DECAY_LABEL}", Label).update(
+            str(epsilon_decay)
+        )
+        self.query_one(f"#{DField.INITIAL_EPSILON_LABEL}", Label).update(
+            str(initial_epsilon)
+        )
+        self.query_one(f"#{DField.MIN_EPSILON_LABEL}", Label).update(
+            str(min_epsilon)
+        )
         # Turbo mode == Not per_step
         per_step = not self.query_one(f"#{DField.TURBO_MODE}", Switch).value
         # Move delay
-        move_delay = self._w_move_delay_input.value
+        move_delay = self.query_one(f"#{DField.MOVE_DELAY_INPUT}", Input).value
         # Model type
-        model_type = self._w_model_type_select.value
+        model_type = self.query_one(
+            f"#{DField.MODEL_TYPE_SELECT}", Select
+        ).value
         model_type_label = MODEL_TYPE_TABLE[model_type]
-        self._w_model_type_label.update(model_type_label)
+        self.query_one(f"#{DField.MODEL_TYPE_LABEL}", Label).update(
+            model_type_label
+        )
         # Hidden size
-        hidden_size = self._w_hidden_size_input.value
-        self._w_hidden_size_label.update(str(hidden_size))
+        hidden_size = self.query_one(
+            f"#{DField.HIDDEN_SIZE_INPUT}", Input
+        ).value
+        self.query_one(f"#{DField.HIDDEN_SIZE_LABEL}", Label).update(
+            str(hidden_size)
+        )
         # Learning rate
-        learning_rate = self._w_learning_rate_input.value
-        self._w_learning_rate_label.update(learning_rate)
+        learning_rate = self.query_one(
+            f"#{DField.LEARNING_RATE_INPUT}", Input
+        ).value
+        self.query_one(f"#{DField.LEARNING_RATE_LABEL}", Label).update(
+            learning_rate
+        )
         # Discount/Gamma
-        gamma = self._w_gamma_input.value
-        self._w_gamma_label.update(gamma)
+        gamma = self.query_one(f"#{DField.GAMMA_INPUT}", Input).value
+        self.query_one(f"#{DField.GAMMA_LABEL}", Label).update(gamma)
         # Dropout p-value
-        dropout_p = self._w_dropout_p_input.value
-        self._w_dropout_p_label.update(dropout_p)
+        dropout_p = self.query_one(f"#{DField.DROPOUT_P_INPUT}", Input).value
+        self.query_one(f"#{DField.DROPOUT_P_LABEL}", Label).update(dropout_p)
         # RNN layers
-        rnn_layers = self._w_rnn_layers_input.value
-        self._w_rnn_layers_label.update(rnn_layers)
+        rnn_layers = self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value
+        self.query_one(f"#{DField.RNN_LAYERS_LABEL}", Label).update(rnn_layers)
         # RNN Tau
-        rnn_tau = self._w_rnn_tau_input.value
-        self._w_rnn_tau_label.update(rnn_tau)
+        rnn_tau = self.query_one(f"#{DField.RNN_TAU_INPUT}", Input).value
+        self.query_one(f"#{DField.RNN_TAU_LABEL}", Label).update(rnn_tau)
 
         self.cfg.apply(
             {
