@@ -114,14 +114,14 @@ Other visualizations are shown below:
 The loss plotted over the duration of the running simulation and a short, 
 75 episode, sliding window showing recent loss.
 
-![Loss Plot](https://aihydra.osoyalce.com/images//loss-plot.png)
+![Loss Plot](https://aihydra.osoyalce.com/images/loss-plot.png)
 
 ### Scores Histogram
 
 This plot shows the score distribution over the simulation run and a second plot 
 with a sliding window showing a histogram of the scores over the previous 500 games.
 
-![Score Distribution](https://aihydra.osoyalce.com/images//scores-histogram.png)
+![Score Distribution](https://aihydra.osoyalce.com/images/scores-histogram.png)
 
 ## Snapshot Report
 
@@ -131,11 +131,11 @@ text file that captures the simulation settings. A sample is shows below.
 ```
 📸 AI Hydra - Snapshot
 ══════════════════════
-Timestamp: 2026-03-14 13:00:38
-Simulation Run Time: 1h  0m
-Episode Number: 7585
-AI Hydra Version: v0.14.1
-Random Seed: 129
+Timestamp: 2026-03-19 06:28:53
+Simulation Run Time:  3m  8s
+Current Episode Number: 1076
+AI Hydra Version: v0.17.0
+Random Seed: 1970
 
 🎯 Epsilon Greedy
 ═════════════════
@@ -146,31 +146,82 @@ Epsilon Decay Rate: 0.993
 🧠 RNN Model
 ════════════
 Input Size: 16
-Hidden Size: 320
-RNN Layers: 5
-Dropout Layer P-Value: 0.1
-Sequence Length: 32
+Hidden Size: 256
+Dropout Layer P-Value: 0.05
+RNN Layers: 4
+RNN Tau: 0.01
+
+🧙 Training
+═══════════
+Learning Rate: 0.0008
+Discount/Gamma: 0.96
 Batch Size: 64
+Sequence Length: 4
+RNN Tau: 0.01
+
+📚 Event Log Messages
+═════════════════════
+   Type                Time  Event
+💻 Hydra Client          0s  Initialized...
+⚡ Simulation            0s  Connected to simulation server
+⚡ Simulation            0s  Turbo mode enabled: Game rendering disabled, move delay set to 0.0
+⚡ Simulation            0s  Simulation started
+💾 Replay Memory         0s  Epoch 0: Setting max_frames to 100000
+💾 Replay Memory         0s  Epoch 0: Setting max_buckets to 20
+💾 Replay Memory        38s  Epoch 459: Shifting into higher gear: 2
+💾 Replay Memory     1m 16s  Epoch 651: Shifting into higher gear: 3
+💾 Replay Memory     1m 28s  Epoch 704: Memory is full, pruning initiated
+🎲 Epsilon           1m 41s  Epoch 754: Exploration complete: ε = 0.005
 
 🏆 Highscore Events
 ═══════════════════
 Episode Highscore        Time Epsilon
 ═══════ ═════════ ═══════════ ═══════
       2         1          0s   0.999
-     91         2         10s  0.5235
-    118         3         15s  0.4423
-    189         4         33s  0.2705
-    189         5         33s   0.263
-    215         6         40s  0.2222
-    215         7         40s  0.2222
-    295         8      1m  1s  0.1267
-    324         9      1m  9s  0.1026
-    415        10      1m 39s  0.0545
-    428        11      1m 43s  0.0501
-    428        12      1m 43s  0.0501
-    428        13      1m 43s  0.0501
-    484        14      2m  1s  0.0336
+     82         2          4s  0.5576
+     82         3          4s  0.5576
+    170         4          8s  0.3135
+    185         5          9s  0.2762
+    279         6         17s  0.1407
+    310         7         20s  0.1148
+    340         8         22s   0.095
+    353         9         24s  0.0837
+    462        10         38s  0.0397
+    498        11         45s  0.0309
+    498        12         45s  0.0309
+    498        13         45s  0.0309
+    548        14         54s  0.0213
+    548        15         54s  0.0213
+    587        16      1m  1s  0.0162
+    587        17      1m  1s  0.0162
+    643        18      1m 13s  0.0109
+    643        19      1m 13s  0.0109
+
 ```
+
+## ATH Replay Memory
+
+The ATH (Adaptive Temporal Horizon) Replay Memory is not a static buffer. It’s a system that evolves with the model.
+
+Rather than locking in a single sequence length and batch size, ATH introduces a gearbox that shifts as the agent improves. Early on, it prioritizes speed and simplicity with short sequences and large batches. As the agent becomes more capable, it transitions into longer sequences and smaller batches, allowing the model to reason over deeper time horizons.
+
+But temporal adaptation is only part of the story.
+
+ATH Replay Memory also uses a bucketed sampling strategy to address a common issue in reinforcement learning: training data naturally follows the agent’s score distribution. Without intervention, the model would mostly train on “typical” games and rarely revisit edge cases such as high-scoring runs or rare failure modes.
+
+To counter this, transitions are grouped into buckets based on outcome characteristics (e.g., score ranges). During sampling, these buckets are used to ensure a more balanced and representative training set, preventing the model from overfitting to the most common experiences. The *memory* widget at the bottom shows the buckets and how many sequences each bucket contains. The shading shows how full the buckets are relative to each other.
+
+![ATH Memory](https://aihydra.osoyalce.com/images/ath-memory.png)
+
+In practice, this means:
+
+- Early training is fast and efficient
+- Later training becomes more context-aware and strategic
+- Rare but important experiences remain visible to the model
+- The system adapts both what it learns from and how it learns
+
+Replay memory itself remains clean and decoupled from global state. It emits lifecycle events (warm-up, capacity, gear shifts), which are enriched and tracked by the client. This makes the training process observable in terms of state transitions, not just outcomes.
+phase transitions.
 
 ## Blazing Speed
 
