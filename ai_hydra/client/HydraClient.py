@@ -982,7 +982,7 @@ class HydraClientTui(App):
             random_seed
         )
         # Epsilon values
-        epsilon_decay = self.query_one(f"#{DField.MIN_EPSILON_INPUT}").value
+        epsilon_decay = self.query_one(f"#{DField.EPSILON_DECAY}").value
         initial_epsilon = self.query_one(
             f"#{DField.INITIAL_EPSILON_INPUT}", Input
         ).value
