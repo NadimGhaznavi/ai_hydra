@@ -307,7 +307,7 @@ class HydraMgr(HydraServer):
 
                     if model_type == DField.RNN:
                         # train_mgr.replay.append(t=t, final_score=sess.score)
-                        train_mgr.trainer.train_long_memory()
+                        await train_mgr.trainer.train_long_memory()
 
                     # Loss, if available, is loaded into the telemetry here
                     loss = train_mgr.trainer.get_avg_loss()

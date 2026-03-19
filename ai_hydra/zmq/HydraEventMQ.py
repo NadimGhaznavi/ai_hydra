@@ -22,7 +22,7 @@ from ai_hydra.constants.DHydraMQ import DEvent, DHydraMQ, DHydraMQDef
 @dataclass(slots=True, frozen=True)
 class EventMsg:
     level: DHydraLog
-    message: str
+    message: str | None = None
     ev_type: str | None = None
     payload: dict[Any, Any] = field(default_factory=dict)
 

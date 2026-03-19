@@ -72,9 +72,9 @@ class RNNTrainer:
         self._losses = []
         return avg_loss
 
-    def train_long_memory(self) -> float | None:
+    async def train_long_memory(self) -> float | None:
 
-        chunks = self.replay.sample_chunks()
+        chunks = await self.replay.sample_chunks()
         if chunks is None:
             return
 

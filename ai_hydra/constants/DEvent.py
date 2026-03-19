@@ -24,4 +24,7 @@ EVENT_MAP = {
 
 
 class EV_TYPE:
+    BUCKET_CAPACITIES: Final[str] = "bucket_capacities"
+    BUCKET_COUNTS: Final[str] = "bucket_counts"
     SHIFTING: Final[str] = "shifting"
+    BUCKETS_STATUS: Final[str] = "buckets_status"

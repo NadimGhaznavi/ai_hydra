@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
     grid-size: 4 8;
-    grid-rows: 3 5 6 6 5 2 22;
+    grid-rows: 3 5 6 6 5 2 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -82,6 +82,29 @@ Switch {
 .input_field {
     height: 1;
     padding: 0 1;
+}
+
+/* ---------- ATHReplayMemory --- */
+#ath_memory {
+    column-span: 4;
+    align: center middle;
+    width: 100%;
+    background: black;
+}
+#replay_mem {
+    border: round #2aa5ceff;
+    text-style: bold;
+    padding: 0 1;
+    color: #54ac59;
+    width: 13;
+    text-align: center;
+}
+.bucket {
+    border: round #2aa5ceff;
+    color: #ffffff;
+    text-align: center;
+    text-style: bold;
+    width: 6;
 }
 
 /* ---------- HydraTelemetry --- */
@@ -424,6 +447,9 @@ EventLog {
 
 /* Linear Model is Selected */
 /* ------------------------ */
+.linear #ath_memory {
+    display: none;
+}
 .linear #seq_length_input {
     display: none;
 }

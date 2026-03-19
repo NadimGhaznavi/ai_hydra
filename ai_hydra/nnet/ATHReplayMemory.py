@@ -22,17 +22,17 @@ from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 
-MAX_FRAMES = DMemory.MAX_MEM_SIZE  # Max Linear transitions
+MAX_FRAMES = DMemory.MAX_FRAMES  # Max Linear transitions
 MAX_BUCKETS = 20
 THRESHOLDS_REQUIRED = 5
 
 # Gear => (promotion_score, seq_length, batch_size)
 GEARBOX = {
-    1: (10, 4, 128),
-    2: (25, 8, 64),
-    3: (40, 16, 32),
-    4: (55, 32, 16),
-    5: (70, 64, 8),
+    1: (8, 4, 128),
+    2: (15, 8, 64),
+    3: (30, 16, 32),
+    4: (45, 32, 16),
+    5: (50, 64, 8),
 }
 
 
@@ -89,6 +89,8 @@ class ATHReplayMemory:
         self._threshold_achieved_count = 0
 
         self._has_logged_pruning = False
+
+        self._samples_served = 0
 
         self.log.info("Initialized")
         self.log.info(f"Setting max_frames to {MAX_FRAMES}")
@@ -192,22 +194,23 @@ class ATHReplayMemory:
 
         return True
 
-    def _chunk_range_for_bucket(
+    def UNUSED_chunk_range_for_bucket(
         self, ep_size: int, seq_length: int, bucket_idx: int
     ) -> tuple[int, int] | None:
         pass
 
-    def get_batch_size(self) -> int:
-        return self._batch_size
+    def get_bucket_capacities(self) -> list[int]:
+        return [
+            MAX_FRAMES // ((bucket_idx + 1) * self._cur_seq_length)
+            for bucket_idx in range(MAX_BUCKETS)
+        ]
 
-    def get_seq_length(self) -> int:
-        return self._cur_seq_length
-
-    def get_current_gear(self) -> int:
-        return self._cur_gear
-
-    def get_warmed_buckets(self) -> list[int]:
-        return list(self._warmed_buckets)
+    def get_bucket_counts(self) -> dict[int, int]:
+        return {
+            idx: len(episodes)
+            for idx, episodes in self._episodes_by_bucket.items()
+            if episodes
+        }
 
     def _finalize_game(self) -> None:
         frames = tuple(self._cur_game)
@@ -261,7 +264,7 @@ class ATHReplayMemory:
             if episodes
         ]
 
-    def sample_chunks(self) -> list[list[Transition]] | None:
+    async def sample_chunks(self) -> list[list[Transition]] | None:
         """
         Sample chunks across warmed buckets for the current gear.
         """
@@ -299,4 +302,19 @@ class ATHReplayMemory:
                 start, end = meta.ranges[bucket_idx]
                 samples.append(list(ep.frames[start:end]))
 
+        self._samples_served += 1
+
+        if self._samples_served % 10 == 0:
+            bucket_counts = self.get_bucket_counts()
+            capacities = self.get_bucket_capacities()
+            await self.event.publish(
+                EventMsg(
+                    level=DHydraLog.INFO,
+                    ev_type=EV_TYPE.BUCKETS_STATUS,
+                    payload={
+                        EV_TYPE.BUCKET_COUNTS: bucket_counts,
+                        EV_TYPE.BUCKET_CAPACITIES: capacities,
+                    },
+                )
+            )
         return samples

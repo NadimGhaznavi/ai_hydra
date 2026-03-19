@@ -29,6 +29,7 @@ class DField:
     """
 
     ALL: Final[str] = "all"
+    ATH_Memory: Final[str] = "ath_memory"
     BAD_HANDSHAKE: Final[str] = "bad_handshake"
     BATCH_SIZE: Final[str] = "batch_size"
     BATCH_SIZE_INPUT: Final[str] = "batch_size_input"
@@ -108,6 +109,7 @@ class DField:
     PLOT_SCORES_DIST: Final[str] = "plot_scores_dist"
     QUIT: Final[str] = "quit"
     RECENT: Final[str] = "recent"
+    REPLAY_MEM: Final[str] = "replay_mem"
     RANDOM_SEED_INPUT: Final[str] = "random_seed_input"
     RANDOM_SEED_LABEL: Final[str] = "random_seed_label"
     RESET: Final[str] = "reset"

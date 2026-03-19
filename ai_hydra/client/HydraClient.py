@@ -59,6 +59,7 @@ from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.client.HighScoresLog import HighScoresLog
 from ai_hydra.client.HydraTelemetry import HydraTelemetry
+from ai_hydra.client.ATHMemory import ATHMemory
 
 
 HYDRA_THEME = Theme(
@@ -438,6 +439,9 @@ class HydraClientTui(App):
         # Realtime Telemetry (plots and event log)
         yield HydraTelemetry(metrics=self.metrics, id=DField.HYDRA_TELEMETRY)
 
+        # ATH Memory widget
+        yield ATHMemory(id=DField.ATH_Memory)
+
         # Focus widget: This is hidden, but it allows me to move focus away
         # from the selected button when a button is clicked.
         yield Checkbox(id=DField.HIDDEN_WIDGET)
@@ -804,17 +808,21 @@ class HydraClientTui(App):
         self.metrics.set_initial_epsilon(initial_epsilon)
 
     async def _on_sim_event(self, topic: str, payload) -> None:
-        print(payload)
         sender = payload.get(DEvent.SENDER)
         message = payload.get(DEvent.MESSAGE)
         ev_type = payload.get(DEvent.EV_TYPE)
         ev_payload = payload.get(DEvent.PAYLOAD)
 
         # Send event to be displayed in the EventLog widget
-        self.event_log.add_event(ev_type=sender, event=message)
+        if message is not None:
+            self.event_log.add_event(ev_type=sender, event=message)
 
-        # Check for additional data
+        ## Check for additional data
+
+        # ATH Replay Memory
         if sender == DModule.ATH_REPLAY_MEMORY:
+
+            # Shifting gears
             if ev_type == EV_TYPE.SHIFTING:
                 batch_size = ev_payload[DField.BATCH_SIZE]
                 seq_length = ev_payload[DField.SEQ_LENGTH]
@@ -824,6 +832,13 @@ class HydraClientTui(App):
                 self.query_one(f"#{DField.SEQ_LENGTH_LABEL}", Label).update(
                     str(seq_length)
                 )
+
+            # Bucket status
+            if ev_type == EV_TYPE.BUCKETS_STATUS:
+                bucket_counts = ev_payload[EV_TYPE.BUCKET_COUNTS]
+                self.query_one(
+                    f"#{DField.ATH_Memory}", ATHMemory
+                ).update_stats(bucket_counts)
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:
