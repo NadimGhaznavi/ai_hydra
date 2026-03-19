@@ -185,7 +185,7 @@ class HydraSnapshot:
             )
 
         return self._build_table_section(
-            "⚙️ ATH Shift / Mean / Median",
+            "⚙️  ATH Shift / Mean / Median",
             headers,
             table_rows,
         )

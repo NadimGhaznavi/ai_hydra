@@ -4,6 +4,8 @@ from textual.widgets import Label
 from textual.color import Color
 
 from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.utils.HydraMetrics import HydraMetrics
+from ai_hydra.utils.MetricEvent import MemEvent
 
 BUCKET = "bucket"
 NUM_BUCKETS = 20
@@ -20,22 +22,31 @@ def percent_to_hex(p: float) -> str:
 
 
 class ATHMemory(Widget):
+
+    def __init__(self, metrics: HydraMetrics, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.metrics = metrics
+
     def compose(self) -> ComposeResult:
         with Horizontal():
             yield Label("Memory", id=DField.REPLAY_MEM)
             for i in range(NUM_BUCKETS):
                 yield Label(id=f"b{i}", classes=BUCKET)
 
-    def update_stats(self, stats: dict[str | int, int]) -> None:
-        if not stats:
+    def refresh_data(self) -> None:
+
+        mem_event = self.metrics.get_bucket_snaphot()
+        if mem_event is None:
             return
 
-        max_size = max(stats.values())
-        min_size = min(stats.values())
+        bucket_counts = mem_event.bucket_counts
+        max_size = max(bucket_counts)
+        min_size = min(bucket_counts)
         span = max_size - min_size
 
-        for bucket, count in stats.items():
-            label_id = f"b{bucket}"
+        bucket_idx = 0
+        for count in bucket_counts:
+            label_id = f"b{bucket_idx}"
             cur_label = self.query_one(f"#{label_id}", Label)
             cur_label.update(str(count))
 
@@ -44,3 +55,4 @@ class ATHMemory(Widget):
             cur_label.styles.background = Color.parse(
                 f"{BASE_COLOR}{alpha_hex}"
             )
+            bucket_idx += 1

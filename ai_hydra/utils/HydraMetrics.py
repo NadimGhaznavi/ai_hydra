@@ -68,6 +68,7 @@ class HydraMetrics:
 
         # ATH Memory events
         self._memory_events: list[MemEvent] = []
+        self._latest_memory_event: MemEvent | None = None
 
         # Seed the shift events list...
         self.add_shift_event(
@@ -75,15 +76,27 @@ class HydraMetrics:
         )
 
     def add_bucket_stats(self, bucket_counts) -> None:
+
+        ordered_counts = tuple(
+            count for _, count in sorted(bucket_counts.items())
+        )
+
+        mem_event = MemEvent(
+            epoch=self.get_cur_epoch(),
+            bucket_counts=ordered_counts,
+        )
+
+        self._latest_memory_event = mem_event
+
         if self._cur_epoch < self._next_bucket_snapshot_epoch:
             return
 
-        self._memory_events.append(
-            MemEvent(
-                epoch=self._cur_epoch,
-                bucket_counts=tuple(bucket_counts),
-            )
+        mem_event = MemEvent(
+            epoch=self._next_bucket_snapshot_epoch,
+            bucket_counts=ordered_counts,
         )
+
+        self._memory_events.append(mem_event)
         self._next_bucket_snapshot_epoch += 500
 
     def add_cur_epoch(self, epoch: int) -> None:
@@ -210,6 +223,9 @@ class HydraMetrics:
         for e in self._memory_events:
             rows.append((e.epoch, *e.bucket_counts))
         return rows
+
+    def get_bucket_snaphot(self) -> MemEvent:
+        return self._latest_memory_event
 
     def get_cur_epoch(self) -> int:
         return self._cur_epoch

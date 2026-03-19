@@ -440,7 +440,7 @@ class HydraClientTui(App):
         yield HydraTelemetry(metrics=self.metrics, id=DField.HYDRA_TELEMETRY)
 
         # ATH Memory widget
-        yield ATHMemory(id=DField.ATH_Memory)
+        yield ATHMemory(metrics=self.metrics, id=DField.ATH_Memory)
 
         # Focus widget: This is hidden, but it allows me to move focus away
         # from the selected button when a button is clicked.
@@ -781,11 +781,10 @@ class HydraClientTui(App):
             # Bucket status
             if ev_type == EV_TYPE.BUCKETS_STATUS:
                 bucket_counts = ev_payload[EV_TYPE.BUCKET_COUNTS]
+                self.metrics.add_bucket_stats(bucket_counts)
                 self.query_one(
                     f"#{DField.ATH_Memory}", ATHMemory
-                ).update_stats(bucket_counts)
-
-                self.metrics.add_bucket_stats(bucket_counts)
+                ).refresh_data()
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:
