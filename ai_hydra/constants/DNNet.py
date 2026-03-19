@@ -21,17 +21,17 @@ class DRNN:
     """
 
     BATCH_SIZE: Final[int] = 128
-    DROPOUT_P_VALUE: Final[float] = 0.05
+    DROPOUT_P_VALUE: Final[float] = 0.1
+    INITIAL_EPSILON: Final[float] = 0.999
     EPSILON_DECAY_RATE: Final[float] = 0.993
     GAMMA: Final[float] = 0.96  # Discount
     HIDDEN_SIZE: Final[int] = 256
-    INITIAL_EPSILON: Final[float] = 0.999
     LEARNING_RATE: Final[float] = 0.0008
-    MINIMUM_EPSILON: Final[float] = 0.005
+    MINIMUM_EPSILON: Final[float] = 0.0
     OUTPUT_SIZE: Final[int] = 3
-    RNN_LAYERS: Final[int] = 3
+    RNN_LAYERS: Final[int] = 4
     SEQ_LENGTH: Final[int] = 4
-    TAU: Final[float] = 0.01
+    TAU: Final[float] = 0.001
 
 
 class DEpsilonField:

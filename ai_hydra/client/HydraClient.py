@@ -765,11 +765,17 @@ class HydraClientTui(App):
             if ev_type == EV_TYPE.SHIFTING:
                 batch_size = ev_payload[DField.BATCH_SIZE]
                 seq_length = ev_payload[DField.SEQ_LENGTH]
+                gear = ev_payload[DField.GEAR]
+
                 self.query_one(
                     f"#{DField.RNN_BATCH_SIZE_LABEL}", Label
                 ).update(str(batch_size))
                 self.query_one(f"#{DField.SEQ_LENGTH_LABEL}", Label).update(
                     str(seq_length)
+                )
+
+                self.metrics.add_shift_event(
+                    gear=gear, seq_length=seq_length, batch_size=batch_size
                 )
 
             # Bucket status
@@ -778,6 +784,8 @@ class HydraClientTui(App):
                 self.query_one(
                     f"#{DField.ATH_Memory}", ATHMemory
                 ).update_stats(bucket_counts)
+
+                self.metrics.add_bucket_stats(bucket_counts)
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:
@@ -982,7 +990,7 @@ class HydraClientTui(App):
             random_seed
         )
         # Epsilon values
-        epsilon_decay = self.query_one(f"#{DField.EPSILON_DECAY}").value
+        epsilon_decay = self.query_one(f"#{DField.EPSILON_DECAY_INPUT}").value
         initial_epsilon = self.query_one(
             f"#{DField.INITIAL_EPSILON_INPUT}", Input
         ).value

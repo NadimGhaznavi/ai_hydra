@@ -1,4 +1,4 @@
-# ai_hydra/utils/HighscoreEvent.py
+# ai_hydra/utils/MetricEvent.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi
@@ -20,12 +20,26 @@ class HighscoreEvent:
 
 
 @dataclass(slots=True, frozen=True)
+class LossEvent:
+    epoch: int
+    loss: float
+
+
+@dataclass(slots=True, frozen=True)
 class ScoreEvent:
     epoch: int
     score: int
 
 
 @dataclass(slots=True, frozen=True)
-class LossEvent:
+class ShiftEvent:
     epoch: int
-    loss: float
+    gear: int
+    seq_length: int
+    batch_size: int
+
+
+@dataclass(slots=True, frozen=True)
+class MemEvent:
+    epoch: int
+    bucket_counts: tuple[int, ...]

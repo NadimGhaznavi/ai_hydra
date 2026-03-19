@@ -10,8 +10,15 @@
 from collections import deque
 from statistics import mean, median
 
+from ai_hydra.constants.DNNet import DRNN
 from ai_hydra.constants.DHydraTui import DPlotDef
-from ai_hydra.utils.MetricEvent import HighscoreEvent, ScoreEvent, LossEvent
+from ai_hydra.utils.MetricEvent import (
+    HighscoreEvent,
+    ScoreEvent,
+    LossEvent,
+    ShiftEvent,
+    MemEvent,
+)
 
 MAX_CUR_SCORES = DPlotDef.MAX_CUR_SCORES
 RECENT_SCORES_MAX = DPlotDef.RECENT_SCORES_MAX
@@ -29,6 +36,7 @@ class HydraMetrics:
         self._cur_loss: float | None = None
         self._cur_score: int = 0
         self._elapsed_time: str = "0s"
+        self._next_bucket_snapshot_epoch = 500
 
         # Current scores data
         self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
@@ -54,6 +62,29 @@ class HydraMetrics:
         # Epoch, mean and median values
         self._mean_and_median: list[tuple[int, float, float]] = []
         self._recent_mean_and_median: list[tuple[int, float, float]] = []
+
+        # Gear shift events
+        self._shift_events: list[ShiftEvent] = []
+
+        # ATH Memory events
+        self._memory_events: list[MemEvent] = []
+
+        # Seed the shift events list...
+        self.add_shift_event(
+            gear=0, seq_length=DRNN.SEQ_LENGTH, batch_size=DRNN.BATCH_SIZE
+        )
+
+    def add_bucket_stats(self, bucket_counts) -> None:
+        if self._cur_epoch < self._next_bucket_snapshot_epoch:
+            return
+
+        self._memory_events.append(
+            MemEvent(
+                epoch=self._cur_epoch,
+                bucket_counts=tuple(bucket_counts),
+            )
+        )
+        self._next_bucket_snapshot_epoch += 500
 
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
@@ -154,8 +185,31 @@ class HydraMetrics:
     def add_recent_mean_and_median(self, epoch, mean, median):
         self._recent_mean_and_median.append((epoch, mean, median))
 
+    def add_shift_event(
+        self,
+        gear: int,
+        seq_length: int,
+        batch_size: int,
+    ) -> None:
+        self._shift_events.append(
+            ShiftEvent(
+                epoch=self._cur_epoch,
+                gear=gear,
+                seq_length=seq_length,
+                batch_size=batch_size,
+            )
+        )
+
+    # ----- Get Ops ------------------
+
     def get_avg_cur_score_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.score) for e in self._avg_cur_scores]
+
+    def get_bucket_snapshot_rows(self) -> list[tuple[int, ...]]:
+        rows = []
+        for e in self._memory_events:
+            rows.append((e.epoch, *e.bucket_counts))
+        return rows
 
     def get_cur_epoch(self) -> int:
         return self._cur_epoch
@@ -191,22 +245,12 @@ class HydraMetrics:
     def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.loss) for e in self._recent_losses]
 
-    def get_scores_dist_plot_points(self) -> tuple[list[int], list[int]]:
-        scores = sorted(self._scores_dist.keys())
-        counts = [self._scores_dist[score] for score in scores]
-        return scores, counts
-
     def get_recent_scores_dist_plot_points(
         self,
     ) -> tuple[list[int], list[int]]:
         scores = sorted(self._recent_scores_dist.keys())
         counts = [self._recent_scores_dist[score] for score in scores]
         return scores, counts
-
-    def get_scores_dist_stats(self) -> tuple[float, float] | None:
-        if not self._scores_dist_list:
-            return None
-        return mean(self._scores_dist_list), median(self._scores_dist_list)
 
     def get_recent_scores_dist_stats(self) -> tuple[float, float] | None:
         if not self._recent_scores_dist_list:
@@ -215,30 +259,46 @@ class HydraMetrics:
             self._recent_scores_dist_list
         )
 
-    def get_mean_median_snapshots(
+    def get_scores_dist_plot_points(self) -> tuple[list[int], list[int]]:
+        scores = sorted(self._scores_dist.keys())
+        counts = [self._scores_dist[score] for score in scores]
+        return scores, counts
+
+    def get_scores_dist_stats(self) -> tuple[float, float] | None:
+        if not self._scores_dist_list:
+            return None
+        return mean(self._scores_dist_list), median(self._scores_dist_list)
+
+    def get_shift_mean_median_snapshot_rows(
         self,
-    ) -> list[
-        tuple[int, float | None, float | None, float | None, float | None]
-    ]:
-        all_stats = {
-            epoch: (mean, median)
-            for epoch, mean, median in self._mean_and_median
-        }
+    ) -> list[tuple[int, int, int, int, float, float]]:
+        rows = []
+        shifts = sorted(self._shift_events, key=lambda e: e.epoch)
 
-        recent_stats = {
-            epoch: (mean, median)
-            for epoch, mean, median in self._recent_mean_and_median
-        }
+        for epoch, mean_score, median_score in self._mean_and_median:
+            active_shift = None
+            for shift in shifts:
+                if shift.epoch <= epoch:
+                    active_shift = shift
+                else:
+                    break
 
-        all_epochs = sorted(set(all_stats) | set(recent_stats))
-
-        combined = []
-        for epoch in all_epochs:
-            mean, median = all_stats.get(epoch, (None, None))
-            recent_mean, recent_median = recent_stats.get(epoch, (None, None))
-            combined.append((epoch, mean, median, recent_mean, recent_median))
-
-        return combined
+            if active_shift is None:
+                rows.append(
+                    (epoch, None, None, None, mean_score, median_score)
+                )
+            else:
+                rows.append(
+                    (
+                        epoch,
+                        active_shift.gear,
+                        active_shift.seq_length,
+                        active_shift.batch_size,
+                        mean_score,
+                        median_score,
+                    )
+                )
+        return rows
 
     def set_initial_epsilon(self, value: float) -> None:
         self._cur_epsilon = value

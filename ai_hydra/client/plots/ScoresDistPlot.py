@@ -84,8 +84,9 @@ class ScoresDistPlot(Widget):
             median_score, DColor.PURPLE, f"{DLabel.MEDIAN}: {median_score:.2f}"
         )
 
-        if len(scores) % 500 == 0:
-            cur_epoch = len(scores)
+        cur_epoch = self.metrics.get_cur_epoch()
+
+        if cur_epoch > 0 and cur_epoch % 500 == 0:
             if tag == DField.ALL:
                 self.metrics.add_mean_median(
                     epoch=cur_epoch, mean=mean_score, median=median_score
