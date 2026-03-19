@@ -23,11 +23,6 @@ class EventLog(Widget):
         super().__init__(*args, **kwargs)
         self.metrics = metrics
 
-        # Save the messages for a snapshot report, start with the header
-        self.metrics.add_event_log_msg(
-            f"   {DLabel.TYPE:<14s}{DLabel.TIME:>10s}  {DLabel.EVENT}"
-        )
-
     def compose(self) -> ComposeResult:
         yield Vertical(
             Label(
