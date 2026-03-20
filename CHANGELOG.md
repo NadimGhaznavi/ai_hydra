@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.18.0] - 2026-03-20 09:21 - Nigel Mansell Release
 
-* **Relentless pace**
+- **Relentless pace**
 - **Controlled aggression**
 - **Occasional wild bursts**
 - **No fear of the edge**
@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Added
 - An *event type* field to the *Hydra MQ* `EventMsg`, used by `HydraEventMQ`.
 - A *Memory* widget that displays the size of (number or stored sequences) and relative health (cells are shaded) of the 20 *Adaptive Replay Memory Buckets*
-  - Published new telemetry information to populat this widget.
+  - Published new telemetry information to populate this widget.
 - Two new report sections in the **Snapshot Report**:
   1. A table showing `Epoch`, `Gear`, `Seq Length`, `Batch Size`, `Mean`, and `Median` values every 500 episodes.
   2. A table showing the bucket sizes for the 20 *ATH Replay Memory* buckets every 500 epochs.
