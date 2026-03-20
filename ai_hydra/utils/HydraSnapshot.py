@@ -13,7 +13,7 @@ import pprint
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DNNet import DNetDef, DNetField
-from ai_hydra.constants.DReplayMemory import GEARBOX
+from ai_hydra.constants.DReplayMemory import ATH_GEARBOX
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
@@ -123,7 +123,7 @@ class HydraSnapshot:
         )
 
     def _build_memory_section(self) -> list[str]:
-        gearbox_str = "\n" + pprint.pformat(GEARBOX)
+        gearbox_str = "\n" + pprint.pformat(ATH_GEARBOX)
         return self._build_kv_section(
             "💾 Replay Memory",
             [
