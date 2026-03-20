@@ -213,5 +213,9 @@ class ATHDataMgr:
         return samples
 
     def set_gear(self, gear: int):
+        if self._cur_gear == gear:
+            return
+
         self._cur_gear = gear
         self.store.set_gear(gear)
+        self._rebuild_bucket_index()

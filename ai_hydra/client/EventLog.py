@@ -35,6 +35,8 @@ class EventLog(Widget):
         elap_time = self.metrics.get_elapsed_time()
 
         ev_icon, ev_type_str = EVENT_MAP[ev_type]
+        if ev_icon == "⚙️":
+            ev_icon += "  "
         msg = f"{ev_icon:<2s}{ev_type_str:<15s}{elap_time:>9s}  {event}"
 
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).write_line(msg)

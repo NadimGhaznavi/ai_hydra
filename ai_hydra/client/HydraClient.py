@@ -758,8 +758,7 @@ class HydraClientTui(App):
 
         ## Check for additional data
 
-        # ATH Replay Memory
-        if sender == DModule.ATH_REPLAY_MEMORY:
+        if sender == DModule.ATH_GEARBOX:
 
             # Shifting gears
             if ev_type == EV_TYPE.SHIFTING:
@@ -777,6 +776,8 @@ class HydraClientTui(App):
                 self.metrics.add_shift_event(
                     gear=gear, seq_length=seq_length, batch_size=batch_size
                 )
+
+        if sender == DModule.ATH_DATA_MGR:
 
             # Bucket status
             if ev_type == EV_TYPE.BUCKETS_STATUS:

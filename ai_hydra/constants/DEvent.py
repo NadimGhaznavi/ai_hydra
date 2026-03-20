@@ -14,8 +14,9 @@ from ai_hydra.constants.DHydra import DModule
 
 
 EVENT_MAP = {
-    DModule.ATH_REPLAY_MEMORY: ("💾", "Replay Memory"),
-    DModule.ATH_DATA_MGR: ("💾", "Replay Data Mgr"),
+    DModule.ATH_REPLAY_MEMORY: ("💾", "ATH Memory"),
+    DModule.ATH_DATA_MGR: ("💾", "ATH Data Mgr"),
+    DModule.ATH_GEARBOX: ("⚙️", "ATH Gearbox"),
     DModule.SIMPLE_REPLAY_MEMORY: ("💾", "Replay Memory"),
     DField.SIM_LOOP: ("⚡", "Simulation"),
     DField.SNAPSHOT: ("📸", "Snapshot"),

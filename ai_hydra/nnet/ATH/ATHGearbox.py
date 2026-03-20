@@ -23,7 +23,14 @@ from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 from ai_hydra.nnet.ATH.ATHDataStore import ATHDataStore
 
-THRESHOLDS_REQUIRED = DMemDef.THRESHOLDS_REQUIRED
+MAX_BUCKETS = DMemDef.MAX_BUCKETS
+
+THRESHOLD_BUCKETS = [17, 18, 19]
+
+UPSHIFT_COUNT_THRESHOLD = 150
+DOWNSHIFT_COUNT_THRESHOLD = 50
+
+NUM_COOLDOWN_EPISODES = 200
 
 
 class ATHGearBox:
@@ -45,51 +52,86 @@ class ATHGearBox:
         )
 
         self._cur_gear = 1
-        self._cur_seq_length, self._batch_size = ATH_GEARBOX[self._cur_gear]
+        self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+            self._cur_gear
+        ]
 
-        self._threshold_achieved_count = 0
+        self._highest_gear = max(ATH_GEARBOX.keys())
+        self._cur_bucket_counts: int | None = None
+
+        self._cooldown_count = 0
 
     async def get_gear(self) -> int:
-        if self._cur_gear == max(ATH_GEARBOX):
-            return self._cur_gear
-
-        """
-        # OLD MANUAL TRANSMISSION LOGIC
-        # -----------------------------
-
-        # The refactor is about creating an algorithm to replace this...
-
-        promotion_score, _, _ = GEARBOX[self._cur_gear]
-
-        if final_score < promotion_score:
-            return self._cur_gear
-
-        self._threshold_achieved_count += 1
-
-        if self._threshold_achieved_count < THRESHOLDS_REQUIRED:
-            return self._cur_gear
-
-        self._cur_gear += 1
-        self._threshold_achieved_count = 0
-        _, self._cur_seq_length, self._batch_size = GEARBOX[self._cur_gear]
-
-        self.log.info(
-            f"Shifting into higher gear: {self._cur_gear}"
-            f"(seq_length={self._cur_seq_length}, batch_size={self._batch_size})"
+        self._cur_bucket_counts = bucket_counts = (
+            self.store.get_bucket_counts()
         )
 
-        await self.event.publish(
-            EventMsg(
-                level=DHydraLog.INFO,
-                message=f"Shifting into higher gear: {self._cur_gear}",
-                ev_type=EV_TYPE.SHIFTING,
-                payload={
-                    DField.GEAR: self._cur_gear,
-                    DField.SEQ_LENGTH: self._cur_seq_length,
-                    DField.BATCH_SIZE: self._batch_size,
-                },
+        if not bucket_counts:
+            return self._cur_gear
+
+        if len(bucket_counts) != MAX_BUCKETS:
+            return self._cur_gear
+
+        chunk_count = self.get_thresh_bucket_chunk_count()
+
+        if (
+            chunk_count > UPSHIFT_COUNT_THRESHOLD
+            and self._cooldown_count > NUM_COOLDOWN_EPISODES
+        ):
+            # The transmission has a top gear
+            if self._cur_gear == self._highest_gear:
+                return self._cur_gear
+
+            self._cur_gear += 1
+            self._cooldown_count = 0
+            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+                self._cur_gear
+            ]
+            await self.event.publish(
+                EventMsg(
+                    level=DHydraLog.INFO,
+                    message=f"Shifting UP: {self._cur_gear}",
+                    ev_type=EV_TYPE.SHIFTING,
+                    payload={
+                        DField.GEAR: self._cur_gear,
+                        DField.SEQ_LENGTH: self._cur_seq_length,
+                        DField.BATCH_SIZE: self._cur_batch_size,
+                    },
+                )
             )
-        )
-        """
+        elif (
+            chunk_count < DOWNSHIFT_COUNT_THRESHOLD
+            and self._cooldown_count > NUM_COOLDOWN_EPISODES
+        ):
+            # First gear is the lowest gear
+            if self._cur_gear == 1:
+                return self._cur_gear
+
+            self._cur_gear -= 1
+            self._cooldown_count = 0
+            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+                self._cur_gear
+            ]
+            await self.event.publish(
+                EventMsg(
+                    level=DHydraLog.INFO,
+                    message=f"Shifting DOWN: {self._cur_gear}",
+                    ev_type=EV_TYPE.SHIFTING,
+                    payload={
+                        DField.GEAR: self._cur_gear,
+                        DField.SEQ_LENGTH: self._cur_seq_length,
+                        DField.BATCH_SIZE: self._cur_batch_size,
+                    },
+                )
+            )
 
         return self._cur_gear
+
+    def get_thresh_bucket_chunk_count(self) -> int:
+        count = 0
+        for bucket_idx in THRESHOLD_BUCKETS:
+            count += self._cur_bucket_counts[bucket_idx]
+        return count
+
+    def incr_cooldown_count(self):
+        self._cooldown_count += 1

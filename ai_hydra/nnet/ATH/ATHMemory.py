@@ -46,5 +46,7 @@ class ATHMemory:
     async def append(
         self, t: Transition, final_score: int | None = None
     ) -> None:
+        if t.done:
+            self.gearbox.incr_cooldown_count()
         await self.data_mgr.append(t=t, final_score=final_score)
         self.data_mgr.set_gear(await self.gearbox.get_gear())

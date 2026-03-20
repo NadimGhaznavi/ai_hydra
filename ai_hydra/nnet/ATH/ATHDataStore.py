@@ -55,9 +55,6 @@ class ATHDataStore:
     def append(self, t: Transition):
         self._cur_game.append(t)
 
-    def get_cur_ep_size(self) -> int:
-        return len(self._cur_game)
-
     def finalize_game(self, gear_meta: dict[int, GearMeta]) -> None:
         frames = tuple(self._cur_game)
         self._cur_game = []
@@ -71,6 +68,9 @@ class ATHDataStore:
                 gear_meta=gear_meta,
             )
         )
+
+    def get_cur_ep_size(self) -> int:
+        return len(self._cur_game)
 
     def get_bucket_counts(self) -> dict[int, int]:
         return {
