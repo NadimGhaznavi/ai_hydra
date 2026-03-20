@@ -87,7 +87,7 @@ class HydraMgr(HydraServer):
         import torch
 
         from ai_hydra.nnet.TrainMgr import TrainMgr
-        from ai_hydra.nnet.ATHReplayMemory import ATHReplayMemory
+        from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
         from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
 
@@ -146,7 +146,7 @@ class HydraMgr(HydraServer):
 
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
-            replay = ATHReplayMemory(
+            replay = ATHMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
                 pub_func=self.mq.publish_events,

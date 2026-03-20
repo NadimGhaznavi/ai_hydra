@@ -14,11 +14,11 @@ import torch.nn as nn
 import torch.optim as optim
 from copy import deepcopy
 
-from ai_hydra.constants.DNNet import DNetDef, DRNN
-from ai_hydra.constants.DHydra import DHydraLog
+from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DNNet import DRNNTrainer
 
-from ai_hydra.nnet.ReplayMemory import ReplayMemory
+from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.utils.HydraLog import HydraLog
 
 GRAD_CLIPPING = True
@@ -30,12 +30,12 @@ class RNNTrainer:
     def __init__(
         self,
         model,
-        replay: ReplayMemory,
+        replay: ATHMemory,
         lr: float,
         log_level: DHydraLog,
         device: torch.device | None = None,
     ):
-        self.device = device or torch.device("cpu")
+        self.device = device or torch.device(DField.CPU)
         self.model = model.to(self.device)
 
         if DQN_WITH_TARGET or DOUBLE_DQN:
@@ -51,7 +51,7 @@ class RNNTrainer:
         self.criterion = DRNNTrainer.CRITERION()
 
         self.log = HydraLog(
-            client_id="RNNTrainer",
+            client_id=DModule.RNN_TRAINER,
             log_level=log_level,
             to_console=True,
         )
@@ -74,7 +74,7 @@ class RNNTrainer:
 
     async def train_long_memory(self) -> float | None:
 
-        chunks = await self.replay.sample_chunks()
+        chunks = await self.replay.data_mgr.sample_chunks()
         if chunks is None:
             return
 

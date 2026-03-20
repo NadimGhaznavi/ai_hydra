@@ -780,8 +780,15 @@ class HydraClientTui(App):
 
             # Bucket status
             if ev_type == EV_TYPE.BUCKETS_STATUS:
-                bucket_counts = ev_payload[EV_TYPE.BUCKET_COUNTS]
+                # The numeric dictionary keys are turned into string by JSON
+                # Convert them back to ints.
+                raw_bucket_counts = ev_payload[EV_TYPE.BUCKET_COUNTS]
+                bucket_counts = {
+                    int(k): v for k, v in raw_bucket_counts.items()
+                }
+                # Add the data to the metric object
                 self.metrics.add_bucket_stats(bucket_counts)
+                # Let the TUI widget know there's new data
                 self.query_one(
                     f"#{DField.ATH_Memory}", ATHMemory
                 ).refresh_data()

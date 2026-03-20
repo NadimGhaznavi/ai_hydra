@@ -4,13 +4,12 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ai_hydra.server.SnakeMgr import SnakeMgr
-from ai_hydra.constants.DGame import DGameField
+from ai_hydra.constants.DHydra import DModule
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
-
-# from ai_hydra.nnet.UNUSED_RNNTrainer import RNNTrainer
 from ai_hydra.nnet.LinearTrainer import LinearTrainer
-from ai_hydra.nnet.ReplayMemory import ReplayMemory
+from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
+from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.nnet.Transition import Transition
 
 
@@ -56,8 +55,8 @@ class TrainMgr:
         snake_mgr: SnakeMgr,
         policy: HydraPolicy,
         trainer,
-        replay: ReplayMemory,
-        client_id: str = "TrainMgr",
+        replay: SimpleReplayMemory | ATHMemory,
+        client_id: str = DModule.TRAIN_MGR,
     ) -> None:
         self.snake_mgr = snake_mgr
         self.policy = policy

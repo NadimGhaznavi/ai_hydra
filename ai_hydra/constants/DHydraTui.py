@@ -41,6 +41,7 @@ class DField:
     CLIENTS_SCREEN: Final[str] = "clients_screen"
     CONFIG: Final[str] = "config"
     CONSOLE_BOX: Final[str] = "console_box"
+    CPU: Final[str] = "cpu"
     DISCONNECTED: Final[str] = "disconnected"
     CONSOLE: Final[str] = "console"
     CONSOLE_SCREEN: Final[str] = "console_screen"

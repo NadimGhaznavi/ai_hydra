@@ -119,13 +119,20 @@ class DModule(StrEnum):
     """
 
     ATH_REPLAY_MEMORY = "ATHReplayMemory"
+    ATH_MEMORY = "ATHMemory"
+    ATH_DATA_MGR = "ATHDataMgr"
+    ATH_DATA_STORE = "ATHDataStore"
+    ATH_GEARBOX = "ATHGearBox"
     EPSILON_ALGO = "EpsilonAlgo"
     HYDRA_CLIENT = "HydraClient"
     HYDRA_MGR = "HydraMgr"
     HYDRA_MQ = "HydraMQ"
     HYDRA_ROUTER = "HydraRouter"
     HYDRA_SERVER = "HydraServer"
+    LINEAR_TRAINER = "LinearTrainer"
+    RNN_TRAINER = "RNNTrainer"
     SIMPLE_REPLAY_MEMORY = "SimpleReplayMemory"
+    TRAIN_MGR = "TrainMgr"
 
 
 LOG_LEVELS: Mapping[DHydraLog, int] = {

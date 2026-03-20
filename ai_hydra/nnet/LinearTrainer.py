@@ -11,10 +11,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from ai_hydra.constants.DNNet import DLinear
-from ai_hydra.constants.DHydra import DHydra, DHydraLog
+from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.constants.DHydra import DHydra, DHydraLog, DModule
 
-from ai_hydra.nnet.ReplayMemory import ReplayMemory
+from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
 from ai_hydra.utils.HydraLog import HydraLog
 
 
@@ -22,12 +22,12 @@ class LinearTrainer:
     def __init__(
         self,
         model,
-        replay: ReplayMemory,
+        replay: SimpleReplayMemory,
         lr: float,
         log_level: DHydraLog,
         device: torch.device | None = None,
     ):
-        self.device = device or torch.device("cpu")
+        self.device = device or torch.device(DField.CPU)
         self.model = model.to(self.device)
         self.replay = replay
         self._gamma = None
@@ -37,7 +37,9 @@ class LinearTrainer:
         self.criterion = nn.SmoothL1Loss()  # nn.MSELoss()
         torch.manual_seed(DHydra.RANDOM_SEED)
         self.log = HydraLog(
-            client_id="LinearTrainer", log_level=log_level, to_console=True
+            client_id=DModule.LINEAR_TRAINER,
+            log_level=log_level,
+            to_console=True,
         )
         self._losses = []
         self._cold_memory = True

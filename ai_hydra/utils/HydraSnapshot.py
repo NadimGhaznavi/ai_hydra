@@ -8,10 +8,12 @@
 #    License: GPL 3.0
 
 from datetime import datetime
+import pprint
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DNNet import DNetDef, DNetField
+from ai_hydra.constants.DReplayMemory import GEARBOX
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
@@ -65,6 +67,7 @@ class HydraSnapshot:
         )
 
         lines.extend(self._build_model_section(cfg))
+        lines.extend(self._build_memory_section())
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_shift_mean_median_section())
@@ -117,6 +120,18 @@ class HydraSnapshot:
         return self._build_kv_section(
             "🧠 Model",
             [("Model Type", str(model_type))],
+        )
+
+    def _build_memory_section(self) -> list[str]:
+        gearbox_str = "\n" + pprint.pformat(GEARBOX)
+        return self._build_kv_section(
+            "💾 Replay Memory",
+            [
+                (
+                    "Gearbox",
+                    gearbox_str,
+                )
+            ],
         )
 
     def _build_event_log_section(self) -> list[str]:
@@ -259,7 +274,6 @@ class HydraSnapshot:
         widths = [len(header) for header in headers]
 
         for row in rows:
-            print(f"ROW: {row}")
             for i, cell in enumerate(row):
                 widths[i] = max(widths[i], len(cell))
 

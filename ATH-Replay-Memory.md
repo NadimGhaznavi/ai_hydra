@@ -43,3 +43,29 @@ Sequence Length | Batch Size | Score Threshold
 16              | 32         | 30
 32              | 16         | 40
 64              | 8          | 50
+
+
+SHIFT_CHECK = 200
+FULL_ENOUGH = 150
+
+Rules
+- Run for SHIFT_CHECK episodes
+- If last 3 buckets have >= FULL_ENOUGH
+
+Seq | Batch
+----|-------
+  4 | 5
+  8 | 7
+ 12 | 5
+ 16 | 4
+ 20 | 3
+ 24 | 3
+ 28 | 2
+ 32 | 2
+ 36 | 2
+ 40 | 1
+ 44 | 1
+ 48 | 1
+ 52 | 1
+ 56 | 1
+ 60 | 1
