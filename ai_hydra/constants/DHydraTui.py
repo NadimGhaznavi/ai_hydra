@@ -150,6 +150,7 @@ class DField:
     TITLE: Final[str] = "title"
     TRAINING_BOX: Final[str] = "training_box"
     TUI: Final[str] = "tui"
+    TURBO_BOX: Final[str] = "turbo_box"
     TURBO_MODE: Final[str] = "turbo_mode"
     TURBO_OFF: Final[str] = "turbo_off"
     TURBO_ON: Final[str] = "turbo_on"

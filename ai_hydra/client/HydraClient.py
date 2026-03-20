@@ -206,13 +206,6 @@ class HydraClientTui(App):
                 ),
                 classes=DField.INPUT_FIELD,
             ),
-            # Turbo mode
-            Horizontal(
-                Label(f"{DLabel.TURBO_MODE:>11s}: "),
-                # Checkbox(value=False, id=DField.TURBO_MODE, compact=True),
-                Switch(value=False, id=DField.TURBO_MODE),
-                classes=DField.INPUT_FIELD,
-            ),
             id=DField.SETTINGS,
         )
 
@@ -276,6 +269,13 @@ class HydraClientTui(App):
                 classes=DField.INPUT_FIELD,
             ),
             id=DField.EPSILON,
+        )
+
+        # Turbo mode
+        yield Vertical(
+            Switch(value=False, id=DField.TURBO_MODE),
+            classes=DField.INPUT_FIELD,
+            id=DField.TURBO_BOX,
         )
 
         # ----- Model ---
@@ -538,6 +538,9 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
         self.query_one(f"#{DField.TRAINING_BOX}").border_subtitle = (
             DLabel.TRAINING
+        )
+        self.query_one(f"#{DField.TURBO_BOX}").border_subtitle = (
+            DLabel.TURBO_MODE
         )
         # --------------------------------------------------------------
 

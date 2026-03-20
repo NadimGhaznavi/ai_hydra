@@ -1,7 +1,7 @@
 Screen {
     layout: grid;
     grid-size: 4 8;
-    grid-rows: 3 5 6 6 5 2 22 3;
+    grid-rows: 3 4 6 6 4 3 22 3;
     grid-columns: 20 44 32 37;
 }
 
@@ -29,7 +29,7 @@ Switch {
 }
 
 #board_box {
-    row-span: 4;
+    row-span: 5;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
@@ -45,7 +45,7 @@ Switch {
 }
 
 #buttons {
-    row-span: 3;
+    row-span: 2;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
@@ -63,9 +63,29 @@ Switch {
     text-style: bold;
     padding: 0 0;
     color: #72af75;
-
 }
 
+#turbo_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    text-style: bold;
+    height: 6;
+    padding: 0 0;
+    align: center middle;
+    color: #72af75;    
+}
+
+#cur_epsilon {
+    color: #cdbf2f;
+}
+#seq_length_label {
+    color: #cdbf2f;
+}
+#rnn_batch_size_label {
+    color: #cdbf2f;
+}
 
 #highscores {
     background: black;

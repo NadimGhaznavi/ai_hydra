@@ -6,10 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.18.0] - 2026-03-20 09:21 - Nigel Mansell Release
+
+* **Relentless pace**
+- **Controlled aggression**
+- **Occasional wild bursts**
+- **No fear of the edge**
+
+*White-knuckle,high-grip performance*
 
 ### Added
 - An *event type* field to the *Hydra MQ* `EventMsg`, used by `HydraEventMQ`.
+- A *Memory* widget that displays the size of (number or stored sequences) and relative health (cells are shaded) of the 20 *Adaptive Replay Memory Buckets*
+  - Published new telemetry information to populat this widget.
+- Two new report sections in the **Snapshot Report**:
+  1. A table showing `Epoch`, `Gear`, `Seq Length`, `Batch Size`, `Mean`, and `Median` values every 500 episodes.
+  2. A table showing the bucket sizes for the 20 *ATH Replay Memory* buckets every 500 epochs.
+- **Adaptive Memory Horizon - Replay Memory Automatic Gearbox**
+  - See the [documentation](https://pypi.org/project/ai-hydra/) for more information on this feature
+
+### Changed
+- Minor TUI layout changes.
+- **Refactored the ATHReplayMemory**
+  - A `ATHDataStore` to house the *Replay Memory* data.
+  - A `ATHDataMgr` to manage the contents of the `ATHDataStore`
+  - Created a `ATHGearbox` class that dynamically changes the sequence length and batch size of the training data based on the state of the `ATHDataStore`.
+  - A `ATHMemory` class to orchestrate the other new *ATH* classes
+  - A small `ATHCommon` module to house the `GearMeta` and `Episode` dataclasses.
+  - Minor refactor of *ATH* Constants.
 
 ### Fixed
 - Batch size and sequence length are now correct in the TUI.
