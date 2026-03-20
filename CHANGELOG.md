@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 - An *event type* field to the *Hydra MQ* `EventMsg`, used by `HydraEventMQ`.
+- Colored the *Move Delay*, *Current Epsilon*, RNN *Batch Size*, and RNN *Sequence Length* settings, because they change during a simulation run.
 - A *Memory* widget that displays the size of (number or stored sequences) and relative health (cells are shaded) of the 20 *Adaptive Replay Memory Buckets*
   - Published new telemetry information to populate this widget.
 - Two new report sections in the **Snapshot Report**:
@@ -25,8 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - **Adaptive Memory Horizon - Replay Memory Automatic Gearbox**
   - See the [documentation](https://pypi.org/project/ai-hydra/) for more information on this feature
 
+
 ### Changed
-- Minor TUI layout changes.
+- Moved the *Turbo Mode* switch to the left side of the TUI.
 - **Refactored the ATHReplayMemory**
   - A `ATHDataStore` to house the *Replay Memory* data.
   - A `ATHDataMgr` to manage the contents of the `ATHDataStore`

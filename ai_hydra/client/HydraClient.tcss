@@ -86,6 +86,9 @@ Switch {
 #rnn_batch_size_label {
     color: #cdbf2f;
 }
+#move_delay_label {
+    color: #cdbf2f;
+}
 
 #highscores {
     background: black;
