@@ -123,6 +123,43 @@ with a sliding window showing a histogram of the scores over the previous 500 ga
 
 ![Score Distribution](https://aihydra.osoyalce.com/images/scores-histogram.png)
 
+### Event Log
+
+This isn't a plot, it's an event log containing key events. The information
+in this widget is also available in the *Snapshot Report*.
+
+![Event Log](https://aihydra.osoyalce.com/images/event-log.png)
+
+## ATH Replay Memory
+
+The ATH (Adaptive Temporal Horizon) Replay Memory is not a static buffer. It’s a system that evolves with the model.
+
+Rather than locking in a single sequence length and batch size, ATH introduces a gearbox that shifts as the agent improves. Early on, it prioritizes speed and simplicity with short sequences and large batches. As the agent becomes more capable, it transitions into longer sequences and smaller batches, allowing the model to reason over deeper time horizons.
+
+But temporal adaptation is only part of the story.
+
+ATH Replay Memory also uses a bucketed sampling strategy to address a common issue in reinforcement learning: training data naturally follows the agent’s score distribution. Without intervention, the model would mostly train on “typical” games and rarely revisit edge cases such as high-scoring runs or rare failure modes.
+
+To counter this, transitions are grouped into buckets based on outcome characteristics (e.g., score ranges). During sampling, these buckets are used to ensure a more balanced and representative training set, preventing the model from overfitting to the most common experiences. The *memory* widget at the bottom shows the buckets and how many sequences each bucket contains. The shading shows how full the buckets are relative to each other.
+
+![ATH Memory](https://aihydra.osoyalce.com/images/ath-memory.png)
+
+In practice, this means:
+
+- Early training is fast and efficient
+- Later training becomes more context-aware and strategic
+- Rare but important experiences remain visible to the model
+- The system adapts both what it learns from and how it learns
+
+Replay memory itself remains clean and decoupled from global state. It emits lifecycle events (warm-up, capacity, gear shifts), which are enriched and tracked by the client. This makes the training process observable in terms of state transitions, not just outcomes.
+phase transitions.
+
+## Blazing Speed
+
+Simulations run **BLAZINGLY** fast on a consumer grade laptop without a GPU.
+This is due to careful architectural design decisions. The *Replay Memory*,
+*Model*, and *Trainer* work in a pipline, minimizing data transformations.
+
 ## Snapshot Report
 
 The *HydraClient TUI* includes a *Snapshot* button that creates a simple
@@ -332,34 +369,4 @@ Epoch  b1   b2   b3   b4   b5   b6   b7   b8   b9   b10  b11  b12  b13  b14  b15
 11000  260  256  247  243  236  226  212  187  174  154  142  129  116  99   82   65   50   38   28   18 
 11500  287  280  267  257  240  227  207  187  169  152  133  117  100  80   62   52   38   29   23   19
 ```
-
-## ATH Replay Memory
-
-The ATH (Adaptive Temporal Horizon) Replay Memory is not a static buffer. It’s a system that evolves with the model.
-
-Rather than locking in a single sequence length and batch size, ATH introduces a gearbox that shifts as the agent improves. Early on, it prioritizes speed and simplicity with short sequences and large batches. As the agent becomes more capable, it transitions into longer sequences and smaller batches, allowing the model to reason over deeper time horizons.
-
-But temporal adaptation is only part of the story.
-
-ATH Replay Memory also uses a bucketed sampling strategy to address a common issue in reinforcement learning: training data naturally follows the agent’s score distribution. Without intervention, the model would mostly train on “typical” games and rarely revisit edge cases such as high-scoring runs or rare failure modes.
-
-To counter this, transitions are grouped into buckets based on outcome characteristics (e.g., score ranges). During sampling, these buckets are used to ensure a more balanced and representative training set, preventing the model from overfitting to the most common experiences. The *memory* widget at the bottom shows the buckets and how many sequences each bucket contains. The shading shows how full the buckets are relative to each other.
-
-![ATH Memory](https://aihydra.osoyalce.com/images/ath-memory.png)
-
-In practice, this means:
-
-- Early training is fast and efficient
-- Later training becomes more context-aware and strategic
-- Rare but important experiences remain visible to the model
-- The system adapts both what it learns from and how it learns
-
-Replay memory itself remains clean and decoupled from global state. It emits lifecycle events (warm-up, capacity, gear shifts), which are enriched and tracked by the client. This makes the training process observable in terms of state transitions, not just outcomes.
-phase transitions.
-
-## Blazing Speed
-
-Simulations run **BLAZINGLY** fast on a consumer grade laptop without a GPU.
-This is due to careful architectural design decisions. The *Replay Memory*,
-*Model*, and *Trainer* work in a pipline, minimizing data transformations.
 
