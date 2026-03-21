@@ -113,9 +113,12 @@ class HydraMgr(HydraServer):
         from ai_hydra.constants.DNNet import DNetField
 
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
+        master_seed = self.cfg.get(DNetField.RANDOM_SEED)
 
         self.hydra_rng = HydraRng(
-            log_level=self.log_level, pub_func=self.mq.publish_events
+            log_level=self.log_level,
+            pub_func=self.mq.publish_events,
+            master_seed=master_seed,
         )
         master_seed = self.hydra_rng.get_seed()
 

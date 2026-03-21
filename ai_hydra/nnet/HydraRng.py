@@ -21,9 +21,9 @@ class HydraRng:
     Centralized Random for deterministic runs.
     """
 
-    def __init__(self, log_level: DHydraLog, pub_func):
+    def __init__(self, log_level: DHydraLog, pub_func, master_seed: int):
 
-        self._master_seed = DHydra.RANDOM_SEED
+        self._master_seed = master_seed
 
         self.log = HydraLog(
             client_id=DModule.HYDRA_RNG,
