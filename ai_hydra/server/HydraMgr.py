@@ -78,7 +78,6 @@ class HydraMgr(HydraServer):
         self._client_id = None
         self._sim_running = False
         self._sim_paused = False
-        self._db_mgr = None
 
         self._run_loop_task: asyncio.Task[None] | None = None
         self._run_loop_pause_event = asyncio.Event()
@@ -115,13 +114,6 @@ class HydraMgr(HydraServer):
 
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
 
-        if (
-            self._train_mgr is not None
-            and self._train_mgr_model_type == model_type
-        ):
-            self._train_mgr.snake_mgr = self.snake
-            return self._train_mgr
-
         self.hydra_rng = HydraRng(
             log_level=self.log_level, pub_func=self.mq.publish_events
         )
@@ -131,7 +123,9 @@ class HydraMgr(HydraServer):
         _, policy_rng = self.hydra_rng.new_rng()
         _, replay_rng = self.hydra_rng.new_rng()
 
-        device = torch.device("cpu")  # keep simple; GPU can be passed later
+        device = torch.device(
+            DField.CPU
+        )  # keep simple; GPU can be passed later
 
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
@@ -210,7 +204,8 @@ class HydraMgr(HydraServer):
             policy=behaviour_policy,
             trainer=trainer,
             replay=replay,
-            client_id="TrainMgr",
+            client_id=DModule.TRAIN_MGR,
+            model=model,
         )
         self._train_mgr_model_type = model_type
         return self._train_mgr
@@ -285,6 +280,21 @@ class HydraMgr(HydraServer):
         )
         if self.mq is not None:
             await self.mq.send(reply)
+
+        # Wait for the simulation to end
+        while self._sim_running:
+            await asyncio.sleep(0.1)
+
+        # Reset the model's weights
+        # self._train_mgr.model.reset_weights()
+        # Reset the optimizer
+        # self._train_mgr.trainer.reset()
+
+        self._sim_paused = False
+        self._runs = {}
+        self._run_loop_pause_event.clear()
+        self._run_loop_stop_event.clear()
+        self.log.info("Stopping the simulation and resetting the environment")
 
     async def _run_loop(self, client_id: str) -> None:
         """
@@ -409,6 +419,8 @@ class HydraMgr(HydraServer):
                         else self.cfg.get(DNetField.MOVE_DELAY)
                     )
                     await asyncio.sleep(delay)
+
+                self._sim_running = False
 
             except asyncio.CancelledError:
                 raise

@@ -8,9 +8,12 @@ from ai_hydra.constants.DHydra import DModule
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.LinearTrainer import LinearTrainer
+from ai_hydra.nnet.RNNTrainer import RNNTrainer
 from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
 from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.nnet.Transition import Transition
+from ai_hydra.nnet.models.LinearModel import LinearModel
+from ai_hydra.nnet.models.RNNModel import RNNModel
 
 
 @dataclass(frozen=True)
@@ -54,12 +57,14 @@ class TrainMgr:
         *,
         snake_mgr: SnakeMgr,
         policy: HydraPolicy,
-        trainer,
+        trainer: LinearTrainer | RNNTrainer,
         replay: SimpleReplayMemory | ATHMemory,
         client_id: str = DModule.TRAIN_MGR,
+        model: LinearModel | RNNModel,
     ) -> None:
         self.snake_mgr = snake_mgr
         self.policy = policy
         self.trainer = trainer
         self.replay = replay
         self.client_id = client_id
+        self.model = model

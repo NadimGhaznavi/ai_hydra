@@ -72,6 +72,12 @@ class RNNTrainer:
         self._losses = []
         return avg_loss
 
+    def reset(self):
+        self.optimizer.state = {}
+        if DQN_WITH_TARGET or DOUBLE_DQN:
+            self.target_model = deepcopy(self.model).to(self.device)
+            self.target_model.eval()
+
     async def train_long_memory(self) -> float | None:
 
         chunks = await self.replay.data_mgr.sample_chunks()

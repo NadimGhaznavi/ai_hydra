@@ -21,6 +21,7 @@ class LinearModel(nn.Module):
     def __init__(self, log_level: DHydraLog, seed: int):
         super().__init__()
 
+        self._seed = seed
         torch.manual_seed(seed)
 
         self.log = HydraLog(
@@ -51,3 +52,9 @@ class LinearModel(nn.Module):
         self.log.info(f"Setting hidden size to {hidden_size}")
         self.log.info(f"Setting dropout layer p-value to {dropout_p}")
         self._init_model()
+
+    def reset_weights(self):
+        for module in self.modules():
+            if hasattr(module, "reset_parameters"):
+                module.reset_parameters()
+        torch.manual_seed(self._seed)
