@@ -22,7 +22,7 @@ class DHydra:
     NETWORK_TIMEOUT: Final[float] = 2.0
     PROTOCOL_VERSION: Final[int] = 1
     RANDOM_SEED: Final[int] = 1970
-    VERSION: Final[str] = "0.18.0"
+    VERSION: Final[str] = "0.19.0"
     HYDRA_DIR: Final[str] = "AI-Hydra"
 
 

@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.19.0] - 2026-03-21 14:13 - Grown-Up Release
 
 ### Added
 - A description of the displayed `ATH_GEARBOX` setting in the *Snapshot Report*.
