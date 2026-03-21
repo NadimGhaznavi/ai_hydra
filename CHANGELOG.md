@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [0.19.1] - 2026-03-21 14:22 - HOTFIX
+
+### Fixed
+- Scores image in README
+
+---
+
 ## [0.19.0] - 2026-03-21 14:13 - Grown-Up Release
 
 - **Professional Docs**
