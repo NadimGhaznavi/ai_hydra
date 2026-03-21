@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [0.19.0] - 2026-03-21 14:13 - Grown-Up Release
 
+- **Professional Docs**
+- **Pause/Resume/Reset Buttons**
+
 ### Added
 - A description of the displayed `ATH_GEARBOX` setting in the *Snapshot Report*.
 - Complete rewrite of the [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
