@@ -18,9 +18,10 @@ from ai_hydra.utils.HydraLog import HydraLog
 
 
 class LinearModel(nn.Module):
-    def __init__(self, log_level: DHydraLog):
+    def __init__(self, log_level: DHydraLog, seed: int):
         super().__init__()
-        torch.manual_seed(DHydra.RANDOM_SEED)
+
+        torch.manual_seed(seed)
 
         self.log = HydraLog(
             client_id="LinearModel",

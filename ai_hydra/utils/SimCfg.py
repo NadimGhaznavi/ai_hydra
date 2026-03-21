@@ -39,6 +39,7 @@ class SimCfg:
         DNetField.RNN_LAYERS: DRNN.RNN_LAYERS,
         DNetField.RNN_TAU: DRNN.TAU,
         DNetField.SEQ_LENGTH: DRNN.SEQ_LENGTH,
+        DNetField.SIM_PAUSED: False,
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
@@ -57,6 +58,7 @@ class SimCfg:
         DNetField.RNN_LAYERS: int,
         DNetField.RNN_TAU: float,
         DNetField.SEQ_LENGTH: int,
+        DNetField.SIM_PAUSED: bool,
     }
 
     __slots__ = ("_values",)

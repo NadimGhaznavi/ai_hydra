@@ -18,9 +18,7 @@ class DMemField:
 
 class DMemDef:
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
-    MAX_CHUNKS: Final[int] = 3000
-    MIN_CHUNKS: Final[int] = 100
-    MAX_FRAMES: Final[int] = 100000
+    MAX_FRAMES: Final[int] = 125000
     MAX_BUCKETS: Final[int] = 20
     NUM_COOLDOWN_EPISODES: Final[int] = 300
     THRESHOLD_BUCKETS: Final[list] = [17, 18, 19]
@@ -48,6 +46,23 @@ GEAR => { ( THRESHOLD, SEQ_LENGTH, BATCH_SIZE ), ... }
 
 ATH_GEARBOX = {
     1: (4, 64),
+    2: (6, 48),
+    3: (8, 32),
+    4: (12, 24),
+    5: (16, 16),
+    6: (20, 13),
+    7: (24, 10),
+    8: (28, 9),
+    9: (30, 9),
+    10: (32, 8),
+    11: (34, 7),
+    12: (36, 6),
+    13: (38, 5),
+    14: (40, 4),
+}
+
+V2_ATH_GEARBOX = {
+    1: (4, 64),
     2: (8, 32),
     3: (16, 16),
     4: (24, 10),
@@ -58,6 +73,7 @@ ATH_GEARBOX = {
     9: (56, 4),
     10: (64, 3),
 }
+
 
 V1_ATH_GEARBOX = {
     1: (4, 64),

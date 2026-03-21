@@ -163,7 +163,9 @@ This is due to careful architectural design decisions. The *Replay Memory*,
 ## Snapshot Report
 
 The *HydraClient TUI* includes a *Snapshot* button that creates a simple
-text file that captures the simulation settings. A sample is shows below.
+text file that captures the simulation settings. The system creates an
+`AI-Hydra` folder in your home directory. That is where snapshot files
+are created.
 
 ```
 📸 AI Hydra - Snapshot Report

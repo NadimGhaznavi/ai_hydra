@@ -268,6 +268,9 @@ EventLog {
 .sim_stopped #handshake {
     display: none;
 }
+.sim_stopped #handshake_divider {
+    display: none;
+}
 .sim_stopped #gamma_label {
     display: none;
 }
@@ -284,6 +287,18 @@ EventLog {
     display: none;
 }
 .sim_stopped #model_type_label {
+    display: none;
+}
+.sim_stopped #resume_run {
+    display: none;
+}
+.sim_stopped #resume_run_divider {
+    display: none;
+}
+.sim_stopped #pause_run {
+    display: none;
+}
+.sim_stopped #pause_run_divider {
     display: none;
 }
 /* Temporary until I implement server side user defined seeds */
@@ -353,6 +368,25 @@ EventLog {
 .sim_running #handshake {
     display: none;
 }
+.sim_running #handshake_divider {
+    display: none;
+}
+
+/* Simulation is Paused */
+.sim_paused #pause_run {
+    display: none;
+}
+.sim_paused #pause_run_divider {
+    display: none;
+}
+
+/* Simulation is Resumed */
+.sim_resumed #resume_run {
+    display: none;
+}
+.sim_resumed #resume_run_divider {
+    display: none;
+}
 
 /* Failed handshake with HydraMgr */
 /* ------------------------------ */
@@ -398,10 +432,22 @@ EventLog {
 .bad_handshake #learning_rate_label {
     display: none;
 }
+.bad_handshake #pause_run {
+    display: none;
+}
+.bad_handshake #pause_run_divider {
+    display: none;
+}
 .bad_handshake #random_seed_input {
     display: none;
 }
 .bad_handshake #random_seed_label {
+    display: none;
+}
+.bad_handshake #resume_run {
+    display: none;
+}
+.bad_handshake #resume_run_divider {
     display: none;
 }
 .bad_handshake #rnn_batch_size_label {
@@ -450,6 +496,9 @@ EventLog {
     display: none;
 }
 .bad_handshake #start_run {
+    display: none;
+}
+.bad_handshake #start_run_divider {
     display: none;
 }
 .bad_handshake #turbo_mode {

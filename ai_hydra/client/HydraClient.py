@@ -167,8 +167,13 @@ class HydraClientTui(App):
         # ----- Buttons ---
         yield Vertical(
             Button(label=DLabel.HANDSHAKE, id=DField.HANDSHAKE, compact=True),
+            Label(id=DField.HANDSHAKE_DIVIDER),
             Button(label=DLabel.START, id=DField.START_RUN, compact=True),
             Label(id=DField.START_RUN_DIVIDER),
+            Button(label=DLabel.PAUSE, id=DField.PAUSE_RUN, compact=True),
+            Label(id=DField.PAUSE_RUN_DIVIDER),
+            Button(label=DLabel.RESUME, id=DField.RESUME_RUN, compact=True),
+            Label(id=DField.RESUME_RUN_DIVIDER),
             Button(label=DLabel.SNAPSHOT, id=DField.SNAPSHOT, compact=True),
             Label(),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
@@ -455,11 +460,17 @@ class HydraClientTui(App):
         elif button_id == DField.HANDSHAKE:
             await self._send_handshake()
 
+        elif button_id == DField.PAUSE_RUN:
+            await self._send_pause_run()
+
         elif button_id == DMethod.QUIT:
             await self.on_quit()
 
-        elif button_id == DGameMethod.RESET_GAME:
+        elif button_id == DGameMethod.RESET_RUN:
             await self._send_reset()
+
+        elif button_id == DGameMethod.RESUME_RUN:
+            await self._send_resume_run()
 
         elif button_id == DField.SNAPSHOT:
             await self._take_snapshot()
@@ -871,6 +882,16 @@ class HydraClientTui(App):
                         True
                     )
 
+                # Simulation is paused
+                if self.cfg.get(DNetField.SIM_PAUSED):
+                    print("Is paused")
+                    self.add_class(DGameField.SIM_PAUSED)
+                    self.remove_class(DGameField.SIM_RESUMED)
+                else:
+                    print("Not paused")
+                    self.add_class(DGameField.SIM_RESUMED)
+                    self.remove_class(DGameField.SIM_PAUSED)
+
                 # Load configurable TUI settings from the running sim config
                 self.query_one(
                     f"#{DField.INITIAL_EPSILON_INPUT}", Input
@@ -909,6 +930,40 @@ class HydraClientTui(App):
                 event="Unable to connect to simulation server",
             )
 
+    async def _send_pause_run(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.PAUSE_RUN,
+        )
+        await self.mq.send(msg)
+
+        try:
+            reply = await self.mq.recv()
+            if reply.method == DGameMethod.PAUSE_RUN_REPLY:
+                self.add_class(DGameField.SIM_PAUSED)
+                self.remove_class(DGameField.SIM_RESUMED)
+                print(reply.method)
+        except asyncio.TimeoutError:
+            pass
+
+    async def _send_resume_run(self):
+        msg = HydraMsg(
+            sender=DModule.HYDRA_CLIENT,
+            target=DModule.HYDRA_MGR,
+            method=DGameMethod.RESUME_RUN,
+        )
+        await self.mq.send(msg)
+
+        try:
+            reply = await self.mq.recv()
+            if reply.method == DGameMethod.RESUME_RUN_REPLY:
+                self.remove_class(DGameField.SIM_PAUSED)
+                self.add_class(DGameField.SIM_RESUMED)
+                print(reply.method)
+        except asyncio.TimeoutError:
+            pass
+
     async def _send_reset(self):
         msg = HydraMsg(
             sender=DModule.HYDRA_CLIENT,
@@ -938,11 +993,15 @@ class HydraClientTui(App):
             if reply.payload[DGameField.OK]:
                 # Perfect, sim wasn't running now it is.
                 self.remove_class(DField.SIM_STOPPED)
+                self.remove_class(DGameField.SIM_PAUSED)
                 self.add_class(DField.SIM_RUNNING)
+                self.add_class(DGameField.SIM_RESUMED)
             else:
                 # Sim was already running
                 self.remove_class(DField.SIM_STOPPED)
+                self.remove_class(DGameField.SIM_RESUMED)
                 self.add_class(DField.SIM_RUNNING)
+                self.add_class(DGameField.SIM_PAUSED)
             self.event_log.add_event(
                 ev_type=DField.SIM_LOOP, event="Simulation started"
             )

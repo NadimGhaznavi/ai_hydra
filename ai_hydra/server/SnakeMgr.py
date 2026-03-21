@@ -15,15 +15,15 @@ from typing import Any, Optional
 from datetime import datetime
 import traceback
 
-from ai_hydra.constants.DHydra import DHydra
+from ai_hydra.constants.DHydra import DHydra, DHydraLog
 from ai_hydra.constants.DGame import DGameField
 from ai_hydra.constants.DNNet import DNetField
 
 from ai_hydra.game.GameLogic import GameLogic
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
+from ai_hydra.nnet.HydraRng import HydraRng
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraLog import HydraLog
-
 from ai_hydra.utils.HydraHelper import minutes_to_uptime
 
 
@@ -49,76 +49,27 @@ class SnakeSession:
 class SnakeMgr:
     """
     Domain manager for Snake game sessions.
-
-    Owns:
-      - a master seed + seed RNG (for minting per-session seeds)
-      - a per-client session map
-
-    Does NOT:
-      - talk to MQ
-      - render
-      - run neural nets (future)
     """
 
     def __init__(
         self,
         cfg: SimCfg,
-        log_level: HydraLog,
-        master_seed: int = DHydra.RANDOM_SEED,
+        log_level: DHydraLog,
+        hydra_rng: HydraRng,
     ) -> None:
         if cfg is None:
             raise TypeError("SnakeMgr requires cfg (SimCfg)")
         self.cfg = cfg
+        self.hydra_rng = hydra_rng
         self.log = HydraLog(
             client_id="SnakeMgr",
             log_level=log_level,
             to_console=True,
         )
 
-        self.master_seed = int(master_seed)
-
-        self.seed_rng = random.Random(self.master_seed)
         self.sessions: dict[str, SnakeSession] = {}
         self.policy: Optional[HydraPolicy] = None
         self._start_time = datetime.now()
-
-    # -------------------------
-    # RNG API (Pattern B)
-    # -------------------------
-
-    def new_rng(self, seed: Optional[int] = None) -> tuple[int, random.Random]:
-        """
-        Create a brand-new RNG stream for a session.
-
-        If seed is None, mint a deterministic seed from seed_rng.
-        Returns (seed, rng).
-        """
-        if seed is None:
-            seed = self.seed_rng.getrandbits(64)
-        else:
-            seed = int(seed)
-
-        return seed, random.Random(seed)
-
-    def clone_rng(self, parent_rng: random.Random) -> random.Random:
-        """
-        Clone RNG state exactly (for future clone rollouts).
-        """
-        clone = random.Random()
-        clone.setstate(parent_rng.getstate())
-        return clone
-
-    def get_rng_state(self, rng: random.Random) -> object:
-        """
-        Export RNG state (useful later for replay/persistence).
-        """
-        return rng.getstate()
-
-    def set_rng_state(self, rng: random.Random, state: object) -> None:
-        """
-        Restore RNG state (useful later for replay/persistence).
-        """
-        rng.setstate(state)
 
     # -------------------------
     # Session lifecycle
@@ -131,9 +82,7 @@ class SnakeMgr:
     # Game operations (Phase 1)
     # -------------------------
 
-    def reset_session(
-        self, client_id: str, seed: Optional[int] = None
-    ) -> SnakeSession:
+    def reset_session(self, client_id: str) -> SnakeSession:
         from ai_hydra.game.GameBoard import GameBoard
 
         prev = self.sessions.get(client_id)
@@ -141,7 +90,7 @@ class SnakeMgr:
         prev_epoch = getattr(prev, "epoch", 0)
         next_step_n = getattr(prev, "step_n", 0) + 1
 
-        session_seed, rng = self.new_rng(seed)
+        session_seed, rng = self.hydra_rng.new_rng()
         episode_id = rng.getrandbits(32)
 
         board = GameBoard.new_game(
@@ -167,18 +116,18 @@ class SnakeMgr:
 
     def get_session(self, client_id: str) -> SnakeSession:
         """
-        Fetch a session. Auto-creates one if missing (seed minted).
+        Fetch a session. Auto-creates one if missing.
         """
         sess = self.sessions.get(client_id)
         if sess is None:
-            sess = self.reset_session(client_id, seed=None)
+            sess = self.reset_session(client_id)
         return sess
 
-    def reset(self, client_id: str, seed: Optional[int] = None) -> None:
+    def reset(self, client_id: str) -> None:
         """
         Reset and return snapshot.
         """
-        self.reset_session(client_id, seed=seed)
+        self.reset_session(client_id)
 
     def start_time(self, start_time=None):
         if start_time is not None:

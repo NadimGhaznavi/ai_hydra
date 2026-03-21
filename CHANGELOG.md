@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Added
+- A description of the displayed `ATH_GEARBOX` setting in the *Snapshot Report*.
+
+---
+
 ## [0.18.0] - 2026-03-20 09:21 - Nigel Mansell Release
 
 - **Relentless pace**

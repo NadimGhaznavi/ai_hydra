@@ -30,6 +30,7 @@ from ai_hydra.server.HydraServer import HydraServer
 from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
+from ai_hydra.nnet.HydraRng import HydraRng
 from ai_hydra.utils.SimCfg import SimCfg
 
 
@@ -55,13 +56,16 @@ class HydraMgr(HydraServer):
 
         self.debug = bool(debug)
         self.cfg = SimCfg()
+        self.hydra_rng: HydraRng | None = None
         self.snake: SnakeMgr | None = None
         self._train_mgr = None
         self._train_mgr_model_type: str | None = None
         self._methods.update(
             {
                 DMethod.HANDSHAKE: self.handshake,
-                DGameMethod.RESET_GAME: self.reset_game,
+                DGameMethod.PAUSE_RUN: self._pause_run,
+                DGameMethod.RESET_RUN: self._reset_run,
+                DGameMethod.RESUME_RUN: self._resume_run,
                 DGameMethod.START_RUN: self.start_run,
                 DGameMethod.STOP_RUN: self.stop_run,
                 DGameMethod.UPDATE_CONFIG: self.update_config,
@@ -73,7 +77,12 @@ class HydraMgr(HydraServer):
         self._runs: dict[str, asyncio.Task[None]] = {}
         self._client_id = None
         self._sim_running = False
+        self._sim_paused = False
         self._db_mgr = None
+
+        self._run_loop_task: asyncio.Task[None] | None = None
+        self._run_loop_pause_event = asyncio.Event()
+        self._run_loop_stop_event = asyncio.Event()
 
     def _ensure_train_mgr(self):
         """
@@ -113,9 +122,14 @@ class HydraMgr(HydraServer):
             self._train_mgr.snake_mgr = self.snake
             return self._train_mgr
 
-        # Hydra-style RNG streams (minted from the existing SnakeMgr)
-        _, policy_rng = self.snake.new_rng()
-        _, replay_rng = self.snake.new_rng()
+        self.hydra_rng = HydraRng(
+            log_level=self.log_level, pub_func=self.mq.publish_events
+        )
+        master_seed = self.hydra_rng.get_seed()
+
+        # Hydra-style RNG streams
+        _, policy_rng = self.hydra_rng.new_rng()
+        _, replay_rng = self.hydra_rng.new_rng()
 
         device = torch.device("cpu")  # keep simple; GPU can be passed later
 
@@ -126,7 +140,7 @@ class HydraMgr(HydraServer):
                 log_level=self.log_level,
                 pub_func=self.mq.publish_events,
             )
-            model = LinearModel(log_level=self.log_level)
+            model = LinearModel(log_level=self.log_level, seed=master_seed)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
@@ -151,7 +165,7 @@ class HydraMgr(HydraServer):
                 log_level=self.log_level,
                 pub_func=self.mq.publish_events,
             )
-            model = RNNModel(log_level=self.log_level)
+            model = RNNModel(log_level=self.log_level, seed=master_seed)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
@@ -212,6 +226,11 @@ class HydraMgr(HydraServer):
             else:
                 payload[DGameField.SIM_RUNNING] = False
 
+            if self._sim_paused:
+                payload[DGameField.SIM_PAUSED] = True
+            else:
+                payload[DGameField.SIM_PAUSED] = False
+
             reply = HydraMsg(
                 sender=self.identity,
                 target=msg.sender,
@@ -225,7 +244,35 @@ class HydraMgr(HydraServer):
             self.log.critical(f"ERROR: {e}")
             self.log.critical(f"TRACEBACK: {traceback.format_exc()}")
 
-    async def reset_game(self, msg: HydraMsg) -> None:
+    async def _pause_run(self, msg: HydraMsg) -> None:
+        """
+        Pause a running simulation.
+        """
+        self._run_loop_pause_event.set()
+        self._sim_paused = True
+        reply = HydraMsg(
+            sender=self.identity,
+            target=msg.sender,
+            method=DGameMethod.PAUSE_RUN_REPLY,
+        )
+        if self.mq is not None:
+            await self.mq.send(reply)
+
+    async def _resume_run(self, msg: HydraMsg) -> None:
+        """
+        Resume a paused simulation.
+        """
+        self._sim_paused = False
+        self._run_loop_pause_event.clear()
+        reply = HydraMsg(
+            sender=self.identity,
+            target=msg.sender,
+            method=DGameMethod.RESUME_RUN_REPLY,
+        )
+        if self.mq is not None:
+            await self.mq.send(reply)
+
+    async def _reset_run(self, msg: HydraMsg) -> None:
         """
         Reset (or create) the sender's snake session and reply with snapshot.
         """
@@ -237,7 +284,7 @@ class HydraMgr(HydraServer):
         reply = HydraMsg(
             sender=self.identity,
             target=msg.sender,
-            method=DGameMethod.RESET_GAME,
+            method=DGameMethod.RESET_RUN_LOOP,
             payload=payload,
         )
         if self.mq is not None:
@@ -252,11 +299,13 @@ class HydraMgr(HydraServer):
         try:
             model_type = self.cfg.get(DNetField.MODEL_TYPE)
 
+            train_mgr = self._ensure_train_mgr()
             snake = self.snake = SnakeMgr(
-                cfg=self.cfg, log_level=self.log_level
+                cfg=self.cfg,
+                log_level=self.log_level,
+                hydra_rng=self.hydra_rng,
             )
             mq = self.mq
-            train_mgr = self._ensure_train_mgr()
             train_mgr.policy.reset_episode()
 
             sess = snake.get_session(client_id)
@@ -267,96 +316,109 @@ class HydraMgr(HydraServer):
             grad_steps = 1
             batch_size = 64
 
-            while True:
-                # Auto-reset when done
-                if sess.done:
-                    snake.reset_session(client_id, seed=None)
-                    sess = snake.get_session(client_id)
-                    train_mgr.policy.reset_episode()
+            try:
+                while not self._run_loop_stop_event.is_set():
 
-                # Decide if we will publish per_step *this tick*
-                want_step = self.cfg.get(DNetField.PER_STEP)
+                    while self._run_loop_pause_event.is_set():
+                        await asyncio.sleep(0.1)
 
-                # Choose action (server-side)
-                old_state = sess.board.get_state()
-                action = train_mgr.policy.select_action(
-                    old_state,
-                )
+                    # Auto-reset when done
+                    if sess.done:
+                        snake.reset_session(client_id)
+                        sess = snake.get_session(client_id)
+                        train_mgr.policy.reset_episode()
 
-                # Advance sim
-                state_dict, scores_payload, step_payload, ep_payload = (
-                    snake.step(
-                        client_id=client_id,
-                        action=action,
+                    # Decide if we will publish per_step *this tick*
+                    want_step = self.cfg.get(DNetField.PER_STEP)
+
+                    # Choose action (server-side)
+                    old_state = sess.board.get_state()
+                    action = train_mgr.policy.select_action(
+                        old_state,
                     )
-                )
 
-                done = state_dict[DGameField.DONE]
+                    # Advance sim
+                    state_dict, scores_payload, step_payload, ep_payload = (
+                        snake.step(
+                            client_id=client_id,
+                            action=action,
+                        )
+                    )
 
-                # Episode-end bookkeeping
-                if done:
-                    sess.epoch += 1
-                    count += 1
+                    done = state_dict[DGameField.DONE]
 
-                    if count % 100 == 0:
-                        self.log.info(f"Epoch: {count}")
+                    # Episode-end bookkeeping
+                    if done:
+                        sess.epoch += 1
+                        count += 1
 
-                    # Epsilon
-                    await train_mgr.policy.played_game()
-                    ep_payload[DNetField.CUR_EPSILON] = (
-                        train_mgr.policy.cur_epsilon()
+                        if count % 100 == 0:
+                            self.log.info(f"Epoch: {count}")
+
+                        # Epsilon
+                        await train_mgr.policy.played_game()
+                        ep_payload[DNetField.CUR_EPSILON] = (
+                            train_mgr.policy.cur_epsilon()
+                        )
+
+                        if model_type == DField.RNN:
+                            # train_mgr.replay.append(t=t, final_score=sess.score)
+                            await train_mgr.trainer.train_long_memory()
+
+                        # Loss, if available, is loaded into the telemetry here
+                        loss = train_mgr.trainer.get_avg_loss()
+                        if loss is not None:
+                            ep_payload[DNetField.LOSS] = loss
+
+                    reward = state_dict[DGameField.REWARD]
+                    new_state = state_dict[DNetField.NEXT_STATE]
+
+                    # Build/store transition (unchanged for now)
+                    t = Transition(
+                        old_state=tuple(old_state),
+                        action=int(action),
+                        reward=float(reward),
+                        new_state=tuple(new_state),
+                        done=bool(done),
                     )
 
                     if model_type == DField.RNN:
-                        # train_mgr.replay.append(t=t, final_score=sess.score)
-                        await train_mgr.trainer.train_long_memory()
+                        await train_mgr.replay.append(
+                            t=t, final_score=sess.score
+                        )
+                    else:
+                        await train_mgr.replay.append(t=t)
 
-                    # Loss, if available, is loaded into the telemetry here
-                    loss = train_mgr.trainer.get_avg_loss()
-                    if loss is not None:
-                        ep_payload[DNetField.LOSS] = loss
+                    if model_type == DField.LINEAR:
+                        if sess.step_n % train_every == 0:
+                            for _ in range(grad_steps):
+                                await train_mgr.trainer.train_long_memory()
 
-                reward = state_dict[DGameField.REWARD]
-                new_state = state_dict[DNetField.NEXT_STATE]
+                    # Publish
+                    if mq is not None:
+                        # Publish scores at every step
+                        await mq.publish_scores(scores_payload)
 
-                # Build/store transition (unchanged for now)
-                t = Transition(
-                    old_state=tuple(old_state),
-                    action=int(action),
-                    reward=float(reward),
-                    new_state=tuple(new_state),
-                    done=bool(done),
-                )
+                        # Publish per epsisode if the episode is "done"
+                        if done:
+                            await mq.publish_per_episode(ep_payload)
+                        # publish per_step only if enabled and payload exists
+                        if want_step and step_payload:
+                            await mq.publish_per_step(step_payload)
 
-                if model_type == DField.RNN:
-                    await train_mgr.replay.append(t=t, final_score=sess.score)
-                else:
-                    await train_mgr.replay.append(t=t)
+                    # Yield to event loop so MQ IO stays healthy
+                    delay = (
+                        0.0
+                        if not want_step
+                        else self.cfg.get(DNetField.MOVE_DELAY)
+                    )
+                    await asyncio.sleep(delay)
 
-                if model_type == DField.LINEAR:
-                    if sess.step_n % train_every == 0:
-                        for _ in range(grad_steps):
-                            await train_mgr.trainer.train_long_memory()
-
-                # Publish
-                if mq is not None:
-                    # Publish scores at every step
-                    await mq.publish_scores(scores_payload)
-
-                    # Publish per epsisode if the episode is "done"
-                    if done:
-                        await mq.publish_per_episode(ep_payload)
-                    # publish per_step only if enabled and payload exists
-                    if want_step and step_payload:
-                        await mq.publish_per_step(step_payload)
-
-                # Yield to event loop so MQ IO stays healthy
-                delay = (
-                    0.0
-                    if not want_step
-                    else self.cfg.get(DNetField.MOVE_DELAY)
-                )
-                await asyncio.sleep(delay)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                self.log.critical(f"ERROR: {e}")
+                self.log.critical(f"STACKTRACE: {traceback.format_exc()}")
 
         except asyncio.CancelledError:
             return
@@ -382,8 +444,10 @@ class HydraMgr(HydraServer):
                     DGameField.INFO: {"status": "already_running"},
                 }
             else:
-                task = asyncio.create_task(self._run_loop(client_id))
-                self._runs[client_id] = task
+                self._run_loop_task = asyncio.create_task(
+                    self._run_loop(client_id)
+                )
+                self._runs[client_id] = self._run_loop_task
                 payload = {
                     DGameField.OK: True,
                     DGameField.INFO: {"status": "started"},

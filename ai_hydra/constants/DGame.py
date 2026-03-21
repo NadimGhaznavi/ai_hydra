@@ -67,6 +67,8 @@ class DGameField:
     SCORE_DELTA: Final[str] = "score_delta"
     SEED: Final[str] = "seed"
     SESSION_ID: Final[str] = "session_id"
+    SIM_PAUSED: Final[str] = "sim_paused"
+    SIM_RESUMED: Final[str] = "sim_resumed"
     SIM_RUNNING: Final[str] = "sim_running"
     SNAKE: Final[str] = "snake"
     SNAKE_BODY: Final[str] = "snake_body"
@@ -85,10 +87,11 @@ class DGameLabel:
 
 
 class DGameMethod:
-    RESET_GAME: Final[str] = "reset_game"
+    PAUSE_RUN: Final[str] = "pause_run"
+    PAUSE_RUN_REPLY: Final[str] = "pause_run_reply"
+    RESET_RUN: Final[str] = "reset_run"
+    RESUME_RUN: Final[str] = "resume_run"
+    RESUME_RUN_REPLY: Final[str] = "resume_run_reply"
     START_RUN: Final[str] = "start_run"
-    XXX_GAME_STEP: Final[str] = "game_step"
-    XXX_PUB_TYPE: Final[str] = "pub_type"
     STOP_RUN: Final[str] = "stop_run"
-    XXX_UPDATE: Final[str] = "update"
     UPDATE_CONFIG: Final[str] = "update_config"

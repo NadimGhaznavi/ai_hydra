@@ -129,8 +129,9 @@ class HydraSnapshot:
             [
                 (
                     "Gearbox",
-                    gearbox_str,
-                )
+                    'The ATH_GEARBOX controls the "Sequence Length"/"Batch Size" combination associated with a specific \*ATH gear\*.items.',
+                ),
+                ("ATH_GEARBOX", gearbox_str),
             ],
         )
 
