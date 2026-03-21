@@ -274,18 +274,14 @@ class HydraMgr(HydraServer):
 
     async def _reset_run(self, msg: HydraMsg) -> None:
         """
-        Reset (or create) the sender's snake session and reply with snapshot.
+        Stop the running simulation.
         """
-        seed = msg.payload.get(DGameField.SEED)
-        payload = self.snake.reset(
-            msg.sender, seed=int(seed) if seed is not None else None
-        )
+        self._run_loop_stop_event.set()
 
         reply = HydraMsg(
             sender=self.identity,
             target=msg.sender,
-            method=DGameMethod.RESET_RUN_LOOP,
-            payload=payload,
+            method=DGameMethod.RESET_RUN_REPLY,
         )
         if self.mq is not None:
             await self.mq.send(reply)

@@ -90,6 +90,7 @@ class DGameMethod:
     PAUSE_RUN: Final[str] = "pause_run"
     PAUSE_RUN_REPLY: Final[str] = "pause_run_reply"
     RESET_RUN: Final[str] = "reset_run"
+    RESET_RUN_REPLY: Final[str] = "reset_run_reply"
     RESUME_RUN: Final[str] = "resume_run"
     RESUME_RUN_REPLY: Final[str] = "resume_run_reply"
     START_RUN: Final[str] = "start_run"

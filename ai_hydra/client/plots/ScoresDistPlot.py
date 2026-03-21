@@ -29,6 +29,11 @@ class ScoresDistPlot(Widget):
             PlotWidget(id=DField.PLOT_RECENT_SCORES_DIST),
         )
 
+    def clear(self):
+        self.query_one(f"#{DField.PLOT_SCORES_DIST}").clear()
+        self.query_one(f"#{DField.PLOT_RECENT_SCORES_DIST}").clear()
+        self.plot_all()
+
     def plot_all(self):
         self.plot_scores_dist()
         self.plot_recent_scores_dist()

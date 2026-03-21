@@ -31,6 +31,9 @@ class EventLog(Widget):
             Log(highlight=True, auto_scroll=True, id=DField.EVENT_LOG_LOG),
         )
 
+    def clear(self):
+        self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).clear()
+
     def add_event(self, ev_type: str, event: str):
         elap_time = self.metrics.get_elapsed_time()
 

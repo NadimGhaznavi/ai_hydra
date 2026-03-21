@@ -27,6 +27,10 @@ class GameScorePlot(Widget):
             PlotWidget(id=DField.PLOT_CUR_SCORE),
         )
 
+    def clear(self):
+        self.query_one(f"#{DField.PLOT_HIGHSCORES}", PlotWidget).clear()
+        self.query_one(f"#{DField.PLOT_CUR_SCORE}", PlotWidget).clear()
+
     def plot_cur_scores(self):
         score_events = self.metrics.get_cur_score_plot_points()
         if not score_events:

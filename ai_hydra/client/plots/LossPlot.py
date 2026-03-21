@@ -23,6 +23,11 @@ class LossPlot(Widget):
         super().__init__(*args, **kwargs)
         self.metrics = metrics
 
+    def clear(self):
+        self.query_one(f"#{DField.PLOT_LOSS}", PlotWidget).clear()
+        self.query_one(f"#{DField.PLOT_RECENT_LOSS}", PlotWidget).clear()
+        self.plot_all()
+
     def compose(self) -> ComposeResult:
         yield Horizontal(
             PlotWidget(id=DField.PLOT_LOSS),

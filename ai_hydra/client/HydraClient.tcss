@@ -311,6 +311,13 @@ EventLog {
 }
 /* ------------------------------------- */
 
+.sim_stopped #reset_run {
+    display: none;
+}
+.sim_stopped #reset_run_divider {
+    display: none;
+}
+
 .sim_stopped #rnn_layers_label {
     display: none;
 }
@@ -432,6 +439,24 @@ EventLog {
 .bad_handshake #learning_rate_label {
     display: none;
 }
+.bad_handshake #min_epsilon_label {
+    display: none;
+}
+.bad_handshake #min_epsilon_input {
+    display: none;
+}
+.bad_handshake #model_type_label {
+    display: none;
+}
+.bad_handshake #model_type_select {
+    display: none;
+}
+.bad_handshake #move_delay_input {
+    display: none;
+}
+.bad_handshake #move_delay_label {
+    display: none;
+}
 .bad_handshake #pause_run {
     display: none;
 }
@@ -442,6 +467,12 @@ EventLog {
     display: none;
 }
 .bad_handshake #random_seed_label {
+    display: none;
+}
+.bad_handshake #reset_run {
+    display: none;
+}
+.bad_handshake #reset_run_divider {
     display: none;
 }
 .bad_handshake #resume_run {
@@ -465,27 +496,6 @@ EventLog {
 .bad_handshake #rnn_tau_label {
     display: none;
 }
-.bad_handshake #min_epsilon_label {
-    display: none;
-}
-.bad_handshake #min_epsilon_input {
-    display: none;
-}
-.bad_handshake #model_type_label {
-    display: none;
-}
-.bad_handshake #model_type_select {
-    display: none;
-}
-.bad_handshake #move_delay_input {
-    display: none;
-}
-.bad_handshake #move_delay_label {
-    display: none;
-}
-.bad_handshake #random_seed_label {
-    display: none;
-}
 .bad_handshake #seq_length_input {
     display: none;
 }
@@ -493,6 +503,12 @@ EventLog {
     display: none;
 }
 .bad_handshake #seq_length_opt {
+    display: none;
+}
+.bad_handshake #snapshot {
+    display: none;
+}
+.bad_handshake #snapshot_divider {
     display: none;
 }
 .bad_handshake #start_run {

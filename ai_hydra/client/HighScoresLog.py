@@ -30,3 +30,6 @@ class HighScoresLog(Widget):
         self.query_one(f"#{DField.HIGHSCORES}", Log).write_line(
             f"{event.epoch:7d}{event.highscore:7d}{event.elapsed_time:>13s}"
         )
+
+    def clear(self) -> None:
+        self.query_one(f"#{DField.HIGHSCORES}", Log).clear()

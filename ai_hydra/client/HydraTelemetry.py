@@ -36,6 +36,12 @@ class HydraTelemetry(Widget):
         self.loss_plot = LossPlot(id=DField.LOSS_PLOT, metrics=self.metrics)
         self.event_log = EventLog(id=DField.EVENT_LOG, metrics=self.metrics)
 
+    def clear(self):
+        self.event_log.clear()
+        self.loss_plot.clear()
+        self.scores_dist_plot.clear()
+        self.game_score_plot.clear()
+
     def compose(self) -> ComposeResult:
         with TabbedContent(
             DLabel.GAME_SCORES,

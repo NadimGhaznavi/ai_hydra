@@ -32,6 +32,9 @@ class HydraMetrics:
 
     def __init__(self, initial_epsilon: float) -> None:
         self._cur_epsilon = initial_epsilon
+        self._init_data()
+
+    def _init_data(self):
         self._cur_epoch: int = 0
         self._cur_loss: float | None = None
         self._cur_score: int = 0
@@ -74,6 +77,10 @@ class HydraMetrics:
         self.add_shift_event(
             gear=0, seq_length=DRNN.SEQ_LENGTH, batch_size=DRNN.BATCH_SIZE
         )
+
+    def clear(self, initial_epsilon: float) -> None:
+        self._cur_epsilon = initial_epsilon
+        self._init_data()
 
     def add_bucket_stats(self, bucket_counts) -> None:
 

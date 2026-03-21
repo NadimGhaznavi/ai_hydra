@@ -175,7 +175,9 @@ class HydraClientTui(App):
             Button(label=DLabel.RESUME, id=DField.RESUME_RUN, compact=True),
             Label(id=DField.RESUME_RUN_DIVIDER),
             Button(label=DLabel.SNAPSHOT, id=DField.SNAPSHOT, compact=True),
-            Label(),
+            Label(id=DField.SNAPSHOT_DIVIDER),
+            Button(label=DLabel.RESET, id=DField.RESET_RUN, compact=True),
+            Label(id=DField.RESET_RUN_DIVIDER),
             Button(label=DLabel.QUIT, id=DMethod.QUIT, compact=True),
             id=DField.BUTTONS,
         )
@@ -841,6 +843,22 @@ class HydraClientTui(App):
         )
         await self.mq.send(msg)
 
+    def reset_tui(self):
+        # Reset metrics data
+        initial_epsilon = self.query_one(
+            f"#{DField.INITIAL_EPSILON_INPUT}", Input
+        )
+        self.metrics.clear(initial_epsilon=initial_epsilon)
+        # Clear widgets
+        self.query_one(f"#{DField.HIGHSCORES_LOG}", HighScoresLog).clear()
+        self.query_one(f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry).clear()
+        self._w_board_box.border_title = ""
+        self.query_one(f"#{DField.HYDRA_TELEMETRY}").border_subtitle = ""
+        self.query_one(
+            f"#{DField.HIGHSCORES_LOG}", HighScoresLog
+        ).border_subtitle = ""
+        self.query_one(f"#{DField.CUR_EPSILON}", Label).update("")
+
     async def _send_handshake(self):
         msg = HydraMsg(
             sender=DModule.HYDRA_CLIENT,
@@ -943,7 +961,6 @@ class HydraClientTui(App):
             if reply.method == DGameMethod.PAUSE_RUN_REPLY:
                 self.add_class(DGameField.SIM_PAUSED)
                 self.remove_class(DGameField.SIM_RESUMED)
-                print(reply.method)
         except asyncio.TimeoutError:
             pass
 
@@ -960,7 +977,6 @@ class HydraClientTui(App):
             if reply.method == DGameMethod.RESUME_RUN_REPLY:
                 self.remove_class(DGameField.SIM_PAUSED)
                 self.add_class(DGameField.SIM_RESUMED)
-                print(reply.method)
         except asyncio.TimeoutError:
             pass
 
@@ -968,12 +984,21 @@ class HydraClientTui(App):
         msg = HydraMsg(
             sender=DModule.HYDRA_CLIENT,
             target=DModule.HYDRA_MGR,
-            method=DGameMethod.RESET_GAME,
+            method=DGameMethod.RESET_RUN,
         )
         await self.mq.send(msg)
 
         try:
             reply = await self.mq.recv()
+            if reply.method == DGameMethod.RESET_RUN_REPLY:
+                self.mq.disable_events_sub()
+                self.mq.disable_per_episode_sub()
+                self.mq.disable_per_step_sub()
+                self.mq.disable_scores_sub()
+                self.remove_class(DGameField.SIM_PAUSED)
+                self.remove_class(DGameField.SIM_RUNNING)
+                self.add_class(DField.SIM_STOPPED)
+                self.reset_tui()
         except asyncio.TimeoutError:
             pass
 
