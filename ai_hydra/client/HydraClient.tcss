@@ -1,19 +1,19 @@
 Screen {
     layout: grid;
-    grid-size: 4 8;
-    grid-rows: 3 4 6 6 4 3 22 3;
+    grid-size: 4 9;
+    grid-rows: 3 4 6 3 3 4 3 22 3;
     grid-columns: 20 44 32 37;
 }
 
 Button {
-    row-span: 2;
+    row-span: 3;
     background: #082641;
     padding: 0 1;
     border: none;
 }
 
 HighScoresLog {
-    row-span: 5;
+    row-span: 6;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
@@ -29,7 +29,7 @@ Switch {
 }
 
 #board_box {
-    row-span: 5;
+    row-span: 6;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
@@ -45,7 +45,7 @@ Switch {
 }
 
 #buttons {
-    row-span: 2;
+    row-span: 3;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
@@ -192,6 +192,7 @@ EventLog {
 /* -------------------------------------------- */
 
 #model {
+    row-span: 2;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #72af75;

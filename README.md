@@ -1,28 +1,29 @@
-![HydraClient TUI](https://aihydra.osoyalce.com/images/hydra-client.png)
-
 # AI Hydra - Reinforcement Learning Platform
+
+![HydraClient TUI](https://aihydra.osoyalce.com/images/hydra-client.png)
 
 ## Overview
 
-AI Hydra is a distributed application that includes a Textual TUI client, a 
-simple router, and a headless server. Communication is over ZeroMQ. The basic
-functionality is that the Client sends control messages (e.g., handshake, start)
-to the router, which forwards them to the server. When the server is running,
-it publishes board and other telemetry information on a ZeroMQ PUB/SUB socket.
-The client subscribes to the server's PUB socket and displays the game state.
+AI Hydra is a distributed reinforcement learning platform composed of three core components:
 
-The server splits the simulation telemetry into two ZeroMQ PUB topics. One 
-topic provides *per-step* updates that include the actual board state (snake
-position, food position, and current score). The other topic publishes per 
-episode information such as high score, NN loss, current epsilon, and more.
+- **HydraClient** — a Textual TUI for control and visualization  
+- **HydraRouter** — a lightweight message router  
+- **HydraMgr** — a headless simulation and training engine  
 
-The client can select *Turbo* mode to disable per-step updates. The board and
-current score are no longer updated, but the server runs more than 15x faster.
-This is useful for running experiments quickly.
+All components communicate over **ZeroMQ**, forming a clean separation between control, execution, and visualization.
 
-The headless server uses a neural network and a policy stack to play the game.
-The policy stack includes an implementation of the traditional Epsilon-Greedy
-algorithm to encourage exploration at the beginning of a simulation run. 
+The client sends control messages (e.g., *handshake*, *start*) to the router, which forwards them to the server. The server runs the simulation and publishes telemetry via PUB/SUB sockets. The client subscribes to these streams and renders the system state in real time.
+
+Telemetry is split into two channels:
+
+- **Per-step updates** — board state (snake position, food, score)  
+- **Per-episode updates** — metrics (high score, loss, epsilon, etc.)  
+
+This separation allows fine-grained control over performance and observability.
+
+### Turbo Mode
+
+The client supports a **Turbo mode** that disables per-step updates. This removes rendering overhead and allows the simulation to run **15×+ faster**, making it ideal for rapid experimentation.
 
 ## Installation
 
@@ -32,140 +33,214 @@ algorithm to encourage exploration at the beginning of a simulation run.
    hydra-venv> pip install ai-hydra
 ```
 
+---
+
 ## Distributed Architecture
 
 ![Architecture](https://aihydra.osoyalce.com/images/architecture.png)
 
-The *HydraClient*, *HydraRouter*, and *HydraMgr* are run in three different
-terminals. The project supports running the client, router, and server on
-different machines, but at this early stage in the project, it's recommended
-that all three be run on the same machine.
+Each component runs independently:
+
+- HydraClient
+- HydraRouter
+- HydraMgr
+
+They can be distributed across machines, but for early experimentation it’s recommended to run all three locally.
+
+---
 
 ## Startup
 
-Start the *HydraClient* in the first terminal:
+Start each component in its own terminal:
+
+**1. Client**
 
 ```
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-client
 ```
 
-Start the *HydraRouter* in a second terminal:
+**2. Router**
 
 ```
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-router
 ```
 
-Finally, start the *HydraMgr* in a third terminal:
+**3. Server**
 
 ```
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-mgr
 ```
 
-Click the *Start* button in the *HydraRouter* to start the routing functions.
-Click the *Handshake* button in the *HydraClient*. This causes a `HANDSHAKE` 
-ZeroMQ message to be sent through the *HydraRouter* to the *HydraMgr*. 
+After starting the three processes:
 
-- If the server cannot be reached, a console message appears.
-- If the server can be reached
-  - And no simulation is running, then the *Handshake* is replaced with a *Start* button, and settings appear which can be configured.
-  - If a simulation is running, then the *Handshake* button is replaced with a *Update Config* button, and only runtime values are configurable. The settings from the running simulation are displayed in the *HydraClient*.
+1. Click **Start** in the *HydraRouter*
+2. Click **Handshake** in the *HydraClient*
+
+This sends a `HANDSHAKE` message through the router to the server.
+
+If the client cannot connect to the server, then nothing will happen.
+
+If the server is reachable, then the **Start** button appears, and the simulation settings will also appear and be editable.
+
+To launch the simulation, click on the **Start** button. Upon starting, the **Pause** and **Reset** buttons will appear. These allow the user to pause a running simulation, or reset the simulation, which takes you back to the *post-handshake* display.
+
+---
 
 ## Shutdown
 
-In this early release, the server can only be stopped by hitting `Control-C` in 
-the terminal where it's running. The client is stopped by hitting the *Quit* key, 
-but the shutdown is currently not 100% clean, so an additional `Control-C` may be 
-required to fully terminate the *HydraClient*. The *HydraRouter* can be shut down 
-by clicking the *Quit* button.
+In this early release, the server can only be stopped by hitting `Control-C` in the terminal where it's running. The client is stopped by hitting the **Quit** key. The *HydraRouter* can be shut down by clicking the *Quit* button.
 
-A clean shutdown will be implemented for the client and server in a future release.
+The shutdown process is not 100% clean, so you may be required to also hit `Control-C` on the client to fully stop it.
 
-## Fully Deterministic
+---
 
-Simulations are fully deterministic with a few caveats:
+## Deterministic Simulations
 
-- The user must click the *Turbo* button before starting the simulation
-- The user cannot switch back to *Normal* mode during the simulation
-- The HydraMgr must be restarted after a simulation run
+Simulations are **fully deterministic.**
 
-This means that the **exact** same scores will be achieved at the exact same
-game number during a simulation run. This makes true comparisons between runs
-possible.
+Given the same configuration and random seed:
+
+- Episode progression is identical
+- Scores occur at the same episodes
+- Pausing/resuming does not affect outcomes
+
+This enables reliable experimentation and reproducibility.
+
+You can also vary only the random seed to validate that results are not artifacts of a *“lucky run.”*
+
+---
 
 ## Supported Models: Linear and RNN
 
-This project includes a *Linear* and an *RNN* for the backend neural network.
-The choice of model is made available in the TUI with a simple drop down 
-menu.
+- Linear Model
+- Recurrent Neural Network (RNN)
+
+Model selection is available directly in the TUI.
+
+---
 
 ## Visualizations
 
-The TUI includes real-time visualzations. The screenshot at the top of this
-document shows the actual Snake Game, a *high scores* widget, and two plots
-at the bottom; a *high score* plot and a *current score* plot.
+The TUI provides real-time insight into training:
 
-Other visualizations are shown below:
+- Live Snake board
+- High score tracking
+- Score plots
+
+Views include:
+
+### High Scores, Current and Average Current Scores
+
+[Scores](https://aihydra.osoyalce.com/images/hydra-client.png)
 
 ### Loss
 
-The loss plotted over the duration of the running simulation and a short, 
-75 episode, sliding window showing recent loss.
+- Full training loss over time
+- Sliding window (recent 75 episodes)
 
 ![Loss Plot](https://aihydra.osoyalce.com/images/loss-plot.png)
 
-### Scores Histogram
+### Scores Distribution
 
-This plot shows the score distribution over the simulation run and a second plot 
-with a sliding window showing a histogram of the scores over the previous 500 games.
+- Global score histogram
+- Recent performance window (last 500 episodes)
 
 ![Score Distribution](https://aihydra.osoyalce.com/images/scores-histogram.png)
 
 ### Event Log
 
-This isn't a plot, it's an event log containing key events. The information
-in this widget is also available in the *Snapshot Report*.
+A structured event stream capturing system behavior:
+
+- Simulation lifecycle
+- Replay memory transitions
+- Gear shifts and thresholds
 
 ![Event Log](https://aihydra.osoyalce.com/images/event-log.png)
 
+---
+
 ## ATH Replay Memory
 
-The ATH (Adaptive Temporal Horizon) Replay Memory is not a static buffer. It’s a system that evolves with the model.
+The **ATH (Adaptive Temporal Horizon) Replay Memory** is a dynamic system that evolves with the agent.
 
-Rather than locking in a single sequence length and batch size, ATH introduces a gearbox that shifts as the agent improves. Early on, it prioritizes speed and simplicity with short sequences and large batches. As the agent becomes more capable, it transitions into longer sequences and smaller batches, allowing the model to reason over deeper time horizons.
+Instead of using fixed training parameters, ATH introduces a gearbox that adjusts:
 
-But temporal adaptation is only part of the story.
+- **Sequence length**
+- **Batch size**
 
-ATH Replay Memory also uses a bucketed sampling strategy to address a common issue in reinforcement learning: training data naturally follows the agent’s score distribution. Without intervention, the model would mostly train on “typical” games and rarely revisit edge cases such as high-scoring runs or rare failure modes.
+### Adaptive Training Dynamics
 
-To counter this, transitions are grouped into buckets based on outcome characteristics (e.g., score ranges). During sampling, these buckets are used to ensure a more balanced and representative training set, preventing the model from overfitting to the most common experiences. The *memory* widget at the bottom shows the buckets and how many sequences each bucket contains. The shading shows how full the buckets are relative to each other.
+- Early training → short sequences, large batches (fast learning)
+- Later training → long sequences, small batches (deep temporal reasoning)
+
+The system shifts gears based on observed performance, not fixed schedules.
+
+### Bucketed Sampling
+
+Training data is not uniformly useful.
+
+Without intervention, the model overfits to typical gameplay and neglects:
+
+- Rare high-scoring runs
+- Edge-case failures
+
+ATH addresses this by grouping transitions into buckets based on outcomes.
+
+Sampling pulls from across buckets, ensuring:
+
+- Diverse training signals
+- Visibility into rare but critical experiences
+- Reduced bias toward median performance
+
+The TUI memory widget visualizes:
+
+- Bucket distribution
+- Relative capacity
+- System balance over time
 
 ![ATH Memory](https://aihydra.osoyalce.com/images/ath-memory.png)
 
-In practice, this means:
+### System Properties
 
-- Early training is fast and efficient
-- Later training becomes more context-aware and strategic
-- Rare but important experiences remain visible to the model
-- The system adapts both what it learns from and how it learns
+- Training adapts **how** it learns (gearbox)
+- Training adapts **what** it learns (buckets)
+- Replay memory remains **decoupled and observable**
 
-Replay memory itself remains clean and decoupled from global state. It emits lifecycle events (warm-up, capacity, gear shifts), which are enriched and tracked by the client. This makes the training process observable in terms of state transitions, not just outcomes.
-phase transitions.
+Lifecycle events (warm-up, capacity, gear shifts) are emitted and tracked in real time.
 
-## Blazing Speed
+---
 
-Simulations run **BLAZINGLY** fast on a consumer grade laptop without a GPU.
-This is due to careful architectural design decisions. The *Replay Memory*,
-*Model*, and *Trainer* work in a pipline, minimizing data transformations.
+## Performance
+
+AI Hydra is designed for **high-throughput training on consumer hardware.**
+
+Key design choices:
+
+- Pipeline architecture (memory → model → trainer)
+- Minimal data transformation overhead
+- Asynchronous telemetry via ZeroMQ
+
+The result: **extremely fast simulations without requiring a GPU**
+
+---
 
 ## Snapshot Report
 
-The *HydraClient TUI* includes a *Snapshot* button that creates a simple
-text file that captures the simulation settings. The system creates an
-`AI-Hydra` folder in your home directory. That is where snapshot files
-are created.
+The TUI includes a **Snapshot** feature that captures:
+
+- Configuration
+- Model parameters
+- Replay memory state
+- Event log
+- Performance metrics
+
+Snapshots are saved to a ``AI-Hydra`` directory that the system creates in the user's home directory.
+
+
+Example:
 
 ```
 📸 AI Hydra - Snapshot Report
@@ -372,3 +447,10 @@ Epoch  b1   b2   b3   b4   b5   b6   b7   b8   b9   b10  b11  b12  b13  b14  b15
 11500  287  280  267  257  240  227  207  187  169  152  133  117  100  80   62   52   38   29   23   19
 ```
 
+---
+
+## Closing Thought
+
+AI Hydra isn’t just running a simulation.
+
+It’s exposing the **mechanics of learning itself** — in real time, with structure, visibility, and control. Its high-performance architecture enables users to do **extremely fast iterations** and the visualizations enable **real-time analysis** that is augmented by the **Snapshot Reports.**

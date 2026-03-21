@@ -10,11 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 - A description of the displayed `ATH_GEARBOX` setting in the *Snapshot Report*.
-- **Pause/Resume** Functionality
+- Complete rewrite of the [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
+- **Pause/Resume** buttons
   - The *Hydra Client* now includes *Pause* and *Resume* buttons.
   - The visibility is implemented correctly, so only one button is ever visible.
   - This feature also works when *Hydra Client* connects to (un)paused, running simulation.
-
+- **Reset** button to reset the simulation.
+- Configurable *random seed*
+- Sane defaults for the *RTH Replay Memory* and the *RNN Model*.
 
 ---
 

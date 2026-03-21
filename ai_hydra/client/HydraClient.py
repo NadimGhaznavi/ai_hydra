@@ -278,13 +278,6 @@ class HydraClientTui(App):
             id=DField.EPSILON,
         )
 
-        # Turbo mode
-        yield Vertical(
-            Switch(value=False, id=DField.TURBO_MODE),
-            classes=DField.INPUT_FIELD,
-            id=DField.TURBO_BOX,
-        )
-
         # ----- Model ---
         yield Vertical(
             # Model type
@@ -348,6 +341,13 @@ class HydraClientTui(App):
                 classes=DField.INPUT_FIELD,
             ),
             id=DField.MODEL,
+        )
+
+        # Turbo mode
+        yield Vertical(
+            Switch(value=False, id=DField.TURBO_MODE),
+            classes=DField.INPUT_FIELD,
+            id=DField.TURBO_BOX,
         )
 
         # ------ Network ---
