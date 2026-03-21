@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 - A description of the displayed `ATH_GEARBOX` setting in the *Snapshot Report*.
+- **Pause/Resume** Functionality
+  - The *Hydra Client* now includes *Pause* and *Resume* buttons.
+  - The visibility is implemented correctly, so only one button is ever visible.
+  - This feature also works when *Hydra Client* connects to (un)paused, running simulation.
+
 
 ---
 

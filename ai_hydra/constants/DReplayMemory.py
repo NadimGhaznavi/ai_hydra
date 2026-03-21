@@ -43,8 +43,21 @@ GEAR => { ( THRESHOLD, SEQ_LENGTH, BATCH_SIZE ), ... }
 - When the AI achieves a score of 8 ten times, it shifts up a gear
   - seq_length is now 8, batch_size i 64
 """
-
 ATH_GEARBOX = {
+    1: (4, 64),
+    2: (8, 32),
+    3: (16, 16),
+    4: (24, 10),
+    5: (28, 9),
+    6: (32, 8),
+    7: (40, 6),
+    8: (48, 5),
+    9: (56, 4),
+    10: (64, 3),
+}
+
+
+V3_ATH_GEARBOX = {
     1: (4, 64),
     2: (6, 48),
     3: (8, 32),
