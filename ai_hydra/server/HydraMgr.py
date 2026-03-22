@@ -396,6 +396,12 @@ class HydraMgr(HydraServer):
                         if loss is not None:
                             ep_payload[DNetField.LOSS] = loss
 
+                        # Anti-Stagnation strategy
+                        if DNetField.FINAL_SCORE in scores_payload:
+                            await train_mgr.handle_stagnation(
+                                scores_payload[DNetField.FINAL_SCORE]
+                            )
+
                     reward = state_dict[DGameField.REWARD]
                     new_state = state_dict[DNetField.NEXT_STATE]
 

@@ -35,6 +35,11 @@ class TrainRunStats:
     avg_loss: float
 
 
+MAX_STAGNANT_EPISODES = 600
+
+MAX_HARD_RESET_EPISODES = MAX_STAGNANT_EPISODES * 3
+
+
 class TrainMgr:
     """
     Training orchestrator.
@@ -68,3 +73,25 @@ class TrainMgr:
         self.replay = replay
         self.client_id = client_id
         self.model = model
+
+        self._stag_ep_count = 0
+        self._hard_reset_ep_count = 0
+        self._cur_highscore = 0
+
+    async def handle_stagnation(self, final_score):
+        if final_score > self._cur_highscore:
+            self._cur_highscore = final_score
+            self._stag_ep_count = 0
+            self._hard_reset_ep_count = 0
+            await self.replay.stagnation_cleared()
+
+        else:
+            self._stag_ep_count += 1
+            self._hard_reset_ep_count += 1
+
+        if self._stag_ep_count >= MAX_STAGNANT_EPISODES:
+            self._stag_ep_count = 0
+            self.replay.stagnation_warning()
+
+        if self._hard_reset_ep_count >= MAX_HARD_RESET_EPISODES:
+            await self.replay.hard_reset()

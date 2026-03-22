@@ -58,6 +58,10 @@ class ATHGearBox:
 
         self._cooldown_count = 0
 
+        # Handling stagnation by downshifting
+        self._stagnation_flag = False
+        self._stagnation_alert_count = 0
+
     async def get_gear(self) -> int:
         self._cur_bucket_counts = bucket_counts = (
             self.store.get_bucket_counts()
@@ -71,10 +75,51 @@ class ATHGearBox:
 
         chunk_count = self.get_thresh_bucket_chunk_count()
 
+        # We're dealing with a stagnation event
         if (
+            self._stagnation_flag
+            and self._cooldown_count > NUM_COOLDOWN_EPISODES
+        ):
+
+            # Downshift
+            self._cur_gear -= self._stagnation_alert_count
+
+            # Make sure we don't downshift past 1
+            if self._cur_gear < 1:
+                self._cur_gear = 1
+                return self._cur_gear
+
+            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+                self._cur_gear
+            ]
+            # Stay here till the cooldown period is over
+            self._cooldown_count = 0
+            # Clear the stagnation flag
+            self._stagnation_flag = False
+
+            # Log the event
+            await self.event.publish(
+                EventMsg(
+                    level=DHydraLog.WARNING,
+                    message=f"Stagnation alert({self._stagnation_alert_count}) - Shifting DOWN: {self._cur_gear + self._stagnation_alert_count} > {self._cur_gear}",
+                    ev_type=EV_TYPE.SHIFTING,
+                    payload={
+                        DField.GEAR: self._cur_gear,
+                        DField.SEQ_LENGTH: self._cur_seq_length,
+                        DField.BATCH_SIZE: self._cur_batch_size,
+                    },
+                )
+            )
+
+        # Time to shift UP
+        elif (
             chunk_count > UPSHIFT_COUNT_THRESHOLD
             and self._cooldown_count > NUM_COOLDOWN_EPISODES
         ):
+            # Upshifting resets the stagnation alert count. This allows the
+            # system to, up, up, stagnation-alert: down, up, up, ... to
+            # work it's way back up to the "top gear" again.
+            self._stagnation_alert_count = 0
             # The transmission has a top gear
             if self._cur_gear == self._highest_gear:
                 return self._cur_gear
@@ -87,7 +132,7 @@ class ATHGearBox:
             await self.event.publish(
                 EventMsg(
                     level=DHydraLog.INFO,
-                    message=f"Shifting UP: {self._cur_gear}",
+                    message=f"Shifting UP: {self._cur_gear - 1} > {self._cur_gear}",
                     ev_type=EV_TYPE.SHIFTING,
                     payload={
                         DField.GEAR: self._cur_gear,
@@ -96,6 +141,8 @@ class ATHGearBox:
                     },
                 )
             )
+
+        # Time to shift DOWN
         elif (
             chunk_count < DOWNSHIFT_COUNT_THRESHOLD
             and self._cooldown_count > NUM_COOLDOWN_EPISODES
@@ -130,5 +177,35 @@ class ATHGearBox:
             count += self._cur_bucket_counts[bucket_idx]
         return count
 
+    async def hard_reet(self):
+        self._stagnation_flag = False
+        self._cooldown_count = 0
+        old_gear = self._cur_gear
+        self._cur_gear = 3  # seq_length/batch_size == 8/32
+        self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+            self._cur_gear
+        ]
+        await self.event.publish(
+            EventMsg(
+                level=DHydraLog.INFO,
+                message=f"Hard Reset - Shifting DOWN: {old_gear} > {self._cur_gear}",
+            )
+        )
+
     def incr_cooldown_count(self):
         self._cooldown_count += 1
+
+    async def stagnation_cleared(self):
+        if self._stagnation_alert_count != 0:
+            await self.event.publish(
+                EventMsg(
+                    level=DHydraLog.INFO,
+                    message=f"Resetting stagnation count to 0",
+                )
+            )
+        self._stagnation_flag = False
+        self._stagnation_alert_count = 0
+
+    def stagnation_warning(self):
+        self._stagnation_flag = True
+        self._stagnation_alert_count += 1

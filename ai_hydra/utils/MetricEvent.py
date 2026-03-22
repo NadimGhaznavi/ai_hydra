@@ -42,7 +42,6 @@ class NiceEvent:
     no_safe_alternative: int
     trigger_rate: float
     override_rate: float
-    rescue_rate: float
 
 
 @dataclass(slots=True, frozen=True)

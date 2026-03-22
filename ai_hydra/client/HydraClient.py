@@ -821,7 +821,6 @@ class HydraClientTui(App):
             no_safe_alternatives = ev_payload[DEpsilonNice.NO_SAFE_ALTERNATIVE]
             trigger_rate = ev_payload[DEpsilonNice.TRIGGER_RATE]
             override_rate = ev_payload[DEpsilonNice.OVERRIDE_RATE]
-            rescue_rate = ev_payload[DEpsilonNice.RESCUE_RATE]
             self.metrics.add_nice_event(
                 window=window,
                 epoch=epoch,
@@ -832,7 +831,6 @@ class HydraClientTui(App):
                 no_safe_alternative=no_safe_alternatives,
                 trigger_rate=trigger_rate,
                 override_rate=override_rate,
-                rescue_rate=rescue_rate,
             )
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:

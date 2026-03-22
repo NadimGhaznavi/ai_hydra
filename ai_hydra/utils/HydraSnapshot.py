@@ -178,13 +178,13 @@ class HydraSnapshot:
         model_type = cfg.get(DNetField.MODEL_TYPE)
         if model_type == DField.LINEAR:
             p_value = DLinear.NICE_P_VALUE
+            nice_steps = DLinear.NICE_STEPS
         elif model_type == DField.RNN:
             p_value = DRNN.NICE_P_VALUE
+            nice_steps = DRNN.NICE_STEPS
         return self._build_kv_section(
             "🙂 Epsilon Nice",
-            [
-                ("P-Value", p_value),
-            ],
+            [("P-Value", p_value), ("Nice Steps", nice_steps)],
         )
 
     def _build_nice_table(self) -> list[str]:
@@ -199,7 +199,6 @@ class HydraSnapshot:
             "No Safe Alt",
             "Trigger Rate",
             "Override Rate",
-            "Rescue Rate",
         ]
         table_rows: list[list[str]] = []
 
@@ -213,7 +212,6 @@ class HydraSnapshot:
             no_safe_alternatives,
             trigger_rate,
             override_rate,
-            rescue_rate,
         ) in rows:
             table_rows.append(
                 [
@@ -226,7 +224,6 @@ class HydraSnapshot:
                     str(no_safe_alternatives),
                     f"{trigger_rate:.4f}",
                     f"{override_rate:.4f}",
-                    f"{rescue_rate:.4f}",
                 ]
             )
 

@@ -23,12 +23,13 @@ class DRNN:
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
     INITIAL_EPSILON: Final[float] = 0.999
-    EPSILON_DECAY_RATE: Final[float] = 0.988
+    EPSILON_DECAY_RATE: Final[float] = 0.995
     GAMMA: Final[float] = 0.96
     HIDDEN_SIZE: Final[int] = 320
     LEARNING_RATE: Final[float] = 0.002
     MINIMUM_EPSILON: Final[float] = 0.0
-    NICE_P_VALUE: Final[float] = 0.006
+    NICE_P_VALUE: Final[float] = 0.025
+    NICE_STEPS: Final[int] = 10
     OUTPUT_SIZE: Final[int] = 3
     RNN_LAYERS: Final[int] = 5
     SEQ_LENGTH: Final[int] = 4
@@ -59,6 +60,7 @@ class DLinear:
     INITIAL_EPSILON: Final[float] = 0.99
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
+    NICE_STEPS: Final[int] = 10
     EPSILON_DECAY_RATE: Final[float] = 0.98
 
 

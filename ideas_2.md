@@ -41,6 +41,9 @@ Trigger on:
 * no new high score for X episodes
 * OR mean declining
 
+
+if episodes_since_last_high_score > N:
+    trigger_exploration_boost()
 ---
 
 ## 2. 🧠 Reduce sequence length ceiling

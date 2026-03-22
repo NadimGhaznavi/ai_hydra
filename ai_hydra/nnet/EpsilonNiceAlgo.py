@@ -101,11 +101,6 @@ class EpsilonNiceAlgo:
     def get_stats(self) -> dict[str, int | float]:
         trigger_rate = self._triggered / self._calls if self._calls else 0.0
         override_rate = self._overrides / self._calls if self._calls else 0.0
-        rescue_rate = (
-            self._overrides / self._fatal_suggested
-            if self._fatal_suggested
-            else 0.0
-        )
 
         return {
             DEpsilonNice.EPOCH: self._epoch,
@@ -116,7 +111,6 @@ class EpsilonNiceAlgo:
             DEpsilonNice.NO_SAFE_ALTERNATIVE: self._no_safe_alternative,
             DEpsilonNice.TRIGGER_RATE: round(trigger_rate, 6),
             DEpsilonNice.OVERRIDE_RATE: round(override_rate, 6),
-            DEpsilonNice.RESCUE_RATE: round(rescue_rate, 6),
         }
 
     async def played_game(self) -> None:

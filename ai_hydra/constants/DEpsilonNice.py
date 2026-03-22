@@ -22,4 +22,3 @@ class DEpsilonNice:
     NO_SAFE_ALTERNATIVE: Final[str] = "no_safe_alternative"
     TRIGGER_RATE: Final[str] = "trigger_rate"
     OVERRIDE_RATE: Final[str] = "override_rate"
-    RESCUE_RATE: Final[str] = "rescue_rate"

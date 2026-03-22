@@ -9,45 +9,28 @@
 
 from typing import Sequence
 
-from ai_hydra.constants.DNNet import DRNN
-
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
 from ai_hydra.game.GameBoard import GameBoard
 
-
-NICE_STEPS = DRNN.NICE_STEPS  # 10
+NICE_STEPS = 5
 
 
 class EpsilonNicePolicy(HydraPolicy):
     def __init__(self, base_policy: HydraPolicy, epsilon_n: EpsilonNiceAlgo):
         self._base_policy = base_policy
         self._epsilon_n = epsilon_n
-        self._nice_steps_remaining = 0
 
     def select_action(self, state: Sequence[float], board: GameBoard) -> int:
         suggested = self._base_policy.select_action(state, board)
 
         if self._base_policy.cur_epsilon() > 0.0001:
-            self._nice_steps_remaining = 0
             return suggested
 
-        if self._nice_steps_remaining > 0:
-            self._nice_steps_remaining -= 1
-            return self._epsilon_n.maybe_override_action(
-                suggested_action=suggested,
-                board=board,
-            )
-
-        action = self._epsilon_n.maybe_override_action(
+        return self._epsilon_n.maybe_override_action(
             suggested_action=suggested,
             board=board,
         )
-
-        if action != suggested:
-            self._nice_steps_remaining = NICE_STEPS - 1
-
-        return action
 
     async def played_game(self):
         await self._base_policy.played_game()

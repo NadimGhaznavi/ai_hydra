@@ -217,7 +217,6 @@ class HydraMetrics:
         no_safe_alternative,
         trigger_rate,
         override_rate,
-        rescue_rate,
     ):
         self._epsilon_nice_events.append(
             NiceEvent(
@@ -230,7 +229,6 @@ class HydraMetrics:
                 no_safe_alternative=no_safe_alternative,
                 trigger_rate=trigger_rate,
                 override_rate=override_rate,
-                rescue_rate=rescue_rate,
             )
         )
 
@@ -299,7 +297,7 @@ class HydraMetrics:
 
     def get_epsilon_nice_events(
         self,
-    ) -> list[tuple[str, int, int, int, int, int, int, float, float, float]]:
+    ) -> list[tuple[str, int, int, int, int, int, int, float, float]]:
         return [
             (
                 e.window,
@@ -311,7 +309,6 @@ class HydraMetrics:
                 e.no_safe_alternative,
                 e.trigger_rate,
                 e.override_rate,
-                e.rescue_rate,
             )
             for e in self._epsilon_nice_events
         ]
