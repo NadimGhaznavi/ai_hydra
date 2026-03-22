@@ -239,10 +239,6 @@ class GameLogic:
         shaping_reward = GameLogic.calculate_reward(reward_field)
         reward = base_reward + shaping_reward
 
-        print(
-            f"BASE: {base_reward}/{type(base_reward)} | SHAPING: {shaping_reward}/{type(shaping_reward)} "
-        )
-
         # Empty move: shift body (drop tail)
         new_body = (board.snake_head,) + board.snake_body[:-1]
 

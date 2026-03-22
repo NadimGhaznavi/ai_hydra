@@ -158,7 +158,7 @@ class SnakeMgr:
 
             sess.board = result.new_board
 
-            reward = int(result.reward)
+            reward = result.reward
             done = bool(result.is_terminal)
             outcome = result.outcome  # use as "reason" for now
 
