@@ -770,7 +770,7 @@ class HydraClientTui(App):
         if message is not None:
             cur_epoch = self.metrics.get_cur_epoch()
             self.event_log.add_event(
-                ev_type=sender, event=f"Epoch {cur_epoch}: {message}"
+                ev_type=sender, event=message, epoch=cur_epoch
             )
 
         ## Check for additional data

@@ -26,7 +26,7 @@ class EventLog(Widget):
     def compose(self) -> ComposeResult:
         yield Vertical(
             Label(
-                f"[b #3e99af]   {DLabel.TYPE:<14s}{DLabel.TIME:>10s}  {DLabel.EVENT}[/]"
+                f"[b #3e99af]{'Epoch':>7s}{DLabel.TIME:>9s}    {'Source':<19s}{DLabel.EVENT}[/]"
             ),
             Log(highlight=True, auto_scroll=True, id=DField.EVENT_LOG_LOG),
         )
@@ -34,13 +34,20 @@ class EventLog(Widget):
     def clear(self):
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).clear()
 
-    def add_event(self, ev_type: str, event: str):
-        elap_time = self.metrics.get_elapsed_time()
+    def add_event(self, ev_type: str, event: str, epoch: str = None):
+        if epoch:
+            epoch = str(epoch)
+        else:
+            epoch = "-"
 
+        elap_time = self.metrics.get_elapsed_time()
         ev_icon, ev_type_str = EVENT_MAP[ev_type]
+
+        # Unicode 2 byte vs. 1 byte workaround
         if ev_icon == "⚙️":
-            ev_icon += "  "
-        msg = f"{ev_icon:<2s}{ev_type_str:<15s}{elap_time:>9s}  {event}"
+            ev_icon = " ⚙️"
+
+        msg = f"{epoch:>7s}{elap_time:>9s}  {ev_icon:>3s} {ev_type_str:<16s}{event}"
 
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).write_line(msg)
 
