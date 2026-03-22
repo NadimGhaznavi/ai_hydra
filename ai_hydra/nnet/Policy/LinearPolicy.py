@@ -20,7 +20,7 @@ class LinearPolicy(HydraPolicy):
         self.device = device or torch.device("cpu")
         self.model.eval()
 
-    def select_action(self, state: Sequence[float]) -> int:
+    def select_action(self, state: Sequence[float], board=None) -> int:
         with torch.no_grad():
             x = torch.tensor(
                 state, dtype=torch.float32, device=self.device

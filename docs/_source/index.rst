@@ -254,6 +254,41 @@ Lifecycle events (warm-up, capacity, gear shifts) are emitted and tracked in rea
 
 ----
 
+Epsilon Nice - Post-Exploration Safety Layer
+********************************************
+
+Overview
+========
+
+**Epsilon Nice** is a lightweight, post-exploration policy layer that improves agent stability by preventing immediate fatal actions.
+
+It operates after epsilon-greedy exploration has completed and applies a minimal, probabilistic correction to the selected action when necessary.
+
+The goal is not to guide the agent, but to preserve *late-stage* learning by avoiding obviously bad decisions.
+
+### Behavior
+
+At each step (after epsilon has decayed to zero):
+
+1. The base policy selects an action.
+2. With probability `p_value`, **Epsilon Nice** is activated.
+3. If the selected action would result in an immediate collision:
+  - A non-colliding alternative is selected (if available).
+4. Otherwise, the original action is preserved.
+
+If no safe alternative exists, the action is left unchanged.
+
+Key Properties
+==============
+
+- **Minimal intervention** - Only applies to immediate, one-step collisions.
+- **Probabilistic** - Controlled by `p_value`` (e.g., `0.005`).
+- **Post-epsilon only** - Disabled during exploration to avoid interfering with learning.
+- **Model-agnostic** - Works with both Linear and RNN policies.
+- **Deterministic-friendly** - Uses the same RNG as the rest of the system.
+
+----
+
 Performance
 ***********
 

@@ -99,18 +99,21 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
 
-        # from ai_hydra.nnet.UNUSED_RNNTrainer import RNNTrainer
         from ai_hydra.nnet.RNNTrainer import RNNTrainer
         from ai_hydra.nnet.models.LinearModel import LinearModel
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
 
-        # from ai_hydra.nnet.models.UNUSED_RNNModel import RNNModel
         from ai_hydra.nnet.models.RNNModel import RNNModel
         from ai_hydra.nnet.Policy.RNNPolicy import RNNPolicy
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
 
+        from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
+        from ai_hydra.nnet.Policy.EpsilonNicePolicy import EpsilonNicePolicy
+
         from ai_hydra.constants.DNNet import DNetField
+        from ai_hydra.constants.DNNet import DLinear
+        from ai_hydra.constants.DNNet import DRNN
 
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
         master_seed = self.cfg.get(DNetField.RANDOM_SEED)
@@ -132,6 +135,7 @@ class HydraMgr(HydraServer):
 
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
+            epsilon_nice_p_val = DLinear.NICE_P_VALUE
             replay = SimpleReplayMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
@@ -157,6 +161,7 @@ class HydraMgr(HydraServer):
 
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
+            epsilon_nice_p_val = DRNN.NICE_P_VALUE
             replay = ATHMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
@@ -198,8 +203,18 @@ class HydraMgr(HydraServer):
         epsilon_algo.min_epsilon(self.cfg.get(DNetField.MIN_EPSILON))
         epsilon_algo.decay_rate(self.cfg.get(DNetField.EPSILON_DECAY))
 
-        behaviour_policy = EpsilonPolicy(
+        epsilon_nice = EpsilonNiceAlgo(
+            rng=policy_rng,
+            log_level=self.log_level,
+            pub_func=self.mq.publish_events,
+            p_value=epsilon_nice_p_val,  # This will eventually be set in the TUI...
+        )
+        epsilon_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_algo
+        )
+
+        behaviour_policy = EpsilonNicePolicy(
+            base_policy=epsilon_policy, epsilon_n=epsilon_nice
         )
 
         self._train_mgr = TrainMgr(
@@ -342,8 +357,10 @@ class HydraMgr(HydraServer):
 
                     # Choose action (server-side)
                     old_state = sess.board.get_state()
+
+                    # EpsilonNice needs the board
                     action = train_mgr.policy.select_action(
-                        old_state,
+                        old_state, sess.board
                     )
 
                     # Advance sim

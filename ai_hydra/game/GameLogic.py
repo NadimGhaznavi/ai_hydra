@@ -308,3 +308,11 @@ class GameLogic:
             DGameField.FURTHER_FROM_FOOD: DGameDef.FURTHER_FROM_FOOD,
         }
         return int(reward_map.get(outcome, 0))
+
+    @staticmethod
+    def would_collide(board: GameBoard, action: int) -> bool:
+        # rng is irrelevant for collisions because collision is decided
+        # before any food respawn logic matters
+        dummy_rng = random.Random(0)
+        result = GameLogic.step(board, action, dummy_rng)
+        return result.is_collision()

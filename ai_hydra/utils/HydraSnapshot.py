@@ -12,7 +12,7 @@ import pprint
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
-from ai_hydra.constants.DNNet import DNetDef, DNetField
+from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN
 from ai_hydra.constants.DReplayMemory import ATH_GEARBOX
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
@@ -66,12 +66,18 @@ class HydraSnapshot:
             )
         )
 
+        model_type = cfg.get(DNetField.MODEL_TYPE)
+
         lines.extend(self._build_model_section(cfg))
-        lines.extend(self._build_memory_section())
+        if model_type == DField.RNN:
+            lines.extend(self._build_memory_section())
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
+        lines.extend(self._build_nice_section(cfg))
+        lines.extend(self._build_nice_table())
         lines.extend(self._build_shift_mean_median_section())
-        lines.extend(self._build_bucket_section())
+        if model_type == DField.RNN:
+            lines.extend(self._build_bucket_section())
 
         return "\n".join(lines).rstrip() + "\n"
 
@@ -133,6 +139,66 @@ class HydraSnapshot:
                 ),
                 ("ATH_GEARBOX", gearbox_str),
             ],
+        )
+
+    def _build_nice_section(self, cfg: SimCfg) -> list[str]:
+        model_type = cfg.get(DNetField.MODEL_TYPE)
+        if model_type == DField.LINEAR:
+            p_value = DLinear.NICE_P_VALUE
+        elif model_type == DField.RNN:
+            p_value = DRNN.NICE_P_VALUE
+        return self._build_kv_section(
+            "🙂 Epsilon Nice",
+            [
+                ("P-Value", p_value),
+            ],
+        )
+
+    def _build_nice_table(self) -> list[str]:
+        rows = self.metrics.get_epsilon_nice_events()
+        headers = [
+            "Window",
+            "Epoch",
+            "Calls",
+            "Triggered",
+            "Fatal Suggested",
+            "Overrides",
+            "No Safe Alt",
+            "Trigger Rate",
+            "Override Rate",
+            "Rescue Rate",
+        ]
+        table_rows: list[list[str]] = []
+
+        for (
+            window,
+            epoch,
+            calls,
+            triggered,
+            fatal_suggested,
+            overrides,
+            no_safe_alternatives,
+            trigger_rate,
+            override_rate,
+            rescue_rate,
+        ) in rows:
+            table_rows.append(
+                [
+                    window,
+                    str(epoch),
+                    str(calls),
+                    str(triggered),
+                    str(fatal_suggested),
+                    str(overrides),
+                    str(no_safe_alternatives),
+                    f"{trigger_rate:.4f}",
+                    f"{override_rate:.4f}",
+                    f"{rescue_rate:.4f}",
+                ]
+            )
+
+        return self._build_table_section(
+            "🙂 Epsilon Nice Events", headers, table_rows
         )
 
     def _build_event_log_section(self) -> list[str]:

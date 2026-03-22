@@ -117,7 +117,7 @@ class EpsilonAlgo:
         Start a fresh schedule (called at START_RUN or RESET)
         """
         self._cur_epsilon = self._initial_epsilon
-        self._depleted = self.cur_epsilon <= self._min_epsilon
+        self._depleted = self._cur_epsilon <= self._min_epsilon
         self.reset_injected()
 
     def reset_injected(self) -> None:

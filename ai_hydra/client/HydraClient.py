@@ -49,6 +49,7 @@ from ai_hydra.constants.DNNet import (
     MODEL_TYPE_TABLE,
     MODEL_TYPES,
 )
+from ai_hydra.constants.DEpsilonNice import DEpsilonNice
 
 # AI Hydra Modules
 from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
@@ -809,6 +810,30 @@ class HydraClientTui(App):
                 self.query_one(
                     f"#{DField.ATH_Memory}", ATHMemory
                 ).refresh_data()
+
+        if sender == DModule.EPSILON_NICE_ALGO:
+            window = ev_payload[DEpsilonNice.WINDOW]
+            epoch = ev_payload[DEpsilonNice.EPOCH]
+            calls = ev_payload[DEpsilonNice.CALLS]
+            triggered = ev_payload[DEpsilonNice.TRIGGERED]
+            fatal_suggested = ev_payload[DEpsilonNice.FATAL_SUGGESTED]
+            overrides = ev_payload[DEpsilonNice.OVERRIDES]
+            no_safe_alternatives = ev_payload[DEpsilonNice.NO_SAFE_ALTERNATIVE]
+            trigger_rate = ev_payload[DEpsilonNice.TRIGGER_RATE]
+            override_rate = ev_payload[DEpsilonNice.OVERRIDE_RATE]
+            rescue_rate = ev_payload[DEpsilonNice.RESCUE_RATE]
+            self.metrics.add_nice_event(
+                window=window,
+                epoch=epoch,
+                calls=calls,
+                triggered=triggered,
+                fatal_suggested=fatal_suggested,
+                overrides=overrides,
+                no_safe_alternative=no_safe_alternatives,
+                trigger_rate=trigger_rate,
+                override_rate=override_rate,
+                rescue_rate=rescue_rate,
+            )
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:

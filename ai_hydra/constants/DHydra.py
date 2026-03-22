@@ -124,6 +124,7 @@ class DModule(StrEnum):
     ATH_DATA_STORE = "ATHDataStore"
     ATH_GEARBOX = "ATHGearBox"
     EPSILON_ALGO = "EpsilonAlgo"
+    EPSILON_NICE_ALGO = "EpsilonNiceAlgo"
     HYDRA_CLIENT = "HydraClient"
     HYDRA_MGR = "HydraMgr"
     HYDRA_MQ = "HydraMQ"

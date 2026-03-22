@@ -52,8 +52,6 @@ class SimpleReplayMemory:
         self._memory_cold = True
         self._has_logged_startup = False
 
-        self._log_startup()
-
     async def _log_startup(self):
         self.log.info("Initialized")
 

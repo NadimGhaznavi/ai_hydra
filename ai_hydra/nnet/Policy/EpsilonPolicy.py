@@ -22,11 +22,12 @@ class EpsilonPolicy(HydraPolicy):
         self._base_policy = base_policy
         self._epsilon = epsilon
 
-    def select_action(self, state: Sequence[float]) -> int:
+    # def select_action(self, state: Sequence[float]) -> int:
+    def select_action(self, state: Sequence[float], board=None) -> int:
         a = self._epsilon.maybe_random_action()
         if a is not None:
             return a
-        return self._base_policy.select_action(state)
+        return self._base_policy.select_action(state, board)
 
     async def played_game(self) -> None:
         await self._epsilon.played_game()

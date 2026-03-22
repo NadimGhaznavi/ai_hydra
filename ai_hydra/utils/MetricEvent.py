@@ -26,6 +26,26 @@ class LossEvent:
 
 
 @dataclass(slots=True, frozen=True)
+class MemEvent:
+    epoch: int
+    bucket_counts: tuple[int, ...]
+
+
+@dataclass(slots=True, frozen=True)
+class NiceEvent:
+    window: str
+    epoch: int
+    calls: int
+    triggered: int
+    fatal_suggested: int
+    overrides: int
+    no_safe_alternative: int
+    trigger_rate: float
+    override_rate: float
+    rescue_rate: float
+
+
+@dataclass(slots=True, frozen=True)
 class ScoreEvent:
     epoch: int
     score: int
@@ -37,9 +57,3 @@ class ShiftEvent:
     gear: int
     seq_length: int
     batch_size: int
-
-
-@dataclass(slots=True, frozen=True)
-class MemEvent:
-    epoch: int
-    bucket_counts: tuple[int, ...]

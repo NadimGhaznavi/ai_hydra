@@ -18,6 +18,7 @@ from ai_hydra.utils.MetricEvent import (
     LossEvent,
     ShiftEvent,
     MemEvent,
+    NiceEvent,
 )
 
 MAX_CUR_SCORES = DPlotDef.MAX_CUR_SCORES
@@ -72,6 +73,9 @@ class HydraMetrics:
         # ATH Memory events
         self._memory_events: list[MemEvent] = []
         self._latest_memory_event: MemEvent | None = None
+
+        # EpsilonNice events
+        self._epsilon_nice_events: list[NiceEvent] = []
 
         # Seed the shift events list...
         self.add_shift_event(
@@ -202,6 +206,34 @@ class HydraMetrics:
     def add_mean_median(self, epoch, mean, median):
         self._mean_and_median.append((epoch, mean, median))
 
+    def add_nice_event(
+        self,
+        window,
+        epoch,
+        calls,
+        fatal_suggested,
+        triggered,
+        overrides,
+        no_safe_alternative,
+        trigger_rate,
+        override_rate,
+        rescue_rate,
+    ):
+        self._epsilon_nice_events.append(
+            NiceEvent(
+                window=window,
+                epoch=epoch,
+                calls=calls,
+                triggered=triggered,
+                fatal_suggested=fatal_suggested,
+                overrides=overrides,
+                no_safe_alternative=no_safe_alternative,
+                trigger_rate=trigger_rate,
+                override_rate=override_rate,
+                rescue_rate=rescue_rate,
+            )
+        )
+
     def add_recent_mean_and_median(self, epoch, mean, median):
         self._recent_mean_and_median.append((epoch, mean, median))
 
@@ -264,6 +296,25 @@ class HydraMetrics:
 
     def get_loss_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.loss) for e in self._losses]
+
+    def get_epsilon_nice_events(
+        self,
+    ) -> list[tuple[str, int, int, int, int, int, int, float, float, float]]:
+        return [
+            (
+                e.window,
+                e.epoch,
+                e.calls,
+                e.triggered,
+                e.fatal_suggested,
+                e.overrides,
+                e.no_safe_alternative,
+                e.trigger_rate,
+                e.override_rate,
+                e.rescue_rate,
+            )
+            for e in self._epsilon_nice_events
+        ]
 
     def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.loss) for e in self._recent_losses]

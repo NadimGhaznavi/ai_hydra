@@ -14,7 +14,7 @@ from typing import Sequence
 class HydraPolicy(ABC):
 
     @abstractmethod
-    def select_action(self, state: Sequence[float]) -> int:
+    def select_action(self, state: Sequence[float], board=None) -> int:
         """
         Return action index: 0, 1, 2
         (LEFT, STRAIGHT, RIGHT)
