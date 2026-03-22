@@ -189,6 +189,12 @@ class ATHGearBox:
             EventMsg(
                 level=DHydraLog.INFO,
                 message=f"Hard Reset - Shifting DOWN: {old_gear} > {self._cur_gear}",
+                ev_type=EV_TYPE.SHIFTING,
+                payload={
+                    DField.GEAR: self._cur_gear,
+                    DField.SEQ_LENGTH: self._cur_seq_length,
+                    DField.BATCH_SIZE: self._cur_batch_size,
+                },
             )
         )
 
