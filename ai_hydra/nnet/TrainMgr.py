@@ -36,8 +36,7 @@ class TrainRunStats:
 
 
 MAX_STAGNANT_EPISODES = 600
-
-MAX_HARD_RESET_EPISODES = MAX_STAGNANT_EPISODES * 3
+MAX_HARD_RESET_EPISODES = 1500
 
 
 class TrainMgr:
@@ -95,4 +94,5 @@ class TrainMgr:
 
         if self._hard_reset_ep_count >= MAX_HARD_RESET_EPISODES:
             self._hard_reset_ep_count = 0
+            self._stag_ep_count = 0
             await self.replay.hard_reset()

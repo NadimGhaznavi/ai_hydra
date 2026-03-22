@@ -853,6 +853,7 @@ class HydraClientTui(App):
             move_delay = self.query_one(f"#{DField.MOVE_DELAY_INPUT}").value
             self.event_log.add_event(
                 ev_type=DField.SIM_LOOP,
+                epoch=self.metrics.get_cur_epoch(),
                 event=f"Turbo mode disabled: Game rendering enabled, move delay set to {move_delay}",
             )
             self.mq.enable_per_step_sub()
