@@ -1,71 +1,99 @@
+# 🧪 What Would I Do (in your system specifically)
 
+No generic RL fluff. Just targeted moves.
 
+---
 
-## Adding Memories
+## 1. 🔥 Micro-exploration injection (your own idea, but sharper)
 
-- Initialization: `cur_game: list = []` and `games: list[list[t]] = []`
-- Memories, or transitions will be added just like before `replay.append(t)`.
-- `append(t)` will simply `cur_game.append(t)`
-- When the game is over (`t.done == True`), the complete game will be saved:
-  - `games.append(cur_game) ; cur_game = []`
+Right now:
 
-## Managing Memory Size
+```text
+epsilon = 0
+epsilonNice = 0.006
+```
 
-- The Replay Memory will manage a **MAX_MEM_SIZE** setting that represents the total number of stored transitions. When this is reached, games will be removed from the beginning of the `games` list to keep the size relatively stable.
+Try:
 
-## The Chunk
+### Option A (cleanest)
 
-- The smallest *memory unit* consists of 4 transitions; a **chunk**.
-- Valid chunk sizes are 4, 8, 16, 32 or 64.
-- The transitions in a chunk **must be ordered**.
+* Keep epsilon = 0
+* Increase epsilonNice → **0.01**
 
-## Sampling
+👉 doubles intervention rate
+👉 still minimal, but enough to shake habits
 
-Sampling is a bit more complex.
+---
 
+### Option B (more surgical)
 
+Make epsilonNice adaptive:
 
-## The Clean Position
+```python
+if stagnation_detected:
+    p_value = 0.01
+else:
+    p_value = 0.006
+```
 
-Avoid the Bitter Lesson:
+Trigger on:
 
-- keep real experience
-- keep bad experience
-- keep embarrassing experience
-- discard only what is too short to form a meaningful temporal unit
+* no new high score for X episodes
+* OR mean declining
 
-# Proposed Gears
+---
 
-Sequence Length | Batch Size | Score Threshold 
-----------------|------------|-----------------
-4               | 128        | 10
-8               | 64         | 20
-16              | 32         | 30
-32              | 16         | 40
-64              | 8          | 50
+## 2. 🧠 Reduce sequence length ceiling
 
+Your gearbox climbs too high.
 
-SHIFT_CHECK = 200
-FULL_ENOUGH = 150
+Try capping at:
 
-Rules
-- Run for SHIFT_CHECK episodes
-- If last 3 buckets have >= FULL_ENOUGH
+```python
+max_gear = 8  # instead of 10+
+```
 
-Seq | Batch
-----|-------
-  4 | 5
-  8 | 7
- 12 | 5
- 16 | 4
- 20 | 3
- 24 | 3
- 28 | 2
- 32 | 2
- 36 | 2
- 40 | 1
- 44 | 1
- 48 | 1
- 52 | 1
- 56 | 1
- 60 | 1
+Why:
+
+* Forces more **reactive decision making**
+* Reduces overfitting to long trajectories
+
+---
+
+## 3. 🪣 Replay memory bias tweak
+
+Right now: passive distribution
+
+Try:
+
+* Slight **priority to higher-score buckets**
+
+Not full PER. Just bias.
+
+👉 Tell the agent:
+
+> “These rare good runs matter more.”
+
+---
+
+## 4. ⚡ Learning rate pulse
+
+You’re at:
+
+```
+LR = 0.002
+```
+
+Late stage trick:
+
+* Temporarily bump:
+
+```
+0.002 → 0.003 (short burst)
+```
+
+👉 helps escape local minima
+👉 then drop back
+
+---
+

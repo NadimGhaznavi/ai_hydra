@@ -14,6 +14,7 @@ from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN
 from ai_hydra.constants.DReplayMemory import ATH_GEARBOX
+from ai_hydra.constants.DGame import DGameDef
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
@@ -69,6 +70,7 @@ class HydraSnapshot:
         model_type = cfg.get(DNetField.MODEL_TYPE)
 
         lines.extend(self._build_model_section(cfg))
+        lines.extend(self._build_rewards_section())
         if model_type == DField.RNN:
             lines.extend(self._build_memory_section())
         lines.extend(self._build_event_log_section())
@@ -126,6 +128,37 @@ class HydraSnapshot:
         return self._build_kv_section(
             "🧠 Model",
             [("Model Type", str(model_type))],
+        )
+
+    def _build_rewards_section(self) -> list[str]:
+        return self._build_kv_section(
+            "💰 Rewards",
+            [
+                (
+                    "MAX_MOVES_MULTIPLIER",
+                    DGameDef.MAX_MOVES_MULTIPLIER,
+                ),
+                (
+                    "FOOD_REWARD",
+                    DGameDef.FOOD_REWARD,
+                ),
+                (
+                    "COLLISION_PENALTY",
+                    DGameDef.COLLISION_PENALTY,
+                ),
+                (
+                    "EMPTY_MOVE_REWARD",
+                    DGameDef.EMPTY_MOVE_REWARD,
+                ),
+                (
+                    "CLOSER_TO_FOOD",
+                    DGameDef.CLOSER_TO_FOOD,
+                ),
+                (
+                    "FURTHER_FROM_FOOD",
+                    DGameDef.FURTHER_FROM_FOOD,
+                ),
+            ],
         )
 
     def _build_memory_section(self) -> list[str]:

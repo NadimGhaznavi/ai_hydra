@@ -219,6 +219,15 @@ class GameLogic:
             )
 
         # Empty move....
+        base_reward = GameLogic.calculate_reward(DGameField.EMPTY)
+
+        reward_field = GameLogic._food_direction_reward(
+            head=board.snake_head,
+            food=board.food_position,
+            move_dx=move.resulting_direction.dx,
+            move_dy=move.resulting_direction.dy,
+        )
+        shaping_reward = GameLogic.calculate_reward(reward_field)
 
         # Reward based on move direction relative to the food
         reward_field = GameLogic._food_direction_reward(
@@ -227,7 +236,12 @@ class GameLogic:
             move_dx=move.resulting_direction.dx,
             move_dy=move.resulting_direction.dy,
         )
-        reward = GameLogic.calculate_reward(reward_field)
+        shaping_reward = GameLogic.calculate_reward(reward_field)
+        reward = base_reward + shaping_reward
+
+        print(
+            f"BASE: {base_reward}/{type(base_reward)} | SHAPING: {shaping_reward}/{type(shaping_reward)} "
+        )
 
         # Empty move: shift body (drop tail)
         new_body = (board.snake_head,) + board.snake_body[:-1]
@@ -297,7 +311,7 @@ class GameLogic:
         ]
 
     @staticmethod
-    def calculate_reward(outcome: str) -> int:
+    def calculate_reward(outcome: str) -> float:
         reward_map = {
             DGameField.EMPTY: DGameDef.EMPTY_MOVE_REWARD,
             DGameField.FOOD: DGameDef.FOOD_REWARD,
@@ -307,7 +321,7 @@ class GameLogic:
             DGameField.CLOSER_TO_FOOD: DGameDef.CLOSER_TO_FOOD,
             DGameField.FURTHER_FROM_FOOD: DGameDef.FURTHER_FROM_FOOD,
         }
-        return int(reward_map.get(outcome, 0))
+        return reward_map.get(outcome, 0.0)
 
     @staticmethod
     def would_collide(board: GameBoard, action: int) -> bool:
