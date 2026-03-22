@@ -177,7 +177,7 @@ class ATHGearBox:
             count += self._cur_bucket_counts[bucket_idx]
         return count
 
-    async def hard_reet(self):
+    async def hard_reset(self):
         self._stagnation_flag = False
         self._cooldown_count = 0
         old_gear = self._cur_gear
