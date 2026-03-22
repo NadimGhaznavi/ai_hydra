@@ -94,4 +94,5 @@ class TrainMgr:
             self.replay.stagnation_warning()
 
         if self._hard_reset_ep_count >= MAX_HARD_RESET_EPISODES:
+            self._hard_reset_ep_count = 0
             await self.replay.hard_reset()
