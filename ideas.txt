@@ -43,3 +43,13 @@ selection
 
 
 That would actually fit your Hydra name nicely.
+
+1. Color by intent, not just type
+You already have icons, but color can reinforce:
+
+🟢 UP shifts
+🔴 DOWN shifts
+🟡 Stagnation alerts
+🔵 System/init events
+
+Now your log becomes visually scannable
