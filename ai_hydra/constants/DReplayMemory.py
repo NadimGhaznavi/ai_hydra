@@ -17,87 +17,34 @@ class DMemField:
 
 
 class DMemDef:
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    # Used by the ATHGearbox to calculate the seq_length/batch_size for the
+    # different gears.
+    MAX_TRAINING_FRAMES: Final[int] = 256
+    # ATH memory stores this maximum number of frames
     MAX_FRAMES: Final[int] = 125000
+    # ATH uses this many memory buckets
     MAX_BUCKETS: Final[int] = 20
-    NUM_COOLDOWN_EPISODES: Final[int] = 300
+    # The ATHGearbox won't shift up or down before NUM_COOLDOWN_EPISODES
+    # episodes have gone by.
+    NUM_COOLDOWN_EPISODES: Final[int] = 150
+    # If the THRESHOLD_BUCKETS have a combined contents greater than
+    # UPSHIFT_COUNT_THRESHOLD, the the ATHGearbox shifts UP.
+    # If the THRESHOLD_BUCKETS have a combined contents less than
+    # DOWNSHIFT_COUNT_THRESHOLD, the the ATHGearbox shifts DOWN.
     THRESHOLD_BUCKETS: Final[list] = [17, 18, 19]
-    THRESHOLDS_REQUIRED: Final[int] = 10
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     # The number of episodes that the TrainMgr will tolerate with no new
     # highscore before calling `stagnation_warning()` on the ATHReplay.
     MAX_STAGNANT_EPISODES: Final[int] = 600
-    MAX_HARD_RESET_EPISODES: Final[int] = 1500
+    # The number of episodes without a new highscore before the TrainMgr
+    # calls `hard_reset()`.
+    MAX_HARD_RESET_EPISODES: Final[int] = 2500
+    # Legacy - to be deleted...
+    UNUSED_THRESHOLDS_REQUIRED: Final[int] = 10
 
 
 class DMemory:
     # Simple Replay Memory - Linear model
     MIN_FRAMES: Final[int] = 1500
     MAX_MEM_SIZE: Final[int] = 75000
-
-
-"""
-Defines the threshold score for changing "gears". A gear change results
-in a longer sequence length and smaller batch size.
-
-GEAR => { ( THRESHOLD, SEQ_LENGTH, BATCH_SIZE ), ... }
-
-- ATH Replay Memory starts in gear 0
-  - seq_length is 4, batch_size is 128
-- When the AI achieves a score of 8 ten times, it shifts up a gear
-  - seq_length is now 8, batch_size i 64
-"""
-ATH_GEARBOX = {
-    1: (4, 64),
-    2: (6, 48),
-    3: (8, 32),
-    4: (12, 24),
-    5: (16, 16),
-    6: (20, 13),
-    7: (24, 10),
-    8: (28, 9),
-    9: (30, 9),
-    10: (32, 8),
-    11: (34, 8),
-    12: (36, 7),
-    13: (38, 7),
-    14: (40, 6),
-    15: (42, 6),
-    16: (44, 6),
-    17: (46, 6),
-    18: (48, 5),
-    19: (50, 5),
-    20: (52, 5),
-    21: (54, 5),
-    22: (56, 4),
-    23: (58, 4),
-    24: (60, 4),
-    25: (62, 4),
-    26: (64, 4),
-}
-
-V2_ATH_GEARBOX = {
-    1: (4, 64),
-    2: (8, 32),
-    3: (16, 16),
-    4: (24, 10),
-    5: (28, 9),
-    6: (32, 8),
-    7: (40, 6),
-    8: (48, 5),
-    9: (56, 4),
-    10: (64, 3),
-}
-
-
-V1_ATH_GEARBOX = {
-    1: (4, 64),
-    2: (8, 32),
-    3: (16, 16),
-    4: (24, 10),
-    5: (32, 8),
-    6: (40, 6),
-    7: (48, 5),
-    8: (56, 4),
-    9: (64, 3),
-}

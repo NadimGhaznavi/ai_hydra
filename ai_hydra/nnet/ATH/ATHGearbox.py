@@ -13,7 +13,7 @@ from __future__ import annotations
 from random import Random
 from dataclasses import dataclass, field
 
-from ai_hydra.constants.DReplayMemory import DMemDef, ATH_GEARBOX
+from ai_hydra.constants.DReplayMemory import DMemDef
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DEvent import EV_TYPE
@@ -28,6 +28,7 @@ THRESHOLD_BUCKETS = DMemDef.THRESHOLD_BUCKETS
 UPSHIFT_COUNT_THRESHOLD = DMemDef.UPSHIFT_COUNT_THRESHOLD
 DOWNSHIFT_COUNT_THRESHOLD = DMemDef.DOWNSHIFT_COUNT_THRESHOLD
 NUM_COOLDOWN_EPISODES = DMemDef.NUM_COOLDOWN_EPISODES
+MAX_TRAINING_FRAMES = DMemDef.MAX_TRAINING_FRAMES
 
 
 class ATHGearBox:
@@ -49,11 +50,10 @@ class ATHGearBox:
         )
 
         self._cur_gear = 1
-        self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+        self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
             self._cur_gear
-        ]
+        )
 
-        self._highest_gear = max(ATH_GEARBOX.keys())
         self._cur_bucket_counts: int | None = None
 
         self._cooldown_count = 0
@@ -95,9 +95,9 @@ class ATHGearBox:
                 self._cur_gear = 1
                 return self._cur_gear
 
-            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+            self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
                 self._cur_gear
-            ]
+            )
             # Stay here till the cooldown period is over
             self._cooldown_count = 0
             # Clear the stagnation flag
@@ -130,16 +130,13 @@ class ATHGearBox:
             # system to, up, up, stagnation-alert: down, up, up, ... to
             # work it's way back up to the "top gear" again.
             self._stagnation_alert_count = 0
-            # The transmission has a top gear
-            if self._cur_gear == self._highest_gear:
-                return self._cur_gear
 
             self._cur_gear += 1
             self._last_upshift = self._cur_epoch
             self._cooldown_count = 0
-            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+            self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
                 self._cur_gear
-            ]
+            )
             await self.event.publish(
                 EventMsg(
                     level=DHydraLog.INFO,
@@ -164,9 +161,9 @@ class ATHGearBox:
 
             self._cur_gear -= 1
             self._cooldown_count = 0
-            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
+            self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
                 self._cur_gear
-            ]
+            )
             await self.event.publish(
                 EventMsg(
                     level=DHydraLog.INFO,
@@ -182,45 +179,55 @@ class ATHGearBox:
 
         return self._cur_gear
 
+    def get_gear_data(self, gear: int) -> tuple[int, int]:
+        """
+        - Accepts a gear.
+        - Returns (sequence_length, batch_size)
+
+        The sequence_length/batch_size should not exceed MAX_TRAINING_FRAMES.
+        First gear (1), should have a sequence_length of 4.
+        Every gear after one should increase the seq_length by 2.
+        """
+
+        if gear < 1:
+            raise ValueError("gear must be >= 1")
+
+        seq_len = (gear * 2) + 2
+        batch_size = max(1, MAX_TRAINING_FRAMES // seq_len)
+        return seq_len, batch_size
+
     def get_thresh_bucket_chunk_count(self) -> int:
         count = 0
         for bucket_idx in THRESHOLD_BUCKETS:
             count += self._cur_bucket_counts[bucket_idx]
         return count
 
-    async def hard_reset(self):
-        self._crit_stagnation_alert_count += 1
-        max_hard_reset_eps = (
-            DMemDef.MAX_HARD_RESET_EPISODES * self._crit_stagnation_alert_count
+    async def hard_reset(self, crit_count: int):
+        self._stagnation_flag = False
+        self._cooldown_count = 0
+        old_gear = self._cur_gear
+        self._cur_gear = 3  # seq_length/batch_size == 8/32
+        self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
+            self._cur_gear
         )
-
-        num_ep_since_upshift = self._cur_epoch - self._last_upshift
-        # Don't do a radical downshift, we just upshifted...
-        if num_ep_since_upshift > max_hard_reset_eps:
-            self._stagnation_flag = False
-            self._cooldown_count = 0
-            old_gear = self._cur_gear
-            self._cur_gear = 3  # seq_length/batch_size == 8/32
-            self._cur_seq_length, self._cur_batch_size = ATH_GEARBOX[
-                self._cur_gear
-            ]
-            await self.event.publish(
-                EventMsg(
-                    level=DHydraLog.INFO,
-                    message=f"Critical Stagnation alert: Radical DOWN shift: {old_gear} > {self._cur_gear} - {self._cur_seq_length}/{self._cur_batch_size}",
-                    ev_type=EV_TYPE.SHIFTING,
-                    payload={
-                        DField.GEAR: self._cur_gear,
-                        DField.SEQ_LENGTH: self._cur_seq_length,
-                        DField.BATCH_SIZE: self._cur_batch_size,
-                    },
-                )
+        await self.event.publish(
+            EventMsg(
+                level=DHydraLog.INFO,
+                message=(
+                    f"Critical Stagnation "
+                    f"alert({crit_count}): Radical "
+                    f"DOWN shift: {old_gear} > {self._cur_gear} - "
+                    f"{self._cur_seq_length}/{self._cur_batch_size}"
+                ),
+                ev_type=EV_TYPE.SHIFTING,
+                payload={
+                    DField.GEAR: self._cur_gear,
+                    DField.SEQ_LENGTH: self._cur_seq_length,
+                    DField.BATCH_SIZE: self._cur_batch_size,
+                },
             )
-            return
-
-        self.log.debug(
-            "Received critical stagnation warning: Ignoring because of recent upshift"
         )
+        return
 
     def incr_cooldown_count(self):
         self._cooldown_count += 1
