@@ -53,19 +53,32 @@ class HydraLog:
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-        # Optional file handler
-        if log_file:
-            fh = logging.FileHandler(log_file)
-            fh.setLevel(LOG_LEVELS[log_level])
-            fh.setFormatter(formatter)
-            self._logger.addHandler(fh)
-
         # Optional console handler
         if to_console:
-            ch = logging.StreamHandler()
-            ch.setLevel(LOG_LEVELS[log_level])
-            ch.setFormatter(formatter)
-            self._logger.addHandler(ch)
+            # Check if the logger has been registerd to avoid dupe log msgs.
+            has_console = any(
+                isinstance(h, logging.StreamHandler)
+                and not isinstance(h, logging.FileHandler)
+                for h in self._logger.handlers
+            )
+            if not has_console:
+                ch = logging.StreamHandler()
+                ch.setLevel(LOG_LEVELS[log_level])
+                ch.setFormatter(formatter)
+                self._logger.addHandler(ch)
+
+        # Optional file handler
+        if log_file:
+            has_file = any(
+                isinstance(h, logging.FileHandler)
+                and getattr(h, "baseFilename", None) == log_file
+                for h in self._logger.handlers
+            )
+            if not has_file:
+                fh = logging.FileHandler(log_file)
+                fh.setLevel(LOG_LEVELS[log_level])
+                fh.setFormatter(formatter)
+                self._logger.addHandler(fh)
 
         self._logger.propagate = False
 
