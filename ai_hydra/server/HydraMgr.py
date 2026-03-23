@@ -163,6 +163,7 @@ class HydraMgr(HydraServer):
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
             epsilon_nice_p_val = DRNN.NICE_P_VALUE
+            epsilon_nice_steps = DRNN.NICE_STEPS
             model = RNNModel(log_level=self.log_level, seed=master_seed)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
@@ -190,6 +191,7 @@ class HydraMgr(HydraServer):
         elif model_type == DField.GRU:
             self.log.debug("Using GRU Model")
             epsilon_nice_p_val = DGRU.NICE_P_VALUE
+            epsilon_nice_steps = DGRU.NICE_STEPS
             model = GRUModel(log_level=self.log_level, seed=master_seed)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
@@ -231,17 +233,21 @@ class HydraMgr(HydraServer):
         epsilon_algo.decay_rate(self.cfg.get(DNetField.EPSILON_DECAY))
 
         epsilon_nice = EpsilonNiceAlgo(
-            rng=policy_rng,
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
-            p_value=epsilon_nice_p_val,  # This will eventually be set in the TUI...
+            rng=policy_rng,
         )
         epsilon_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_algo
         )
 
         behaviour_policy = EpsilonNicePolicy(
-            base_policy=epsilon_policy, epsilon_n=epsilon_nice
+            base_policy=epsilon_policy,
+            epsilon_n=epsilon_nice,
+            p_value=epsilon_nice_p_val,
+            rng=policy_rng,
+            steps=epsilon_nice_steps,
+            log_level=self.log_level,
         )
 
         self._train_mgr = TrainMgr(

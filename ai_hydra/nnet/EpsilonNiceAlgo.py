@@ -20,33 +20,14 @@ from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 
 
 class EpsilonNiceAlgo:
-    """
-    Post-epsilon collision rescue helper.
-
-    Behavior:
-      - Called after the normal policy has selected an action.
-      - With probability `p_value`, checks whether the suggested action
-        would immediately collide.
-      - If so, attempts to replace it with a safe alternative.
-      - Otherwise, leaves the action unchanged.
-
-    Stats:
-      - calls: total invocations
-      - triggered: times the probability gate fired
-      - overrides: times the suggested action was replaced
-      - no_safe_alternative: times the suggested action was fatal and no
-        non-fatal alternative existed
-    """
 
     def __init__(
         self,
-        rng: random.Random,
         log_level: DHydraLog,
         pub_func,
-        p_value: float,
+        rng: random.Random,
     ) -> None:
         self._rng = rng
-        self._p_value = float(p_value)
 
         self.event = HydraEventMQ(
             client_id=DModule.EPSILON_NICE_ALGO,
@@ -59,25 +40,10 @@ class EpsilonNiceAlgo:
             to_console=True,
         )
         self._epoch = 0
-        self.log.info(f"P-Value set: {p_value}")
+        self._calls = 0
         self._reset_window()
 
-    def maybe_override_action(
-        self,
-        suggested_action: int,
-        board: GameBoard,
-    ) -> int:
-        """
-        Return the action to execute.
-
-        Usually returns `suggested_action` unchanged.
-        With probability `p_value`, try to replace it with a different
-        non-fatal action. If no safe alternative exists, keep the original.
-        """
-        self._calls += 1
-
-        if self._rng.random() >= self._p_value:
-            return suggested_action
+    def override_action(self, suggested_action: int, board: GameBoard) -> int:
 
         self._triggered += 1
 
@@ -113,11 +79,14 @@ class EpsilonNiceAlgo:
             DEpsilonNice.OVERRIDE_RATE: round(override_rate, 6),
         }
 
+    def incr_calls(self):
+        self._calls += 1
+
     async def played_game(self) -> None:
         self._epoch += 1
-        if self._epoch % 100 == 0:
+        if self._epoch % 500 == 0:
             payload = self.get_stats()
-            payload[DEpsilonNice.WINDOW] = f"{self._epoch-99}-{self._epoch}"
+            payload[DEpsilonNice.WINDOW] = f"{self._epoch-499}-{self._epoch}"
             await self.event.publish(
                 EventMsg(
                     level=DHydraLog.INFO,

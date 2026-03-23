@@ -125,6 +125,7 @@ class DModule(StrEnum):
     ATH_GEARBOX = "ATHGearBox"
     EPSILON_ALGO = "EpsilonAlgo"
     EPSILON_NICE_ALGO = "EpsilonNiceAlgo"
+    EPSILON_NICE_POLICY = "EpsilonNicePolicy"
     GRU_MODEL = "GRUModel"
     HYDRA_CLIENT = "HydraClient"
     HYDRA_MGR = "HydraMgr"

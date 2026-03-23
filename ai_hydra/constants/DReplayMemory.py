@@ -28,7 +28,7 @@ class DMemDef:
     MAX_BUCKETS: Final[int] = 20
     # The ATHGearbox won't shift up or down before NUM_COOLDOWN_EPISODES
     # episodes have gone by.
-    NUM_COOLDOWN_EPISODES: Final[int] = 150
+    NUM_COOLDOWN_EPISODES: Final[int] = 100
     # If the THRESHOLD_BUCKETS have a combined contents greater than
     # UPSHIFT_COUNT_THRESHOLD, the the ATHGearbox shifts UP.
     # If the THRESHOLD_BUCKETS have a combined contents less than
@@ -38,10 +38,10 @@ class DMemDef:
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     # The number of episodes that the TrainMgr will tolerate with no new
     # highscore before calling `stagnation_warning()` on the ATHReplay.
-    MAX_STAGNANT_EPISODES: Final[int] = 600
+    MAX_STAGNANT_EPISODES: Final[int] = 300
     # The number of episodes without a new highscore before the TrainMgr
     # calls `hard_reset()`.
-    MAX_HARD_RESET_EPISODES: Final[int] = 2500
+    MAX_HARD_RESET_EPISODES: Final[int] = 2000
 
 
 class DMemory:
