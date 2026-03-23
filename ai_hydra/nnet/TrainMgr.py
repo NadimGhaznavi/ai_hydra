@@ -121,4 +121,4 @@ class TrainMgr:
                 )
             self._hard_reset_ep_count = 0
             self._stag_ep_count = 0
-            await self.replay.hard_reset()
+            await self.replay.hard_reset(self._hard_reset_count)
