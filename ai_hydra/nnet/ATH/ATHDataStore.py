@@ -13,7 +13,7 @@ from __future__ import annotations
 from random import Random
 
 
-from ai_hydra.constants.DReplayMemory import DMemDef, DMemField, ATH_GEARBOX
+from ai_hydra.constants.DReplayMemory import DMemDef, DMemField
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DEvent import EV_TYPE
@@ -22,7 +22,7 @@ from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 
-from ai_hydra.nnet.ATH.ATHCommon import Episode, GearMeta
+from ai_hydra.nnet.ATH.ATHCommon import Episode, GearMeta, get_gear_data
 
 MAX_BUCKETS = DMemDef.MAX_BUCKETS
 
@@ -112,4 +112,4 @@ class ATHDataStore:
 
     def set_gear(self, gear: int):
         self._cur_gear = gear
-        _, self._batch_size = ATH_GEARBOX[gear]
+        _, self._batch_size = get_gear_data(gear)

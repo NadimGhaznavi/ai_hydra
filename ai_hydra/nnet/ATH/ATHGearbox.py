@@ -18,17 +18,16 @@ from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DEvent import EV_TYPE
 
-from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 from ai_hydra.nnet.ATH.ATHDataStore import ATHDataStore
+from ai_hydra.nnet.ATH.ATHCommon import get_gear_data
 
 MAX_BUCKETS = DMemDef.MAX_BUCKETS
 THRESHOLD_BUCKETS = DMemDef.THRESHOLD_BUCKETS
 UPSHIFT_COUNT_THRESHOLD = DMemDef.UPSHIFT_COUNT_THRESHOLD
 DOWNSHIFT_COUNT_THRESHOLD = DMemDef.DOWNSHIFT_COUNT_THRESHOLD
 NUM_COOLDOWN_EPISODES = DMemDef.NUM_COOLDOWN_EPISODES
-MAX_TRAINING_FRAMES = DMemDef.MAX_TRAINING_FRAMES
 
 
 class ATHGearBox:
@@ -50,7 +49,7 @@ class ATHGearBox:
         )
 
         self._cur_gear = 1
-        self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
+        self._cur_seq_length, self._cur_batch_size = get_gear_data(
             self._cur_gear
         )
 
@@ -95,7 +94,7 @@ class ATHGearBox:
                 self._cur_gear = 1
                 return self._cur_gear
 
-            self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
+            self._cur_seq_length, self._cur_batch_size = get_gear_data(
                 self._cur_gear
             )
             # Stay here till the cooldown period is over
@@ -134,7 +133,7 @@ class ATHGearBox:
             self._cur_gear += 1
             self._last_upshift = self._cur_epoch
             self._cooldown_count = 0
-            self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
+            self._cur_seq_length, self._cur_batch_size = get_gear_data(
                 self._cur_gear
             )
             await self.event.publish(
@@ -161,7 +160,7 @@ class ATHGearBox:
 
             self._cur_gear -= 1
             self._cooldown_count = 0
-            self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
+            self._cur_seq_length, self._cur_batch_size = get_gear_data(
                 self._cur_gear
             )
             await self.event.publish(
@@ -179,23 +178,6 @@ class ATHGearBox:
 
         return self._cur_gear
 
-    def get_gear_data(self, gear: int) -> tuple[int, int]:
-        """
-        - Accepts a gear.
-        - Returns (sequence_length, batch_size)
-
-        The sequence_length/batch_size should not exceed MAX_TRAINING_FRAMES.
-        First gear (1), should have a sequence_length of 4.
-        Every gear after one should increase the seq_length by 2.
-        """
-
-        if gear < 1:
-            raise ValueError("gear must be >= 1")
-
-        seq_len = (gear * 2) + 2
-        batch_size = max(1, MAX_TRAINING_FRAMES // seq_len)
-        return seq_len, batch_size
-
     def get_thresh_bucket_chunk_count(self) -> int:
         count = 0
         for bucket_idx in THRESHOLD_BUCKETS:
@@ -207,7 +189,7 @@ class ATHGearBox:
         self._cooldown_count = 0
         old_gear = self._cur_gear
         self._cur_gear = 3  # seq_length/batch_size == 8/32
-        self._cur_seq_length, self._cur_batch_size = self.get_gear_data(
+        self._cur_seq_length, self._cur_batch_size = get_gear_data(
             self._cur_gear
         )
         await self.event.publish(

@@ -9,7 +9,7 @@
 
 from random import Random
 
-from ai_hydra.constants.DReplayMemory import DMemDef, DMemField, ATH_GEARBOX
+from ai_hydra.constants.DReplayMemory import DMemDef, DMemField
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DEvent import EV_TYPE
 
@@ -17,7 +17,11 @@ from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.nnet.ATH.ATHDataStore import ATHDataStore
-from ai_hydra.nnet.ATH.ATHCommon import GearMeta
+from ai_hydra.nnet.ATH.ATHCommon import (
+    GearMeta,
+    get_gear_data,
+    get_valid_gears,
+)
 
 
 MAX_BUCKETS = DMemDef.MAX_BUCKETS
@@ -78,7 +82,8 @@ class ATHDataMgr:
         """
         gear_meta: dict[int, GearMeta] = {}
 
-        for gear, (seq_length, _) in ATH_GEARBOX.items():
+        for gear in get_valid_gears():
+            seq_length, _ = get_gear_data(gear)
             gear_meta[gear] = self._build_gear_meta_for_size(
                 ep_size=ep_size,
                 seq_length=seq_length,
@@ -168,7 +173,7 @@ class ATHDataMgr:
             episodes = self.store.get_eps_by_bucket_idx(bucket_idx=bucket_idx)
             total_chunks += len(episodes)
 
-        _, batch_size = ATH_GEARBOX[self._cur_gear]
+        _, batch_size = get_gear_data(self._cur_gear)
 
         if total_chunks < batch_size:
             return None

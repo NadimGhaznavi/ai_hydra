@@ -13,8 +13,8 @@ import pprint
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN, DGRU
-from ai_hydra.constants.DReplayMemory import ATH_GEARBOX
 from ai_hydra.constants.DGame import DGameDef
+from ai_hydra.constants.DReplayMemory import DMemDef
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
@@ -182,11 +182,21 @@ class HydraSnapshot:
         )
 
     def _build_memory_section(self) -> list[str]:
-        gearbox_str = "\n" + pprint.pformat(ATH_GEARBOX)
         return self._build_kv_section(
             "💾 Replay Memory",
             [
-                ("ATH_GEARBOX", gearbox_str),
+                ("MAX_TRAINING_FRAMES", DMemDef.MAX_TRAINING_FRAMES),
+                ("MAX_FRAMES", DMemDef.MAX_FRAMES),
+                ("MAX_BUCKETS", DMemDef.MAX_BUCKETS),
+                ("NUM_COOLDOWN_EPISODES", DMemDef.NUM_COOLDOWN_EPISODES),
+                ("THRESHOLD_BUCKETS", DMemDef.THRESHOLD_BUCKETS),
+                ("UPSHIFT_COUNT_THRESHOLD", DMemDef.UPSHIFT_COUNT_THRESHOLD),
+                (
+                    "DOWNSHIFT_COUNT_THRESHOLD",
+                    DMemDef.DOWNSHIFT_COUNT_THRESHOLD,
+                ),
+                ("MAX_STAGNANT_EPISODES", DMemDef.MAX_STAGNANT_EPISODES),
+                ("MAX_HARD_RESET_EPISODES", DMemDef.MAX_HARD_RESET_EPISODES),
             ],
         )
 

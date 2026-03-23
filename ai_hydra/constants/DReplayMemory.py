@@ -20,6 +20,8 @@ class DMemDef:
     # Used by the ATHGearbox to calculate the seq_length/batch_size for the
     # different gears.
     MAX_TRAINING_FRAMES: Final[int] = 256
+    # The highest gear
+    MAX_GEAR: Final[int] = 26
     # ATH memory stores this maximum number of frames
     MAX_FRAMES: Final[int] = 125000
     # ATH uses this many memory buckets
@@ -40,8 +42,6 @@ class DMemDef:
     # The number of episodes without a new highscore before the TrainMgr
     # calls `hard_reset()`.
     MAX_HARD_RESET_EPISODES: Final[int] = 2500
-    # Legacy - to be deleted...
-    UNUSED_THRESHOLDS_REQUIRED: Final[int] = 10
 
 
 class DMemory:
