@@ -35,7 +35,7 @@ from ai_hydra.constants.DHydra import (
     DMethod,
     DModule,
 )
-from ai_hydra.constants.DEvent import EV_TYPE
+from ai_hydra.constants.DEvent import EV_TYPE, EV_STATUS
 from ai_hydra.constants.DHydraMQ import DHydraMQDef, DHydraMQ, DEvent
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
@@ -579,7 +579,9 @@ class HydraClientTui(App):
         self.mq.disable_per_step_sub()
         self.mq.disable_scores_sub()
 
-        self.event_log.add_event(ev_type=DField.TUI, event="Initialized...")
+        self.event_log.add_event(
+            ev_type=DField.TUI, status=EV_STATUS.INFO, event="Initialized..."
+        )
 
     def on_per_episode(self, topic: str, payload: dict) -> None:
         # Unbatch messages
@@ -592,6 +594,7 @@ class HydraClientTui(App):
         if (self._cur_per_ep_batch_num - self._prev_per_ep_batch_num) != 1:
             self.event_log.add_event(
                 ev_type=DField.WARNING,
+                status=EV_STATUS.BAD,
                 event="Per episode data is being dropped",
             )
         self._prev_per_ep_batch_num = self._cur_per_ep_batch_num
@@ -650,7 +653,9 @@ class HydraClientTui(App):
             self._prev_scores_batch_num = self._cur_scores_batch_num - 1
         if (self._cur_scores_batch_num - self._prev_scores_batch_num) != 1:
             self.event_log.add_event(
-                ev_type=DField.WARNING, event="Score data is being dropped"
+                ev_type=DField.WARNING,
+                status=EV_STATUS.BAD,
+                event="Score data is being dropped",
             )
         self._prev_scores_batch_num = self._cur_scores_batch_num
 
@@ -789,12 +794,13 @@ class HydraClientTui(App):
         message = payload.get(DEvent.MESSAGE)
         ev_type = payload.get(DEvent.EV_TYPE)
         ev_payload = payload.get(DEvent.PAYLOAD)
+        status = payload.get(DEvent.LEVEL)
 
         # Send event to be displayed in the EventLog widget
         if message is not None:
             cur_epoch = self.metrics.get_cur_epoch()
             self.event_log.add_event(
-                ev_type=sender, event=message, epoch=cur_epoch
+                ev_type=sender, status=status, event=message, epoch=cur_epoch
             )
 
         ## Check for additional data

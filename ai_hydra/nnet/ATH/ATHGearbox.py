@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from ai_hydra.constants.DReplayMemory import DMemDef
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DHydraTui import DField
-from ai_hydra.constants.DEvent import EV_TYPE
+from ai_hydra.constants.DEvent import EV_TYPE, EV_STATUS
 
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
@@ -105,7 +105,7 @@ class ATHGearBox:
             # Log the event
             await self.event.publish(
                 EventMsg(
-                    level=DHydraLog.WARNING,
+                    level=EV_STATUS.WARN,
                     message=(
                         f"Stagnation alert({self._stagnation_alert_count}) - "
                         f"Shifting DOWN: {self._cur_gear + self._stagnation_alert_count}"
@@ -138,7 +138,7 @@ class ATHGearBox:
             )
             await self.event.publish(
                 EventMsg(
-                    level=DHydraLog.INFO,
+                    level=EV_STATUS.GOOD,
                     message=f"Shifting UP: {self._cur_gear - 1} > {self._cur_gear} - {self._cur_seq_length}/{self._cur_batch_size}",
                     ev_type=EV_TYPE.SHIFTING,
                     payload={
@@ -165,7 +165,7 @@ class ATHGearBox:
             )
             await self.event.publish(
                 EventMsg(
-                    level=DHydraLog.INFO,
+                    level=EV_STATUS.WARN,
                     message=f"Shifting DOWN: {self._cur_gear} - {self._cur_seq_length}/{self._cur_batch_size}",
                     ev_type=EV_TYPE.SHIFTING,
                     payload={
@@ -194,7 +194,7 @@ class ATHGearBox:
         )
         await self.event.publish(
             EventMsg(
-                level=DHydraLog.INFO,
+                level=EV_STATUS.BAD,
                 message=(
                     f"Critical Stagnation "
                     f"alert({crit_count}): Radical "
@@ -221,7 +221,7 @@ class ATHGearBox:
         if self._stagnation_alert_count != 0:
             await self.event.publish(
                 EventMsg(
-                    level=DHydraLog.INFO,
+                    level=EV_STATUS.INFO,
                     message=f"Resetting stagnation count to 0",
                 )
             )

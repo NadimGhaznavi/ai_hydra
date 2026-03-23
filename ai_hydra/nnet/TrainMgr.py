@@ -95,7 +95,7 @@ class TrainMgr:
             self._cur_highscore = final_score
             self._stag_ep_count = 0
             self._hard_reset_ep_count = 0
-            await self.replay.stagnation_cleared()
+            await self.replay.gearbox.stagnation_cleared()
 
         else:
             self._stag_ep_count += 1
@@ -106,7 +106,7 @@ class TrainMgr:
                 "Stagnation event detected, notifying the replay memory"
             )
             self._stag_ep_count = 0
-            self.replay.stagnation_warning()
+            self.replay.gearbox.stagnation_warning()
 
         if self._hard_reset_ep_count >= self._max_hard_reset_episodes:
             self._hard_reset_count += 1
@@ -121,4 +121,4 @@ class TrainMgr:
                 )
             self._hard_reset_ep_count = 0
             self._stag_ep_count = 0
-            await self.replay.hard_reset(self._hard_reset_count)
+            await self.replay.gearbox.hard_reset(self._hard_reset_count)

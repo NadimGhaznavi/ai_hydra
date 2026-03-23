@@ -11,7 +11,7 @@ from random import Random
 
 from ai_hydra.constants.DReplayMemory import DMemDef, DMemField
 from ai_hydra.constants.DHydra import DHydraLog, DModule
-from ai_hydra.constants.DEvent import EV_TYPE
+from ai_hydra.constants.DEvent import EV_TYPE, EV_STATUS
 
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
@@ -129,16 +129,6 @@ class ATHDataMgr:
         self.log.info(
             f"Initialized. Setting max_frames to {MAX_FRAMES}, max_buckets to {MAX_BUCKETS}"
         )
-        await self.event.publish(
-            EventMsg(
-                level=DHydraLog.INFO,
-                message="Initialized",
-                payload={
-                    DMemField.MAX_FRAMES: MAX_FRAMES,
-                    DMemField.MAX_BUCKETS: MAX_BUCKETS,
-                },
-            )
-        )
 
     async def _prune_if_needed(self) -> None:
 
@@ -146,11 +136,11 @@ class ATHDataMgr:
             self.store.pop_first_game()
 
             if not self._has_logged_pruning:
-                msg = "Memory is full, pruning initiated"
+                msg = f"Memory is full ({MAX_FRAMES}), pruning initiated"
                 self.log.info(msg)
 
                 await self.event.publish(
-                    EventMsg(level=DHydraLog.INFO, message=msg)
+                    EventMsg(level=EV_STATUS.INFO, message=msg)
                 )
                 self._has_logged_pruning = True
 
@@ -208,7 +198,7 @@ class ATHDataMgr:
             bucket_counts = self.store.get_bucket_counts()
             await self.event.publish(
                 EventMsg(
-                    level=DHydraLog.INFO,
+                    level=EV_STATUS.INFO,
                     ev_type=EV_TYPE.BUCKETS_STATUS,
                     payload={
                         EV_TYPE.BUCKET_COUNTS: bucket_counts,

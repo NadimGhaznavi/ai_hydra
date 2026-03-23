@@ -32,3 +32,10 @@ class EV_TYPE:
     BUCKET_COUNTS: Final[str] = "bucket_counts"
     SHIFTING: Final[str] = "shifting"
     BUCKETS_STATUS: Final[str] = "buckets_status"
+
+
+class EV_STATUS:
+    GOOD: Final[str] = "🟢"
+    BAD: Final[str] = "🔴"
+    WARN: Final[str] = "🟡"
+    INFO: Final[str] = "🔵"
