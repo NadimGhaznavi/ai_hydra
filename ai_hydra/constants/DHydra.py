@@ -125,6 +125,7 @@ class DModule(StrEnum):
     ATH_GEARBOX = "ATHGearBox"
     EPSILON_ALGO = "EpsilonAlgo"
     EPSILON_NICE_ALGO = "EpsilonNiceAlgo"
+    GRU_MODEL = "GRUModel"
     HYDRA_CLIENT = "HydraClient"
     HYDRA_MGR = "HydraMgr"
     HYDRA_MQ = "HydraMQ"
@@ -132,7 +133,8 @@ class DModule(StrEnum):
     HYDRA_RNG = "HydraRng"
     HYDRA_SERVER = "HydraServer"
     LINEAR_TRAINER = "LinearTrainer"
-    RNN_TRAINER = "RNNTrainer"
+    RNN_MODEL = "RNNModel"
+    RECURRENT_TRAINER = "RecurrentTrainer"
     SIMPLE_REPLAY_MEMORY = "SimpleReplayMemory"
     TRAIN_MGR = "TrainMgr"
 

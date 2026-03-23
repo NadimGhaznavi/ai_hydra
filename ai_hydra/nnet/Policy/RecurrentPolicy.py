@@ -1,4 +1,4 @@
-# ai_hydra/nnet/Policy/RNNPolicy.py
+# ai_hydra/nnet/Policy/RecurrentPolicy.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi
@@ -14,7 +14,7 @@ from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.models.RNNModel import RNNModel
 
 
-class RNNPolicy(HydraPolicy):
+class RecurrentPolicy(HydraPolicy):
     def __init__(self, model: RNNModel, device: torch.device | None = None):
         self.model = model
         self.device = device or torch.device("cpu")

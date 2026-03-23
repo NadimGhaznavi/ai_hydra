@@ -12,7 +12,7 @@ import pprint
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
-from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN
+from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN, DGRU
 from ai_hydra.constants.DReplayMemory import ATH_GEARBOX
 from ai_hydra.constants.DGame import DGameDef
 from ai_hydra.utils.SimCfg import SimCfg
@@ -45,7 +45,7 @@ class HydraSnapshot:
                         str(self.metrics.get_cur_epoch()),
                     ),
                     ("AI Hydra Version", f"v{DHydra.VERSION}"),
-                    ("Random Seed", str(DHydra.RANDOM_SEED)),
+                    ("Random Seed", str(cfg.get(DNetField.RANDOM_SEED))),
                 ],
             )
         )
@@ -71,14 +71,14 @@ class HydraSnapshot:
 
         lines.extend(self._build_model_section(cfg))
         lines.extend(self._build_rewards_section())
-        if model_type == DField.RNN:
+        if model_type == DField.RNN or model_type == DField.GRU:
             lines.extend(self._build_memory_section())
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
         lines.extend(self._build_nice_table())
         lines.extend(self._build_shift_mean_median_section())
-        if model_type == DField.RNN:
+        if model_type == DField.RNN or model_type == DField.GRU:
             lines.extend(self._build_bucket_section())
 
         return "\n".join(lines).rstrip() + "\n"
@@ -106,9 +106,9 @@ class HydraSnapshot:
             )
 
         if model_type == DField.RNN:
-            rnn_layers = cfg.get(DNetField.RNN_LAYERS)
+            layers = cfg.get(DNetField.LAYERS)
             seq_length = cfg.get(DNetField.SEQ_LENGTH)
-            rnn_tau = cfg.get(DNetField.RNN_TAU)
+            tau = cfg.get(DNetField.TAU)
 
             return self._build_kv_section(
                 "🧠 RNN Model",
@@ -116,12 +116,32 @@ class HydraSnapshot:
                     ("Input Size", str(model_input_size)),
                     ("Hidden Size", str(model_hidden_size)),
                     ("Dropout Layer P-Value", str(dropout_p)),
-                    ("RNN Layers", str(rnn_layers)),
+                    ("Layers", str(layers)),
                     ("Learning Rate", str(learning_rate)),
                     ("Discount/Gamma", str(gamma)),
                     ("Batch Size", str(batch_size)),
                     ("Sequence Length", str(seq_length)),
-                    ("RNN Tau", str(rnn_tau)),
+                    ("Tau", str(tau)),
+                ],
+            )
+
+        if model_type == DField.GRU:
+            layers = cfg.get(DNetField.LAYERS)
+            seq_length = cfg.get(DNetField.SEQ_LENGTH)
+            tau = cfg.get(DNetField.TAU)
+
+            return self._build_kv_section(
+                "🧠 GRU Model",
+                [
+                    ("Input Size", str(model_input_size)),
+                    ("Hidden Size", str(model_hidden_size)),
+                    ("Dropout Layer P-Value", str(dropout_p)),
+                    ("Layers", str(layers)),
+                    ("Learning Rate", str(learning_rate)),
+                    ("Discount/Gamma", str(gamma)),
+                    ("Batch Size", str(batch_size)),
+                    ("Sequence Length", str(seq_length)),
+                    ("Tau", str(tau)),
                 ],
             )
 
@@ -166,10 +186,6 @@ class HydraSnapshot:
         return self._build_kv_section(
             "💾 Replay Memory",
             [
-                (
-                    "Gearbox",
-                    'The ATH_GEARBOX controls the "Sequence Length"/"Batch Size" combination associated with a specific \*ATH gear\*.items.',
-                ),
                 ("ATH_GEARBOX", gearbox_str),
             ],
         )
@@ -182,6 +198,9 @@ class HydraSnapshot:
         elif model_type == DField.RNN:
             p_value = DRNN.NICE_P_VALUE
             nice_steps = DRNN.NICE_STEPS
+        elif model_type == DField.GRU:
+            p_value = DGRU.NICE_P_VALUE
+            nice_steps = DGRU.NICE_STEPS
         return self._build_kv_section(
             "🙂 Epsilon Nice",
             [("P-Value", p_value), ("Nice Steps", nice_steps)],

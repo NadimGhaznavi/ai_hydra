@@ -36,8 +36,8 @@ class SimCfg:
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
         DNetField.PER_STEP: DNetDef.PER_STEP,
         DNetField.RANDOM_SEED: DHydra.RANDOM_SEED,
-        DNetField.RNN_LAYERS: DRNN.RNN_LAYERS,
-        DNetField.RNN_TAU: DRNN.TAU,
+        DNetField.LAYERS: DRNN.RNN_LAYERS,
+        DNetField.TAU: DRNN.TAU,
         DNetField.SEQ_LENGTH: DRNN.SEQ_LENGTH,
         DNetField.SIM_PAUSED: False,
     }
@@ -55,8 +55,8 @@ class SimCfg:
         DNetField.MOVE_DELAY: float,
         DNetField.PER_STEP: bool,
         DNetField.RANDOM_SEED: int,
-        DNetField.RNN_LAYERS: int,
-        DNetField.RNN_TAU: float,
+        DNetField.LAYERS: int,
+        DNetField.TAU: float,
         DNetField.SEQ_LENGTH: int,
         DNetField.SIM_PAUSED: bool,
     }

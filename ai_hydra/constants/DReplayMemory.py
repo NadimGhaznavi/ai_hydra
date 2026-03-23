@@ -24,6 +24,10 @@ class DMemDef:
     THRESHOLD_BUCKETS: Final[list] = [17, 18, 19]
     THRESHOLDS_REQUIRED: Final[int] = 10
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    # The number of episodes that the TrainMgr will tolerate with no new
+    # highscore before calling `stagnation_warning()` on the ATHReplay.
+    MAX_STAGNANT_EPISODES: Final[int] = 600
+    MAX_HARD_RESET_EPISODES: Final[int] = 1500
 
 
 class DMemory:

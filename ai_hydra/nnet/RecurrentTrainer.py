@@ -1,4 +1,4 @@
-# ai_hydra/nnet/RNNTrainer2.py
+# ai_hydra/nnet/RecurrentTrainer.py
 #
 #    AI Hydra
 #    Author: Nadim-Daniel Ghaznavi
@@ -16,7 +16,7 @@ from copy import deepcopy
 
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DHydra import DHydraLog, DModule
-from ai_hydra.constants.DNNet import DRNNTrainer
+from ai_hydra.constants.DNNet import DRecurrentTrainer
 
 from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.utils.HydraLog import HydraLog
@@ -26,7 +26,7 @@ DQN_WITH_TARGET = False
 DOUBLE_DQN = True
 
 
-class RNNTrainer:
+class RecurrentTrainer:
     def __init__(
         self,
         model,
@@ -45,13 +45,14 @@ class RNNTrainer:
         self.replay = replay
         self._tau = None
         self._gamma = None
-        self._batch_size = None
 
-        self.optimizer = DRNNTrainer.OPTIM(self.model.parameters(), lr=lr)
-        self.criterion = DRNNTrainer.CRITERION()
+        self.optimizer = DRecurrentTrainer.OPTIM(
+            self.model.parameters(), lr=lr
+        )
+        self.criterion = DRecurrentTrainer.CRITERION()
 
         self.log = HydraLog(
-            client_id=DModule.RNN_TRAINER,
+            client_id=DModule.RECURRENT_TRAINER,
             log_level=log_level,
             to_console=True,
         )
@@ -201,10 +202,8 @@ class RNNTrainer:
                 self._tau * param.data + (1.0 - self._tau) * target_param.data
             )
 
-    def set_params(self, tau: float, gamma: float, batch_size: int):
+    def set_params(self, tau: float, gamma: float):
         self._tau = tau
         self.log.info(f"Setting Tau to {tau}")
         self._gamma = gamma
         self.log.info(f"Setting the Discount/Gamma to {gamma}")
-        self._batch_size = batch_size
-        self.log.info(f"Setting Batch Size to {batch_size}")

@@ -15,6 +15,27 @@ import torch.nn as nn
 import torch.optim as optim
 
 
+class DGRU:
+    """
+    GRU Model defaults
+    """
+
+    BATCH_SIZE: Final[int] = 64
+    DROPOUT_P_VALUE: Final[float] = 0.0
+    INITIAL_EPSILON: Final[float] = 0.999
+    EPSILON_DECAY_RATE: Final[float] = 0.98
+    GAMMA: Final[float] = 0.96
+    HIDDEN_SIZE: Final[int] = 64
+    LEARNING_RATE: Final[float] = 0.002
+    MINIMUM_EPSILON: Final[float] = 0.0
+    NICE_P_VALUE: Final[float] = 0.0
+    NICE_STEPS: Final[int] = 10
+    OUTPUT_SIZE: Final[int] = 3
+    GRU_LAYERS: Final[int] = 2
+    SEQ_LENGTH: Final[int] = 4
+    TAU: Final[float] = 0.001
+
+
 class DRNN:
     """
     RNN Model defaults
@@ -110,14 +131,14 @@ class DNetField:
     PER_STEP: Final[str] = "per_step"
     RANDOM_SEED: Final[str] = "random_seed"
     REWARD: Final[str] = DGameField.REWARD
-    RNN_LAYERS: Final[str] = "rnn_layers"
-    RNN_TAU: Final[str] = "rnn_tau"
+    LAYERS: Final[str] = "layers"
+    TAU: Final[str] = "tau"
     SEQ_LENGTH: Final[str] = "sequence_length"
     SIM_PAUSED: Final[str] = "sim_paused"
     STATE: Final[str] = "state"
 
 
-class DRNNTrainer:
+class DRecurrentTrainer:
     """
     RNN Trainer defaults
     """
@@ -131,9 +152,11 @@ class DRNNTrainer:
 MODEL_TYPE_TABLE: Final[dict] = {
     DField.LINEAR: DLabel.LINEAR,
     DField.RNN: DLabel.RNN,
+    DField.GRU: DLabel.GRU,
 }
 
 MODEL_TYPES: Final[list] = [
     (DLabel.LINEAR, DField.LINEAR),
     (DLabel.RNN, DField.RNN),
+    (DLabel.GRU, DField.GRU),
 ]

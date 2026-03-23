@@ -6,10 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.19.2] - 2026-03-21 14:22 - HOTFIX
+
+## [Unreleased] - The "I am GRU Relaease"
+
+### Added
+- Updated *Event Log* screenshot for the docs.
+- **Stagnation Hander**
 
 ### Fixed
-- Scores image in README
+- Scores image link in README
+- `HydraLog` bug that caused dupe log messages after a `reset`.
+
+---
+
+## [0.19.1] - 2026-03-21 14:37 - HOTFIX
+
+- **Grown-Ups make mistakes too**
+
+### Fixed
+- Release glitch.
 
 ---
 

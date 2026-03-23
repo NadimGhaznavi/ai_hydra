@@ -9,8 +9,6 @@
 
 # General Python Modules
 import asyncio
-import sys
-import time
 from pathlib import Path
 import os
 from datetime import datetime
@@ -46,6 +44,7 @@ from ai_hydra.constants.DNNet import (
     DNetDef,
     DLinear,
     DRNN,
+    DGRU,
     MODEL_TYPE_TABLE,
     MODEL_TYPES,
 )
@@ -716,10 +715,12 @@ class HydraClientTui(App):
             lr = f"{DLinear.LEARNING_RATE:.5f}"
             min_epsilon = DLinear.MINIMUM_EPSILON
             self.remove_class(DField.RNN)
+            self.remove_class(DField.GRU)
             self.add_class(DField.LINEAR)
             self.query_one(f"#{DField.BATCH_SIZE_INPUT}", Input).value = str(
                 batch_size
             )
+            layers = "N/A"
 
         # RNN model defaults
         elif model_type == DField.RNN:
@@ -730,13 +731,33 @@ class HydraClientTui(App):
             initial_epsilon = DRNN.INITIAL_EPSILON
             lr = f"{DRNN.LEARNING_RATE:.4f}"
             min_epsilon = DRNN.MINIMUM_EPSILON
+            layers = DRNN.RNN_LAYERS
             self.remove_class(DField.LINEAR)
+            self.remove_class(DField.GRU)
             self.add_class(DField.RNN)
             self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(
                 str(DRNN.BATCH_SIZE)
             )
+
+        # GRU model defaults
+        elif model_type == DField.GRU:
+            dropout_p = DGRU.DROPOUT_P_VALUE
+            epsilon_decay = DGRU.EPSILON_DECAY_RATE
+            gamma = DGRU.GAMMA
+            hidden_size = DGRU.HIDDEN_SIZE
+            initial_epsilon = DGRU.INITIAL_EPSILON
+            lr = f"{DGRU.LEARNING_RATE:.4f}"
+            min_epsilon = DGRU.MINIMUM_EPSILON
+            layers = DGRU.GRU_LAYERS
+            self.remove_class(DField.LINEAR)
+            self.remove_class(DField.RNN)
+            self.add_class(DField.GRU)
+            self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(
+                str(DGRU.BATCH_SIZE)
+            )
+
         else:
-            raise ValueError(f"EFFOR: Unrecognized model type {model_type}")
+            raise ValueError(f"ERROR: Unrecognized model type {model_type}")
 
         # Update widgets with model specific defaults
         self.query_one(f"#{DField.DROPOUT_P_INPUT}", Input).value = str(
@@ -755,6 +776,9 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.LEARNING_RATE_INPUT}", Input).value = lr
         self.query_one(f"#{DField.MIN_EPSILON_INPUT}", Input).value = str(
             min_epsilon
+        )
+        self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value = str(
+            layers
         )
 
         # Update HydraMetrics
@@ -846,6 +870,7 @@ class HydraClientTui(App):
                 event="Turbo mode enabled: Game rendering disabled, move delay set to 0.0",
             )
             self.mq.disable_per_step_sub()
+            self._w_board_box.border_subtitle = ""
         # Turbo disabled
         else:
             self.remove_class(DField.TURBO_ON)
@@ -1107,6 +1132,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RANDOM_SEED_LABEL}", Label).update(
             random_seed
         )
+
         # Epsilon values
         epsilon_decay = self.query_one(f"#{DField.EPSILON_DECAY_INPUT}").value
         initial_epsilon = self.query_one(
@@ -1122,6 +1148,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.MIN_EPSILON_LABEL}", Label).update(
             str(min_epsilon)
         )
+
         # Turbo mode == Not per_step
         per_step = not self.query_one(f"#{DField.TURBO_MODE}", Switch).value
         # Move delay
@@ -1134,6 +1161,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.MODEL_TYPE_LABEL}", Label).update(
             model_type_label
         )
+
         # Hidden size
         hidden_size = self.query_one(
             f"#{DField.HIDDEN_SIZE_INPUT}", Input
@@ -1141,6 +1169,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.HIDDEN_SIZE_LABEL}", Label).update(
             str(hidden_size)
         )
+
         # Learning rate
         learning_rate = self.query_one(
             f"#{DField.LEARNING_RATE_INPUT}", Input
@@ -1148,18 +1177,19 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.LEARNING_RATE_LABEL}", Label).update(
             learning_rate
         )
+
         # Discount/Gamma
         gamma = self.query_one(f"#{DField.GAMMA_INPUT}", Input).value
         self.query_one(f"#{DField.GAMMA_LABEL}", Label).update(gamma)
         # Dropout p-value
         dropout_p = self.query_one(f"#{DField.DROPOUT_P_INPUT}", Input).value
         self.query_one(f"#{DField.DROPOUT_P_LABEL}", Label).update(dropout_p)
-        # RNN layers
-        rnn_layers = self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value
-        self.query_one(f"#{DField.RNN_LAYERS_LABEL}", Label).update(rnn_layers)
+        # RNN/GRU layers
+        layers = self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value
+        self.query_one(f"#{DField.RNN_LAYERS_LABEL}", Label).update(layers)
         # RNN Tau
-        rnn_tau = self.query_one(f"#{DField.RNN_TAU_INPUT}", Input).value
-        self.query_one(f"#{DField.RNN_TAU_LABEL}", Label).update(rnn_tau)
+        tau = self.query_one(f"#{DField.RNN_TAU_INPUT}", Input).value
+        self.query_one(f"#{DField.RNN_TAU_LABEL}", Label).update(tau)
 
         self.cfg.apply(
             {
@@ -1175,8 +1205,8 @@ class HydraClientTui(App):
                 DNetField.MODEL_TYPE: model_type,
                 DNetField.MOVE_DELAY: move_delay,
                 DNetField.RANDOM_SEED: random_seed,
-                DNetField.RNN_LAYERS: rnn_layers,
-                DNetField.RNN_TAU: rnn_tau,
+                DNetField.LAYERS: layers,
+                DNetField.TAU: tau,
             }
         )
 

@@ -527,6 +527,15 @@ EventLog {
     display: none;
 }
 
+/* GRU Model is Seleted */
+/* -------------------- */
+.gru #batch_size_input {
+    display: none;
+}
+.gru #batch_size_label {
+    display: none;
+}
+
 /* Linear Model is Selected */
 /* ------------------------ */
 .linear #ath_memory {
