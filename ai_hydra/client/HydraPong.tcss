@@ -1,0 +1,18 @@
+
+.box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    color: #5fc442;
+    padding: 0 1;
+}
+
+#title {
+    width: 44;
+    text-style: bold;
+}
+
+#pong_box {
+    width: 44;
+}
