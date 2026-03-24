@@ -16,6 +16,8 @@ from typing import Optional, Callable, Awaitable
 
 from ai_hydra.constants.DNNet import DEpsilonField
 from ai_hydra.constants.DHydra import DHydraLog, DModule
+from ai_hydra.constants.DEvent import EV_STATUS
+
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 
@@ -102,11 +104,14 @@ class EpsilonAlgo:
         )
         self._depleted = self._cur_epsilon <= self._min_epsilon
 
+        if self._cur_epsilon < 0.0001:
+            self._cur_epsilon = 0.0
+
         if self._epsilon_not_depleted and self._depleted:
             msg = f"Exploration complete: ε = {self._min_epsilon}"
             self.log.info(msg)
             await self.event.publish(
-                EventMsg(level=DHydraLog.INFO, message=msg)
+                EventMsg(level=EV_STATUS.INFO, message=msg)
             )
             self._epsilon_not_depleted = False
 
