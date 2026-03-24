@@ -522,6 +522,9 @@ class HydraClientTui(App):
         )
         self.event_log = self.telemtry.event_log
 
+        # Seed the highscores with a zero for plotting
+        self.metrics.add_highscore(0)
+
         # Create references to some TUI element that are frequently updated
         # in the ZeroMQ listening loop.
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
