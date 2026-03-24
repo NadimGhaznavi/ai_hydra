@@ -248,6 +248,7 @@ class HydraMgr(HydraServer):
             rng=policy_rng,
             steps=epsilon_nice_steps,
             log_level=self.log_level,
+            pub_func=self.mq.publish_events,
         )
 
         self._train_mgr = TrainMgr(

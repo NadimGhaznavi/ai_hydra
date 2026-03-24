@@ -728,7 +728,7 @@ class HydraClientTui(App):
             self.query_one(f"#{DField.BATCH_SIZE_INPUT}", Input).value = str(
                 batch_size
             )
-            layers = "N/A"
+            layers = 0
 
         # RNN model defaults
         elif model_type == DField.RNN:
@@ -1201,24 +1201,26 @@ class HydraClientTui(App):
         tau = self.query_one(f"#{DField.RNN_TAU_INPUT}", Input).value
         self.query_one(f"#{DField.RNN_TAU_LABEL}", Label).update(tau)
 
-        self.cfg.apply(
-            {
-                DNetField.BATCH_SIZE: batch_size,
-                DNetField.DROPOUT_P: dropout_p,
-                DNetField.EPSILON_DECAY: epsilon_decay,
-                DNetField.GAMMA: gamma,
-                DNetField.HIDDEN_SIZE: hidden_size,
-                DNetField.INITIAL_EPSILON: initial_epsilon,
-                DNetField.LEARNING_RATE: learning_rate,
-                DNetField.MIN_EPSILON: min_epsilon,
-                DNetField.PER_STEP: per_step,
-                DNetField.MODEL_TYPE: model_type,
-                DNetField.MOVE_DELAY: move_delay,
-                DNetField.RANDOM_SEED: random_seed,
-                DNetField.LAYERS: layers,
-                DNetField.TAU: tau,
-            }
-        )
+        cfg_dict = {
+            DNetField.BATCH_SIZE: batch_size,
+            DNetField.DROPOUT_P: dropout_p,
+            DNetField.EPSILON_DECAY: epsilon_decay,
+            DNetField.GAMMA: gamma,
+            DNetField.HIDDEN_SIZE: hidden_size,
+            DNetField.INITIAL_EPSILON: initial_epsilon,
+            DNetField.LEARNING_RATE: learning_rate,
+            DNetField.MIN_EPSILON: min_epsilon,
+            DNetField.PER_STEP: per_step,
+            DNetField.MODEL_TYPE: model_type,
+            DNetField.MOVE_DELAY: move_delay,
+            DNetField.RANDOM_SEED: random_seed,
+            DNetField.LAYERS: layers,
+            DNetField.TAU: tau,
+        }
+        # For debugging
+        # print(cfg_dict)
+
+        self.cfg.apply(cfg_dict)
 
 
 def main() -> None:

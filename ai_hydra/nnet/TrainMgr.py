@@ -9,6 +9,7 @@ from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.nnet.LinearTrainer import LinearTrainer
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
+from ai_hydra.nnet.Policy.EpsilonNicePolicy import EpsilonNicePolicy
 from ai_hydra.nnet.RecurrentTrainer import RecurrentTrainer
 from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
 from ai_hydra.nnet.models.LinearModel import LinearModel
@@ -61,7 +62,7 @@ class TrainMgr:
         self,
         *,
         snake_mgr: SnakeMgr,
-        policy: HydraPolicy,
+        policy: EpsilonNicePolicy,
         trainer: LinearTrainer | RecurrentTrainer,
         replay: SimpleReplayMemory | ATHMemory,
         client_id: str = DModule.TRAIN_MGR,
@@ -96,6 +97,7 @@ class TrainMgr:
             self._stag_ep_count = 0
             self._hard_reset_ep_count = 0
             await self.replay.gearbox.stagnation_cleared()
+            await self.policy.disable_nice()
 
         else:
             self._stag_ep_count += 1
@@ -107,6 +109,7 @@ class TrainMgr:
             )
             self._stag_ep_count = 0
             self.replay.gearbox.stagnation_warning()
+            await self.policy.enable_nice()
 
         if self._hard_reset_ep_count >= self._max_hard_reset_episodes:
             self._hard_reset_count += 1
@@ -122,3 +125,4 @@ class TrainMgr:
             self._hard_reset_ep_count = 0
             self._stag_ep_count = 0
             await self.replay.gearbox.hard_reset(self._hard_reset_count)
+            await self.policy.enable_nice()

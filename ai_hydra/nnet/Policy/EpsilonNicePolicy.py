@@ -12,11 +12,13 @@ import random
 
 from ai_hydra.constants.DNNet import DRNN
 from ai_hydra.constants.DHydra import DHydraLog, DModule
+from ai_hydra.constants.DEvent import EV_STATUS
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
 from ai_hydra.game.GameBoard import GameBoard
 from ai_hydra.utils.HydraLog import HydraLog
+from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 
 
 class EpsilonNicePolicy(HydraPolicy):
@@ -28,8 +30,13 @@ class EpsilonNicePolicy(HydraPolicy):
         p_value: float,
         steps: int,
         rng: random.Random,
+        pub_func,
     ):
-
+        self._pub_func = pub_func
+        self.event = HydraEventMQ(
+            client_id=DModule.EPSILON_NICE_POLICY,
+            pub_func=pub_func,
+        )
         self.log = HydraLog(
             client_id=DModule.EPSILON_NICE_POLICY,
             log_level=log_level,
@@ -45,7 +52,37 @@ class EpsilonNicePolicy(HydraPolicy):
         self.log.info(f"Nice P-Value set: {p_value}")
         self.log.info(f"Nice STEPS: {steps}")
 
+        self._nice_enabled = False
         self._nice_steps_remaining = 0
+
+    def cur_epsilon(self):
+        return self.base_policy.cur_epsilon()
+
+    async def disable_nice(self):
+        self._nice_enabled = False
+        msg = "Disabling EpsilonNice"
+        await self.event.publish(
+            EventMsg(
+                level=EV_STATUS.INFO,
+                message=msg,
+            )
+        )
+        self.log.info(msg)
+
+    async def enable_nice(self):
+        self._nice_enabled = True
+        msg = "Enabling EpsilonNice"
+        await self.event.publish(
+            EventMsg(
+                level=EV_STATUS.INFO,
+                message=msg,
+            )
+        )
+        self.log.info(msg)
+
+    async def played_game(self):
+        await self.base_policy.played_game()
+        await self.epsilon_n.played_game()
 
     def select_action(self, state: Sequence[float], board: GameBoard) -> int:
 
@@ -54,6 +91,10 @@ class EpsilonNicePolicy(HydraPolicy):
         # Normal Epsilon is still active, do nothing
         if self.base_policy.cur_epsilon() > 0.0001:
             self._nice_steps_remaining = 0
+            return suggested
+
+        # Check if Nice is enabled
+        if not self._nice_enabled:
             return suggested
 
         self.epsilon_n.incr_calls()
@@ -72,10 +113,3 @@ class EpsilonNicePolicy(HydraPolicy):
 
         # Let the NN decide as it normally does....
         return suggested
-
-    async def played_game(self):
-        await self.base_policy.played_game()
-        await self.epsilon_n.played_game()
-
-    def cur_epsilon(self):
-        return self.base_policy.cur_epsilon()

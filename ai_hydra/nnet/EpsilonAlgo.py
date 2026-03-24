@@ -104,7 +104,7 @@ class EpsilonAlgo:
         )
         self._depleted = self._cur_epsilon <= self._min_epsilon
 
-        if self._cur_epsilon < 0.0001:
+        if self._cur_epsilon < 0.001:
             self._cur_epsilon = 0.0
 
         if self._epsilon_not_depleted and self._depleted:
