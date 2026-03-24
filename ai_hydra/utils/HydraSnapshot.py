@@ -8,7 +8,7 @@
 #    License: GPL 3.0
 
 from datetime import datetime
-import pprint
+import traceback
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField
@@ -279,16 +279,20 @@ class HydraSnapshot:
         table_rows: list[list[str]] = []
 
         for epoch, highscore, epsilon, ev_time in rows:
-            epsilon_str = "" if epsilon is None else f"{epsilon:.4f}"
-            time_str = "" if ev_time is None else str(ev_time)
-            table_rows.append(
-                [
-                    str(epoch),
-                    str(highscore),
-                    time_str,
-                    epsilon_str,
-                ]
-            )
+            try:
+                epsilon_str = "" if epsilon is None else f"{epsilon:.4f}"
+                time_str = "" if ev_time is None else str(ev_time)
+                table_rows.append(
+                    [
+                        str(epoch),
+                        str(highscore),
+                        time_str,
+                        epsilon_str,
+                    ]
+                )
+            except Exception as e:
+                print(f"ERROR: {e}")
+                print(f"STACKTRACE: {traceback.format_exc()}")
 
         return self._build_table_section(
             "🏆 Highscore Events", headers, table_rows

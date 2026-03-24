@@ -192,15 +192,15 @@ class ATHGearBox:
         self._cur_seq_length, self._cur_batch_size = get_gear_data(
             self._cur_gear
         )
+        msg = (
+            f"Critical Stagnation alert({crit_count}): Radical DOWN shift: "
+            f"{old_gear} > {self._cur_gear} - {self._cur_seq_length}/"
+            f"{self._cur_batch_size}"
+        )
         await self.event.publish(
             EventMsg(
                 level=EV_STATUS.BAD,
-                message=(
-                    f"Critical Stagnation "
-                    f"alert({crit_count}): Radical "
-                    f"DOWN shift: {old_gear} > {self._cur_gear} - "
-                    f"{self._cur_seq_length}/{self._cur_batch_size}"
-                ),
+                message=msg,
                 ev_type=EV_TYPE.SHIFTING,
                 payload={
                     DField.GEAR: self._cur_gear,
@@ -209,6 +209,7 @@ class ATHGearBox:
                 },
             )
         )
+        self.log.debug(msg)
         return
 
     def incr_cooldown_count(self):
@@ -219,12 +220,14 @@ class ATHGearBox:
 
     async def stagnation_cleared(self):
         if self._stagnation_alert_count != 0:
+            msg = "Resetting stagnation count to 0"
             await self.event.publish(
                 EventMsg(
                     level=EV_STATUS.INFO,
-                    message=f"Resetting stagnation count to 0",
+                    message=msg,
                 )
             )
+            self.log.debug(msg)
         self._stagnation_flag = False
         self._stagnation_alert_count = 0
 

@@ -21,12 +21,12 @@ class DGRU:
     """
 
     BATCH_SIZE: Final[int] = 64
-    DROPOUT_P_VALUE: Final[float] = 0.0
+    DROPOUT_P_VALUE: Final[float] = 0.1
     INITIAL_EPSILON: Final[float] = 0.999
     EPSILON_DECAY_RATE: Final[float] = 0.985
-    GAMMA: Final[float] = 0.96
+    GAMMA: Final[float] = 0.97
     HIDDEN_SIZE: Final[int] = 96
-    LEARNING_RATE: Final[float] = 0.002
+    LEARNING_RATE: Final[float] = 0.001
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20

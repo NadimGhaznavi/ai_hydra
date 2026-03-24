@@ -788,6 +788,7 @@ class HydraClientTui(App):
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
+        self._update_tui_labels()
 
     async def _on_sim_event(self, topic: str, payload) -> None:
         sender = payload.get(DEvent.SENDER)

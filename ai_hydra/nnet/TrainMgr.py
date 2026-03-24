@@ -112,7 +112,7 @@ class TrainMgr:
             self._hard_reset_count += 1
             if self._hard_reset_count > 1:
                 self._max_hard_reset_episodes = (
-                    self._max_hard_reset_episodes * self._hard_reset_count
+                    MAX_HARD_RESET_EPISODES * self._hard_reset_count
                 )
                 self.log.debug(
                     f"Critical stagnation alert({self._hard_reset_count}): "
