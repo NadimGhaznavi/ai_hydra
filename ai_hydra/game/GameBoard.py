@@ -174,6 +174,10 @@ class GameBoard:
         food_dx = dx / max(1, width)
         food_dy = dy / max(1, height)
 
+        # Food on the same X or Y axis
+        food_on_x = int(head.x == self.food_position.x)
+        food_on_y = int(head.y == self.food_position.y)
+
         # Length bits (use snake length, not just body length)
         length_bits = self._int_to_bits(
             self.STATE_LENGTH_BITS, self.get_snake_length()
@@ -192,6 +196,9 @@ class GameBoard:
             # 8 - 9 food delta (normalized
             food_dx,
             food_dy,
+            # 10 - 11 food on same X/Y
+            food_on_x,
+            food_on_y,
             # 10.. length bits
             *length_bits,
         ]
