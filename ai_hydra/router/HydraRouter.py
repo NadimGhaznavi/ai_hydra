@@ -320,10 +320,18 @@ class HydraRouter(App):
 def main() -> None:
 
     p = argparse.ArgumentParser(description="AI Hydra Router")
-    p.add_argument("--address", default="*", help="Bind address")
-    p.add_argument("--port", type=int, default=DHydraRouterDef.PORT)
+    p.add_argument("--address", default="*", help="Bind address (*)")
     p.add_argument(
-        "--hb-port", type=int, default=DHydraRouterDef.HEARTBEAT_PORT
+        "--port",
+        type=int,
+        default=DHydraRouterDef.PORT,
+        help=f"Control port number ({DHydraRouterDef.PORT})",
+    )
+    p.add_argument(
+        "--hb-port",
+        type=int,
+        default=DHydraRouterDef.HEARTBEAT_PORT,
+        help=f"Heartbeat port number ({DHydraRouterDef.HEARTBEAT_PORT}",
     )
     args = p.parse_args()
 
