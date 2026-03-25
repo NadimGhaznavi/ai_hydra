@@ -112,15 +112,15 @@ class HydraServer:
         await self.mq.quit()
 
     async def _main_loop(self, stop_event: asyncio.Event) -> None:
-        self.mq = HydraServerMQ(
-            router_address=self.router_address,
-            router_port=self.router_port,
-            router_hb_port=self.router_hb_port,
-            identity=self.identity,
-            srv_methods=self._methods,
-            log_level=self.log_level,
-        )
         try:
+            self.mq = HydraServerMQ(
+                router_address=self.router_address,
+                router_port=self.router_port,
+                router_hb_port=self.router_hb_port,
+                identity=self.identity,
+                srv_methods=self._methods,
+                log_level=self.log_level,
+            )
             self.mq.start()
         except zmq.error.ZMQError as e:
             print(f"ERROR: {e}")
