@@ -61,7 +61,7 @@ class HydraServerMQ(HydraBaseMQ):
             topic_prefix=topic_prefix,
         )
         self.log = HydraLog(
-            client_id=DModule.H,
+            client_id=DModule.HYDRA_SERVER_MQ,
             log_level=log_level,
             to_console=True,
         )

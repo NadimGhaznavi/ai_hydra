@@ -111,7 +111,8 @@ class HydraServer:
         )
 
     async def quit(self):
-        await self.mq.quit()
+        if self.mq is not None:
+            await self.mq.quit()
 
     async def _main_loop(self, stop_event: asyncio.Event) -> None:
         try:
@@ -127,11 +128,7 @@ class HydraServer:
             self.mq.start()
         except Exception:
             if self.mq is not None:
-                stop = getattr(self.mq, "stop", None)
-                if callable(stop):
-                    maybe_awaitable = stop()
-                    if asyncio.iscoroutine(maybe_awaitable):
-                        await maybe_awaitable
+                await self.mq.quit()
                 self.mq = None
             raise
 
@@ -163,54 +160,67 @@ class HydraServer:
         self._main_task = asyncio.create_task(
             self._main_loop(stop_event), name="hydra-server-main"
         )
+        wait_stop_task = asyncio.create_task(
+            stop_event.wait(), name="wait-stop"
+        )
 
         try:
             done, pending = await asyncio.wait(
-                [
-                    asyncio.create_task(stop_event.wait(), name="wait-stop"),
-                    self._main_task,
-                ],
+                [wait_stop_task, self._main_task],
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
             if self._main_task in done:
-                # retrieve exception immediately
-                await self._main_task
+                exc = self._main_task.exception()
+                if exc is not None:
+                    self.log.critical(
+                        f"Main task failed: {exc!r}",
+                    )
+                    raise exc
 
         finally:
+            wait_stop_task.cancel()
+            await asyncio.gather(wait_stop_task, return_exceptions=True)
             await self._shutdown()
 
     async def _shutdown(self) -> None:
-        """Graceful shutdown: cancel main task, close MQ, cancel stragglers."""
+        """Graceful shutdown: stop main task, close MQ, cancel stragglers."""
         self.log.info("Shutting down...")
 
-        if self._main_task is not None:
-            if not self._main_task.done():
-                self._main_task.cancel()
+        main_task = self._main_task
+        self._main_task = None
+
+        # Drain the main task, but do not re-raise its exception here.
+        if main_task is not None:
+            if not main_task.done():
+                main_task.cancel()
             try:
-                await self._main_task
+                await main_task
             except asyncio.CancelledError:
                 pass
+            except Exception as e:
+                self.log.debug(
+                    f"Ignoring main task exception during shutdown: {e!r}"
+                )
 
-        # Stop/close MQ if available
+        # Close MQ if still present
         if self.mq is not None:
-            stop = getattr(self.mq, "stop", None)
-            if callable(stop):
-                try:
-                    maybe_awaitable = stop()
-                    if asyncio.iscoroutine(maybe_awaitable):
-                        await maybe_awaitable
-                except Exception as e:
-                    self.log.error(f"Error stopping HydraMQ: {e}")
-            self.mq = None
+            try:
+                await self.mq.quit()
+            except Exception as e:
+                self.log.debug(f"Ignoring MQ shutdown exception: {e!r}")
+            finally:
+                self.mq = None
 
-        # Cancel any other pending tasks (keeps asyncio.run() happy)
+        # Cancel any other pending tasks, excluding this one
         current = asyncio.current_task()
         pending = [
             t for t in asyncio.all_tasks() if t is not current and not t.done()
         ]
+
         for t in pending:
             t.cancel()
+
         if pending:
             await asyncio.gather(*pending, return_exceptions=True)
 
