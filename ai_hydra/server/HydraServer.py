@@ -125,7 +125,7 @@ class HydraServer:
                 log_level=self.log_level,
             )
             self.mq.start()
-        except zmq.error.ZMQError as e:
+        except Exception as e:
             print(f"ERROR: {e}")
             self.mq.quit()
             sys.exit(1)
