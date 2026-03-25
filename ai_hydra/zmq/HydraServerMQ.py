@@ -82,7 +82,7 @@ class HydraServerMQ(HydraBaseMQ):
             # Make sure the port is available
             self.pub_socket.bind(self.pub_addr)
 
-        except zmq.error.ZMQError:
+        except Exception as e:
             print(f"ERROR: Port {pub_port} already being used")
             self.quit()
             sys.exit(1)
