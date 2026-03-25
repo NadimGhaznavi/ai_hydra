@@ -74,14 +74,14 @@ class HydraServerMQ(HydraBaseMQ):
 
         # Per-Step topic doesn't need batching, it's slow, because of the
         # user defined move_delay
-
-        self.pub_socket: zmq.asyncio.Socket | None = None
-        self.pub_addr = f"tcp://*:{pub_port}"
-        self.pub_socket = self.ctx.socket(zmq.PUB)
-
-        # Make sure the port is available
         try:
+            self.pub_socket: zmq.asyncio.Socket | None = None
+            self.pub_addr = f"tcp://*:{pub_port}"
+            self.pub_socket = self.ctx.socket(zmq.PUB)
+
+            # Make sure the port is available
             self.pub_socket.bind(self.pub_addr)
+
         except zmq.error.ZMQError:
             print(f"ERROR: Port {pub_port} already being used")
             self.quit()
