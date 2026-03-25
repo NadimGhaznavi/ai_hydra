@@ -7,7 +7,8 @@
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
 
-import argparse
+import sys
+import zmq
 import asyncio
 import signal
 from typing import Callable, Optional
@@ -119,7 +120,12 @@ class HydraServer:
             srv_methods=self._methods,
             log_level=self.log_level,
         )
-        self.mq.start()
+        try:
+            self.mq.start()
+        except zmq.error.ZMQError as e:
+            print(f"ERROR: {e}")
+            self.mq.quit()
+            sys.exit(1)
 
         try:
             while not stop_event.is_set():
