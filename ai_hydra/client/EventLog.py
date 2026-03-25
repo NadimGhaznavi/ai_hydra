@@ -33,7 +33,7 @@ class EventLog(Widget):
     def compose(self) -> ComposeResult:
         yield Vertical(
             Label(
-                f"[b #3e99af]{'Epoch':>7s}{DLabel.TIME:>9s}    {'Source':<17s}{'  ':<2}{DLabel.EVENT}[/]"
+                f"[b #3e99af]{'Epoch':>7s}{DLabel.TIME:>13s}    {'Source':<17s}{'  ':<2}{DLabel.EVENT}[/]"
             ),
             Log(highlight=True, auto_scroll=True, id=DField.EVENT_LOG_LOG),
         )
@@ -55,7 +55,7 @@ class EventLog(Widget):
         elap_time = self.metrics.get_elapsed_time()
         src_icon, source = EVENT_MAP[ev_type]
 
-        msg = f"{epoch:>7s}{elap_time:>9s}  {src_icon:>3s} {source:<16s}{status:<2}{event}"
+        msg = f"{epoch:>7s}{elap_time:>13s}  {src_icon:>3s} {source:<16s}{status:<2}{event}"
 
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).write_line(msg)
 
