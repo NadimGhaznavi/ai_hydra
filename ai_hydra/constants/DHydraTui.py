@@ -216,6 +216,7 @@ class DLabel:
     GAMMA: Final[str] = "Discount/Gamma"
     GRU: Final[str] = "GRU"
     HANDSHAKE: Final[str] = "Handshake"
+    HEARTBEAT_PORT: Final[str] = "Heartbeat Port"
     HIDDEN_SIZE: Final[str] = "Hidden Size"
     HIGHSCORE: Final[str] = "Highscore"
     HIGHSCORES: Final[str] = "Highscores"

@@ -164,7 +164,9 @@ class HydraRouter(App):
 
         # Configuration
         yield Vertical(
-            Label(f"{DLabel.LISTEN_PORT}: {self._port}"), id=DField.CONFIG
+            Label(f"{DLabel.LISTEN_PORT}: {self._port}"),
+            Label(f"{DLabel.HEARTBEAT_PORT}: {self._hb_port}"),
+            id=DField.CONFIG,
         )
 
         # Buttons
