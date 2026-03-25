@@ -113,10 +113,11 @@ You can also vary only the random seed to validate that results are not artifact
 
 ---
 
-## Supported Models: Linear and RNN
+## Supported Models: Linear, RNN, and GRU
 
 - Linear Model
 - Recurrent Neural Network (RNN)
+- Gated Recurrent Network (GRU)
 
 Model selection is available directly in the TUI.
 
@@ -164,99 +165,205 @@ A structured event stream capturing system behavior:
 
 ## ATH Replay Memory
 
-The **ATH (Adaptive Temporal Horizon) Replay Memory** is a dynamic system that evolves with the agent.
+The **ATH (Adaptive Temporal Horizon) Replay Memory** is a dynamic replay 
+system that evolves with the agent.
 
-Instead of using fixed training parameters, ATH introduces a gearbox that adjusts:
+Instead of storing isolated transitions for uniform replay, ATH stores 
+**complete episodes** and generates **gear-specific metadata** describing how 
+each episode can be sampled at different temporal horizons.
+
+The ATH gearbox adjusts:
 
 - **Sequence length**
 - **Batch size**
 
 ### Adaptive Training Dynamics
 
-- Early training → short sequences, large batches (fast learning)
-- Later training → long sequences, small batches (deep temporal reasoning)
+- Early training → short sequences, large batches
+- Later training → long sequences, smaller batches
 
-The system shifts gears based on observed performance, not fixed schedules.
+The system shifts gears based on observed performance rather than a fixed 
+schedule.
 
-### Bucketed Sampling
+### Temporal Bucket Indexing
 
-Training data is not uniformly useful.
+ATH does not bucket experiences by score or outcome.
 
-Without intervention, the model overfits to typical gameplay and neglects:
+Instead, completed episodes are analyzed against the active gear, and metadata 
+is used to determine which **end-aligned temporal chunks** are available for 
+sampling.
 
-- Rare high-scoring runs
-- Edge-case failures
+This produces a bucketed index based on **temporal chunk position and usability**, 
+not reward classification.
 
-ATH addresses this by grouping transitions into buckets based on outcomes.
+Sampling then draws across warmed buckets to preserve temporal variety in the 
+training batch.
 
-Sampling pulls from across buckets, ensuring:
+This gives ATH a few useful properties:
 
-- Diverse training signals
-- Visibility into rare but critical experiences
-- Reduced bias toward median performance
+- Full episodes remain intact in storage
+- Sampling adapts automatically as sequence length changes
+- Training batches retain coverage across different temporal windows
+- Replay stays observable and decoupled from the trainer
 
-The TUI memory widget visualizes:
-
-- Bucket distribution
-- Relative capacity
-- System balance over time
+The TUI memory widget visualizes the current bucket distribution and how balanced 
+the replay space is under the active gear.
 
 ![ATH Memory](https://aihydra.osoyalce.com/images/ath-memory.png)
 
 ### System Properties
 
-- Training adapts **how** it learns (gearbox)
-- Training adapts **what** it learns (buckets)
-- Replay memory remains **decoupled and observable**
+- Training adapts **how** it learns through the gearbox
+- Replay adapts **how episodes are sampled** through gear-aware temporal metadata
+- Memory remains **decoupled, inspectable, and observable**
 
-Lifecycle events (warm-up, capacity, gear shifts) are emitted and tracked in real time.
+Lifecycle events such as warm-up, pruning, and gear shifts are emitted and 
+tracked in real time.
 
 ---
 
-## Epsilon Nice - Post-Exploration Safety Layer
+## Train Manager
+
+`TrainMgr` is the central coordinator for AI Hydra’s learning loop.
+
+It is responsible for constructing and wiring together:
+
+- the model and trainer
+- replay memory
+- the base action policy
+- the Epsilon Nice policy wrapper
+- stagnation detection and recovery behavior
+
+`TrainMgr` does more than orchestrate training. It also acts as the system’s 
+recovery controller.
+
+When progress stalls, `TrainMgr` emits stagnation alerts to adaptive subsystems 
+so they can respond in different ways:
+
+- **ATH Gearbox** adjusts sequence length and batch size by shifting gears
+- **Epsilon Nice** can be enabled as a bounded corrective policy layer
+
+This makes stagnation a first-class runtime signal rather than a passive metric.
+
+The result is a coordinated feedback system where memory dynamics and policy 
+behavior can both adapt when learning plateaus.
+
+---
+
+## Epsilon Nice - Bounded Safe-Detour Policy
 
 ### Overview
 
-**Epsilon Nice** is a lightweight, post-exploration policy layer that improves agent stability by preventing immediate fatal actions.
+**Epsilon Nice** is a conditionally enabled policy wrapper that can temporarily 
+redirect action selection into a short safe-detour mode.
 
-It operates after epsilon-greedy exploration has completed and applies a minimal, probabilistic correction to the selected action when necessary.
+It is not a one-step correction and it is not always active.
 
-The goal is not to guide the agent, but to preserve *late-stage* learning by avoiding obviously bad decisions.
+Instead, once normal epsilon exploration has effectively ended, Epsilon Nice 
+may be enabled by the training system. When enabled, it can probabilistically 
+arm a temporary intervention window. During that window, action selection is 
+redirected toward safe alternatives for a fixed number of steps.
 
-### Behavior
+This allows the agent to break out of locally bad or stagnant behavior without 
+permanently replacing the underlying learned policy.
 
-At each step (after epsilon has decayed to zero):
+### How It Works
+
+At each step:
 
 1. The base policy selects an action.
-2. With probability `p_value`, **Epsilon Nice** is activated.
-3. If the selected action would result in an immediate collision:
-  - A non-colliding alternative is selected (if available).
-4. Otherwise, the original action is preserved.
+2. If normal epsilon exploration is still active, that action is returned unchanged.
+3. If Nice is not enabled, the action is returned unchanged.
+4. If Nice is enabled:
+   - with probability `p_value`, Nice arms a detour
+   - once armed, Nice remains active for `steps` turns
+   - during those turns, it attempts to replace the suggested action with a safe alternative
 
-If no safe alternative exists, the action is left unchanged.
+So:
+
+- `p_value` controls how often a Nice detour begins
+- `steps` controls how long the detour lasts
+
+### Override Behavior
+
+During an active Nice detour, the policy looks at the other available actions 
+and gathers the non-colliding alternatives.
+
+- If safe alternatives exist, one is selected at random
+- If no safe alternative exists, the original action is preserved
+
+This means Nice does not simply “block fatal moves.”  
+It temporarily moves the policy into a safe-alternative action mode for a 
+bounded number of steps.
 
 ### Key Properties
 
-- **Minimal intervention** - Only applies to immediate, one-step collisions.
-- **Probabilistic** - Controlled by `p_value` (e.g., `0.005`).
-- **Post-epsilon only** - Disabled during exploration to avoid interfering with learning.
-- **Model-agnostic** - Works with both Linear and RNN policies.
-- **Deterministic-friendly** - Uses the same RNG as the rest of the system.
+- **Post-epsilon gated** - Nice does nothing while normal epsilon exploration is still active
+- **Externally controlled** - Enabled and disabled by the training system
+- **Probabilistic arming** - `p_value` controls entry into Nice mode
+- **Multi-step intervention** - `steps` defines the length of the detour
+- **Safe-alternative sampling** - Overrides choose from non-colliding alternatives when available
+- **Deterministic-friendly** - Uses the shared RNG
+- **Observable** - Reports rolling stats such as calls, triggers, overrides, fatal suggestions, and no-safe-alternative cases
+
+### Telemetry
+
+Epsilon Nice tracks and reports:
+
+- calls
+- triggers
+- overrides
+- fatal suggested actions
+- no-safe-alternative cases
+- trigger rate
+- override rate
+
+These statistics are emitted on rolling windows, allowing the TUI to show how 
+often Nice is being consulted and how often it actually changes behavior.
 
 ---
 
 ## Performance
 
-AI Hydra is designed for **high-throughput training on consumer hardware.**
+AI Hydra is designed for **high-throughput training on consumer hardware**, 
+without relying on a GPU.
 
-Key design choices:
+Its performance comes from two complementary design pillars:
 
-- Pipeline architecture (memory → model → trainer)
-- Minimal data transformation overhead
-- Asynchronous telemetry via ZeroMQ
+### 1. Aligned Training Pipeline
 
-The result: **extremely fast simulations without requiring a GPU**
+The training path is tightly aligned across memory, batching, and model execution.
 
+- Replay memory stores full episodes and exposes **variable-length sequences via metadata**
+- Sequences are constructed **without expensive transformation or reshaping**
+- Batches are fed directly into the model’s **sequence-forward path**
+
+This creates a continuous pipeline:
+
+**memory → sequence assembly → batched training → model forward**
+
+Because each stage is designed to match the next, the system avoids unnecessary 
+copying, slicing, or recomputation.
+
+### 2. Lean Simulation Loop
+
+The core run loop is intentionally minimal and stays focused on simulation and training only.
+
+- No rendering or plotting occurs in the training process
+- Telemetry is published asynchronously via a **ZeroMQ PUB socket**
+- Visualization, plotting, and event correlation are handled by a separate client (TUI)
+
+This keeps the hot path free of UI and analysis overhead, allowing the simulation to run at full speed.
+
+### Result
+
+- High episode throughput on CPU-only systems  
+- Stable real-time telemetry without blocking the simulation  
+- Fast iteration cycles with immediate observability  
+
+AI Hydra achieves speed not through hardware, but through **alignment and separation of concerns**. 
+The system is optimized so that the cost of learning is dominated by model 
+computation, not data movement or orchestration.
 ---
 
 ## Snapshot Report
@@ -277,212 +384,395 @@ Example:
 ```
 📸 AI Hydra - Snapshot Report
 ════════════════════════════
-Timestamp              : 2026-03-20 07:48:40
-Simulation Run Time    : 48m 10s
-Current Episode Number : 11705
-AI Hydra Version       : v0.17.0
+Timestamp              : 2026-03-25 06:33:58
+Simulation Run Time    : 4h 50m
+Current Episode Number : 54655
+AI Hydra Version       : v0.19.2
 Random Seed            : 1970
 
 🎯 Epsilon Greedy
 ════════════════
 Initial Epsilon    : 0.999
 Minimum Epsilon    : 0.0
-Epsilon Decay Rate : 0.993
+Epsilon Decay Rate : 0.985
 
-🧠 RNN Model
+🧠 GRU Model
 ═══════════
-Input Size            : 16
-Hidden Size           : 256
+Input Size            : 18
+Hidden Size           : 192
 Dropout Layer P-Value : 0.1
-RNN Layers            : 4
+Layers                : 3
 Learning Rate         : 0.001
-Discount/Gamma        : 0.96
+Discount/Gamma        : 0.97
 Batch Size            : 64
 Sequence Length       : 4
-RNN Tau               : 0.001
+Tau                   : 0.001
+
+💰 Rewards
+═════════
+MAX_MOVES_MULTIPLIER : 100
+FOOD_REWARD          : 10
+COLLISION_PENALTY    : -10
+EMPTY_MOVE_REWARD    : 0.1
+CLOSER_TO_FOOD       : 0.1
+FURTHER_FROM_FOOD    : -0.1
 
 💾 Replay Memory
 ═══════════════
-Gearbox : 
-{1: (4, 64),
- 2: (8, 32),
- 3: (16, 16),
- 4: (24, 10),
- 5: (32, 8),
- 6: (40, 6),
- 7: (48, 5),
- 8: (56, 4),
- 9: (64, 3)}
+MAX_TRAINING_FRAMES       : 512
+MAX_FRAMES                : 125000
+MAX_BUCKETS               : 20
+NUM_COOLDOWN_EPISODES     : 100
+THRESHOLD_BUCKETS         : [17, 18, 19]
+UPSHIFT_COUNT_THRESHOLD   : 150
+DOWNSHIFT_COUNT_THRESHOLD : 50
+MAX_STAGNANT_EPISODES     : 300
+MAX_HARD_RESET_EPISODES   : 2000
 
 📚 Event Log Messages
 ════════════════════
-💻 Hydra Client          0s  Initialized...
-⚡ Simulation            0s  Connected to simulation server
-⚡ Simulation            0s  Turbo mode enabled: Game rendering disabled, move delay set to 0.0
-⚡ Simulation            0s  Simulation started
-💾 ATH Data Mgr          0s  Epoch 0: Initialized
-⚙️  ATH Gearbox           6s  Epoch 225: Shifting UP: 2
-⚙️  ATH Gearbox          23s  Epoch 482: Shifting UP: 3
-💾 ATH Data Mgr      1m 21s  Epoch 962: Memory is full, pruning initiated
-⚙️  ATH Gearbox       1m 29s  Epoch 1013: Shifting UP: 4
-⚙️  ATH Gearbox       1m 52s  Epoch 1214: Shifting DOWN: 3
-⚙️  ATH Gearbox       2m 24s  Epoch 1415: Shifting UP: 4
-⚙️  ATH Gearbox       4m 19s  Epoch 1976: Shifting UP: 5
-⚙️  ATH Gearbox       5m  1s  Epoch 2177: Shifting DOWN: 4
-⚙️  ATH Gearbox       5m 51s  Epoch 2379: Shifting UP: 5
-⚙️  ATH Gearbox       6m 42s  Epoch 2580: Shifting DOWN: 4
-⚙️  ATH Gearbox       7m 35s  Epoch 2781: Shifting UP: 5
-⚙️  ATH Gearbox      10m 22s  Epoch 3397: Shifting DOWN: 4
-⚙️  ATH Gearbox      11m 11s  Epoch 3598: Shifting UP: 5
-⚙️  ATH Gearbox      11m 54s  Epoch 3799: Shifting DOWN: 4
-⚙️  ATH Gearbox      12m 46s  Epoch 4000: Shifting UP: 5
-⚙️  ATH Gearbox      13m 46s  Epoch 4201: Shifting DOWN: 4
-⚙️  ATH Gearbox      14m 36s  Epoch 4402: Shifting UP: 5
-⚙️  ATH Gearbox      15m 56s  Epoch 4724: Shifting DOWN: 4
-⚙️  ATH Gearbox      16m 49s  Epoch 4925: Shifting UP: 5
-⚙️  ATH Gearbox      21m 50s  Epoch 6106: Shifting DOWN: 4
-⚙️  ATH Gearbox      22m 45s  Epoch 6307: Shifting UP: 5
-⚙️  ATH Gearbox      23m 33s  Epoch 6508: Shifting DOWN: 4
-⚙️  ATH Gearbox      24m 25s  Epoch 6719: Shifting UP: 5
-⚙️  ATH Gearbox      25m 14s  Epoch 6920: Shifting DOWN: 4
-⚙️  ATH Gearbox      26m 11s  Epoch 7126: Shifting UP: 5
-⚙️  ATH Gearbox      26m 59s  Epoch 7327: Shifting DOWN: 4
-⚙️  ATH Gearbox      27m 55s  Epoch 7527: Shifting UP: 5
-⚙️  ATH Gearbox      28m 58s  Epoch 7729: Shifting DOWN: 4
-⚙️  ATH Gearbox      29m 50s  Epoch 7930: Shifting UP: 5
-⚙️  ATH Gearbox      30m 54s  Epoch 8182: Shifting DOWN: 4
-⚙️  ATH Gearbox      31m 56s  Epoch 8383: Shifting UP: 5
-⚙️  ATH Gearbox      35m 24s  Epoch 9185: Shifting DOWN: 4
-⚙️  ATH Gearbox      36m 33s  Epoch 9386: Shifting UP: 5
+      -           0s    💻 Hydra Client    🔵 Initialized...
+      -           0s    ⚡ Simulation      🔵 Connected to simulation server
+      -           0s    ⚡ Simulation      🔵 Simulation started
+    111           6s    🏁 ATH Gearbox     🟢 Shifting UP: 1 > 2 - 6/85
+    212          19s    🏁 ATH Gearbox     🟢 Shifting UP: 2 > 3 - 8/64
+    313          45s    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+    414       1m 18s    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+    455       1m 33s    💾 ATH Data Mgr    🔵 Memory is full (125000), pruning initiated
+    457       1m 34s    🧭 Epsilon         🔵 Exploration complete: ε = 0.0
+    515       1m 54s    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+    616       2m 31s    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+    717       3m  7s    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+    818       3m 53s    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+    919       4m 37s    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+   1020       5m 14s    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+   1121       6m  5s    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+   1157       6m 19s    💪 Train Manager   🟡 Stagnation alert raised
+   1157       6m 19s    🙂 Nice Policy     🔵 Enabling EpsilonNice
+   1222       6m 50s    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+   1323       7m 31s    🏁 ATH Gearbox     🟢 Shifting UP: 13 > 14 - 30/17
+   1424       8m  8s    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+   1525       8m 48s    🏁 ATH Gearbox     🟢 Shifting UP: 15 > 16 - 34/15
+   1626       9m 24s    🏁 ATH Gearbox     🟢 Shifting UP: 16 > 17 - 36/14
+   1837      10m 40s    💪 Train Manager   🟢 Stagnation alert cleared
+   1837      10m 40s    🙂 Nice Policy     🔵 Disabling EpsilonNice
+   2137      12m 23s    💪 Train Manager   🟡 Stagnation alert raised
+   2137      12m 23s    🙂 Nice Policy     🔵 Enabling EpsilonNice
+   2137      12m 23s    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 17 > 16 - 34/15
+   2405      13m 56s    🏁 ATH Gearbox     🔵 Resetting stagnation count to 0
+   2405      13m 56s    💪 Train Manager   🟢 Stagnation alert cleared
+   2405      13m 56s    🙂 Nice Policy     🔵 Disabling EpsilonNice
+   2705      15m 32s    💪 Train Manager   🟡 Stagnation alert raised
+   2705      15m 32s    🙂 Nice Policy     🔵 Enabling EpsilonNice
+   2705      15m 32s    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 16 > 15 - 32/16
+   2803      16m  3s    🏁 ATH Gearbox     🔵 Resetting stagnation count to 0
+   2803      16m  3s    💪 Train Manager   🟢 Stagnation alert cleared
+   2803      16m  3s    🙂 Nice Policy     🔵 Disabling EpsilonNice
+   3125      17m 38s    💪 Train Manager   🟡 Stagnation alert raised
+   3125      17m 38s    🙂 Nice Policy     🔵 Enabling EpsilonNice
+   3125      17m 38s    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 15 > 14 - 30/17
+   3426      19m 15s    🏁 ATH Gearbox     🔵 Resetting stagnation count to 0
+   3426      19m 15s    💪 Train Manager   🟢 Stagnation alert cleared
+   3426      19m 15s    🙂 Nice Policy     🔵 Disabling EpsilonNice
+   3834      21m 19s    💪 Train Manager   🟡 Stagnation alert raised
+   3834      21m 19s    🙂 Nice Policy     🔵 Enabling EpsilonNice
+   3834      21m 19s    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 14 > 13 - 28/18
+   3935      21m 51s    🏁 ATH Gearbox     🟢 Shifting UP: 13 > 14 - 30/17
+   4673      25m 48s    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+   4890      27m  3s    💪 Train Manager   🟢 Stagnation alert cleared
+   4890      27m  3s    🙂 Nice Policy     🔵 Disabling EpsilonNice
+   5190      28m 48s    💪 Train Manager   🟡 Stagnation alert raised
+   5190      28m 48s    🙂 Nice Policy     🔵 Enabling EpsilonNice
+   5190      28m 48s    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 15 > 14 - 30/17
+   5291      29m 21s    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+   6890      38m 19s    💪 Train Manager   🔴 Critical stagnation event(1) detected
+   6890      38m 19s    🏁 ATH Gearbox     🔴 Critical Stagnation alert(1): Radical DOWN shift: 15 > 3 - 8/64
+   6990      38m 50s    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+   7091      39m 24s    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+   7191      39m 57s    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+   7293      40m 28s    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+   7394      40m 58s    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+   7495      41m 30s    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+   7596      42m  1s    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+   7697      42m 35s    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+   7798      43m  9s    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+   7899      43m 42s    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+   8000      44m 14s    🏁 ATH Gearbox     🟢 Shifting UP: 13 > 14 - 30/17
+   8294      45m 54s    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+   8890      49m 16s    💪 Train Manager   🔴 Critical stagnation event(2) detected
+   8890      49m 16s    🏁 ATH Gearbox     🔴 Critical Stagnation alert(2): Radical DOWN shift: 15 > 3 - 8/64
+   8990      49m 47s    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+   9091      50m 18s    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+   9192      50m 52s    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+   9293      51m 25s    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+   9394      51m 59s    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+   9494      52m 33s    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+   9596      53m  5s    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+   9697      53m 40s    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+   9798      54m 15s    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+   9899      54m 50s    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+  10000      55m 26s    🏁 ATH Gearbox     🟢 Shifting UP: 13 > 14 - 30/17
+  10101      56m  1s    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  12648       1h 10m    🏁 ATH Gearbox     🟢 Shifting UP: 15 > 16 - 34/15
+  12890       1h 12m    💪 Train Manager   🔴 Critical stagnation event(3) detected
+  12890       1h 12m    🏁 ATH Gearbox     🔴 Critical Stagnation alert(3): Radical DOWN shift: 16 > 3 - 8/64
+  12990       1h 12m    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+  13091       1h 13m    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+  13192       1h 13m    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+  13293       1h 14m    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+  13394       1h 14m    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+  13495       1h 15m    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+  13596       1h 16m    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+  13697       1h 16m    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+  13797       1h 17m    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+  13899       1h 17m    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+  14000       1h 18m    🏁 ATH Gearbox     🟢 Shifting UP: 13 > 14 - 30/17
+  14101       1h 19m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  14184       1h 19m    💪 Train Manager   🟢 Stagnation alert cleared
+  14184       1h 19m    🙂 Nice Policy     🔵 Disabling EpsilonNice
+  14484       1h 21m    💪 Train Manager   🟡 Stagnation alert raised
+  14484       1h 21m    🙂 Nice Policy     🔵 Enabling EpsilonNice
+  14484       1h 21m    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 15 > 14 - 30/17
+  14602       1h 21m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  17602       1h 39m    💪 Train Manager   🟢 Stagnation alert cleared
+  17602       1h 39m    🙂 Nice Policy     🔵 Disabling EpsilonNice
+  17902       1h 41m    💪 Train Manager   🟡 Stagnation alert raised
+  17902       1h 41m    🙂 Nice Policy     🔵 Enabling EpsilonNice
+  17902       1h 41m    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 15 > 14 - 30/17
+  18003       1h 41m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  18828       1h 46m    🏁 ATH Gearbox     🟡 Shifting DOWN: 14 - 30/17
+  19183       1h 48m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  19353       1h 49m    💪 Train Manager   🟢 Stagnation alert cleared
+  19353       1h 49m    🙂 Nice Policy     🔵 Disabling EpsilonNice
+  19653       1h 51m    💪 Train Manager   🟡 Stagnation alert raised
+  19653       1h 51m    🙂 Nice Policy     🔵 Enabling EpsilonNice
+  19653       1h 51m    🏁 ATH Gearbox     🟡 Stagnation alert(1) - Shifting DOWN: 15 > 14 - 30/17
+  20040       1h 53m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  23243       2h 11m    🏁 ATH Gearbox     🟡 Shifting DOWN: 14 - 30/17
+  23577       2h 13m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  25353       2h 23m    💪 Train Manager   🔴 Critical stagnation event(4) detected
+  25353       2h 23m    🏁 ATH Gearbox     🔴 Critical Stagnation alert(4): Radical DOWN shift: 15 > 3 - 8/64
+  25453       2h 24m    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+  25554       2h 24m    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+  25655       2h 25m    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+  25756       2h 25m    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+  25857       2h 26m    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+  25958       2h 27m    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+  26059       2h 27m    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+  26160       2h 28m    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+  26261       2h 28m    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+  26362       2h 29m    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+  26463       2h 29m    🏁 ATH Gearbox     🟢 Shifting UP: 13 > 14 - 30/17
+  26571       2h 30m    🏁 ATH Gearbox     🟢 Shifting UP: 14 > 15 - 32/16
+  29289       2h 45m    🏁 ATH Gearbox     🟢 Shifting UP: 15 > 16 - 34/15
+  30277       2h 51m    🏁 ATH Gearbox     🟡 Shifting DOWN: 15 - 32/16
+  30746       2h 53m    🏁 ATH Gearbox     🟡 Shifting DOWN: 14 - 30/17
+  32364       3h  2m    🏁 ATH Gearbox     🟡 Shifting DOWN: 13 - 28/18
+  33353       3h  6m    💪 Train Manager   🔴 Critical stagnation event(5) detected
+  33353       3h  6m    🏁 ATH Gearbox     🔴 Critical Stagnation alert(5): Radical DOWN shift: 13 > 3 - 8/64
+  33453       3h  7m    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+  33554       3h  7m    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+  33655       3h  8m    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+  33756       3h  8m    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+  33857       3h  9m    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+  33958       3h  9m    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+  34059       3h 10m    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+  34160       3h 10m    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+  34261       3h 11m    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+  34362       3h 11m    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+  43353       3h 55m    💪 Train Manager   🔴 Critical stagnation event(6) detected
+  43353       3h 55m    🏁 ATH Gearbox     🔴 Critical Stagnation alert(6): Radical DOWN shift: 13 > 3 - 8/64
+  43453       3h 56m    🏁 ATH Gearbox     🟢 Shifting UP: 3 > 4 - 10/51
+  43554       3h 56m    🏁 ATH Gearbox     🟢 Shifting UP: 4 > 5 - 12/42
+  43655       3h 57m    🏁 ATH Gearbox     🟢 Shifting UP: 5 > 6 - 14/36
+  43756       3h 57m    🏁 ATH Gearbox     🟢 Shifting UP: 6 > 7 - 16/32
+  43856       3h 58m    🏁 ATH Gearbox     🟢 Shifting UP: 7 > 8 - 18/28
+  43958       3h 58m    🏁 ATH Gearbox     🟢 Shifting UP: 8 > 9 - 20/25
+  44059       3h 59m    🏁 ATH Gearbox     🟢 Shifting UP: 9 > 10 - 22/23
+  44160       3h 59m    🏁 ATH Gearbox     🟢 Shifting UP: 10 > 11 - 24/21
+  44261       4h  0m    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+  44519       4h  1m    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
+  50268       4h 29m    🏁 ATH Gearbox     🟡 Shifting DOWN: 12 - 26/19
+  51065       4h 33m    🏁 ATH Gearbox     🟡 Shifting DOWN: 11 - 24/21
+  52007       4h 37m    🏁 ATH Gearbox     🟢 Shifting UP: 11 > 12 - 26/19
+  52860       4h 41m    🏁 ATH Gearbox     🟢 Shifting UP: 12 > 13 - 28/18
 
 🏆 Highscore Events
 ══════════════════
 Epoch  Highscore  Time     Epsilon
 ═════  ═════════  ═══════  ═══════
-2      1          0s       0.9990 
-90     2          2s       0.5655 
-102    3          2s       0.4914 
-198    4          5s       0.2648 
-224    5          6s       0.2115 
-247    6          7s       0.1812 
-263    7          8s       0.1654 
-297    8          10s      0.1276 
-322    9          11s      0.1093 
-322    10         11s      0.1093 
-322    11         11s      0.1093 
-380    12         15s      0.0707 
-380    13         15s      0.0707 
-380    14         15s      0.0707 
-380    15         15s      0.0707 
-476    16         22s      0.0360 
-501    17         25s      0.0304 
-501    18         25s      0.0304 
-558    19         31s      0.0200 
-558    20         31s      0.0200 
-558    21         31s      0.0200 
-558    22         31s      0.0200 
-558    23         31s      0.0200 
-605    24         37s      0.0143 
-605    25         37s      0.0143 
-605    26         37s      0.0143 
-605    27         37s      0.0143 
-1003   28          1m 28s  0.0009 
-1127   29          1m 42s  0.0004 
-1265   30          1m 59s  0.0001 
-1323   31          2m  8s  0.0001 
-1628   32          2m 58s  0.0000 
-1628   33          2m 58s  0.0000 
-1672   34          3m  7s  0.0000 
-1672   35          3m  7s  0.0000 
-1672   36          3m  7s  0.0000 
-1672   37          3m  7s  0.0000 
-1672   38          3m  7s  0.0000 
-1672   39          3m  7s  0.0000 
-1720   40          3m 18s  0.0000 
-1720   41          3m 18s  0.0000 
-1866   42          3m 48s  0.0000 
-1866   43          3m 48s  0.0000 
-1866   44          3m 48s  0.0000 
-1866   45          3m 48s  0.0000 
-1866   46          3m 49s  0.0000 
-1866   47          3m 49s  0.0000 
-1866   48          3m 49s  0.0000 
-1866   49          3m 49s  0.0000 
-1866   50          3m 49s  0.0000 
-1866   51          3m 49s  0.0000 
-1866   52          3m 49s  0.0000 
-4465   53         14m 52s  0.0000 
-4465   54         14m 52s  0.0000 
-8324   55         31m 37s  0.0000 
-8324   56         31m 38s  0.0000 
-8327   57         31m 38s  0.0000 
-8327   58         31m 38s  0.0000 
-9289   59         36m  1s  0.0000 
-9289   60         36m  1s  0.0000 
-9352   61         36m 22s  0.0000 
-9352   62         36m 22s  0.0000 
+0      0          0s       0.9900 
+18     1          0s       0.7726 
+124    2          8s       0.1629 
+137    3          9s       0.1338 
+137    4          9s       0.1338 
+192    5          15s      0.0566 
+192    6          15s      0.0566 
+192    7          15s      0.0566 
+192    8          15s      0.0566 
+291    9          37s      0.0125 
+291    10         37s      0.0125 
+294    11         39s      0.0119 
+294    12         39s      0.0119 
+294    13         39s      0.0119 
+327    14         49s      0.0071 
+381    15          1m  7s  0.0032 
+381    16          1m  7s  0.0032 
+455    17          1m 33s  0.0010 
+541    18          2m  4s  0.0000 
+541    19          2m  4s  0.0000 
+650    20          2m 41s  0.0000 
+679    21          2m 53s  0.0000 
+679    22          2m 53s  0.0000 
+679    23          2m 53s  0.0000 
+679    24          2m 53s  0.0000 
+679    25          2m 53s  0.0000 
+679    26          2m 53s  0.0000 
+800    27          3m 43s  0.0000 
+800    28          3m 43s  0.0000 
+800    29          3m 43s  0.0000 
+800    30          3m 43s  0.0000 
+800    31          3m 43s  0.0000 
+800    32          3m 43s  0.0000 
+857    33          4m 12s  0.0000 
+857    34          4m 12s  0.0000 
+857    35          4m 12s  0.0000 
+1837   36         10m 40s  0.0000 
+1837   37         10m 40s  0.0000 
+1837   38         10m 40s  0.0000 
+1837   39         10m 40s  0.0000 
+1837   40         10m 40s  0.0000 
+2405   41         13m 56s  0.0000 
+2803   42         16m  3s  0.0000 
+2819   43         16m  8s  0.0000 
+2825   44         16m 11s  0.0000 
+2825   45         16m 11s  0.0000 
+2825   46         16m 11s  0.0000 
+2825   47         16m 11s  0.0000 
+2825   48         16m 11s  0.0000 
+3426   49         19m 15s  0.0000 
+3534   50         19m 47s  0.0000 
+3534   51         19m 47s  0.0000 
+3534   52         19m 47s  0.0000 
+3534   53         19m 47s  0.0000 
+3534   54         19m 47s  0.0000 
+3534   55         19m 47s  0.0000 
+3534   56         19m 47s  0.0000 
+4890   57         27m  3s  0.0000 
+4890   58         27m  3s  0.0000 
+4890   59         27m  3s  0.0000 
+4890   60         27m  3s  0.0000 
+4890   61         27m  3s  0.0000 
+4890   62         27m  3s  0.0000 
+4890   63         27m  3s  0.0000 
+4890   64         27m  3s  0.0000 
+
+
+🙂 Epsilon Nice
+══════════════
+P-Value    : 0.001
+Nice Steps : 20
+
+🙂 Epsilon Nice Events
+═════════════════════
+Window       Epoch  Calls   Triggered  Fatal Suggested  Overrides  No Safe Alt  Trigger Rate  Override Rate
+═══════════  ═════  ══════  ═════════  ═══════════════  ═════════  ═══════════  ════════════  ═════════════
+1-500        500    0       0          0                0          0            0.0000        0.0000       
+501-1000     1000   0       0          0                0          0            0.0000        0.0000       
+1001-1500    1500   191421  3780       0                3563       217          0.0197        0.0186       
+1501-2000    2000   153238  2880       1                2728       152          0.0188        0.0178       
+2001-2500    2500   115393  2460       1                2339       121          0.0213        0.0203       
+2501-3000    3000   35131   500        1                464        36           0.0142        0.0132       
+3001-3500    3500   115424  2540       2                2358       182          0.0220        0.0204       
+3501-4000    4000   65779   1180       0                1094       86           0.0179        0.0166       
+4001-4500    4500   186080  3620       0                3333       287          0.0195        0.0179       
+4501-5000    5000   158790  3380       1                3142       238          0.0213        0.0198       
+5001-5500    5500   122657  2420       0                2227       193          0.0197        0.0182       
+5501-6000    6000   200011  4080       2                3748       332          0.0204        0.0187       
+6001-6500    6500   201276  4360       1                4040       320          0.0217        0.0201       
+6501-7000    7000   200522  3760       5                3451       309          0.0188        0.0172       
+7001-7500    7500   199207  4020       1                3747       273          0.0202        0.0188       
+7501-8000    8000   200504  4120       3                3807       313          0.0205        0.0190       
+8001-8500    8500   199125  4020       0                3701       319          0.0202        0.0186       
+8501-9000    9000   195740  4100       2                3799       301          0.0209        0.0194       
+9001-9500    9500   210212  4240       1                3927       313          0.0202        0.0187       
+9501-10000   10000  209103  4120       1                3818       302          0.0197        0.0183       
+  
 
 ⚙️  ATH Shift / Mean / Median
 ═════════════════════════════
 Epoch  Gear  Seq Length  Batch Size  Mean   Median
 ═════  ════  ══════════  ══════════  ═════  ══════
-500    3     16          16          3.07   2.00  
-1000   3     16          16          5.36   3.00  
-1500   4     24          10          7.13   5.00  
-2000   5     32          8           9.51   7.00  
-2500   5     32          8           11.32  9.00  
-3000   5     32          8           13.19  11.00 
-3500   4     24          10          14.06  12.00 
-4000   5     32          8           14.92  13.00 
-4500   5     32          8           15.75  14.00 
-5000   5     32          8           16.36  15.00 
-5500   5     32          8           16.97  16.00 
-6000   5     32          8           17.42  17.00 
-6500   5     32          8           17.80  17.00 
-7000   4     24          10          18.08  18.00 
-7500   4     24          10          18.39  18.00 
-8000   5     32          8           18.78  19.00 
-8500   5     32          8           19.04  19.00 
-9000   5     32          8           19.30  19.00 
-9500   5     32          8           19.60  19.00 
-10000  5     32          8           19.81  20.00 
-10500  5     32          8           20.04  20.00 
-11000  5     32          8           20.25  20.00 
-11500  5     32          8           20.43  20.00 
+500    5     12          42          4.88   3.00  
+1000   10    22          23          8.75   9.00  
+1500   15    32          16          10.22  10.00 
+2000   17    36          14          10.64  11.00 
+2500   16    34          15          11.76  12.00 
+3000   15    32          16          12.88  13.00 
+3500   14    30          17          13.93  13.00 
+4000   14    30          17          15.01  14.00 
+4500   14    30          17          15.88  15.00 
+5000   15    32          16          16.87  16.00 
+5500   15    32          16          17.73  17.00 
+6000   15    32          16          18.40  17.00 
+6500   15    32          16          18.99  18.00 
+7000   4     10          51          19.49  19.00 
+7500   9     20          25          19.92  19.00 
+8000   14    30          17          20.30  19.00 
+8500   15    32          16          20.63  20.00 
+9000   4     10          51          20.91  20.00 
+9500   9     20          25          21.26  20.00 
+10000  14    30          17          21.56  21.00 
+
 
 🪣 ATH Memory Bucket Usage
 ═════════════════════════
 Epoch  b1   b2   b3   b4   b5   b6   b7   b8   b9   b10  b11  b12  b13  b14  b15  b16  b17  b18  b19  b20
 ═════  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══  ═══
-500    476  373  294  232  190  152  120  92   71   54   44   40   27   21   13   11   7    5    4    4  
-1000   808  668  580  504  451  398  342  299  257  213  188  173  146  123  100  83   65   56   46   40 
-1500   505  464  421  372  332  288  254  221  188  163  136  113  90   73   62   53   42   31   22   16 
-2000   354  340  311  283  259  238  208  184  157  131  104  91   74   56   41   34   22   16   15   12 
-2500   314  302  291  279  261  241  215  191  168  139  116  98   85   72   56   42   33   23   16   11 
-3000   282  279  274  257  248  228  207  187  173  156  137  121  103  84   65   53   41   31   23   14 
-3500   337  329  321  308  295  274  256  229  210  192  176  163  141  125  105  92   81   67   56   43 
-4000   313  305  291  279  257  228  210  191  171  152  128  110  85   73   54   40   30   19   12   8  
-4500   294  285  278  257  241  225  206  192  172  151  130  120  99   81   64   53   42   31   24   14 
-5000   304  303  290  272  259  238  211  197  177  145  124  106  86   64   50   39   28   23   19   13 
-5500   297  290  283  273  255  232  215  194  181  151  123  102  86   66   57   43   35   26   19   16 
-6000   292  289  284  267  254  233  214  191  175  150  131  112  83   68   56   51   40   31   23   14 
-6500   296  296  291  279  266  247  223  201  180  157  128  103  83   67   53   39   27   20   14   10 
-7000   304  301  297  296  288  283  275  263  252  227  200  178  152  130  109  95   78   62   45   36 
-7500   291  289  287  284  280  270  256  242  221  206  193  178  159  141  125  111  94   86   72   54 
-8000   265  263  259  248  241  229  217  203  185  165  137  117  91   73   62   49   40   33   27   20 
-8500   280  278  271  261  248  229  219  201  183  157  132  117  91   71   62   48   37   25   20   14 
-9000   282  272  266  260  249  227  214  197  176  159  137  116  96   78   63   49   32   24   21   14 
-9500   248  243  238  233  227  214  205  192  184  166  153  132  112  103  84   67   52   42   32   22 
-10000  259  250  241  235  227  214  207  195  183  160  142  124  108  96   80   68   58   42   33   23 
-10500  278  267  256  251  243  233  216  203  183  153  138  117  102  90   76   62   43   28   20   13 
-11000  260  256  247  243  236  226  212  187  174  154  142  129  116  99   82   65   50   38   28   18 
-11500  287  280  267  257  240  227  207  187  169  152  133  117  100  80   62   52   38   29   23   19
+500    288  286  285  281  281  280  276  272  266  265  258  253  248  243  235  232  226  219  209  204
+1000   220  220  219  219  217  214  212  210  206  201  192  184  178  166  162  155  145  137  129  125
+1500   242  241  240  239  235  228  211  203  197  176  168  159  142  128  114  101  90   82   69   62 
+2000   293  292  290  289  277  260  245  219  177  159  131  109  90   79   70   63   55   45   34   28 
+2500   285  284  279  276  270  263  247  235  217  191  173  150  132  101  85   68   57   43   38   32 
+3000   355  353  346  336  315  295  272  247  213  171  138  119  100  89   66   55   45   37   31   21 
+3500   328  327  326  322  313  291  274  252  230  207  182  165  140  119  102  82   62   52   38   33 
+4000   326  326  325  318  314  300  287  265  239  211  191  167  148  126  106  83   65   54   44   30 
+4500   320  319  318  312  306  295  275  254  234  219  201  178  156  133  104  78   68   53   42   36 
+5000   300  299  294  291  286  276  262  247  229  210  188  173  148  124  101  81   65   46   37   31 
+5500   314  314  311  305  298  284  267  247  228  209  182  157  140  116  94   69   54   41   31   22 
+6000   311  310  307  302  295  278  261  244  231  205  183  160  132  109  87   77   62   50   43   32 
+6500   314  311  308  304  296  290  277  259  241  213  185  165  140  111  96   76   51   38   24   18 
+7000   305  305  305  304  303  303  302  301  301  299  299  299  298  296  292  290  287  287  284  283
+7500   324  324  323  322  320  312  306  299  292  278  269  258  246  236  221  204  182  170  149  137
+8000   313  312  307  303  296  285  275  253  233  212  198  180  158  134  112  95   82   62   52   38 
+8500   313  311  309  301  289  282  274  254  230  205  183  166  144  116  93   82   69   45   34   22 
+9000   324  324  324  324  323  323  323  322  319  319  316  314  312  311  305  304  299  296  294  287
+9500   294  294  293  292  290  288  287  282  276  269  262  256  246  238  224  217  209  187  172  157
+10000  294  294  292  289  282  271  260  246  232  214  194  178  168  144  123  108  94   81   67   49 
 ```
 
 ---
 
 ## Closing Thought
 
-AI Hydra isn’t just running a simulation.
+AI Hydra is not just a simulation engine — it is a **learning ecosystem**.
 
-It’s exposing the **mechanics of learning itself** — in real time, with structure, visibility, and control. Its high-performance architecture enables users to do **extremely fast iterations** and the visualizations enable **real-time analysis** that is augmented by the **Snapshot Reports.**
+Its components — adaptive replay memory, dynamic policy layers, and real-time 
+orchestration — do not operate in isolation. They interact.
+
+- The gearbox reshapes temporal learning
+- The policy adapts under changing constraints
+- Recovery mechanisms respond to stagnation signals
+
+Together, they form a system where behavior is not explicitly programmed, but 
+**emerges** from the interaction of these parts.
+
+The result is a tightly coupled environment where:
+
+- learning dynamics are visible
+- iteration is fast
+- and meaningful behavior can emerge from system-level feedback
+
+AI Hydra is not just running games.
+
+It is **evolving behavior.**

@@ -7,11 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ---
 
 
-## [Unreleased] - The "I am GRU Relaease"
+## [Unreleased] - The "I am GRU Release"
 
 ### Added
 - Updated *Event Log* screenshot for the docs.
 - **Stagnation Hander**
+  - Introduced the concept of a **stagnation** event that is implementd in the `TrainMgr`.
+  - A **stagnation event** is defined as occurring when no new highscore has been achieved within a set number of episodes.
+  - There are **normal** and **critical** stagnation alerts that are sent to the *ATH Gearbox* and *Nice Policy* object.
+    - The *Nice Policy* activates the `EpsilonNiceAlgo` when a threshold is received and deactives it when the event is cleared.
+    - The *ATH Gearbox* gears down when a **normal** stagnation alert is received, unless it has recently shifted up.
+    - The *ATH Gearbox* does a *radical* downshift to a sequence of 8 when a **critical** alert is received.
+- A **Gated Recurrent Network - GRU** has been added.
+- **Epsilon Nice** Policy and Algorithm
+  - See the README for more informationn on this new feature.
+
+### Changed
+- Updated [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
 
 ### Fixed
 - Scores image link in README
