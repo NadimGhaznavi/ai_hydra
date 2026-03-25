@@ -19,9 +19,9 @@ class DGameDef:
     MAX_MOVES_MULTIPLIER: Final[int] = 100
     FOOD_REWARD: Final[int] = 10
     COLLISION_PENALTY: Final[int] = -10
-    EMPTY_MOVE_REWARD: Final[int] = 0.025
-    CLOSER_TO_FOOD: Final[float] = 0.025
-    FURTHER_FROM_FOOD: Final[float] = -0.025
+    EMPTY_MOVE_REWARD: Final[int] = 0.2
+    CLOSER_TO_FOOD: Final[float] = 0.1
+    FURTHER_FROM_FOOD: Final[float] = -0.1
 
 
 class DGameField:

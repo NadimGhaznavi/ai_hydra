@@ -25,7 +25,7 @@ class DGRU:
     INITIAL_EPSILON: Final[float] = 0.999
     EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.97
-    HIDDEN_SIZE: Final[int] = 128
+    HIDDEN_SIZE: Final[int] = 192
     LEARNING_RATE: Final[float] = 0.001
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.001  # 0.005
