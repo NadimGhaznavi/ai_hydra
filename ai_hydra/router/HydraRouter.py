@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import time
+import argparse
 
 import zmq
 import zmq.asyncio
@@ -10,7 +11,13 @@ from textual.containers import Horizontal, Vertical
 from textual.theme import Theme
 from textual.widgets import Button, Label, Log
 
-from ai_hydra.constants.DHydra import DHydra, DHydraRouterDef, DMethod, DModule
+from ai_hydra.constants.DHydra import (
+    DHydra,
+    DHydraRouterDef,
+    DMethod,
+    DModule,
+    DHydraLogDef,
+)
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.zmq.HydraMsg import HydraMsg
 
@@ -311,7 +318,20 @@ class HydraRouter(App):
 
 
 def main() -> None:
-    router = HydraRouter()
+
+    p = argparse.ArgumentParser(description="AI Hydra Router")
+    p.add_argument("--address", default="*", help="Bind address")
+    p.add_argument("--port", type=int, default=DHydraRouterDef.PORT)
+    p.add_argument(
+        "--hb-port", type=int, default=DHydraRouterDef.HEARTBEAT_PORT
+    )
+    args = p.parse_args()
+
+    router = HydraRouter(
+        address=args.address,
+        port=args.port,
+        heartbeat_port=args.hb_port,
+    )
     router.run()
 
 
