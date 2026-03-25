@@ -17,6 +17,7 @@ from typing import Deque, TypeVar
 
 from ai_hydra.constants.DReplayMemory import DMemory
 from ai_hydra.constants.DHydra import DHydraLog, DModule
+from ai_hydra.constants.DEvent import EV_STATUS
 
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.utils.HydraLog import HydraLog
@@ -57,11 +58,11 @@ class SimpleReplayMemory:
 
         msg = f"Setting maximum number of stored transitions to {MAX_MEM_SIZE}"
         self.log.info(msg)
-        await self.event.publish(EventMsg(level=DHydraLog.INFO, message=msg))
+        await self.event.publish(EventMsg(level=EV_STATUS.INFO, message=msg))
 
         msg = f"Setting minimum number of transitions to {MIN_FRAMES}"
         self.log.info(msg)
-        await self.event.publish(EventMsg(level=DHydraLog.INFO, message=msg))
+        await self.event.publish(EventMsg(level=EV_STATUS.INFO, message=msg))
 
     async def append(self, t: Transition) -> None:
         """Add a transition into memory"""
@@ -75,7 +76,7 @@ class SimpleReplayMemory:
             msg = f"Memory has been filled to capacity: {MAX_MEM_SIZE} transitions"
             self.log.info(msg)
             await self.event.publish(
-                EventMsg(level=DHydraLog.INFO, message=msg)
+                EventMsg(level=EV_STATUS.INFO, message=msg)
             )
             self._memory_not_full = False
 
