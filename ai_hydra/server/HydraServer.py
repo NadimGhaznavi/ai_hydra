@@ -125,10 +125,15 @@ class HydraServer:
                 log_level=self.log_level,
             )
             self.mq.start()
-        except Exception as e:
-            print(f"ERROR: {e}")
-            self.mq.quit()
-            sys.exit(1)
+        except Exception:
+            if self.mq is not None:
+                stop = getattr(self.mq, "stop", None)
+                if callable(stop):
+                    maybe_awaitable = stop()
+                    if asyncio.iscoroutine(maybe_awaitable):
+                        await maybe_awaitable
+                self.mq = None
+            raise
 
         try:
             while not stop_event.is_set():
@@ -150,9 +155,8 @@ class HydraServer:
             self.log.info(f"Sent pong to {msg.sender}")
 
     async def run(self) -> None:
-        """Entrypoint for running the server inside an event loop."""
         self._stop_event = asyncio.Event()
-        stop_event = self._stop_event  # local alias for closure safety
+        stop_event = self._stop_event
         self._install_signal_handlers(stop_event)
 
         self.log.info("Initialized")
@@ -161,7 +165,18 @@ class HydraServer:
         )
 
         try:
-            await self._stop_event.wait()
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(stop_event.wait(), name="wait-stop"),
+                    self._main_task,
+                ],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+
+            if self._main_task in done:
+                # retrieve exception immediately
+                await self._main_task
+
         finally:
             await self._shutdown()
 
@@ -169,9 +184,9 @@ class HydraServer:
         """Graceful shutdown: cancel main task, close MQ, cancel stragglers."""
         self.log.info("Shutting down...")
 
-        # Cancel main loop task if still running
-        if self._main_task is not None and not self._main_task.done():
-            self._main_task.cancel()
+        if self._main_task is not None:
+            if not self._main_task.done():
+                self._main_task.cancel()
             try:
                 await self._main_task
             except asyncio.CancelledError:

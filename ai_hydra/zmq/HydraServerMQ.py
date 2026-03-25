@@ -82,10 +82,13 @@ class HydraServerMQ(HydraBaseMQ):
             # Make sure the port is available
             self.pub_socket.bind(self.pub_addr)
 
-        except Exception as e:
-            print(f"ERROR: Port {pub_port} already being used")
-            self.quit()
-            sys.exit(1)
+        except zmq.ZMQError as e:
+            if self.pub_socket is not None:
+                self.pub_socket.close(linger=0)
+                self.pub_socket = None
+            raise RuntimeError(
+                f"Failed to bind PUB socket on {self.pub_addr}: {e}"
+            ) from e
 
         self.listen_task: asyncio.Task[None] | None = None
         self.listen_stop_event = asyncio.Event()
