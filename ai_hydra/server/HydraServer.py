@@ -40,6 +40,7 @@ class HydraServer:
         port: int = DHydraServerDef.PORT,
         router_address: str = DHydraRouterDef.HOSTNAME,
         router_port: int = DHydraRouterDef.PORT,
+        router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
         identity: str = DModule.HYDRA_SERVER,
         log_level: DHydraLog = DHydraLogDef.DEFAULT_LOG_LEVEL,
     ):
@@ -57,6 +58,7 @@ class HydraServer:
         self.port = port
         self.router_address = router_address
         self.router_port = router_port
+        self.router_hb_port = router_hb_port
         self.identity = identity
         self.log_level = log_level
 
@@ -112,6 +114,7 @@ class HydraServer:
         self.mq = HydraServerMQ(
             router_address=self.router_address,
             router_port=self.router_port,
+            router_hb_port=self.router_hb_port,
             identity=self.identity,
             srv_methods=self._methods,
             log_level=self.log_level,
@@ -188,56 +191,3 @@ class HydraServer:
             await asyncio.gather(*pending, return_exceptions=True)
 
         self.log.info("Shutdown complete.")
-
-
-async def amain() -> None:
-    parser = argparse.ArgumentParser(description="Hydra ZeroMQ server")
-    parser.add_argument("--address", default="*", help="Address to bind to")
-    parser.add_argument(
-        "--log_level",
-        default=DHydraLogDef.DEFAULT_LOG_LEVEL,
-        help="Log level [DEBUG|INFO|WARNING|ERROR|CRITICAL]",
-    )
-    parser.add_argument(
-        "--port", type=int, default=DHydraServerDef.PORT, help="Server port"
-    )
-    parser.add_argument(
-        "--router-address",
-        default=DHydraRouterDef.HOSTNAME,
-        help="HydraRouter hostname",
-    )
-    parser.add_argument(
-        "--router-port",
-        type=int,
-        default=DHydraRouterDef.PORT,
-        help="HydraRouter main port",
-    )
-    parser.add_argument(
-        "--identity", default=DModule.HYDRA_SERVER, help="Server identity"
-    )
-    args = parser.parse_args()
-
-    server = HydraServer(
-        address=args.address,
-        port=args.port,
-        router_address=args.router_address,
-        router_port=args.router_port,
-        identity=args.identity,
-        log_level=args.log_level,
-    )
-
-    await server.run()
-
-
-def main() -> None:
-    try:
-        asyncio.run(amain())
-    except KeyboardInterrupt:
-        # If signal handlers aren't supported, Ctrl-C lands here.
-        # asyncio.run will already have cancelled tasks; keep this quiet and
-        # clean.
-        pass
-
-
-if __name__ == "__main__":
-    main()

@@ -41,6 +41,7 @@ class HydraMgr(HydraServer):
         port: int = DHydraServerDef.PORT,
         router_address: str = DHydraRouterDef.HOSTNAME,
         router_port: int = DHydraRouterDef.PORT,
+        router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
         identity: str = DModule.HYDRA_MGR,
         log_level: DHydraLog = DHydraLogDef.DEFAULT_LOG_LEVEL,
         debug: bool = False,
@@ -582,31 +583,53 @@ class HydraMgr(HydraServer):
         )
 
 
-async def amain() -> None:
-    p = argparse.ArgumentParser(description="AI Hydra Manager")
-    p.add_argument("--address", default="*", help="Bind address")
-    p.add_argument("--port", type=int, default=DHydraServerDef.PORT)
-    p.add_argument("--router-address", default=DHydraRouterDef.HOSTNAME)
-    p.add_argument("--router-port", type=int, default=DHydraRouterDef.PORT)
-    p.add_argument("--identity", default=DModule.HYDRA_MGR)
-    p.add_argument("--log-level", default=DHydraLogDef.DEFAULT_LOG_LEVEL)
-    args = p.parse_args()
+async def amain(
+    address,
+    port,
+    router_address,
+    router_port,
+    router_hb_port,
+    identity,
+    log_level,
+) -> None:
 
     server = HydraMgr(
-        address=args.address,
-        port=args.port,
-        router_address=args.router_address,
-        router_port=args.router_port,
-        identity=args.identity,
-        log_level=args.log_level,
+        address=address,
+        port=port,
+        router_address=router_address,
+        router_port=router_port,
+        router_hb_port=router_hb_port,
+        identity=identity,
+        log_level=log_level,
     )
 
     await server.run()
 
 
 def main() -> None:
+    p = argparse.ArgumentParser(description="AI Hydra Manager")
+    p.add_argument("--address", default="*", help="Bind address")
+    p.add_argument("--port", type=int, default=DHydraServerDef.PORT)
+    p.add_argument("--router-address", default=DHydraRouterDef.HOSTNAME)
+    p.add_argument("--router-port", type=int, default=DHydraRouterDef.PORT)
+    p.add_argument(
+        "--router-hb-port", type=int, default=DHydraRouterDef.HEARTBEAT_PORT
+    )
+    p.add_argument("--identity", default=DModule.HYDRA_MGR)
+    p.add_argument("--log-level", default=DHydraLogDef.DEFAULT_LOG_LEVEL)
+    args = p.parse_args()
     try:
-        asyncio.run(amain())
+        asyncio.run(
+            amain(
+                address=args.address,
+                port=args.port,
+                router_address=args.router_address,
+                router_port=args.router_port,
+                router_hb_port=args.router_hb_port,
+                identity=args.identity,
+                log_level=args.log_level,
+            )
+        )
     except BaseException:
         traceback.print_exc()
         raise
