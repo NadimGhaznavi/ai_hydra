@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ---
 
 
-## [Unreleased] - The "I am GRU Release"
+## [0.20.0] - The "I am GRU Release"
 
 ### Added
 - Updated *Event Log* screenshot for the docs.
