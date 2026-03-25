@@ -39,6 +39,7 @@ class HydraMgr(HydraServer):
         self,
         address: str = "*",
         port: int = DHydraServerDef.PORT,
+        pub_port: int = DHydraServerDef.PUB_PORT,
         router_address: str = DHydraRouterDef.HOSTNAME,
         router_port: int = DHydraRouterDef.PORT,
         router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
@@ -49,8 +50,10 @@ class HydraMgr(HydraServer):
         super().__init__(
             address=address,
             port=port,
+            pub_port=pub_port,
             router_address=router_address,
             router_port=router_port,
+            router_hb_port=router_hb_port,
             identity=identity,
             log_level=log_level,
         )
@@ -586,6 +589,7 @@ class HydraMgr(HydraServer):
 async def amain(
     address,
     port,
+    pub_port,
     router_address,
     router_port,
     router_hb_port,
@@ -596,6 +600,7 @@ async def amain(
     server = HydraMgr(
         address=address,
         port=port,
+        pub_port=pub_port,
         router_address=router_address,
         router_port=router_port,
         router_hb_port=router_hb_port,
@@ -614,6 +619,12 @@ def main() -> None:
         type=int,
         default=DHydraServerDef.PORT,
         help=f"Control port number ({DHydraServerDef.PORT})",
+    )
+    p.add_argument(
+        "--pub-port",
+        type=int,
+        default=DHydraServerDef.PUB_PORT,
+        help=f"Control port number ({DHydraServerDef.PUB_PORT})",
     )
     p.add_argument(
         "--router-address",
@@ -648,6 +659,7 @@ def main() -> None:
             amain(
                 address=args.address,
                 port=args.port,
+                pub_port=args.pub_port,
                 router_address=args.router_address,
                 router_port=args.router_port,
                 router_hb_port=args.router_hb_port,
