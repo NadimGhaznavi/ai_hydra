@@ -609,14 +609,39 @@ async def amain(
 def main() -> None:
     p = argparse.ArgumentParser(description="AI Hydra Manager")
     p.add_argument("--address", default="*", help="Bind address")
-    p.add_argument("--port", type=int, default=DHydraServerDef.PORT)
-    p.add_argument("--router-address", default=DHydraRouterDef.HOSTNAME)
-    p.add_argument("--router-port", type=int, default=DHydraRouterDef.PORT)
     p.add_argument(
-        "--router-hb-port", type=int, default=DHydraRouterDef.HEARTBEAT_PORT
+        "--port",
+        type=int,
+        default=DHydraServerDef.PORT,
+        help=f"Control port number ({DHydraServerDef.PORT})",
     )
-    p.add_argument("--identity", default=DModule.HYDRA_MGR)
-    p.add_argument("--log-level", default=DHydraLogDef.DEFAULT_LOG_LEVEL)
+    p.add_argument(
+        "--router-address",
+        default=DHydraRouterDef.HOSTNAME,
+        help=f"Router hostname/IP address ({DHydraRouterDef.HOSTNAME})",
+    )
+    p.add_argument(
+        "--router-port",
+        type=int,
+        default=DHydraRouterDef.PORT,
+        help=f"Router port number ({DHydraRouterDef.PORT})",
+    )
+    p.add_argument(
+        "--router-hb-port",
+        type=int,
+        default=DHydraRouterDef.HEARTBEAT_PORT,
+        help=f"Router heartbeat port number ({DHydraRouterDef.HEARTBEAT_PORT})",
+    )
+    p.add_argument(
+        "--identity",
+        default=DModule.HYDRA_MGR,
+        help=f"ZeroMQ identity ({DModule.HYDRA_MGR})",
+    )
+    p.add_argument(
+        "--log-level",
+        default=DHydraLogDef.DEFAULT_LOG_LEVEL,
+        help=f"Default log level ({str(DHydraLogDef.DEFAULT_LOG_LEVEL)})",
+    )
     args = p.parse_args()
     try:
         asyncio.run(
