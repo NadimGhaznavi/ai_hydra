@@ -47,7 +47,7 @@ class HydraServerMQ(HydraBaseMQ):
         router_address: str = DHydraRouterDef.HOSTNAME,
         router_port: int = DHydraRouterDef.PORT,
         router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
-        identity: str = DModule.HYDRA_MQ,
+        identity: str = DModule.HYDRA_SERVER_MQ,
         srv_methods: dict[str, MsgHandler] | None = None,
         pub_port: int = DHydraServerDef.PUB_PORT,
         topic_prefix: str = DHydraMQDef.TOPIC_PREFIX,
@@ -61,7 +61,7 @@ class HydraServerMQ(HydraBaseMQ):
             topic_prefix=topic_prefix,
         )
         self.log = HydraLog(
-            client_id="HydraServerMQ",
+            client_id=DModule.H,
             log_level=log_level,
             to_console=True,
         )
@@ -71,6 +71,12 @@ class HydraServerMQ(HydraBaseMQ):
         # Per topic batch storage
         self._per_ep_batch = HydraMsgBatch()
         self._scores_batch = HydraMsgBatch()
+
+        # Log the configuration
+        self.log.info(f"Router address set: {router_address}")
+        self.log.info(f"Router control port set: {router_port}")
+        self.log.info(f"Router heartbeat port set: {router_hb_port}")
+        self.log.info(f"ZeroMQ identity set: {identity}")
 
         # Per-Step topic doesn't need batching, it's slow, because of the
         # user defined move_delay

@@ -45,7 +45,6 @@ class HydraMgr(HydraServer):
         router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
         identity: str = DModule.HYDRA_MGR,
         log_level: DHydraLog = DHydraLogDef.DEFAULT_LOG_LEVEL,
-        debug: bool = False,
     ) -> None:
         super().__init__(
             address=address,
@@ -58,7 +57,6 @@ class HydraMgr(HydraServer):
             log_level=log_level,
         )
 
-        self.debug = bool(debug)
         self.cfg = SimCfg()
         self.hydra_rng: HydraRng | None = None
         self.snake: SnakeMgr | None = None
@@ -75,8 +73,6 @@ class HydraMgr(HydraServer):
                 DGameMethod.UPDATE_CONFIG: self.update_config,
             }
         )
-        if self.debug:
-            self._methods[DGameMethod.GAME_STEP] = self.game_step
 
         self._runs: dict[str, asyncio.Task[None]] = {}
         self._client_id = None
