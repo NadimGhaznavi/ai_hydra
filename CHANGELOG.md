@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [0.20.1] - 2025-03-25 @ 10:10 - HOTFIX
 
-## [0.20.0] - The "I am GRU Release"
+### Fixed
+- Set *NICE STEPS* when the Linear model is selected
+
+---
+
+## [0.20.0] - 2025-03-25 @ 8:05 - The "I am GRU Release"
 
 ### Added
 - Updated *Event Log* screenshot for the docs.
