@@ -875,10 +875,6 @@ class HydraClientTui(App):
         if event.value:
             self.remove_class(DField.TURBO_OFF)
             self.add_class(DField.TURBO_ON)
-            self.event_log.add_event(
-                ev_type=DField.SIM_LOOP,
-                event="Turbo mode enabled: Game rendering disabled, move delay set to 0.0",
-            )
             self.mq.disable_per_step_sub()
             self._w_board_box.border_subtitle = ""
         # Turbo disabled
@@ -886,11 +882,6 @@ class HydraClientTui(App):
             self.remove_class(DField.TURBO_ON)
             self.add_class(DField.TURBO_OFF)
             move_delay = self.query_one(f"#{DField.MOVE_DELAY_INPUT}").value
-            self.event_log.add_event(
-                ev_type=DField.SIM_LOOP,
-                epoch=self.metrics.get_cur_epoch(),
-                event=f"Turbo mode disabled: Game rendering enabled, move delay set to {move_delay}",
-            )
             self.mq.enable_per_step_sub()
 
         self._update_tui_labels()

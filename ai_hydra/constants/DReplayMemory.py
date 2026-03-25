@@ -19,7 +19,7 @@ class DMemField:
 class DMemDef:
     # Used by the ATHGearbox to calculate the seq_length/batch_size for the
     # different gears.
-    MAX_TRAINING_FRAMES: Final[int] = 256
+    MAX_TRAINING_FRAMES: Final[int] = 512
     # The highest gear
     MAX_GEAR: Final[int] = 26
     # ATH memory stores this maximum number of frames
