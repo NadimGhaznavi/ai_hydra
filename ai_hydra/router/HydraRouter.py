@@ -331,7 +331,7 @@ def main() -> None:
         "--hb-port",
         type=int,
         default=DHydraRouterDef.HEARTBEAT_PORT,
-        help=f"Heartbeat port number ({DHydraRouterDef.HEARTBEAT_PORT}",
+        help=f"Heartbeat port number ({DHydraRouterDef.HEARTBEAT_PORT})",
     )
     args = p.parse_args()
 
