@@ -364,6 +364,7 @@ This keeps the hot path free of UI and analysis overhead, allowing the simulatio
 AI Hydra achieves speed not through hardware, but through **alignment and separation of concerns**. 
 The system is optimized so that the cost of learning is dominated by model 
 computation, not data movement or orchestration.
+
 ---
 
 ## Snapshot Report

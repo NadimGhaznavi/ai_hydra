@@ -137,6 +137,7 @@ class HydraMgr(HydraServer):
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
             epsilon_nice_p_val = DLinear.NICE_P_VALUE
+            epsilon_nice_steps = DLinear.NICE_STEPS
             replay = SimpleReplayMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
