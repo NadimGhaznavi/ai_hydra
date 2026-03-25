@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from ai_hydra.constants.DHydra import DModule, DHydraLog
 from ai_hydra.constants.DReplayMemory import DMemDef
+from ai_hydra.constants.DEvent import EV_STATUS, EV_TYPE
+
 
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
@@ -16,6 +18,7 @@ from ai_hydra.nnet.models.LinearModel import LinearModel
 from ai_hydra.nnet.models.RNNModel import RNNModel
 from ai_hydra.nnet.models.GRUModel import GRUModel
 from ai_hydra.server.SnakeMgr import SnakeMgr
+from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 
 
 @dataclass(frozen=True)
@@ -68,8 +71,12 @@ class TrainMgr:
         client_id: str = DModule.TRAIN_MGR,
         model: LinearModel | RNNModel | GRUModel,
         log_level: DHydraLog,
+        pub_func,
     ) -> None:
-
+        self.event = HydraEventMQ(
+            client_id=DModule.TRAIN_MGR,
+            pub_func=pub_func,
+        )
         self.log = HydraLog(
             client_id=DModule.TRAIN_MGR,
             log_level=log_level,
@@ -82,6 +89,7 @@ class TrainMgr:
         self.client_id = client_id
         self.model = model
 
+        self._stag_alert_status = EV_TYPE.CLEARED
         self._stag_ep_count = 0
         self._hard_reset_ep_count = 0
         self._hard_reset_count = 0
@@ -97,19 +105,30 @@ class TrainMgr:
             self._stag_ep_count = 0
             self._hard_reset_ep_count = 0
             await self.replay.gearbox.stagnation_cleared()
-            await self.policy.disable_nice()
+            if self._stag_alert_status != EV_TYPE.CLEARED:
+                msg = "Stagnation alert cleared"
+                self.log.debug(msg)
+                await self.event.publish(
+                    EventMsg(level=EV_STATUS.GOOD, message=msg)
+                )
+                await self.policy.disable_nice()
+            self._stag_alert_status = EV_TYPE.CLEARED
 
         else:
             self._stag_ep_count += 1
             self._hard_reset_ep_count += 1
 
         if self._stag_ep_count >= MAX_STAGNANT_EPISODES:
-            self.log.debug(
-                "Stagnation event detected, notifying the replay memory"
-            )
-            self._stag_ep_count = 0
-            self.replay.gearbox.stagnation_warning()
-            await self.policy.enable_nice()
+            if self._stag_alert_status != EV_TYPE.SET:
+                msg = f"Stagnation alert raised"
+                self.log.debug(msg)
+                await self.event.publish(
+                    EventMsg(level=EV_STATUS.WARN, message=msg)
+                )
+                self._stag_ep_count = 0
+                self.replay.gearbox.stagnation_warning()
+                await self.policy.enable_nice()
+            self._stag_alert_status = EV_TYPE.SET
 
         if self._hard_reset_ep_count >= self._max_hard_reset_episodes:
             self._hard_reset_count += 1
@@ -120,9 +139,17 @@ class TrainMgr:
                 self.log.debug(
                     f"Critical stagnation alert({self._hard_reset_count}): "
                     f"Exceeded {self._hard_reset_count} episodes without "
-                    "improvement, notifying replay memory"
+                    "improvement"
                 )
+            await self.event.publish(
+                EventMsg(
+                    level=EV_STATUS.BAD,
+                    message=f"Critical stagnation event({self._hard_reset_count}) detected",
+                )
+            )
             self._hard_reset_ep_count = 0
             self._stag_ep_count = 0
             await self.replay.gearbox.hard_reset(self._hard_reset_count)
-            await self.policy.enable_nice()
+            if self._stag_alert_status != EV_TYPE.SET:
+                await self.policy.enable_nice()
+            self._stag_alert_status = EV_TYPE.SET

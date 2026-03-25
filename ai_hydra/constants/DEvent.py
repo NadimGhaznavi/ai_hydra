@@ -18,9 +18,10 @@ EVENT_MAP = {
     DModule.ATH_DATA_MGR: ("💾", "ATH Data Mgr"),
     DModule.ATH_GEARBOX: ("🏁", "ATH Gearbox"),
     DModule.EPSILON_ALGO: ("🧭", "Epsilon"),
-    DModule.EPSILON_NICE_POLICY: ("🙂", "NicePolicy"),
+    DModule.EPSILON_NICE_POLICY: ("🙂", "Nice Policy"),
     DModule.HYDRA_RNG: ("🎲", "Random"),
     DModule.SIMPLE_REPLAY_MEMORY: ("💾", "Replay Memory"),
+    DModule.TRAIN_MGR: ("💪", "Train Manager"),
     DField.SIM_LOOP: ("⚡", "Simulation"),
     DField.SNAPSHOT: ("📸", "Snapshot"),
     DField.TUI: ("💻", "Hydra Client"),
@@ -33,6 +34,8 @@ class EV_TYPE:
     BUCKET_COUNTS: Final[str] = "bucket_counts"
     SHIFTING: Final[str] = "shifting"
     BUCKETS_STATUS: Final[str] = "buckets_status"
+    CLEARED: Final[str] = "cleared"
+    SET: Final[str] = "set"
 
 
 class EV_STATUS:

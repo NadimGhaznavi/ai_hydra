@@ -259,6 +259,7 @@ class HydraMgr(HydraServer):
             client_id=DModule.TRAIN_MGR,
             model=model,
             log_level=self.log_level,
+            pub_func=self.mq.publish_events,
         )
         self._train_mgr_model_type = model_type
         return self._train_mgr

@@ -28,8 +28,8 @@ class DGRU:
     HIDDEN_SIZE: Final[int] = 96
     LEARNING_RATE: Final[float] = 0.001
     MINIMUM_EPSILON: Final[float] = 0.0
-    NICE_P_VALUE: Final[float] = 0.01  # 0.005
-    NICE_STEPS: Final[int] = 15
+    NICE_P_VALUE: Final[float] = 0.0  # 0.005
+    NICE_STEPS: Final[int] = 20
     OUTPUT_SIZE: Final[int] = 3
     GRU_LAYERS: Final[int] = 2
     SEQ_LENGTH: Final[int] = 4

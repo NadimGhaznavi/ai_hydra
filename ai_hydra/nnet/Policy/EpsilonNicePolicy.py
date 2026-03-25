@@ -32,7 +32,6 @@ class EpsilonNicePolicy(HydraPolicy):
         rng: random.Random,
         pub_func,
     ):
-        self._pub_func = pub_func
         self.event = HydraEventMQ(
             client_id=DModule.EPSILON_NICE_POLICY,
             pub_func=pub_func,
@@ -59,6 +58,14 @@ class EpsilonNicePolicy(HydraPolicy):
         return self.base_policy.cur_epsilon()
 
     async def disable_nice(self):
+        # Globally disabled
+        if self._p_value == 0:
+            return
+
+        # Already disabled
+        if not self._nice_enabled:
+            return
+
         self._nice_enabled = False
         msg = "Disabling EpsilonNice"
         await self.event.publish(
@@ -70,6 +77,14 @@ class EpsilonNicePolicy(HydraPolicy):
         self.log.info(msg)
 
     async def enable_nice(self):
+        # Globally disabled
+        if self._p_value == 0:
+            return
+
+        # Already enabled
+        if self._nice_enabled:
+            return
+
         self._nice_enabled = True
         msg = "Enabling EpsilonNice"
         await self.event.publish(

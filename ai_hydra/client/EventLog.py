@@ -33,7 +33,7 @@ class EventLog(Widget):
     def compose(self) -> ComposeResult:
         yield Vertical(
             Label(
-                f"[b #3e99af]{'Epoch':>7s}{DLabel.TIME:>9s}    {'Source':<19s}{'  ':<2} {DLabel.EVENT}[/]"
+                f"[b #3e99af]{'Epoch':>7s}{DLabel.TIME:>9s}    {'Source':<17s}{'  ':<2}{DLabel.EVENT}[/]"
             ),
             Log(highlight=True, auto_scroll=True, id=DField.EVENT_LOG_LOG),
         )
@@ -53,13 +53,9 @@ class EventLog(Widget):
             status = EV_STATUS.INFO
 
         elap_time = self.metrics.get_elapsed_time()
-        ev_icon, ev_type_str = EVENT_MAP[ev_type]
+        src_icon, source = EVENT_MAP[ev_type]
 
-        # Unicode 2 byte vs. 1 byte workaround
-        if ev_icon == "⚙️":
-            ev_icon = " ⚙️"
-
-        msg = f"{epoch:>7s}{elap_time:>9s}  {ev_icon:>3s} {ev_type_str:<16s}{status:<2}{event}"
+        msg = f"{epoch:>7s}{elap_time:>9s}  {src_icon:>3s} {source:<16s}{status:<2}{event}"
 
         self.query_one(f"#{DField.EVENT_LOG_LOG}", Log).write_line(msg)
 
