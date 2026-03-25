@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Added
+- Added switches for port and hb port to the hydra router
+
+### Fixed
+- Fixed startup args parsing bus in `HydraMgr`
+
+---
+
 ## [0.20.1] - 2025-03-25 @ 10:10 - HOTFIX
 
 ### Fixed

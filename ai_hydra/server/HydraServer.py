@@ -39,6 +39,7 @@ class HydraServer:
         self,
         address: str = "*",
         port: int = DHydraServerDef.PORT,
+        pub_port: int = DHydraServerDef.PUB_PORT,
         router_address: str = DHydraRouterDef.HOSTNAME,
         router_port: int = DHydraRouterDef.PORT,
         router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
@@ -57,6 +58,7 @@ class HydraServer:
 
         self.address = address
         self.port = port
+        self.pub_port = pub_port
         self.router_address = router_address
         self.router_port = router_port
         self.router_hb_port = router_hb_port
@@ -119,6 +121,7 @@ class HydraServer:
                 router_hb_port=self.router_hb_port,
                 identity=self.identity,
                 srv_methods=self._methods,
+                pub_port=self.pub_port,
                 log_level=self.log_level,
             )
             self.mq.start()
