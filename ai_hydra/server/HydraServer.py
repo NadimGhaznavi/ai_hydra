@@ -75,6 +75,10 @@ class HydraServer:
             client_id=self.identity, log_level=log_level, to_console=True
         )
 
+        self.log.info(f"Hostname/IP address: {self.address}")
+        self.log.info(f"Control port: {self.port}")
+        self.log.iofo(f"ZeroMQ PUB port: {self.pub_port}")
+
         # Shutdown coordination
         self._stop_event: asyncio.Event | None = None
         self._main_task: asyncio.Task[None] | None = None
