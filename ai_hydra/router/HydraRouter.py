@@ -16,7 +16,6 @@ from ai_hydra.constants.DHydra import (
     DHydraRouterDef,
     DMethod,
     DModule,
-    DHydraLogDef,
 )
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.zmq.HydraMsg import HydraMsg
