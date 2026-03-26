@@ -44,8 +44,8 @@ class HydraClientMQ(HydraBaseMQ):
         router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
         identity: str = DModule.HYDRA_MQ,
         topic_prefix: str = DHydraMQDef.TOPIC_PREFIX,
-        srv_host: str = DHydraServerDef.HOSTNAME,
-        sub_port: int = DHydraServerDef.PUB_PORT,
+        server_address: str = DHydraServerDef.HOSTNAME,
+        server_pub_port: int = DHydraServerDef.PUB_PORT,
         sub_methods: dict[str, SubHandler] | None = None,
     ) -> None:
 
@@ -56,13 +56,13 @@ class HydraClientMQ(HydraBaseMQ):
             identity=identity,
             topic_prefix=topic_prefix,
         )
-        self.srv_host = srv_host
-        self.sub_port = sub_port
+        self.srv_host = server_address
+        self.sub_port = server_pub_port
         self.sub_methods = sub_methods or {}
 
         self.sub_socket: zmq.asyncio.Socket | None = None
         self.sub_task: asyncio.Task[None] | None = None
-        self.sub_addr = f"tcp://{srv_host}:{sub_port}"
+        self.sub_addr = f"tcp://{server_address}:{server_pub_port}"
         self.sub_socket = self.ctx.socket(zmq.SUB)
 
         self.sub_socket.connect(self.sub_addr)

@@ -576,8 +576,10 @@ class HydraClientTui(App):
         self.mq = HydraClientMQ(
             router_address=self._router_address,
             router_port=self._port,
+            router_hb_port=self._router_hb_port,
             identity=self._identity,
-            srv_host=self._server_address,
+            server_address=self._server_address,
+            server_pub_port=self._server_pub_port,
         )
         self.mq.sub_methods = {
             self.mq.topic(DHydraMQDef.EVENTS_TOPIC): self._on_sim_event,
