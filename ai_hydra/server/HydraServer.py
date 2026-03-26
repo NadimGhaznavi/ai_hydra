@@ -115,7 +115,6 @@ class HydraServer:
             await self.mq.quit()
 
     async def _main_loop(self, stop_event: asyncio.Event) -> None:
-        self.log.debug("Starting main loop")
         try:
             self.mq = HydraServerMQ(
                 router_address=self.router_address,
