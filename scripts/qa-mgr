@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ai-hydra-mgr --port 6759 --pub-port 6760 --router-port 6757 --router-hb-port 6758
