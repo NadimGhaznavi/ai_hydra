@@ -6,13 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.21.0] - 2025-03-26 @ 08:23 - The Islands Release
 
 ### Added
 - Support for fully distributed AI Hydra
+- Added additional switches 
 
 ### Fixed
 - Fixed startup args parsing bus in `HydraMgr`
+- Issue where a port conflict was hidden
 
 ---
 

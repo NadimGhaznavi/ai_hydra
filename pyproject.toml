@@ -1,6 +1,6 @@
 [project]
 name = "ai-hydra"
-version = "0.20.1"
+version = "0.21.0"
 description = "A distributed reinforcement learning experimentation platform running in a terminal"
 authors = [{ name = "Nadim-Daniel Ghaznavi", email = "nghaznavi@gmail.com" }]
 license = { text = "GPL-3.0" }
