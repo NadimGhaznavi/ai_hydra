@@ -188,7 +188,7 @@ Views include:
 High Scores, Current and Average Current Scores
 ===============================================
 
-.. image:: https://aihydra.osoyalce.com/images/hydra-client.png
+.. image:: https://aihydra.osoyalce.com/images/scores.png
    :alt: Scores
 
 Loss

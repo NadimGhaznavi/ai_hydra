@@ -33,7 +33,7 @@ class TabbedSettings(Widget):
         self.cur_epsilon = Label(id=DField.CUR_EPSILON)
 
     def compose(self) -> ComposeResult:
-        with TabbedContent(DLabel.SETTINGS, DLabel.NETWORK):
+        with TabbedContent(DLabel.CONFIG, DLabel.NETWORK):
 
             # ----- Settings Tab ---
             yield Vertical(

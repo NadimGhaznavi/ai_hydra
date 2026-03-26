@@ -348,6 +348,9 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.MOVE_DELAY_BOX}").border_subtitle = (
             DLabel.MOVE_DELAY
         )
+        self.query_one(f"#{DField.TABBED_SETTINGS}").border_subtitle = (
+            DLabel.SETTINGS
+        )
         # --------------------------------------------------------------
 
         # Switch focus to a hidden widget

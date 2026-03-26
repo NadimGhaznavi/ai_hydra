@@ -202,7 +202,7 @@ class DLabel:
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
     COMPLETE: Final[str] = "Complete"
-    CONFIG: Final[str] = "Configuration"
+    CONFIG: Final[str] = "Config"
     CONSOLE: Final[str] = "Console"
     CUR_LOSS: Final[str] = "Current Loss"
     CUR_EPSILON: Final[str] = "Current Epsilon"

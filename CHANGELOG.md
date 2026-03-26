@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased] 
 
+### Added
+- Complete network configuration is now visible in the TUI. The network configuration now shows:
+  - Hydra router address
+  - Hydra router port
+  - Hydra router heartbeat port
+  - Hydra router status
+  - Simulation server address
+  - Simulation server ZeroMQ pub port
+  - A placeholder for the simulation server status (not yet implemented feature)
+- Updated screenshots in the documentation that show the new TUI layout.
+
+### Changed
+- Changed the TUI layout (again) to allow for additonal settings.
+  - Move the *random seed* and *move delay* to the left side of the TUI
+  - Moved the *Settings* into a `TabbedContent` widget
+    - Old settings are now in the *Config* tab
+    - Old, partial network config moved from the left side to a *Network* tab
+
 ### Fixed
 - Updatd the [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation to reflect support for custom, distributed deployments.
 

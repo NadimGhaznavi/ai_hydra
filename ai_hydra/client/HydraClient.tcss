@@ -162,7 +162,7 @@ HighScoresLog {
     text-style: bold;
     padding: 0 1;
     color: #54ac59;
-    width: 13;
+    width: 15;
     text-align: center;
 }
 .bucket {
