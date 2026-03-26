@@ -614,13 +614,13 @@ def main() -> None:
         "--port",
         type=int,
         default=DHydraServerDef.PORT,
-        help=f"Control port number ({DHydraServerDef.PORT})",
+        help=f"Control port ({DHydraServerDef.PORT})",
     )
     p.add_argument(
         "--pub-port",
         type=int,
         default=DHydraServerDef.PUB_PORT,
-        help=f"Control port number ({DHydraServerDef.PUB_PORT})",
+        help=f"Control port ({DHydraServerDef.PUB_PORT})",
     )
     p.add_argument(
         "--router-address",
@@ -631,13 +631,13 @@ def main() -> None:
         "--router-port",
         type=int,
         default=DHydraRouterDef.PORT,
-        help=f"Router port number ({DHydraRouterDef.PORT})",
+        help=f"Router port ({DHydraRouterDef.PORT})",
     )
     p.add_argument(
         "--router-hb-port",
         type=int,
         default=DHydraRouterDef.HEARTBEAT_PORT,
-        help=f"Router heartbeat port number ({DHydraRouterDef.HEARTBEAT_PORT})",
+        help=f"Router heartbeat port ({DHydraRouterDef.HEARTBEAT_PORT})",
     )
     p.add_argument(
         "--identity",
