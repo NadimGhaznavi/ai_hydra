@@ -8,10 +8,12 @@
 #    License: GPL 3.0
 
 # General Python Modules
+import argparse
 import asyncio
 from pathlib import Path
 import os
 from datetime import datetime
+import time
 
 # Textual Modules
 from textual import work, on
@@ -32,6 +34,7 @@ from textual.message import Message
 from ai_hydra.constants.DHydra import (
     DHydra,
     DHydraRouterDef,
+    DHydraServerDef,
     DMethod,
     DModule,
 )
@@ -98,14 +101,20 @@ class HydraClientTui(App):
 
     def __init__(
         self,
-        address: str = DHydraRouterDef.HOSTNAME,
-        port: int = DHydraRouterDef.PORT,
+        router_address: str = DHydraRouterDef.HOSTNAME,
+        router_port: int = DHydraRouterDef.PORT,
+        router_hb_port: int = DHydraRouterDef.HEARTBEAT_PORT,
+        server_address: str = DHydraServerDef.HOSTNAME,
+        server_pub_port: int = DHydraServerDef.PUB_PORT,
     ) -> None:
         """Constructor"""
         super().__init__()
 
-        self._address: str = address
-        self._port = port
+        self._router_address: str = router_address
+        self._port = router_port
+        self._router_hb_port = router_hb_port
+        self._server_address = server_address
+        self._server_pub_port = server_pub_port
         self._identity = DModule.HYDRA_CLIENT
         self._connected_msg = DStatus.BAD + " " + DLabel.DISCONNECTED
         self.mq: HydraClientMQ | None = None
@@ -352,7 +361,7 @@ class HydraClientTui(App):
 
         # ------ Network ---
         yield Vertical(
-            Label(f"{DLabel.TARGET_HOST}: {self._address}"),
+            Label(f"{DLabel.TARGET_HOST}: {self._router_address}"),
             Label(f"{DLabel.TARGET_PORT}: {self._port}"),
             Label(f"{DLabel.ROUTER}", id=DField.ROUTER_HB),
             id=DField.NETWORK,
@@ -565,10 +574,10 @@ class HydraClientTui(App):
 
         # Initialize ZeroMQ
         self.mq = HydraClientMQ(
-            router_address=self._address,
+            router_address=self._router_address,
             router_port=self._port,
             identity=self._identity,
-            srv_host=self._address,
+            srv_host=self._server_address,
         )
         self.mq.sub_methods = {
             self.mq.topic(DHydraMQDef.EVENTS_TOPIC): self._on_sim_event,
@@ -1215,7 +1224,53 @@ class HydraClientTui(App):
 
 
 def main() -> None:
-    tui = HydraClientTui()
+
+    p = argparse.ArgumentParser(description="AI Hydra Client")
+    p.add_argument(
+        "--router-address",
+        default=DHydraRouterDef.HOSTNAME,
+        help=f"Router hostname/IP address ({DHydraRouterDef.HOSTNAME})",
+    )
+    p.add_argument(
+        "--router-port",
+        default=DHydraRouterDef.PORT,
+        help=f"Router port ({DHydraRouterDef.PORT})",
+    )
+    p.add_argument(
+        "--router-hb-port",
+        default=DHydraRouterDef.HEARTBEAT_PORT,
+        help=f"Router heartbeat port ({DHydraRouterDef.HEARTBEAT_PORT})",
+    )
+    p.add_argument(
+        "--server-address",
+        default=DHydraServerDef.HOSTNAME,
+        help=f"Server hostname/IP address ({DHydraServerDef.HOSTNAME})",
+    )
+    p.add_argument(
+        "--server-pub-port",
+        default=DHydraServerDef.PUB_PORT,
+        help=f"Server PUB port ({DHydraServerDef.PUB_PORT})",
+    )
+
+    args = p.parse_args()
+
+    print("Using network configuration:")
+    print(f"         Router address: {args.router_address}")
+    print(f"            Router port: {args.router_port}")
+    print(f"  Router heartbeat port: {args.router_hb_port}")
+    print(f"        Server hostname: {args.server_address}")
+    print(f"        Server PUB port: {args.server_pub_port}")
+
+    # Give the user a chance to see the network config before starting the TUI
+    time.sleep(3)
+
+    tui = HydraClientTui(
+        router_address=args.router_address,
+        router_port=args.router_port,
+        router_hb_port=args.router_hb_port,
+        server_address=args.server_address,
+        server_pub_port=args.server_pub_port,
+    )
     tui.run()
 
 
