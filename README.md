@@ -35,20 +35,6 @@ The client supports a **Turbo mode** that disables per-step updates. This remove
 
 ---
 
-## Distributed Architecture
-
-![Architecture](https://aihydra.osoyalce.com/images/architecture.png)
-
-Each component runs independently:
-
-- HydraClient
-- HydraRouter
-- HydraMgr
-
-They can be distributed across machines, but for early experimentation it’s recommended to run all three locally.
-
----
-
 ## Startup
 
 Start each component in its own terminal:
@@ -94,6 +80,42 @@ To launch the simulation, click on the **Start** button. Upon starting, the **Pa
 In this early release, the server can only be stopped by hitting `Control-C` in the terminal where it's running. The client is stopped by hitting the **Quit** key. The *HydraRouter* can be shut down by clicking the *Quit* button.
 
 The shutdown process is not 100% clean, so you may be required to also hit `Control-C` on the client to fully stop it.
+
+---
+
+## Distributed Architecture
+
+![Architecture](https://aihydra.osoyalce.com/images/architecture.png)
+
+**AI Hydra** components run independently and can be deployed across different machines.
+
+### Example Deployment
+
+This configuration demonstrates a fully distributed setup where simulation, routing, and visualization are physically separated across hosts. This example also uses custom ports. The *Hydra Client* is running locally, the *Hydra Router* is running on **bingo**, and the *Hydra Manager* is running on **islands**.
+
+**1. Client**
+
+```
+    # Client (local machine)
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-client --router-port 6757 --router-hb-port 6758 --server-pub-port 6760 --router-address bingo --server-address islands
+```
+
+**2. Router**
+
+```
+    # Router (bingo)
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-router --port 6757 --hb-port 6758
+```
+
+**3. Server**
+
+```
+    # Manager / Simulation (islands)
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-mgr --port 5759 --router-port 6757 --router-hb-port 6758 --router-address bingo
+```
 
 ---
 
