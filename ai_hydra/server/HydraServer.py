@@ -75,7 +75,7 @@ class HydraServer:
             client_id=self.identity, log_level=log_level, to_console=True
         )
 
-        self.log.info(f"Set Hostname/IP address: {self.address}")
+        self.log.info(f"Binding to network interface: {self.address}")
         self.log.info(f"Set control port: {self.port}")
         self.log.info(f"Set ZeroMQ PUB port: {self.pub_port}")
 
