@@ -1,82 +1,129 @@
 Screen {
     layout: grid;
     grid-size: 4 9;
-    grid-rows: 3 4 6 3 3 4 3 22 3;
-    grid-columns: 20 44 32 37;
+    grid-rows: 3 14 3 3 3 22 3;
+    grid-columns: 20 44 34 37;
 }
 
+/* Individual widget styling */
 Button {
-    row-span: 3;
     background: #082641;
     padding: 0 1;
     border: none;
 }
-
-HighScoresLog {
-    row-span: 6;
-    background: black;
-    border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
-}
-
 Switch {
     border: none;
     padding: 0;
 }
 
-#both {
-    background: black;
-}
 
-#board_box {
-    row-span: 6;
+/* Grid boxes */
+#title {
+    column-span: 4;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
-    border-title-color: #5fc442;
     color: #5fc442;
-    width: 44;
     text-style: bold;
+    width: 100%;
     padding: 0 1;
 }
-
-#both {
-    background: black;
-}
-
 #buttons {
-    row-span: 3;
     background: black;
+    height: 14;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     color: #5fc442;
     text-style: bold;
     padding: 0 1;
 }
-
-#epsilon {
+#board_box {
+    row-span: 4;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     border-title-color: #5fc442;
-    width: 44;
+    color: #5fc442;
     text-style: bold;
-    padding: 0 0;
-    color: #72af75;
+    padding: 0 1;
 }
-
+#tabbed_settings {
+    row-span: 4;
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+    color: #5fc442;
+    width: 100%;
+    padding: 0 1;
+}
+HighScoresLog {
+    row-span: 4;
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+}
+#random_seed_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+    padding: 0 2;
+}
+#move_delay_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+    padding: 0 2;
+}
 #turbo_box {
+    height: 3;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
     border-title-color: #5fc442;
     text-style: bold;
-    height: 6;
     padding: 0 0;
     align: center middle;
     color: #72af75;    
 }
 
+#both {
+    background: black;
+}
+
+#both {
+    background: black;
+}
+
+/* Tabbed Setting boxes */
+#epsilon_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #5fc442;
+    border-title-color: #5fc442;
+    text-style: bold;
+    color: #72af75;
+}
+#model_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    border-title-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+}
+#training_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+    width: 100%;
+}
+
+
+
+
+/* Widgets that change during a simulation run */
 #cur_epsilon {
     color: #cdbf2f;
 }
@@ -91,10 +138,6 @@ Switch {
 }
 
 #highscores {
-    background: black;
-}
-
-#highscores_lh {
     background: black;
 }
 
@@ -148,7 +191,7 @@ GameScorePlot {
 }
 #plot_highscores {
     height: 18;
-    width: 75;
+    width: 80;
 }
 #plot_cur_score {
     height: 18;
@@ -161,7 +204,7 @@ ScoresDistPlot {
 }
 #plot_scores_dist {
     height: 18;
-    width: 75;    
+    width: 80;
 }
 #plot_recent_scores_dist {
     height: 18;
@@ -174,7 +217,7 @@ LossPlot {
 }
 #plot_loss {
     height: 18;
-    width: 75;
+    width: 80;
 }
 #plot_recent_loss {
     height: 18;
@@ -191,29 +234,6 @@ EventLog {
 
 /* -------------------------------------------- */
 
-#model {
-    row-span: 2;
-    background: black;
-    border: round #2aa5ce;
-    border-subtitle-color: #72af75;
-    border-title-color: #72af75;
-    color: #72af75;
-    width: 44;
-    text-style: bold;
-    padding: 0 0;
-}
-
-#network {
-    row-span: 2;
-    background: black;
-    border: round #2aa5ce;
-    border-subtitle-color: #72af75;
-    color: #72af75;
-    text-style: bold;
-    width: 100%;
-    padding: 0 1;
-}
-
 #settings {
     background: black;
     border: round #2aa5ce;
@@ -221,27 +241,6 @@ EventLog {
     color: #72af75;
     text-style: bold;
     height: 18;
-}
-
-#title {
-    column-span: 4;
-    background: black;
-    border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
-    color: #5fc442;
-    text-style: bold;
-    width: 100%;
-    padding: 0 1;
-}
-
-#training_box {
-    row-span: 2;
-    background: black;
-    border: round #2aa5ce;
-    border-subtitle-color: #72af75;
-    color: #72af75;
-    text-style: bold;
-    width: 100%;
 }
 
 #static_1 {

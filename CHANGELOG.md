@@ -6,11 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased] 
+
+### Fixed
+- Updatd the [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation to reflect support for custom, distributed deployments.
+
+---
+
 ## [0.21.0] - 2025-03-26 @ 08:23 - The Islands Release
 
 ### Added
 - Support for fully distributed AI Hydra
 - Added additional switches 
+- Updated [PyPI](https://pypi.org/project/ai-hydra/) documentation to reflect support for custom, distributed deployments.
 
 ### Fixed
 - Fixed startup args parsing bus in `HydraMgr`

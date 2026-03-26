@@ -49,7 +49,6 @@ from ai_hydra.constants.DNNet import (
     DRNN,
     DGRU,
     MODEL_TYPE_TABLE,
-    MODEL_TYPES,
 )
 from ai_hydra.constants.DEpsilonNice import DEpsilonNice
 
@@ -63,6 +62,7 @@ from ai_hydra.client.ClientGameBoard import ClientGameBoard
 from ai_hydra.client.HighScoresLog import HighScoresLog
 from ai_hydra.client.HydraTelemetry import HydraTelemetry
 from ai_hydra.client.ATHMemory import ATHMemory
+from ai_hydra.client.TabbedSettings import TabbedSettings
 
 
 HYDRA_THEME = Theme(
@@ -111,7 +111,7 @@ class HydraClientTui(App):
         super().__init__()
 
         self._router_address: str = router_address
-        self._port = router_port
+        self._router_port = router_port
         self._router_hb_port = router_hb_port
         self._server_address = server_address
         self._server_pub_port = server_pub_port
@@ -133,8 +133,6 @@ class HydraClientTui(App):
         # Telemetric Widget
         self.telemtry: HydraTelemetry | None = None
 
-        self._cur_epsilon = None
-
         # ZeroMQ batching support at this app layer it checks for lost
         # messages. PUB/SUB does not guarantee delivery, batching  aims to
         # mitigate that.
@@ -154,15 +152,16 @@ class HydraClientTui(App):
     @work(exclusive=True)
     async def check_heartbeat(self) -> None:
         while True:
+            if self.mq is None:
+                await asyncio.sleep(0.1)
+                continue
+
             if self.mq.connected():
                 status = DStatus.GOOD
             else:
                 status = DStatus.BAD
 
-            self.query_one(f"#{DField.ROUTER_HB}", Label).update(
-                f"{DLabel.ROUTER}: {status}"
-            )
-
+            self.settings.router_hb_status.update(status)
             await asyncio.sleep(DHydra.HEARTBEAT_INTERVAL)
 
     def compose(self) -> ComposeResult:
@@ -194,162 +193,36 @@ class HydraClientTui(App):
         # ------ The Snake Game ---
         yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
-        # ----- Settings ---
-        yield Vertical(
-            # Random seed
-            Horizontal(
-                Label(f"{DLabel.RANDOM_SEED:>11s}: "),
-                Input(
-                    type=DField.INTEGER,
-                    compact=True,
-                    valid_empty=False,
-                    value=str(DHydra.RANDOM_SEED),
-                    id=DField.RANDOM_SEED_INPUT,
-                ),
-                Label(str(DHydra.RANDOM_SEED), id=DField.RANDOM_SEED_LABEL),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Move delay
-            Horizontal(
-                Label(f"{DLabel.MOVE_DELAY:>11s}: "),
-                Label(f"0.0", id=DField.MOVE_DELAY_LABEL),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=str(DNetDef.MOVE_DELAY),
-                    id=DField.MOVE_DELAY_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            id=DField.SETTINGS,
-        )
+        # ----- Tabbed Settings ---
+        yield TabbedSettings(id=DField.TABBED_SETTINGS)
 
         # ----- Highscores widget ---
         yield HighScoresLog(id=DField.HIGHSCORES_LOG)
 
-        # ----- Epsilon ---
-        yield Vertical(
-            # Initial epsilon
-            Horizontal(
-                Label(f"{DLabel.INITIAL_EPSILON:>15s}: "),
-                Label(
-                    str(DLinear.INITIAL_EPSILON),
-                    id=DField.INITIAL_EPSILON_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=str(DLinear.INITIAL_EPSILON),
-                    id=DField.INITIAL_EPSILON_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
+        # Random seed
+        yield Horizontal(
+            Input(
+                type=DField.INTEGER,
+                compact=True,
+                valid_empty=False,
+                value=str(DHydra.RANDOM_SEED),
+                id=DField.RANDOM_SEED_INPUT,
             ),
-            # Minimum epsilon
-            Horizontal(
-                Label(f"{DLabel.MIN_EPSILON:>15s}: "),
-                Label(
-                    str(DLinear.MINIMUM_EPSILON),
-                    id=DField.MIN_EPSILON_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=str(DLinear.MINIMUM_EPSILON),
-                    id=DField.MIN_EPSILON_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Epsilon decay
-            Horizontal(
-                Label(f"{DLabel.EPSILON_DECAY:>15s}: "),
-                Label(
-                    str(DLinear.EPSILON_DECAY_RATE),
-                    id=DField.EPSILON_DECAY_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=str(DLinear.EPSILON_DECAY_RATE),
-                    id=DField.EPSILON_DECAY_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Current epsilon
-            Horizontal(
-                Label(f"{DLabel.CUR_EPSILON:>15s}: "),
-                Label(id=DField.CUR_EPSILON),
-                classes=DField.INPUT_FIELD,
-            ),
-            id=DField.EPSILON,
+            Label(str(DHydra.RANDOM_SEED), id=DField.RANDOM_SEED_LABEL),
+            id=DField.RANDOM_SEED_BOX,
         )
 
-        # ----- Model ---
-        yield Vertical(
-            # Model type
-            Horizontal(
-                Label(f"{DLabel.NN_MODEL:>15s}: "),
-                Label(DLabel.LINEAR, id=DField.MODEL_TYPE_LABEL),
-                Select(
-                    MODEL_TYPES,
-                    compact=True,
-                    id=DField.MODEL_TYPE_SELECT,
-                    allow_blank=False,
-                ),
-                classes=DField.INPUT_FIELD,
+        # Move delay
+        yield Horizontal(
+            Label(f"0.0", id=DField.MOVE_DELAY_LABEL),
+            Input(
+                type=DField.NUMBER,
+                compact=True,
+                valid_empty=False,
+                value=str(DNetDef.MOVE_DELAY),
+                id=DField.MOVE_DELAY_INPUT,
             ),
-            # Hidden Size
-            Horizontal(
-                Label(f"{DLabel.HIDDEN_SIZE:>15s}: "),
-                Label(
-                    f"{DLinear.HIDDEN_SIZE:.7f}",
-                    id=DField.HIDDEN_SIZE_LABEL,
-                ),
-                Input(
-                    type=DField.INTEGER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.HIDDEN_SIZE}",
-                    id=DField.HIDDEN_SIZE_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Dropout p-value
-            Horizontal(
-                Label(f"{DLabel.DROPOUT_P_VAL:>15s}: "),
-                Label(
-                    f"{DLinear.DROPOUT_P:.2f}",
-                    id=DField.DROPOUT_P_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.DROPOUT_P:.2f}",
-                    id=DField.DROPOUT_P_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # RNN Layers
-            Horizontal(
-                Label(f"{DLabel.RNN_LAYERS:>15s}: ", id=DField.RNN_LAYERS_OPT),
-                Label(
-                    f"{DRNN.RNN_LAYERS}",
-                    id=DField.RNN_LAYERS_LABEL,
-                ),
-                Input(
-                    type=DField.INTEGER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DRNN.RNN_LAYERS}",
-                    id=DField.RNN_LAYERS_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            id=DField.MODEL,
+            id=DField.MOVE_DELAY_BOX,
         )
 
         # Turbo mode
@@ -357,99 +230,6 @@ class HydraClientTui(App):
             Switch(value=False, id=DField.TURBO_MODE),
             classes=DField.INPUT_FIELD,
             id=DField.TURBO_BOX,
-        )
-
-        # ------ Network ---
-        yield Vertical(
-            Label(f"{DLabel.TARGET_HOST}: {self._router_address}"),
-            Label(f"{DLabel.TARGET_PORT}: {self._port}"),
-            Label(f"{DLabel.ROUTER}", id=DField.ROUTER_HB),
-            id=DField.NETWORK,
-        )
-
-        # ----- Training ---
-        yield Vertical(
-            # Learning rate
-            Horizontal(
-                Label(f"{DLabel.LEARNING_RATE:>15s}: "),
-                Label(
-                    f"{DLinear.LEARNING_RATE:.7f}",
-                    id=DField.LEARNING_RATE_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.LEARNING_RATE:.7f}",
-                    id=DField.LEARNING_RATE_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Discount/Gamma
-            Horizontal(
-                Label(f"{DLabel.GAMMA:>15s}: "),
-                Label(
-                    f"{DLinear.GAMMA:.2f}",
-                    id=DField.GAMMA_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.GAMMA:.2f}",
-                    id=DField.GAMMA_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # Batch size
-            Horizontal(
-                Label(f"{DLabel.BATCH_SIZE:>15s}: "),
-                Label(
-                    f"{DLinear.BATCH_SIZE}",
-                    id=DField.BATCH_SIZE_LABEL,
-                ),
-                Label(
-                    f"{DRNN.BATCH_SIZE}",
-                    id=DField.RNN_BATCH_SIZE_LABEL,
-                ),
-                Input(
-                    type=DField.INTEGER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DLinear.BATCH_SIZE}",
-                    id=DField.BATCH_SIZE_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # RNN Sequence Length
-            Horizontal(
-                Label(
-                    f"{DLabel.SEQUENCE_LENGTH:>15s}: ",
-                    id=DField.SEQ_LENGTH_OPT,
-                ),
-                Label(
-                    f"{DRNN.SEQ_LENGTH}",
-                    id=DField.SEQ_LENGTH_LABEL,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            # RNN Trainer Tau
-            Horizontal(
-                Label(f"{DLabel.RNN_TAU:>15s}: ", id=DField.RNN_TAU_OPT),
-                Label(
-                    f"{DRNN.TAU}",
-                    id=DField.RNN_TAU_LABEL,
-                ),
-                Input(
-                    type=DField.NUMBER,
-                    compact=True,
-                    valid_empty=False,
-                    value=f"{DRNN.TAU}",
-                    id=DField.RNN_TAU_INPUT,
-                ),
-                classes=DField.INPUT_FIELD,
-            ),
-            id=DField.TRAINING_BOX,
         )
 
         # Realtime Telemetry (plots and event log)
@@ -530,6 +310,14 @@ class HydraClientTui(App):
             f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
         )
         self.event_log = self.telemtry.event_log
+        self.settings = self.query_one(f"#{DField.TABBED_SETTINGS}")
+
+        # Show the network config in the TUI
+        self.settings.router_address.update(self._router_address)
+        self.settings.router_port.update(str(self._router_port))
+        self.settings.router_hb_port.update(str(self._router_hb_port))
+        self.settings.server_address.update(self._server_address)
+        self.settings.server_pub_port.update(str(self._server_pub_port))
 
         # Seed the highscores with a zero for plotting
         self.metrics.add_highscore(0)
@@ -537,14 +325,8 @@ class HydraClientTui(App):
         # Create references to some TUI element that are frequently updated
         # in the ZeroMQ listening loop.
         self._w_board_box = self.query_one(f"#{DField.BOARD_BOX}", Vertical)
-        self._w_cur_epsilon_label = self.query_one(
-            f"#{DField.CUR_EPSILON}", Label
-        )
 
         # Network
-        self.query_one(f"#{DField.ROUTER_HB}", Label).update(
-            f"{DLabel.ROUTER:>11s}: {DStatus.UNKNOWN}"
-        )
 
         # Monitor the connection to the server in the background
         self.check_heartbeat()
@@ -553,19 +335,18 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.TITLE}").border_subtitle = (
             DLabel.VERSION + " " + DHydra.VERSION
         )
-        self.query_one(f"#{DField.SETTINGS}").border_subtitle = DLabel.SETTINGS
-        self.query_one(f"#{DField.NETWORK}").border_subtitle = DLabel.NETWORK
         self.query_one(
             f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         ).border_subtitle = DLabel.HIGHSCORES
         self.query_one(f"#{DField.BUTTONS}").border_subtitle = DLabel.ACTIONS
-        self.query_one(f"#{DField.MODEL}").border_subtitle = DLabel.MODEL
-        self.query_one(f"#{DField.EPSILON}").border_subtitle = DLabel.EPSILON
-        self.query_one(f"#{DField.TRAINING_BOX}").border_subtitle = (
-            DLabel.TRAINING
-        )
         self.query_one(f"#{DField.TURBO_BOX}").border_subtitle = (
             DLabel.TURBO_MODE
+        )
+        self.query_one(f"#{DField.RANDOM_SEED_BOX}").border_subtitle = (
+            DLabel.RANDOM_SEED
+        )
+        self.query_one(f"#{DField.MOVE_DELAY_BOX}").border_subtitle = (
+            DLabel.MOVE_DELAY
         )
         # --------------------------------------------------------------
 
@@ -575,7 +356,7 @@ class HydraClientTui(App):
         # Initialize ZeroMQ
         self.mq = HydraClientMQ(
             router_address=self._router_address,
-            router_port=self._port,
+            router_port=self._router_port,
             router_hb_port=self._router_hb_port,
             identity=self._identity,
             server_address=self._server_address,
@@ -637,7 +418,7 @@ class HydraClientTui(App):
             self.query_one(f"#{DField.HYDRA_TELEMETRY}").border_subtitle = (
                 elapsed_time
             )
-            self._w_cur_epsilon_label.update(str(round(cur_epsilon, 4)))
+            self.settings.cur_epsilon.update(str(round(cur_epsilon, 4)))
 
     def on_per_step(self, topic: str, payload: dict) -> None:
         # These messages are not batched (there's a MOVE_DELAY)
@@ -1260,7 +1041,7 @@ def main() -> None:
     print(f"         Router address: {args.router_address}")
     print(f"            Router port: {args.router_port}")
     print(f"  Router heartbeat port: {args.router_hb_port}")
-    print(f"        Server hostname: {args.server_address}")
+    print(f"         Server address: {args.server_address}")
     print(f"        Server PUB port: {args.server_pub_port}")
 
     # Give the user a chance to see the network config before starting the TUI

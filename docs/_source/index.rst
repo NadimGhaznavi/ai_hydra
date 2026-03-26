@@ -44,20 +44,6 @@ Installation
 
 ----
 
-Distributed Architecture
-************************
-
-.. image:: https://aihydra.osoyalce.com/images/architecture.png
-   :alt: Architecture
-
-Each component runs independently:
-
-- HydraClient
-- HydraRouter
-- HydraMgr
-
-----
-
 Startup
 *******
 
@@ -118,6 +104,45 @@ in the terminal where it's running. The client is stopped by hitting the
 
 The shutdown process is not 100% clean, so you may be required to also hit 
 `Control-C` on the client to fully stop it.
+
+----
+
+Distributed Architecture
+************************
+
+.. image:: https://aihydra.osoyalce.com/images/architecture.png
+   :alt: Architecture
+
+**AI Hydra** components run independently and can be deployed across different machines.
+
+### Example Deployment
+
+This configuration demonstrates a fully distributed setup where simulation, routing, and visualization are physically separated across hosts. This example also uses custom ports. The *Hydra Client* is running locally, the *Hydra Router* is running on **bingo**, and the *Hydra Manager* is running on **islands**.
+
+**1. Client**
+
+.. code-block:: shell
+
+    # Client (local machine)
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-client --router-port 6757 --router-hb-port 6758 --server-pub-port 6760 --router-address bingo --server-address islands
+
+
+**2. Router**
+
+.. code-block:: shell
+
+    # Router (bingo)
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-router --port 6757 --hb-port 6758
+
+**3. Server**
+
+.. code-block:: shell
+
+    # Manager / Simulation (islands)
+    $ . hydra-venv/bin/activate
+    hydra-venv> ai-hydra-mgr --port 5759 --router-port 6757 --router-hb-port 6758 --router-address bingo
 
 ----
 
