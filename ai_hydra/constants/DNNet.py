@@ -52,10 +52,10 @@ class DRNN:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
-    INITIAL_EPSILON: Final[float] = 0.999
+    INITIAL_EPSILON: Final[float] = 0.96
     EPSILON_DECAY_RATE: Final[float] = 0.995
     GAMMA: Final[float] = 0.96
-    HIDDEN_SIZE: Final[int] = 320
+    HIDDEN_SIZE: Final[int] = 160
     LEARNING_RATE: Final[float] = 0.002
     MAX_BUCKETS: Final[int] = 20
     MAX_FRAMES: Final[int] = 125000
@@ -68,7 +68,7 @@ class DRNN:
     NICE_STEPS: Final[int] = 10
     NUM_COOLDOWN_EPISODES: Final[int] = 100
     OUTPUT_SIZE: Final[int] = 3
-    RNN_LAYERS: Final[int] = 5
+    RNN_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
