@@ -3554,14 +3554,14 @@ files = [
 
 [[package]]
 name = "textual"
-version = "8.0.0"
+version = "8.2.0"
 description = "Modern Text User Interface framework"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "textual-8.0.0-py3-none-any.whl", hash = "sha256:8908f4ebe93a6b4f77ca7262197784a52162bc88b05f4ecf50ac93a92d49bb8f"},
-    {file = "textual-8.0.0.tar.gz", hash = "sha256:ce48f83a3d686c0fac0e80bf9136e1f8851c653aa6a4502e43293a151df18809"},
+    {file = "textual-8.2.0-py3-none-any.whl", hash = "sha256:0478fed6e945bcadd6f3841e10d05213d318cdb5c4345c04ae78f7ec32e7b63d"},
+    {file = "textual-8.2.0.tar.gz", hash = "sha256:a06201a732b2d2683d2ea11c2538eeb7315c4c7138ed8c8bdb48150b805eaf1e"},
 ]
 
 [package.dependencies]
@@ -3927,4 +3927,4 @@ viz = ["matplotlib", "pillow", "tensorboard"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "a4baf10633f979e380328d7e3562ccba56c9be79826de2f814d2546ecce2031e"
+content-hash = "111a01066536fffb0320d2da1548bdbd60404eaff4f214b19bf894bf10969713"

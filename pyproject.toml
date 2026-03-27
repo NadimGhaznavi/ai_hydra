@@ -39,7 +39,7 @@ dependencies = [
     "numpy>=1.24.0",
     
     # textual
-    "textual>=8.0.0",
+    "textual>=8.2.0",
     "textual-plot>=0.10.1",
     
     # ZeroMQ for headless server communication

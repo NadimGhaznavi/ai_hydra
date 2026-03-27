@@ -210,7 +210,9 @@ class ATHGearBox:
         old_gear = self._cur_gear
         self._cur_gear = 3  # seq_length/batch_size == 8/32
         self._cur_seq_length, self._cur_batch_size = get_gear_data(
-            self._cur_gear
+            gear=self._cur_gear,
+            max_gear=self._max_gear,
+            max_training_frames=self._max_training_frames,
         )
         msg = (
             f"Critical Stagnation alert({crit_count}): Radical DOWN shift: "
