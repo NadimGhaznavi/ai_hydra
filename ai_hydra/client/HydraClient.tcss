@@ -157,6 +157,14 @@ HighScoresLog {
     text-style: bold;
     height:4;
 }
+#nice_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #c4c242;
+    color: #72af75;
+    text-style: bold;
+    height:4;
+}
 
 
 

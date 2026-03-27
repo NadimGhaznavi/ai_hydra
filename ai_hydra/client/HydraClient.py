@@ -534,6 +534,7 @@ class HydraClientTui(App):
 
         # RNN model defaults
         elif model_type == DField.RNN:
+            downshift_thresh = DRNN.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DRNN.DROPOUT_P_VALUE
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
             gamma = DRNN.GAMMA
@@ -542,6 +543,15 @@ class HydraClientTui(App):
             lr = f"{DRNN.LEARNING_RATE:.4f}"
             min_epsilon = DRNN.MINIMUM_EPSILON
             layers = DRNN.RNN_LAYERS
+            max_frames = DRNN.MAX_FRAMES
+            max_gear = DRNN.MAX_GEAR
+            max_crit_stag_eps = DRNN.MAX_HARD_RESET_EPISODES
+            max_stag_eps = DRNN.MAX_STAGNANT_EPISODES
+            max_training_frames = DRNN.MAX_TRAINING_FRAMES
+            nice_p_value = DRNN.NICE_P_VALUE
+            nice_steps = DRNN.NICE_STEPS
+            num_cooldown_eps = DRNN.NUM_COOLDOWN_EPISODES
+            upshift_thresh = DRNN.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.GRU)
             self.add_class(DField.RNN)
@@ -590,6 +600,16 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value = str(
             layers
         )
+        self.settings.downshift_count_threshold_input.value = downshift_thresh
+        self.settings.max_frames_input.value = max_frames
+        self.settings.max_gear_input.value = max_gear
+        self.settings.max_crit_stag_eps_input.value = max_crit_stag_eps
+        self.settings.max_stag_eps_input.value = max_stag_eps
+        self.settings.max_training_frames_input.value = max_training_frames
+        self.settings.nice_p_value_input.value = nice_p_value
+        self.settings.nice_steps_input.value = nice_steps
+        self.settings.num_cooldown_eps_input.value = num_cooldown_eps
+        self.settings.upshift_count_threshold_input.value = upshift_thresh
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)

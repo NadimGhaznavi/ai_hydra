@@ -121,8 +121,32 @@ class TabbedSettings(Widget):
             id=DField.MAX_CRIT_STAGNANT_EPISODES_INPUT,
         )
 
+        # Nice p-value
+        self.nice_p_value_label = Label(
+            id=DField.NICE_P_VALUE_LABEL,
+        )
+        self.nice_p_value_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DRNN.NICE_P_VALUE),
+            id=DField.NICE_P_VALUE_INPUT,
+        )
+
+        # Nice steps
+        self.nice_steps_label = Label(
+            id=DField.NICE_STEPS_LABEL,
+        )
+        self.nice_steps_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DRNN.NICE_STEPS),
+            id=DField.NICE_STEPS_INPUT,
+        )
+
     def compose(self) -> ComposeResult:
-        with TabbedContent(DLabel.CONFIG, DLabel.NETWORK, DLabel.MEMORY):
+        with TabbedContent(
+            DLabel.CONFIG, DLabel.NETWORK, DLabel.MEMORY, DLabel.NICE
+        ):
 
             # ----- Settings Tab ---
             yield Vertical(
@@ -448,6 +472,25 @@ class TabbedSettings(Widget):
                         classes=DField.INPUT_FIELD,
                     ),
                     id=DField.STAGNATION_BOX,
+                ),
+            )
+
+            # ----- Nice ---
+            yield Vertical(
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.NICE_P_VALUE}: "),
+                        self.nice_p_value_label,
+                        self.nice_p_value_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.NICE_STEPS}  : "),
+                        self.nice_steps_label,
+                        self.nice_steps_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.NICE_BOX,
                 ),
             )
 
