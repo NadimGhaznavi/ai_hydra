@@ -8,7 +8,6 @@ from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.utils.MetricEvent import MemEvent
 
 BUCKET = "bucket"
-NUM_BUCKETS = 20
 BASE_COLOR = "#0f1e10"
 
 
@@ -23,14 +22,17 @@ def percent_to_hex(p: float) -> str:
 
 class ATHMemory(Widget):
 
-    def __init__(self, metrics: HydraMetrics, *args, **kwargs) -> None:
+    def __init__(
+        self, metrics: HydraMetrics, max_buckets: int, *args, **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.metrics = metrics
+        self._max_buckets = max_buckets
 
     def compose(self) -> ComposeResult:
         with Horizontal():
             yield Label("Memory", id=DField.REPLAY_MEM)
-            for i in range(NUM_BUCKETS):
+            for i in range(self._max_buckets):
                 yield Label(id=f"b{i}", classes=BUCKET)
 
     def refresh_data(self) -> None:
@@ -56,3 +58,7 @@ class ATHMemory(Widget):
                 f"{BASE_COLOR}{alpha_hex}"
             )
             bucket_idx += 1
+
+    def set_max_buckets(self, max_buckets: int):
+        self._max_buckets = max_buckets
+        self.refresh()

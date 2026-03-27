@@ -51,6 +51,7 @@ from ai_hydra.constants.DNNet import (
     MODEL_TYPE_TABLE,
 )
 from ai_hydra.constants.DEpsilonNice import DEpsilonNice
+from ai_hydra.constants.DReplayMemory import DMemDef
 
 # AI Hydra Modules
 from ai_hydra.zmq.HydraClientMQ import HydraClientMQ
@@ -236,7 +237,11 @@ class HydraClientTui(App):
         yield HydraTelemetry(metrics=self.metrics, id=DField.HYDRA_TELEMETRY)
 
         # ATH Memory widget
-        yield ATHMemory(metrics=self.metrics, id=DField.ATH_Memory)
+        yield ATHMemory(
+            metrics=self.metrics,
+            max_buckets=DMemDef.MAX_BUCKETS,
+            id=DField.ATH_Memory,
+        )
 
         # Focus widget: This is hidden, but it allows me to move focus away
         # from the selected button when a button is clicked.

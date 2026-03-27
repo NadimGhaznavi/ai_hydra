@@ -324,7 +324,7 @@ EventLog {
 .sim_stopped #learning_rate_label {
     display: none;
 }
-.sim_stopped #max_buckets_label {
+.sim_stopped #max_buckets_input {
     display: none;
 }
 .sim_stopped #max_crit_stag_eps_label {
