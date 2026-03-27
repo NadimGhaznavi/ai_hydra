@@ -714,9 +714,6 @@ EventLog {
 
 /* Linear Model is Selected */
 /* ------------------------ */
-.linear #ath_memory {
-    display: none;
-}
 .linear #seq_length_input {
     display: none;
 }
