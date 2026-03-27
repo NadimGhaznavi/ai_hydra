@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 
 from ai_hydra.constants.DNNet import DNetDef, DLinear
-from ai_hydra.constants.DHydra import DHydra
+from ai_hydra.constants.DHydra import DModule
 from ai_hydra.constants.DHydra import DHydraLog
 
 from ai_hydra.utils.HydraLog import HydraLog
@@ -25,7 +25,7 @@ class LinearModel(nn.Module):
         torch.manual_seed(seed)
 
         self.log = HydraLog(
-            client_id="LinearModel",
+            client_id=DModule.LINEAR_MODEL,
             log_level=log_level,
             to_console=True,
         )
@@ -34,6 +34,9 @@ class LinearModel(nn.Module):
         self._dropout_p = None
 
     def forward(self, x):
+        return self.net(x)
+
+    def forward_sequence(self, x):
         return self.net(x)
 
     def _init_model(self):
@@ -46,15 +49,12 @@ class LinearModel(nn.Module):
             nn.Linear(self._hidden_size, DLinear.OUTPUT_SIZE),
         )
 
-    def set_params(self, hidden_size: int, dropout_p: float) -> None:
+    def set_params(
+        self, hidden_size: int, dropout_p: float, layers: int
+    ) -> None:
         self._hidden_size = hidden_size
         self._dropout_p = dropout_p
         self.log.info(f"Setting hidden size to {hidden_size}")
         self.log.info(f"Setting dropout layer p-value to {dropout_p}")
+        self.log.info(f"Setting (UNUSED) layers to {layers}")
         self._init_model()
-
-    def reset_weights(self):
-        for module in self.modules():
-            if hasattr(module, "reset_parameters"):
-                module.reset_parameters()
-        torch.manual_seed(self._seed)

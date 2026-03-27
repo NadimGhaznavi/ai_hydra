@@ -134,6 +134,7 @@ class DModule(StrEnum):
     HYDRA_RNG = "HydraRng"
     HYDRA_SERVER = "HydraServer"
     HYDRA_SERVER_MQ = "HydraServerMQ"
+    LINEAR_MODEL = "LinearModel"
     LINEAR_TRAINER = "LinearTrainer"
     RNN_MODEL = "RNNModel"
     RECURRENT_TRAINER = "RecurrentTrainer"

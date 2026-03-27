@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+
+### Added
+- **Additional Configurable Simulation Settings**
+  - **Epsilon Nice Settings**
+    - Added TUI controls for setting the `NICE_P_VALUE` and `NICE_STEPS` values.
+  - **ATH Replay Memory Settings**
+    - Added TUI controls for setting the `DOWNSHIFT_COUNT_THRESHOLD`, `MAX_FRAMES`, `MAX_GEAR`, `MAX_HARD_RESET_EPISODES`, `MAX_STAGNANT_EPISODES`, `MAX_TRAINING_FRAMES`, `NUM_COOLDOWN_EPISODES`, and `UPSHIFT_COUNT_THRESHOLD` values.
+  - Wired these settings through the entire stack i.e. enabled support in the `SimCfg`, `HydraMgr`, `ATHMemory`, `ATHCommon`, `ATHDataMgr`, `ATHDataStore`, `ATHGearbox`, and `EpsilonNicePolicy` classes.
+
 ### Changed
 - Removed `THRESHOLD_BUCKETS`. Instead the system uses the last three bucket and limits the MAX_BUCKETS to have a **minimum** of 3.
 

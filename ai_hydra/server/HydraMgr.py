@@ -130,23 +130,35 @@ class HydraMgr(HydraServer):
         _, policy_rng = self.hydra_rng.new_rng()
         _, replay_rng = self.hydra_rng.new_rng()
 
-        device = torch.device(
-            DField.CPU
-        )  # keep simple; GPU can be passed later
+        device = torch.device(DField.CPU)
 
+        replay = ATHMemory(
+            rng=replay_rng,
+            log_level=self.log_level,
+            pub_func=self.mq.publish_events,
+            max_buckets=self.cfg.get(DNetField.MAX_BUCKETS),
+            max_gear=self.cfg.get(DNetField.MAX_GEAR),
+            max_training_frames=self.cfg.get(DNetField.MAX_TRAINING_FRAMES),
+            max_frames=self.cfg.get(DNetField.MAX_FRAMES),
+            upshift_count_thresh=self.cfg.get(
+                DNetField.UPSHIFT_COUNT_THRESHOLD
+            ),
+            downshift_count_thresh=self.cfg.get(
+                DNetField.DOWNSHIFT_COUNT_THRESHOLD
+            ),
+            num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
+        )
+
+        # Linear Model
         if model_type == DField.LINEAR:
-            self.log.debug("Using Linear Model")
-            replay = SimpleReplayMemory(
-                rng=replay_rng,
-                log_level=self.log_level,
-                pub_func=self.mq.publish_events,
-            )
+            self.log.info("Using Linear Model")
             model = LinearModel(log_level=self.log_level, seed=master_seed)
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
+                layers=self.cfg.get(DNetField.LAYERS),
             )
-            nnet_policy = LinearPolicy(model=model, device=device)
+
             trainer = LinearTrainer(
                 model=model,
                 replay=replay,
@@ -154,48 +166,29 @@ class HydraMgr(HydraServer):
                 device=device,
                 log_level=self.log_level,
             )
-            trainer.set_params(
-                gamma=self.cfg.get(DNetField.GAMMA),
-                batch_size=self.cfg.get(DNetField.BATCH_SIZE),
-            )
+            nnet_policy = LinearPolicy(model=model, device=device)
 
+        # RNN Model
         elif model_type == DField.RNN:
-            self.log.debug("Using RNN Model")
+            self.log.info("Using RNN Model")
             model = RNNModel(log_level=self.log_level, seed=master_seed)
 
+        # GRU Model
         elif model_type == DField.GRU:
-            self.log.debug("Using GRU Model")
-            epsilon_nice_p_val = DGRU.NICE_P_VALUE
-            epsilon_nice_steps = DGRU.NICE_STEPS
+            self.log.info("Using GRU Model")
             model = GRUModel(log_level=self.log_level, seed=master_seed)
+
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
+        # Recurrent (GRU or RNN) model
         if model_type == DField.RNN or model_type == DField.GRU:
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
                 layers=self.cfg.get(DNetField.LAYERS),
             )
-            nnet_policy = RecurrentPolicy(model=model, device=device)
-            replay = ATHMemory(
-                rng=replay_rng,
-                log_level=self.log_level,
-                pub_func=self.mq.publish_events,
-                max_buckets=self.cfg.get(DNetField.MAX_BUCKETS),
-                max_gear=self.cfg.get(DNetField.MAX_GEAR),
-                max_training_frames=self.cfg.get(
-                    DNetField.MAX_TRAINING_FRAMES
-                ),
-                max_frames=self.cfg.get(DNetField.MAX_FRAMES),
-                upshift_count_thresh=self.cfg.get(
-                    DNetField.UPSHIFT_COUNT_THRESHOLD
-                ),
-                downshift_count_thresh=self.cfg.get(
-                    DNetField.DOWNSHIFT_COUNT_THRESHOLD
-                ),
-                num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
-            )
+
             trainer = RecurrentTrainer(
                 model=model,
                 replay=replay,
@@ -203,11 +196,12 @@ class HydraMgr(HydraServer):
                 device=device,
                 log_level=self.log_level,
             )
-            trainer.set_params(
-                tau=self.cfg.get(DNetField.TAU),
-                gamma=self.cfg.get(DNetField.GAMMA),
-            )
+            nnet_policy = RecurrentPolicy(model=model, device=device)
 
+        trainer.set_params(
+            tau=self.cfg.get(DNetField.TAU),
+            gamma=self.cfg.get(DNetField.GAMMA),
+        )
         self.log.debug(f"Model details:")
         self.log.debug(str(model))
 
@@ -414,17 +408,13 @@ class HydraMgr(HydraServer):
                             train_mgr.policy.cur_epsilon()
                         )
 
-                        if (
-                            model_type == DField.RNN
-                            or model_type == DField.GRU
-                        ):
-                            # train_mgr.replay.append(t=t, final_score=sess.score)
-                            await train_mgr.trainer.train_long_memory()
-                            # Anti-Stagnation strategy
-                            if DNetField.FINAL_SCORE in scores_payload:
-                                await train_mgr.handle_stagnation(
-                                    scores_payload[DNetField.FINAL_SCORE]
-                                )
+                        # train_mgr.replay.append(t=t, final_score=sess.score)
+                        await train_mgr.trainer.train_long_memory()
+                        # Anti-Stagnation strategy
+                        if DNetField.FINAL_SCORE in scores_payload:
+                            await train_mgr.handle_stagnation(
+                                scores_payload[DNetField.FINAL_SCORE]
+                            )
 
                         # Loss, if available, is loaded into the telemetry here
                         loss = train_mgr.trainer.get_avg_loss()
@@ -443,17 +433,7 @@ class HydraMgr(HydraServer):
                         done=bool(done),
                     )
 
-                    if model_type == DField.RNN or model_type == DField.GRU:
-                        await train_mgr.replay.append(
-                            t=t, final_score=sess.score
-                        )
-                    else:
-                        await train_mgr.replay.append(t=t)
-
-                    if model_type == DField.LINEAR:
-                        if sess.step_n % train_every == 0:
-                            for _ in range(grad_steps):
-                                await train_mgr.trainer.train_long_memory()
+                    await train_mgr.replay.append(t=t, final_score=sess.score)
 
                     # Publish
                     if mq is not None:

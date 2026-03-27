@@ -12,12 +12,13 @@ from typing import Sequence
 
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.models.RNNModel import RNNModel
+from ai_hydra.constants.DHydraTui import DField
 
 
 class RecurrentPolicy(HydraPolicy):
     def __init__(self, model: RNNModel, device: torch.device | None = None):
         self.model = model
-        self.device = device or torch.device("cpu")
+        self.device = device or torch.device(DField.CPU)
         self.model.eval()
 
     def select_action(self, state: Sequence[float], board=None) -> int:

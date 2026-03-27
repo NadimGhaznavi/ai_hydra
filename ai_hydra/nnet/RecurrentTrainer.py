@@ -79,6 +79,15 @@ class RecurrentTrainer:
             self.target_model = deepcopy(self.model).to(self.device)
             self.target_model.eval()
 
+    def _soft_update_target(self) -> None:
+        for target_param, param in zip(
+            self.target_model.parameters(),
+            self.model.parameters(),
+        ):
+            target_param.data.copy_(
+                self._tau * param.data + (1.0 - self._tau) * target_param.data
+            )
+
     async def train_long_memory(self) -> float | None:
 
         chunks = await self.replay.data_mgr.sample_chunks()
@@ -88,7 +97,8 @@ class RecurrentTrainer:
         if self._cold_memory:
             self._cold_memory = False
             self.log.debug(
-                f"Training with {len(chunks)} batches with sequence length {len(chunks[0])}"
+                f"Training with {len(chunks)} batches with sequence length "
+                f"{len(chunks[0])}"
             )
 
         # Shapes (B = batch_size, T = seq_length, F = feature/input size)
@@ -192,15 +202,6 @@ class RecurrentTrainer:
 
         self._losses.append(loss.item())
         return float(loss.item())
-
-    def _soft_update_target(self) -> None:
-        for target_param, param in zip(
-            self.target_model.parameters(),
-            self.model.parameters(),
-        ):
-            target_param.data.copy_(
-                self._tau * param.data + (1.0 - self._tau) * target_param.data
-            )
 
     def set_params(self, tau: float, gamma: float):
         self._tau = tau
