@@ -34,6 +34,7 @@ class DField:
     BATCH_SIZE: Final[str] = "batch_size"
     BATCH_SIZE_INPUT: Final[str] = "batch_size_input"
     BATCH_SIZE_LABEL: Final[str] = "batch_size_label"
+    BLANK: Final[str] = "blank"
     BOARD_BOX: Final[str] = "board_box"
     BOTH: Final[str] = "both"
     BUTTONS: Final[str] = "buttons"

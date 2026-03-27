@@ -191,11 +191,11 @@ class HydraClientTui(App):
             id=DField.BUTTONS,
         )
 
-        # ------ The Snake Game ---
-        yield Vertical(self.game_board, id=DField.BOARD_BOX)
-
         # ----- Tabbed Settings ---
         yield TabbedSettings(id=DField.TABBED_SETTINGS)
+
+        # ------ The Snake Game ---
+        yield Vertical(self.game_board, id=DField.BOARD_BOX)
 
         # ----- Highscores widget ---
         yield HighScoresLog(id=DField.HIGHSCORES_LOG)
@@ -232,6 +232,9 @@ class HydraClientTui(App):
             classes=DField.INPUT_FIELD,
             id=DField.TURBO_BOX,
         )
+
+        # Blank Label to make a nice black filler
+        yield Label(" " * 44, id=DField.BLANK)
 
         # Realtime Telemetry (plots and event log)
         yield HydraTelemetry(metrics=self.metrics, id=DField.HYDRA_TELEMETRY)
@@ -355,7 +358,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.MOVE_DELAY_BOX}").border_subtitle = (
             DLabel.MOVE_DELAY
         )
-        self.query_one(f"#{DField.TABBED_SETTINGS}").border_subtitle = (
+        self.query_one(f"#{DField.TABBED_SETTINGS}").border_title = (
             DLabel.SETTINGS
         )
         # --------------------------------------------------------------

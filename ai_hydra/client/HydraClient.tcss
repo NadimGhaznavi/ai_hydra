@@ -1,8 +1,8 @@
 Screen {
     layout: grid;
     grid-size: 4 9;
-    grid-rows: 3 14 3 3 3 22 3;
-    grid-columns: 20 44 34 37;
+    grid-rows: 3 14 3 3 2 1 22 3;
+    grid-columns: 20 44 44 37;
 }
 
 /* Individual widget styling */
@@ -32,7 +32,8 @@ Switch {
     background: black;
     height: 14;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #5fc442;
     text-style: bold;
     padding: 0 1;
@@ -42,49 +43,60 @@ Switch {
     height: 22;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
-    border-title-color: #5fc442;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
+    border-title-color: #42bbc4;
+    border-title-style: bold;
     color: #5fc442;
     text-style: bold;
     padding: 0 1;
 }
 #tabbed_settings {
-    row-span: 4;
+    row-span: 5;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-title-color: #42bbc4;
+    text-style: bold;
+    border-title-style: bold;
     color: #72af75;
     width: 100%;
     padding: 0 1;
 }
 HighScoresLog {
-    row-span: 4;
+    row-span: 5;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
 }
 #random_seed_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     padding: 0 2;
 }
 #move_delay_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     padding: 0 2;
 }
 #turbo_box {
     height: 3;
+    row-span: 2;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
-    border-title-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     text-style: bold;
     padding: 0 0;
     align: center middle;
     color: #72af75;    
+}
+#blank {
+    background: black;
 }
 
 #both {
@@ -99,28 +111,32 @@ HighScoresLog {
 #epsilon_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     text-style: bold;
     color: #72af75;
 }
 #model_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
 }
 #training_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
 }
 #router_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
     height: 6;
@@ -128,7 +144,8 @@ HighScoresLog {
 #server_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
     height: 5;
@@ -136,7 +153,8 @@ HighScoresLog {
 #mem_sizing_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
     height: 5;
@@ -144,7 +162,8 @@ HighScoresLog {
 #shifting_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
     height: 6;
@@ -152,7 +171,8 @@ HighScoresLog {
 #stagnation_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
     height:4;
