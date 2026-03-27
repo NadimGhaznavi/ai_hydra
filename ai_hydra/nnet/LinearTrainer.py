@@ -196,6 +196,6 @@ class LinearTrainer:
 
     def set_params(self, tau: float, gamma: float):
         self._tau = tau
-        self.log.info(f"Setting (UNUSED) Tau to {tau}")
+        self.log.info(f"Set Tau: {tau}")
         self._gamma = gamma
-        self.log.info(f"Setting the Discount/Gamma to {gamma}")
+        self.log.info(f"Set Discount/Gamma: {gamma}")

@@ -29,6 +29,7 @@ class LinearModel(nn.Module):
             log_level=log_level,
             to_console=True,
         )
+        self.hidden_block = nn.Sequential()
 
         self._hidden_size = None
         self._dropout_p = None
@@ -43,8 +44,7 @@ class LinearModel(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(DNetDef.INPUT_SIZE, self._hidden_size),
             nn.ReLU(),
-            nn.Linear(self._hidden_size, self._hidden_size),
-            nn.ReLU(),
+            self.hidden_block,
             nn.Dropout(p=self._dropout_p),
             nn.Linear(self._hidden_size, DLinear.OUTPUT_SIZE),
         )
@@ -54,7 +54,16 @@ class LinearModel(nn.Module):
     ) -> None:
         self._hidden_size = hidden_size
         self._dropout_p = dropout_p
-        self.log.info(f"Setting hidden size to {hidden_size}")
-        self.log.info(f"Setting dropout layer p-value to {dropout_p}")
-        self.log.info(f"Setting (UNUSED) layers to {layers}")
+        self.log.info(f"Set hidden size: {hidden_size}")
+        self.log.info(f"Set dropout layer p-value: {dropout_p}")
+        self.log.info(f"Set layers: {layers}")
+
+        # Add hidden layers
+        while layers:
+            self.hidden_block.append(
+                nn.Linear(self._hidden_size, self._hidden_size),
+            )
+            self.hidden_block.append(nn.ReLU())
+            layers -= 1
+
         self._init_model()

@@ -92,7 +92,7 @@ class DLinear:
 
     BATCH_SIZE: Final[int] = 64
     GAMMA: Final[float] = 0.9
-    HIDDEN_SIZE: Final[int] = 96
+    HIDDEN_SIZE: Final[int] = 192
     INITIAL_EPSILON: Final[float] = 0.99
     EPSILON_DECAY_RATE: Final[float] = 0.985
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
