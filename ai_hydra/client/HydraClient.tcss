@@ -356,6 +356,12 @@ EventLog {
 .sim_stopped #model_type_label {
     display: none;
 }
+.sim_stopped #nice_p_value_label {
+    display: none;
+}
+.sim_stopped #nice_steps_label {
+    display: none;
+}
 .sim_stopped #num_cooldown_eps_label {
     display: none;
 }
@@ -441,6 +447,12 @@ EventLog {
     display: none;
 }
 .sim_running #model_type_select {
+    display: none;
+}
+.sim_running #nice_p_value_input {
+    display: none;
+}
+.sim_running #nice_steps_input {
     display: none;
 }
 .sim_running #num_cooldown_eps_input {
@@ -589,6 +601,18 @@ EventLog {
     display: none;
 }
 .bad_handshake #move_delay_label {
+    display: none;
+}
+.bad_handshake #nice_p_value_input {
+    display: none;
+}
+.bad_handshake #nice_p_value_label {
+    display: none;
+}
+.bad_handshake #nice_steps_input {
+    display: none;
+}
+.bad_handshake #nice_steps_label {
     display: none;
 }
 .bad_handshake #num_cooldown_eps_input {

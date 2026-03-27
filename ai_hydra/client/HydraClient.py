@@ -516,14 +516,25 @@ class HydraClientTui(App):
         model_type = event.value
         # Linear model defaults
         if model_type == DField.LINEAR:
+            downshift_thresh = DLinear.DOWNSHIFT_COUNT_THRESHOLD
             batch_size = DLinear.BATCH_SIZE
             dropout_p = DLinear.DROPOUT_P
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
             gamma = DLinear.GAMMA
             hidden_size = DLinear.HIDDEN_SIZE
             initial_epsilon = DLinear.INITIAL_EPSILON
+            layers = DLinear.LINEAR_LAYERS
             lr = f"{DLinear.LEARNING_RATE:.5f}"
             min_epsilon = DLinear.MINIMUM_EPSILON
+            max_frames = DLinear.MAX_FRAMES
+            max_gear = DLinear.MAX_GEAR
+            max_crit_stag_eps = DLinear.MAX_HARD_RESET_EPISODES
+            max_stag_eps = DLinear.MAX_STAGNANT_EPISODES
+            max_training_frames = DLinear.MAX_TRAINING_FRAMES
+            nice_p_value = DLinear.NICE_P_VALUE
+            nice_steps = DLinear.NICE_STEPS
+            num_cooldown_eps = DLinear.NUM_COOLDOWN_EPISODES
+            upshift_thresh = DLinear.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.RNN)
             self.remove_class(DField.GRU)
             self.add_class(DField.LINEAR)
@@ -540,9 +551,9 @@ class HydraClientTui(App):
             gamma = DRNN.GAMMA
             hidden_size = DRNN.HIDDEN_SIZE
             initial_epsilon = DRNN.INITIAL_EPSILON
+            layers = DRNN.RNN_LAYERS
             lr = f"{DRNN.LEARNING_RATE:.4f}"
             min_epsilon = DRNN.MINIMUM_EPSILON
-            layers = DRNN.RNN_LAYERS
             max_frames = DRNN.MAX_FRAMES
             max_gear = DRNN.MAX_GEAR
             max_crit_stag_eps = DRNN.MAX_HARD_RESET_EPISODES
@@ -561,24 +572,24 @@ class HydraClientTui(App):
 
         # GRU model defaults
         elif model_type == DField.GRU:
-            downshift_thresh = DRNN.DOWNSHIFT_COUNT_THRESHOLD
+            downshift_thresh = DGRU.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DGRU.DROPOUT_P_VALUE
             epsilon_decay = DGRU.EPSILON_DECAY_RATE
             gamma = DGRU.GAMMA
             hidden_size = DGRU.HIDDEN_SIZE
             initial_epsilon = DGRU.INITIAL_EPSILON
+            layers = DGRU.GRU_LAYERS
             lr = f"{DGRU.LEARNING_RATE:.4f}"
             min_epsilon = DGRU.MINIMUM_EPSILON
-            layers = DGRU.GRU_LAYERS
-            max_frames = DRNN.MAX_FRAMES
-            max_gear = DRNN.MAX_GEAR
-            max_crit_stag_eps = DRNN.MAX_HARD_RESET_EPISODES
-            max_stag_eps = DRNN.MAX_STAGNANT_EPISODES
-            max_training_frames = DRNN.MAX_TRAINING_FRAMES
-            nice_p_value = DRNN.NICE_P_VALUE
-            nice_steps = DRNN.NICE_STEPS
-            num_cooldown_eps = DRNN.NUM_COOLDOWN_EPISODES
-            upshift_thresh = DRNN.UPSHIFT_COUNT_THRESHOLD
+            max_frames = DGRU.MAX_FRAMES
+            max_gear = DGRU.MAX_GEAR
+            max_crit_stag_eps = DGRU.MAX_HARD_RESET_EPISODES
+            max_stag_eps = DGRU.MAX_STAGNANT_EPISODES
+            max_training_frames = DGRU.MAX_TRAINING_FRAMES
+            nice_p_value = DGRU.NICE_P_VALUE
+            nice_steps = DGRU.NICE_STEPS
+            num_cooldown_eps = DGRU.NUM_COOLDOWN_EPISODES
+            upshift_thresh = DGRU.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.RNN)
             self.add_class(DField.GRU)
@@ -610,16 +621,20 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value = str(
             layers
         )
-        self.settings.downshift_count_threshold_input.value = downshift_thresh
-        self.settings.max_frames_input.value = max_frames
-        self.settings.max_gear_input.value = max_gear
-        self.settings.max_crit_stag_eps_input.value = max_crit_stag_eps
-        self.settings.max_stag_eps_input.value = max_stag_eps
-        self.settings.max_training_frames_input.value = max_training_frames
-        self.settings.nice_p_value_input.value = nice_p_value
-        self.settings.nice_steps_input.value = nice_steps
-        self.settings.num_cooldown_eps_input.value = num_cooldown_eps
-        self.settings.upshift_count_threshold_input.value = upshift_thresh
+        self.settings.downshift_count_threshold_input.value = str(
+            downshift_thresh
+        )
+        self.settings.max_frames_input.value = str(max_frames)
+        self.settings.max_gear_input.value = str(max_gear)
+        self.settings.max_crit_stag_eps_input.value = str(max_crit_stag_eps)
+        self.settings.max_stag_eps_input.value = str(max_stag_eps)
+        self.settings.max_training_frames_input.value = str(
+            max_training_frames
+        )
+        self.settings.nice_p_value_input.value = str(nice_p_value)
+        self.settings.nice_steps_input.value = str(nice_steps)
+        self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
+        self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
