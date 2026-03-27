@@ -24,11 +24,16 @@ from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 
 from ai_hydra.nnet.ATH.ATHCommon import Episode, GearMeta, get_gear_data
 
-MAX_BUCKETS = DMemDef.MAX_BUCKETS
-
 
 class ATHDataStore:
-    def __init__(self, log_level: DHydraLog, pub_func):
+    def __init__(
+        self,
+        log_level: DHydraLog,
+        pub_func,
+        max_buckets: int,
+        max_gear: int,
+        max_training_frames: int,
+    ):
 
         # Local logging
         self.log = HydraLog(
@@ -42,7 +47,7 @@ class ATHDataStore:
         )
 
         self._episodes_by_bucket: dict[int, list[Episode]] = {
-            idx: [] for idx in range(MAX_BUCKETS)
+            idx: [] for idx in range(max_buckets)
         }
         self._warmed_buckets: list[int] = []
         self._games: list[Episode] = []
@@ -51,6 +56,10 @@ class ATHDataStore:
         self._batch_size: int | None = None
 
         self._stored_frames = 0
+
+        self._max_buckets = max_buckets
+        self._max_gear = max_gear
+        self._max_training_frames = max_training_frames
 
     def append(self, t: Transition):
         self._cur_game.append(t)
@@ -102,14 +111,20 @@ class ATHDataStore:
     def update_episodes_by_bucket(self):
         for ep in self._games:
             meta = ep.gear_meta[self._cur_gear]
-            usable_buckets = min(meta.num_chunks, MAX_BUCKETS)
+            usable_buckets = min(meta.num_chunks, self._max_buckets)
 
             for bucket_idx in range(usable_buckets):
                 self._episodes_by_bucket[bucket_idx].append(ep)
 
     def reset_bucket_indexes(self):
-        self._episodes_by_bucket = {idx: [] for idx in range(MAX_BUCKETS)}
+        self._episodes_by_bucket = {
+            idx: [] for idx in range(self._max_buckets)
+        }
 
     def set_gear(self, gear: int):
         self._cur_gear = gear
-        _, self._batch_size = get_gear_data(gear)
+        _, self._batch_size = get_gear_data(
+            gear=gear,
+            max_gear=self._max_gear,
+            max_training_frames=self._max_training_frames,
+        )

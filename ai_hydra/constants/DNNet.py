@@ -22,18 +22,27 @@ class DGRU:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.999
     EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.97
     HIDDEN_SIZE: Final[int] = 192
     LEARNING_RATE: Final[float] = 0.001
+    MAX_BUCKETS: Final[int] = 20
+    MAX_FRAMES: Final[int] = 125000
+    MAX_GEAR: Final[int] = 26
+    MAX_HARD_RESET_EPISODES: Final[int] = 2000
+    MAX_STAGNANT_EPISODES: Final[int] = 300
+    MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.001  # 0.005
     NICE_STEPS: Final[int] = 20
+    NUM_COOLDOWN_EPISODES: Final[int] = 100
     OUTPUT_SIZE: Final[int] = 3
     GRU_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
 
 
 class DRNN:
@@ -116,6 +125,7 @@ class DNetField:
     BATCH_SIZE: Final[str] = "batch_size"
     CUR_EPSILON: Final[str] = "cur_epsilon"
     DONE: Final[str] = DGameField.DONE
+    DOWNSHIFT_COUNT_THRESHOLD: Final[str] = "downshift_count_threshold"
     DROPOUT_P: Final[str] = "dropout_p"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
@@ -124,10 +134,17 @@ class DNetField:
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
     LEARNING_RATE: Final[str] = "learning_rate"
     LOSS: Final[str] = "loss"
+    MAX_BUCKETS: Final[str] = "max_buckets"
+    MAX_FRAMES: Final[str] = "max_frames"
+    MAX_GEAR: Final[str] = "max_gear"
+    MAX_HARD_RESET_EPISODES: Final[str] = "max_hard_reset_episodes"
+    MAX_STAGNANT_EPISODES: Final[str] = "max_stagnant_episodes"
+    MAX_TRAINING_FRAMES: Final[str] = "max_training_frames"
     MIN_EPSILON: Final[str] = "min_epsilon"
     MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"
+    NUM_COOLDOWN_EPISODES: Final[str] = "num_cooledown_episodes"
     PER_STEP: Final[str] = "per_step"
     RANDOM_SEED: Final[str] = "random_seed"
     REWARD: Final[str] = DGameField.REWARD
@@ -136,6 +153,7 @@ class DNetField:
     SEQ_LENGTH: Final[str] = "sequence_length"
     SIM_PAUSED: Final[str] = "sim_paused"
     STATE: Final[str] = "state"
+    UPSHIFT_COUNT_THRESHOLD: Final[str] = "upshift_count_threshold"
 
 
 class DRecurrentTrainer:

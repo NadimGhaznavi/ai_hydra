@@ -23,16 +23,20 @@ from ai_hydra.zmq.HydraEventMQ import HydraEventMQ, EventMsg
 from ai_hydra.nnet.ATH.ATHDataStore import ATHDataStore
 from ai_hydra.nnet.ATH.ATHCommon import get_gear_data
 
-MAX_BUCKETS = DMemDef.MAX_BUCKETS
-UPSHIFT_COUNT_THRESHOLD = DMemDef.UPSHIFT_COUNT_THRESHOLD
-DOWNSHIFT_COUNT_THRESHOLD = DMemDef.DOWNSHIFT_COUNT_THRESHOLD
-NUM_COOLDOWN_EPISODES = DMemDef.NUM_COOLDOWN_EPISODES
-
 
 class ATHGearBox:
 
     def __init__(
-        self, log_level: DHydraLog, data_store: ATHDataStore, pub_func
+        self,
+        log_level: DHydraLog,
+        data_store: ATHDataStore,
+        pub_func,
+        max_buckets: int,
+        upshift_count_thresh: int,
+        downshift_count_thresh: int,
+        num_cooldown_eps: int,
+        max_gear: int,
+        max_training_frames: int,
     ):
         self.store = data_store
 
@@ -48,8 +52,12 @@ class ATHGearBox:
         )
 
         self._cur_gear = 1
+        self._max_gear = max_gear
+        self._max_training_frames = max_training_frames
         self._cur_seq_length, self._cur_batch_size = get_gear_data(
-            self._cur_gear
+            gear=self._cur_gear,
+            max_gear=max_gear,
+            max_training_frames=max_training_frames,
         )
 
         self._cur_bucket_counts: int | None = None
@@ -66,6 +74,12 @@ class ATHGearBox:
         self._cur_epoch = 0
         self._last_upshift = 0
 
+        # User defined settings
+        self._max_buckets = max_buckets
+        self._upshift_count_thresh = upshift_count_thresh
+        self._downshift_count_thresh = downshift_count_thresh
+        self._num_cooldown_eps = num_cooldown_eps
+
     async def get_gear(self) -> int:
         self._cur_bucket_counts = bucket_counts = (
             self.store.get_bucket_counts()
@@ -74,7 +88,7 @@ class ATHGearBox:
         if not bucket_counts:
             return self._cur_gear
 
-        if len(bucket_counts) != MAX_BUCKETS:
+        if len(bucket_counts) != self._max_buckets:
             return self._cur_gear
 
         chunk_count = self.get_thresh_bucket_chunk_count()
@@ -82,7 +96,7 @@ class ATHGearBox:
         # We're dealing with a stagnation event
         if (
             self._stagnation_flag
-            and self._cooldown_count > NUM_COOLDOWN_EPISODES
+            and self._cooldown_count > self._num_cooldown_eps
         ):
 
             # Downshift
@@ -94,7 +108,9 @@ class ATHGearBox:
                 return self._cur_gear
 
             self._cur_seq_length, self._cur_batch_size = get_gear_data(
-                self._cur_gear
+                gear=self._cur_gear,
+                max_gear=self._max_gear,
+                max_training_frames=self._max_training_frames,
             )
             # Stay here till the cooldown period is over
             self._cooldown_count = 0
@@ -121,8 +137,8 @@ class ATHGearBox:
 
         # Time to shift UP
         elif (
-            chunk_count > UPSHIFT_COUNT_THRESHOLD
-            and self._cooldown_count > NUM_COOLDOWN_EPISODES
+            chunk_count > self._upshift_count_thresh
+            and self._cooldown_count > self._num_cooldown_eps
         ):
             # Upshifting resets the stagnation alert count. This allows the
             # system to, up, up, stagnation-alert: down, up, up, ... to
@@ -133,7 +149,9 @@ class ATHGearBox:
             self._last_upshift = self._cur_epoch
             self._cooldown_count = 0
             self._cur_seq_length, self._cur_batch_size = get_gear_data(
-                self._cur_gear
+                gear=self._cur_gear,
+                max_gear=self._max_gear,
+                max_training_frames=self._max_training_frames,
             )
             await self.event.publish(
                 EventMsg(
@@ -150,8 +168,8 @@ class ATHGearBox:
 
         # Time to shift DOWN
         elif (
-            chunk_count < DOWNSHIFT_COUNT_THRESHOLD
-            and self._cooldown_count > NUM_COOLDOWN_EPISODES
+            chunk_count < self._downshift_count_thresh
+            and self._cooldown_count > self._num_cooldown_eps
         ):
             # First gear is the lowest gear
             if self._cur_gear == 1:

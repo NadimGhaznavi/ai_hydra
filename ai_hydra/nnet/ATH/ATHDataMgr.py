@@ -24,10 +24,6 @@ from ai_hydra.nnet.ATH.ATHCommon import (
 )
 
 
-MAX_BUCKETS = DMemDef.MAX_BUCKETS
-MAX_FRAMES = DMemDef.MAX_FRAMES
-
-
 class ATHDataMgr:
 
     def __init__(
@@ -36,6 +32,9 @@ class ATHDataMgr:
         rng: Random,
         pub_func,
         data_store: ATHDataStore,
+        max_frames: int,
+        max_gear: int,
+        max_training_frames: int,
     ):
         self._rng = rng
         self.store = data_store
@@ -54,6 +53,10 @@ class ATHDataMgr:
         self._samples_served = 0
         self._has_logged_startup = False
         self._has_logged_pruning = False
+
+        self._max_frames = max_frames
+        self._max_gear = max_gear
+        self._max_training_frames = max_training_frames
 
     async def append(
         self, t: Transition, final_score: int | None = None
@@ -82,8 +85,12 @@ class ATHDataMgr:
         """
         gear_meta: dict[int, GearMeta] = {}
 
-        for gear in get_valid_gears():
-            seq_length, _ = get_gear_data(gear)
+        for gear in get_valid_gears(max_gear=self._max_gear):
+            seq_length, _ = get_gear_data(
+                gear=gear,
+                max_gear=self._max_gear,
+                max_training_frames=self._max_training_frames,
+            )
             gear_meta[gear] = self._build_gear_meta_for_size(
                 ep_size=ep_size,
                 seq_length=seq_length,
@@ -126,17 +133,15 @@ class ATHDataMgr:
         self._rebuild_bucket_index()
 
     async def _log_startup(self):
-        self.log.info(
-            f"Initialized. Setting max_frames to {MAX_FRAMES}, max_buckets to {MAX_BUCKETS}"
-        )
+        self.log.info(f"Initialized. Setting max_frames to {self._max_frames}")
 
     async def _prune_if_needed(self) -> None:
 
-        while self.store.get_stored_frame_count() > MAX_FRAMES:
+        while self.store.get_stored_frame_count() > self._max_frames:
             self.store.pop_first_game()
 
             if not self._has_logged_pruning:
-                msg = f"Memory is full ({MAX_FRAMES}), pruning initiated"
+                msg = f"Memory is full ({self._max_frames}), pruning initiated"
                 self.log.info(msg)
 
                 await self.event.publish(
@@ -163,7 +168,11 @@ class ATHDataMgr:
             episodes = self.store.get_eps_by_bucket_idx(bucket_idx=bucket_idx)
             total_chunks += len(episodes)
 
-        _, batch_size = get_gear_data(self._cur_gear)
+        _, batch_size = get_gear_data(
+            gear=self._cur_gear,
+            max_gear=self._max_gear,
+            max_training_frames=self._max_training_frames,
+        )
 
         if total_chunks < batch_size:
             return None

@@ -19,7 +19,19 @@ from ai_hydra.nnet.ATH.ATHDataMgr import ATHDataMgr
 
 
 class ATHMemory:
-    def __init__(self, rng: Random, log_level: DHydraLog, pub_func):
+    def __init__(
+        self,
+        rng: Random,
+        log_level: DHydraLog,
+        pub_func,
+        max_buckets: int,
+        max_gear: int,
+        max_training_frames: int,
+        max_frames: int,
+        upshift_count_thresh: int,
+        downshift_count_thresh: int,
+        num_cooldown_eps: int,
+    ):
         # Local logging
         self.log = HydraLog(
             client_id=DModule.ATH_MEMORY,
@@ -28,7 +40,13 @@ class ATHMemory:
         )
 
         # Memory storage
-        data_store = ATHDataStore(log_level=log_level, pub_func=pub_func)
+        data_store = ATHDataStore(
+            log_level=log_level,
+            pub_func=pub_func,
+            max_buckets=max_buckets,
+            max_gear=max_gear,
+            max_training_frames=max_training_frames,
+        )
 
         # Memory Management
         self.data_mgr = ATHDataMgr(
@@ -36,11 +54,22 @@ class ATHMemory:
             rng=rng,
             pub_func=pub_func,
             data_store=data_store,
+            max_frames=max_frames,
+            max_gear=max_gear,
+            max_training_frames=max_training_frames,
         )
 
         # The ATH Gearbox a.k.a. "The Automatic ATH Transmission."
         self.gearbox = ATHGearBox(
-            log_level=log_level, pub_func=pub_func, data_store=data_store
+            log_level=log_level,
+            pub_func=pub_func,
+            data_store=data_store,
+            max_buckets=max_buckets,
+            upshift_count_thresh=upshift_count_thresh,
+            downshift_count_thresh=downshift_count_thresh,
+            num_cooldown_eps=num_cooldown_eps,
+            max_gear=max_gear,
+            max_training_frames=max_training_frames,
         )
 
     async def append(

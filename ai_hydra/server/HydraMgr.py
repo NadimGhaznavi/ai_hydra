@@ -166,34 +166,16 @@ class HydraMgr(HydraServer):
             epsilon_nice_p_val = DRNN.NICE_P_VALUE
             epsilon_nice_steps = DRNN.NICE_STEPS
             model = RNNModel(log_level=self.log_level, seed=master_seed)
-            model.set_params(
-                hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
-                dropout_p=self.cfg.get(DNetField.DROPOUT_P),
-                rnn_layers=self.cfg.get(DNetField.LAYERS),
-            )
-            nnet_policy = RecurrentPolicy(model=model, device=device)
-            replay = ATHMemory(
-                rng=replay_rng,
-                log_level=self.log_level,
-                pub_func=self.mq.publish_events,
-            )
-            trainer = RecurrentTrainer(
-                model=model,
-                replay=replay,
-                lr=self.cfg.get(DNetField.LEARNING_RATE),
-                device=device,
-                log_level=self.log_level,
-            )
-            trainer.set_params(
-                tau=self.cfg.get(DNetField.TAU),
-                gamma=self.cfg.get(DNetField.GAMMA),
-            )
 
         elif model_type == DField.GRU:
             self.log.debug("Using GRU Model")
             epsilon_nice_p_val = DGRU.NICE_P_VALUE
             epsilon_nice_steps = DGRU.NICE_STEPS
             model = GRUModel(log_level=self.log_level, seed=master_seed)
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
+
+        if model_type == DField.RNN or model_type == DField.GRU:
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
@@ -204,6 +186,19 @@ class HydraMgr(HydraServer):
                 rng=replay_rng,
                 log_level=self.log_level,
                 pub_func=self.mq.publish_events,
+                max_buckets=self.cfg.get(DNetField.MAX_BUCKETS),
+                max_gear=self.cfg.get(DNetField.MAX_GEAR),
+                max_training_frames=self.cfg.get(
+                    DNetField.MAX_TRAINING_FRAMES
+                ),
+                max_frames=self.cfg.get(DNetField.MAX_FRAMES),
+                upshift_count_thresh=self.cfg.get(
+                    DNetField.UPSHIFT_COUNT_THRESHOLD
+                ),
+                downshift_count_thresh=self.cfg.get(
+                    DNetField.DOWNSHIFT_COUNT_THRESHOLD
+                ),
+                num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
             )
             trainer = RecurrentTrainer(
                 model=model,
@@ -216,9 +211,6 @@ class HydraMgr(HydraServer):
                 tau=self.cfg.get(DNetField.TAU),
                 gamma=self.cfg.get(DNetField.GAMMA),
             )
-
-        else:
-            raise ValueError(f"Unsupported model type: {model_type}")
 
         self.log.debug(f"Model details:")
         self.log.debug(str(model))

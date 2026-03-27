@@ -1030,19 +1030,28 @@ class HydraClientTui(App):
 
         cfg_dict = {
             DNetField.BATCH_SIZE: batch_size,
+            DNetField.DOWNSHIFT_COUNT_THRESHOLD: downshift_count_thresh,
             DNetField.DROPOUT_P: dropout_p,
             DNetField.EPSILON_DECAY: epsilon_decay,
             DNetField.GAMMA: gamma,
             DNetField.HIDDEN_SIZE: hidden_size,
             DNetField.INITIAL_EPSILON: initial_epsilon,
             DNetField.LEARNING_RATE: learning_rate,
+            DNetField.MAX_BUCKETS: max_buckets,
+            DNetField.MAX_FRAMES: max_frames,
+            DNetField.MAX_GEAR: max_gear,
+            DNetField.MAX_HARD_RESET_EPISODES: max_crit_stag_eps,
+            DNetField.MAX_STAGNANT_EPISODES: max_stag_eps,
             DNetField.MIN_EPSILON: min_epsilon,
+            DNetField.NUM_COOLDOWN_EPISODES: num_cooldown_eps,
             DNetField.PER_STEP: per_step,
+            DNetField.MAX_TRAINING_FRAMES: max_training_frames,
             DNetField.MODEL_TYPE: model_type,
             DNetField.MOVE_DELAY: move_delay,
             DNetField.RANDOM_SEED: random_seed,
             DNetField.LAYERS: layers,
             DNetField.TAU: tau,
+            DNetField.UPSHIFT_COUNT_THRESHOLD: upshift_count_thresh,
         }
         # For debugging
         # print(cfg_dict)
@@ -1087,9 +1096,6 @@ def main() -> None:
     print(f"  Router heartbeat port: {args.router_hb_port}")
     print(f"         Server address: {args.server_address}")
     print(f"        Server PUB port: {args.server_pub_port}")
-
-    # Give the user a chance to see the network config before starting the TUI
-    time.sleep(3)
 
     tui = HydraClientTui(
         router_address=args.router_address,

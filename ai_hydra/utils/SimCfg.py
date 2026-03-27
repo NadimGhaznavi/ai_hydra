@@ -17,6 +17,7 @@ from ai_hydra.constants.DNNet import (
     DNetDef,
     DLinear,
     DRNN,
+    DGRU,
 )
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DHydra import DHydra
@@ -25,40 +26,58 @@ from ai_hydra.constants.DHydra import DHydra
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
         DNetField.BATCH_SIZE: DLinear.BATCH_SIZE,
+        DNetField.DOWNSHIFT_COUNT_THRESHOLD: DGRU.DOWNSHIFT_COUNT_THRESHOLD,
         DNetField.DROPOUT_P: DLinear.DROPOUT_P,
         DNetField.EPSILON_DECAY: DLinear.EPSILON_DECAY_RATE,
         DNetField.GAMMA: DLinear.GAMMA,
         DNetField.HIDDEN_SIZE: DLinear.HIDDEN_SIZE,
         DNetField.INITIAL_EPSILON: DLinear.INITIAL_EPSILON,
         DNetField.LEARNING_RATE: DLinear.LEARNING_RATE,
+        DNetField.MAX_BUCKETS: DGRU.MAX_BUCKETS,
+        DNetField.MAX_FRAMES: DGRU.MAX_FRAMES,
+        DNetField.MAX_GEAR: DGRU.MAX_GEAR,
+        DNetField.MAX_HARD_RESET_EPISODES: DGRU.MAX_HARD_RESET_EPISODES,
+        DNetField.MAX_STAGNANT_EPISODES: DGRU.MAX_STAGNANT_EPISODES,
+        DNetField.MAX_TRAINING_FRAMES: DGRU.MAX_TRAINING_FRAMES,
         DNetField.MIN_EPSILON: DLinear.MINIMUM_EPSILON,
         DNetField.MODEL_TYPE: DField.LINEAR,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
+        DNetField.NUM_COOLDOWN_EPISODES: DNetField.NUM_COOLDOWN_EPISODES,
         DNetField.PER_STEP: DNetDef.PER_STEP,
         DNetField.RANDOM_SEED: DHydra.RANDOM_SEED,
         DNetField.LAYERS: DRNN.RNN_LAYERS,
         DNetField.TAU: DRNN.TAU,
         DNetField.SEQ_LENGTH: DRNN.SEQ_LENGTH,
         DNetField.SIM_PAUSED: False,
+        DNetField.UPSHIFT_COUNT_THRESHOLD: DGRU.UPSHIFT_COUNT_THRESHOLD,
     }
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
         DNetField.BATCH_SIZE: int,
+        DNetField.DOWNSHIFT_COUNT_THRESHOLD: int,
         DNetField.DROPOUT_P: float,
         DNetField.EPSILON_DECAY: float,
         DNetField.GAMMA: float,
         DNetField.HIDDEN_SIZE: int,
         DNetField.INITIAL_EPSILON: float,
         DNetField.LEARNING_RATE: float,
+        DNetField.MAX_BUCKETS: int,
+        DNetField.MAX_FRAMES: int,
+        DNetField.MAX_GEAR: int,
+        DNetField.MAX_HARD_RESET_EPISODES: int,
+        DNetField.MAX_STAGNANT_EPISODES: int,
+        DNetField.MAX_TRAINING_FRAMES: int,
         DNetField.MIN_EPSILON: float,
         DNetField.MODEL_TYPE: str,
         DNetField.MOVE_DELAY: float,
+        DNetField.NUM_COOLDOWN_EPISODES: int,
         DNetField.PER_STEP: bool,
         DNetField.RANDOM_SEED: int,
         DNetField.LAYERS: int,
         DNetField.TAU: float,
         DNetField.SEQ_LENGTH: int,
         DNetField.SIM_PAUSED: bool,
+        DNetField.UPSHIFT_COUNT_THRESHOLD: int,
     }
 
     __slots__ = ("_values",)
