@@ -750,6 +750,12 @@ class HydraClientTui(App):
             f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         ).border_subtitle = ""
         self.query_one(f"#{DField.CUR_EPSILON}", Label).update("")
+        self.query_one(f"#{DField.BATCH_SIZE_INPUT}").value = (
+            DLinear.BATCH_SIZE
+        )
+        self.query_one(f"#{DField.SEQ_LENGTH_INPUT}").value = (
+            DLinear.SEQ_LENGTH
+        )
 
     async def _send_handshake(self):
         msg = HydraMsg(

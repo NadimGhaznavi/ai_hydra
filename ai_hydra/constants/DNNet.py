@@ -109,7 +109,7 @@ class DLinear:
     NICE_STEPS: Final[int] = 10
     NUM_COOLDOWN_EPISODES: Final[int] = 100
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
-    LINEAR_LAYERS: Final[int] = 1
+    LINEAR_LAYERS: Final[int] = 2
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
