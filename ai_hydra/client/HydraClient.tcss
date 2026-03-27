@@ -666,9 +666,6 @@ EventLog {
 .bad_handshake #seq_length_label {
     display: none;
 }
-.bad_handshake #seq_length_opt {
-    display: none;
-}
 .bad_handshake #snapshot {
     display: none;
 }
@@ -714,36 +711,13 @@ EventLog {
 
 /* Linear Model is Selected */
 /* ------------------------ */
-.linear #seq_length_input {
+.linear #batch_size_input {
     display: none;
 }
-.linear #seq_length_label {
+.linear #batch_size_label {
     display: none;
 }
-.linear #seq_length_opt {
-    display: none;
-}
-.linear #rnn_batch_size_label {
-    display: none;
-}
-.linear #rnn_layers_opt {
-    display: none;
-}
-.linear #rnn_layers_label {
-    display: none;
-}
-.linear #rnn_layers_input {
-    display: none;
-}
-.linear #rnn_tau_opt {
-    display: none;
-}
-.linear #rnn_tau_label {
-    display: none;
-}
-.linear #rnn_tau_input {
-    display: none;
-}
+
 
 /* Turbo mode is ON */
 .turbo_on #move_delay_input {

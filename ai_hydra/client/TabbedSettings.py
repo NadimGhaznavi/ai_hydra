@@ -34,6 +34,7 @@ class TabbedSettings(Widget):
         self.server_pub_port = Label(id=DField.SERVER_PUB_PORT)
         self.server_status = Label(id=DField.SERVER_STATUS)
         self.cur_epsilon = Label(id=DField.CUR_EPSILON)
+
         # ----- ATH Replay memory ---
         # MAX_FRAMES
         self.max_frames_label = Label(id=DField.MAX_FRAMES_LABEL)
@@ -314,18 +315,7 @@ class TabbedSettings(Widget):
                         Label(f"{DLabel.BATCH_SIZE:>15s}: "),
                         Label(
                             f"{DLinear.BATCH_SIZE}",
-                            id=DField.BATCH_SIZE_LABEL,
-                        ),
-                        Label(
-                            f"{DRNN.BATCH_SIZE}",
                             id=DField.RNN_BATCH_SIZE_LABEL,
-                        ),
-                        Input(
-                            type=DField.INTEGER,
-                            compact=True,
-                            valid_empty=False,
-                            value=f"{DLinear.BATCH_SIZE}",
-                            id=DField.BATCH_SIZE_INPUT,
                         ),
                         classes=DField.INPUT_FIELD,
                     ),
@@ -357,6 +347,7 @@ class TabbedSettings(Widget):
                             value=f"{DRNN.TAU}",
                             id=DField.RNN_TAU_INPUT,
                         ),
+                        classes=DField.INPUT_FIELD,
                     ),
                     id=DField.TRAINING_BOX,
                 ),

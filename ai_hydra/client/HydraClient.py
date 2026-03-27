@@ -517,7 +517,6 @@ class HydraClientTui(App):
         # Linear model defaults
         if model_type == DField.LINEAR:
             downshift_thresh = DLinear.DOWNSHIFT_COUNT_THRESHOLD
-            batch_size = DLinear.BATCH_SIZE
             dropout_p = DLinear.DROPOUT_P
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
             gamma = DLinear.GAMMA
@@ -538,9 +537,6 @@ class HydraClientTui(App):
             self.remove_class(DField.RNN)
             self.remove_class(DField.GRU)
             self.add_class(DField.LINEAR)
-            self.query_one(f"#{DField.BATCH_SIZE_INPUT}", Input).value = str(
-                batch_size
-            )
             layers = 0
 
         # RNN model defaults
@@ -970,9 +966,6 @@ class HydraClientTui(App):
         """
         Update the SimCfg settings and the TUI labels
         """
-        # Batch size
-        batch_size = self.query_one(f"#{DField.BATCH_SIZE_INPUT}", Input).value
-        self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(batch_size)
         # Random Seed
         random_seed = self.query_one(
             f"#{DField.RANDOM_SEED_INPUT}", Input
@@ -1086,7 +1079,6 @@ class HydraClientTui(App):
         self.settings.nice_steps_label.update(nice_steps)
 
         cfg_dict = {
-            DNetField.BATCH_SIZE: batch_size,
             DNetField.DOWNSHIFT_COUNT_THRESHOLD: downshift_count_thresh,
             DNetField.DROPOUT_P: dropout_p,
             DNetField.EPSILON_DECAY: epsilon_decay,

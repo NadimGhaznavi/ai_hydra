@@ -357,9 +357,6 @@ class HydraMgr(HydraServer):
             snake.start_time(datetime.now())
 
             count = 0
-            train_every = 4
-            grad_steps = 1
-            batch_size = 64
 
             try:
                 while not self._run_loop_stop_event.is_set():
