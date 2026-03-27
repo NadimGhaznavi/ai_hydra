@@ -39,6 +39,7 @@ Switch {
 }
 #board_box {
     row-span: 4;
+    height: 22;
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
@@ -283,10 +284,25 @@ EventLog {
 .sim_stopped #learning_rate_label {
     display: none;
 }
+.sim_stopped #max_buckets_label {
+    display: none;
+}
+.sim_stopped #max_frames_label {
+    display: none;
+}
+.sim_stopped #max_gear_label {
+    display: none;
+}
+.sim_stopped #max_training_frames_label {
+    display: none;
+}
 .sim_stopped #min_epsilon_label {
     display: none;
 }
 .sim_stopped #model_type_label {
+    display: none;
+}
+.sim_stopped #num_cooldown_eps_label {
     display: none;
 }
 .sim_stopped #resume_run {
@@ -310,7 +326,6 @@ EventLog {
 .sim_stopped #reset_run_divider {
     display: none;
 }
-
 .sim_stopped #rnn_layers_label {
     display: none;
 }
@@ -318,6 +333,9 @@ EventLog {
     display: none;
 }
 .sim_stopped #update_runtime_config {
+    display: none;
+}
+.sim_stopped #upshift_count_threshold_label {
     display: none;
 }
 
@@ -344,10 +362,25 @@ EventLog {
 .sim_running #learning_rate_input {
     display: none;
 }
+.sim_running #max_buckets_input {
+    display: none;
+}
+.sim_running #max_frames_input {
+    display: none;
+}
+.sim_running #max_gear_input {
+    display: none;
+}
+.sim_running #max_training_frames_input {
+    display: none;
+}
 .sim_running #min_epsilon_input {
     display: none;
 }
 .sim_running #model_type_select {
+    display: none;
+}
+.sim_running #num_cooldown_eps_input {
     display: none;
 }
 .sim_running #random_seed_input {
@@ -369,6 +402,9 @@ EventLog {
     display: none;
 }
 .sim_running #handshake_divider {
+    display: none;
+}
+.sim_running #upshift_count_threshold_input {
     display: none;
 }
 
@@ -432,6 +468,30 @@ EventLog {
 .bad_handshake #learning_rate_label {
     display: none;
 }
+.bad_handshake #max_buckets_input {
+    display: none;
+}
+.bad_handshake #max_buckets_label {
+    display: none;
+}
+.bad_handshake #max_frames_input {
+    display: none;
+}
+.bad_handshake #max_frames_label {
+    display: none;
+}
+.bad_handshake #max_gear_input {
+    display: none;
+}
+.bad_handshake #max_gear_label {
+    display: none;
+}
+.bad_handshake #max_training_frames_input {
+    display: none;
+}
+.bad_handshake #max_training_frames_label {
+    display: none;
+}
 .bad_handshake #min_epsilon_label {
     display: none;
 }
@@ -448,6 +508,12 @@ EventLog {
     display: none;
 }
 .bad_handshake #move_delay_label {
+    display: none;
+}
+.bad_handshake #num_cooldown_eps_input {
+    display: none;
+}
+.bad_handshake #num_cooldown_eps_label {
     display: none;
 }
 .bad_handshake #pause_run {
@@ -514,6 +580,12 @@ EventLog {
     display: none;
 }
 .bad_handshake #update_runtime_config {
+    display: none;
+}
+.bad_handshake #upshift_count_threshold_input {
+    display: none;
+}
+.bad_handshake #upshift_count_threshold_label {
     display: none;
 }
 

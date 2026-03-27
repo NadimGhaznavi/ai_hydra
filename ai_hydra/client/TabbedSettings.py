@@ -13,9 +13,11 @@ from textual import on
 from textual.app import ComposeResult, Widget
 from textual.widgets import TabbedContent, Label, Input, Select
 from textual.containers import Horizontal, Vertical
+from textual.validation import Number
 
 from ai_hydra.constants.DNNet import DLinear, DRNN, MODEL_TYPES
 from ai_hydra.constants.DHydraTui import DLabel, DField, DStatus
+from ai_hydra.constants.DReplayMemory import DMemDef
 
 
 class TabbedSettings(Widget):
@@ -23,6 +25,7 @@ class TabbedSettings(Widget):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        # Network configuration
         self.router_address = Label(id=DField.ROUTER_ADDR)
         self.router_port = Label(id=DField.ROUTER_PORT)
         self.router_hb_port = Label(id=DField.ROUTER_HB_PORT)
@@ -31,9 +34,75 @@ class TabbedSettings(Widget):
         self.server_pub_port = Label(id=DField.SERVER_PUB_PORT)
         self.server_status = Label(id=DField.SERVER_STATUS)
         self.cur_epsilon = Label(id=DField.CUR_EPSILON)
+        # ----- ATH Replay memory ---
+        # MAX_FRAMES
+        self.max_frames_label = Label(id=DField.MAX_FRAMES_LABEL)
+        self.max_frames_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.MAX_FRAMES),
+            id=DField.MAX_FRAMES_INPUT,
+        )
+        # MAX_TRAINING_FRAMES
+        self.max_training_frames_label = Label(
+            id=DField.MAX_TRAINING_FRAMES_LABEL,
+        )
+        self.max_training_frames_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.MAX_TRAINING_FRAMES),
+            id=DField.MAX_TRAINING_FRAMES_INPUT,
+        )
+        # MAX_BUCKETS
+        self.max_buckets_label = Label(id=DField.MAX_BUCKETS_LABEL)
+        self.max_buckets_input = Input(
+            type=DField.INTEGER,
+            validators=[Number(minimum=3)],
+            compact=True,
+            value=str(DMemDef.MAX_BUCKETS),
+            id=DField.MAX_BUCKETS_INPUT,
+        )
+        # MAX_GEAR
+        self.max_gear_label = Label(id=DField.MAX_GEAR_LABEL)
+        self.max_gear_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.MAX_GEAR),
+            id=DField.MAX_GEAR_INPUT,
+        )
+        # NUM_COOLDOWN_EPISODES
+        self.num_cooldown_eps_label = Label(
+            id=DField.NUM_COOLDOWN_EPISODES_LABEL
+        )
+        self.num_cooldown_eps_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.NUM_COOLDOWN_EPISODES),
+            id=DField.NUM_COOLDOWN_EPISODES_INPUT,
+        )
+        # UPSHIFT_COUNT_THRESHOLD
+        self.upshift_count_threshold_label = Label(
+            id=DField.UPSHIFT_COUNT_THRESHOLD_LABEL,
+        )
+        self.upshift_count_threshold_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.UPSHIFT_COUNT_THRESHOLD),
+            id=DField.UPSHIFT_COUNT_THRESHOLD_INPUT,
+        )
+        # DOWNSHIFT_COUNT_THRESHOLD
+        self.downshift_count_threshold_label = Label(
+            id=DField.DOWNSHIFT_COUNT_THRESHOLD_LABEL,
+        )
+        self.downshift_count_threshold_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.DOWNSHIFT_COUNT_THRESHOLD),
+            id=DField.DOWNSHIFT_COUNT_THRESHOLD_INPUT,
+        )
 
     def compose(self) -> ComposeResult:
-        with TabbedContent(DLabel.CONFIG, DLabel.NETWORK):
+        with TabbedContent(DLabel.CONFIG, DLabel.NETWORK, DLabel.MEMORY):
 
             # ----- Settings Tab ---
             yield Vertical(
@@ -288,6 +357,52 @@ class TabbedSettings(Widget):
                     classes=DField.INPUT_FIELD,
                 ),
                 id=DField.NETWORK,
+            )
+
+            # ----- Memory tab ---
+            yield Vertical(
+                Horizontal(
+                    Label(f"{DLabel.MAX_FRAMES}         : "),
+                    self.max_frames_label,
+                    self.max_frames_input,
+                    classes=DField.INPUT_FIELD,
+                ),
+                Horizontal(
+                    Label(f"{DLabel.MAX_BUCKETS}        : "),
+                    self.max_buckets_label,
+                    self.max_buckets_input,
+                    classes=DField.INPUT_FIELD,
+                ),
+                Horizontal(
+                    Label(f"{DLabel.MAX_TRAINING_FRAMES}: "),
+                    self.max_training_frames_label,
+                    self.max_training_frames_input,
+                    classes=DField.INPUT_FIELD,
+                ),
+                Horizontal(
+                    Label(f"{DLabel.MAX_GEAR}       : "),
+                    self.max_gear_label,
+                    self.max_gear_input,
+                    classes=DField.INPUT_FIELD,
+                ),
+                Horizontal(
+                    Label(f"{DLabel.NUM_COOLDOWN_EPISODES}     : "),
+                    self.num_cooldown_eps_label,
+                    self.num_cooldown_eps_input,
+                    classes=DField.INPUT_FIELD,
+                ),
+                Horizontal(
+                    Label(f"{DLabel.UPSHIFT_COUNT_THRESHOLD}  : "),
+                    self.upshift_count_threshold_label,
+                    self.upshift_count_threshold_input,
+                    classes=DField.INPUT_FIELD,
+                ),
+                Horizontal(
+                    Label(f"{DLabel.DOWNSHIFT_COUNT_THRESHOLD}  : "),
+                    self.downshift_count_threshold_label,
+                    self.downshift_count_threshold_input,
+                    classes=DField.INPUT_FIELD,
+                ),
             )
 
     def on_mount(self) -> None:

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Changed
+- Removed `THRESHOLD_BUCKETS`. Instead the system uses the last three bucket and limits the MAX_BUCKETS to have a **minimum** of 3.
+
+
 ## [0.22.0] - 2026-03-26 @ 18:14 - Tweaked Layout Release 
 
 ### Added

@@ -310,7 +310,9 @@ class HydraClientTui(App):
             f"#{DField.HYDRA_TELEMETRY}", HydraTelemetry
         )
         self.event_log = self.telemtry.event_log
-        self.settings = self.query_one(f"#{DField.TABBED_SETTINGS}")
+        self.settings = self.query_one(
+            f"#{DField.TABBED_SETTINGS}", TabbedSettings
+        )
 
         # Show the network config in the TUI
         self.settings.router_address.update(self._router_address)
@@ -986,6 +988,39 @@ class HydraClientTui(App):
         # RNN Tau
         tau = self.query_one(f"#{DField.RNN_TAU_INPUT}", Input).value
         self.query_one(f"#{DField.RNN_TAU_LABEL}", Label).update(tau)
+
+        # ----- Tabbed Settings ---
+        # MAX_TRAINING_FRAMES
+        max_training_frames = self.settings.max_training_frames_input.value
+        self.settings.max_training_frames_label.update(
+            str(max_training_frames)
+        )
+        # MAX_GEAR
+        max_gear = self.settings.max_gear_input.value
+        self.settings.max_gear_label.update(max_gear)
+        # MAX_FRAMES
+        max_frames = self.settings.max_frames_input.value
+        self.settings.max_frames_label.update(max_frames)
+        # MAX_BUCKETS
+        max_buckets = self.settings.max_buckets_input.value
+        self.settings.max_buckets_label.update(max_buckets)
+        # NUM_COOLDOWN_EPISODES
+        num_cooldown_eps = self.settings.num_cooldown_eps_input.value
+        self.settings.num_cooldown_eps_label.update(num_cooldown_eps)
+        # UPSHIFT_COUNT_THRESHOLD
+        upshift_count_thresh = (
+            self.settings.upshift_count_threshold_input.value
+        )
+        self.settings.upshift_count_threshold_label.update(
+            upshift_count_thresh
+        )
+        # DOWNSHIFT_COUNT_THRESHOLD
+        downshift_count_thresh = (
+            self.settings.downshift_count_threshold_input.value
+        )
+        self.settings.downshift_count_threshold_label.update(
+            downshift_count_thresh
+        )
 
         cfg_dict = {
             DNetField.BATCH_SIZE: batch_size,

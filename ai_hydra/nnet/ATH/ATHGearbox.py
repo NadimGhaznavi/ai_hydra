@@ -24,7 +24,6 @@ from ai_hydra.nnet.ATH.ATHDataStore import ATHDataStore
 from ai_hydra.nnet.ATH.ATHCommon import get_gear_data
 
 MAX_BUCKETS = DMemDef.MAX_BUCKETS
-THRESHOLD_BUCKETS = DMemDef.THRESHOLD_BUCKETS
 UPSHIFT_COUNT_THRESHOLD = DMemDef.UPSHIFT_COUNT_THRESHOLD
 DOWNSHIFT_COUNT_THRESHOLD = DMemDef.DOWNSHIFT_COUNT_THRESHOLD
 NUM_COOLDOWN_EPISODES = DMemDef.NUM_COOLDOWN_EPISODES
@@ -179,10 +178,7 @@ class ATHGearBox:
         return self._cur_gear
 
     def get_thresh_bucket_chunk_count(self) -> int:
-        count = 0
-        for bucket_idx in THRESHOLD_BUCKETS:
-            count += self._cur_bucket_counts[bucket_idx]
-        return count
+        return sum(self._cur_bucket_counts[-3:])
 
     async def hard_reset(self, crit_count: int):
         self._stagnation_flag = False

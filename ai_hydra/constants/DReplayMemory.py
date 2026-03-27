@@ -29,11 +29,10 @@ class DMemDef:
     # The ATHGearbox won't shift up or down before NUM_COOLDOWN_EPISODES
     # episodes have gone by.
     NUM_COOLDOWN_EPISODES: Final[int] = 100
-    # If the THRESHOLD_BUCKETS have a combined contents greater than
+    # If the last three buckets have a combined contents greater than
     # UPSHIFT_COUNT_THRESHOLD, the the ATHGearbox shifts UP.
-    # If the THRESHOLD_BUCKETS have a combined contents less than
+    # If the last three buckets have a combined contents less than
     # DOWNSHIFT_COUNT_THRESHOLD, the the ATHGearbox shifts DOWN.
-    THRESHOLD_BUCKETS: Final[list] = [17, 18, 19]
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     # The number of episodes that the TrainMgr will tolerate with no new
