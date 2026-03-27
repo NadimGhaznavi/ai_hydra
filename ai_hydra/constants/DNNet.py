@@ -53,7 +53,7 @@ class DRNN:
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
     INITIAL_EPSILON: Final[float] = 0.96
-    EPSILON_DECAY_RATE: Final[float] = 0.995
+    EPSILON_DECAY_RATE: Final[float] = 0.97
     GAMMA: Final[float] = 0.96
     HIDDEN_SIZE: Final[int] = 160
     LEARNING_RATE: Final[float] = 0.002
