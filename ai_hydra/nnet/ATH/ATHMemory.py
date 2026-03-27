@@ -38,6 +38,14 @@ class ATHMemory:
             log_level=log_level,
             to_console=True,
         )
+        self.log.info(f"Set max buckets: {max_buckets}")
+        self.log.info(f"Set max training frames: {max_training_frames}")
+        self.log.info(f"Set frames: {max_frames}")
+        self.log.info(f"Set upshift count threshold: {upshift_count_thresh}")
+        self.log.info(
+            f"Set downshift count threshold: {downshift_count_thresh}"
+        )
+        self.log.info(f"Set number of cooldown episodes: {num_cooldown_eps}")
 
         # Memory storage
         data_store = ATHDataStore(
