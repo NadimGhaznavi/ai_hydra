@@ -136,8 +136,6 @@ class HydraMgr(HydraServer):
 
         if model_type == DField.LINEAR:
             self.log.debug("Using Linear Model")
-            epsilon_nice_p_val = DLinear.NICE_P_VALUE
-            epsilon_nice_steps = DLinear.NICE_STEPS
             replay = SimpleReplayMemory(
                 rng=replay_rng,
                 log_level=self.log_level,
@@ -163,8 +161,6 @@ class HydraMgr(HydraServer):
 
         elif model_type == DField.RNN:
             self.log.debug("Using RNN Model")
-            epsilon_nice_p_val = DRNN.NICE_P_VALUE
-            epsilon_nice_steps = DRNN.NICE_STEPS
             model = RNNModel(log_level=self.log_level, seed=master_seed)
 
         elif model_type == DField.GRU:
@@ -237,9 +233,9 @@ class HydraMgr(HydraServer):
         behaviour_policy = EpsilonNicePolicy(
             base_policy=epsilon_policy,
             epsilon_n=epsilon_nice,
-            p_value=epsilon_nice_p_val,
+            p_value=self.cfg.get(DNetField.NICE_P_VALUE),
             rng=policy_rng,
-            steps=epsilon_nice_steps,
+            steps=self.cfg.get(DNetField.NICE_STEPS),
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
         )
