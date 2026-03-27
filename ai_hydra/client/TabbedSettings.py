@@ -262,14 +262,14 @@ class TabbedSettings(Widget):
                             id=DField.RNN_LAYERS_OPT,
                         ),
                         Label(
-                            f"{DRNN.RNN_LAYERS}",
+                            f"{DLinear.LINEAR_LAYERS}",
                             id=DField.RNN_LAYERS_LABEL,
                         ),
                         Input(
                             type=DField.INTEGER,
                             compact=True,
                             valid_empty=False,
-                            value=f"{DRNN.RNN_LAYERS}",
+                            value=f"{DLinear.LINEAR_LAYERS}",
                             id=DField.RNN_LAYERS_INPUT,
                         ),
                         classes=DField.INPUT_FIELD,

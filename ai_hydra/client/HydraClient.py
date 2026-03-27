@@ -537,7 +537,6 @@ class HydraClientTui(App):
             self.remove_class(DField.RNN)
             self.remove_class(DField.GRU)
             self.add_class(DField.LINEAR)
-            layers = 0
 
         # RNN model defaults
         elif model_type == DField.RNN:
