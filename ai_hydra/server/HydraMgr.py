@@ -179,7 +179,7 @@ class HydraMgr(HydraServer):
             model.set_params(
                 hidden_size=self.cfg.get(DNetField.HIDDEN_SIZE),
                 dropout_p=self.cfg.get(DNetField.DROPOUT_P),
-                gru_layers=self.cfg.get(DNetField.LAYERS),
+                layers=self.cfg.get(DNetField.LAYERS),
             )
             nnet_policy = RecurrentPolicy(model=model, device=device)
             replay = ATHMemory(

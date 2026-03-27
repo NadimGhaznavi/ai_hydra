@@ -81,12 +81,12 @@ class RNNModel(nn.Module):
         self.apply(_reset)
 
     def set_params(
-        self, hidden_size: int, dropout_p: float, rnn_layers: int
+        self, hidden_size: int, dropout_p: float, layers: int
     ) -> None:
         self._hidden_size = hidden_size
         self._rnn_dropout = dropout_p
-        self._rnn_layers = rnn_layers
+        self._rnn_layers = layers
         self.log.info(f"Setting hidden size to {hidden_size}")
         self.log.info(f"Setting dropout layer p-value to {dropout_p}")
-        self.log.info(f"Setting the number of RNN layers to {rnn_layers}")
+        self.log.info(f"Setting the number of RNN layers to {layers}")
         self._init_model()

@@ -80,12 +80,12 @@ class GRUModel(nn.Module):
         self.apply(_reset)
 
     def set_params(
-        self, hidden_size: int, dropout_p: float, gru_layers: int
+        self, hidden_size: int, dropout_p: float, layers: int
     ) -> None:
         self._hidden_size = hidden_size
         self._gru_dropout = dropout_p
-        self._gru_layers = gru_layers
+        self._gru_layers = layers
         self.log.info(f"Setting hidden size to {hidden_size}")
         self.log.info(f"Setting dropout layer p-value to {dropout_p}")
-        self.log.info(f"Setting the number of GRU layers to {gru_layers}")
+        self.log.info(f"Setting the number of GRU layers to {layers}")
         self._init_model()

@@ -178,7 +178,9 @@ class ATHGearBox:
             self._cur_gear -= 1
             self._cooldown_count = 0
             self._cur_seq_length, self._cur_batch_size = get_gear_data(
-                self._cur_gear
+                gear=self._cur_gear,
+                max_gear=self._max_gear,
+                max_training_frames=self._max_training_frames,
             )
             await self.event.publish(
                 EventMsg(
