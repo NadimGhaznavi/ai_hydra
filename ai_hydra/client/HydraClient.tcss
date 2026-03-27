@@ -32,7 +32,7 @@ Switch {
     background: black;
     height: 14;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
+    border-subtitle-color: #c4c242;
     color: #5fc442;
     text-style: bold;
     padding: 0 1;
@@ -42,7 +42,7 @@ Switch {
     height: 22;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
+    border-subtitle-color: #c4c242;
     border-title-color: #5fc442;
     color: #5fc442;
     text-style: bold;
@@ -52,7 +52,7 @@ Switch {
     row-span: 4;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     width: 100%;
     padding: 0 1;
@@ -61,26 +61,26 @@ HighScoresLog {
     row-span: 4;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
+    border-subtitle-color: #c4c242;
 }
 #random_seed_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
+    border-subtitle-color: #c4c242;
     padding: 0 2;
 }
 #move_delay_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
+    border-subtitle-color: #c4c242;
     padding: 0 2;
 }
 #turbo_box {
     height: 3;
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
-    border-title-color: #5fc442;
+    border-subtitle-color: #c4c242;
+    border-title-color: #c4c242;
     text-style: bold;
     padding: 0 0;
     align: center middle;
@@ -99,30 +99,28 @@ HighScoresLog {
 #epsilon_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #5fc442;
-    border-title-color: #5fc442;
+    border-subtitle-color: #c4c242;
     text-style: bold;
     color: #72af75;
 }
 #model_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
-    border-title-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
 }
 #training_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
 }
 #router_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
     height: 6;
@@ -130,7 +128,7 @@ HighScoresLog {
 #server_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
     height: 5;
@@ -138,7 +136,7 @@ HighScoresLog {
 #mem_sizing_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
     height: 5;
@@ -146,7 +144,7 @@ HighScoresLog {
 #shifting_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
     height: 6;
@@ -154,7 +152,7 @@ HighScoresLog {
 #stagnation_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
     height:4;
@@ -218,8 +216,8 @@ HydraTelemetry {
     column-span: 4;
     background: black;
     border: round #2aa5ceff;
-    border-subtitle-color: #5fc442;
-    border-title-color: #5fc442;
+    border-subtitle-color: #c4c242;
+    border-title-color: #c4c242;
     text-style: bold;
     padding: 0 1;
     color: #54ac59;
@@ -277,7 +275,7 @@ EventLog {
 #settings {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #72af75;
+    border-subtitle-color: #c4c242;
     color: #72af75;
     text-style: bold;
     height: 18;

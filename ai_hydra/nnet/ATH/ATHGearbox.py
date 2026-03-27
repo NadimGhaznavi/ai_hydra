@@ -178,7 +178,11 @@ class ATHGearBox:
         return self._cur_gear
 
     def get_thresh_bucket_chunk_count(self) -> int:
-        return sum(self._cur_bucket_counts[-3:])
+        count = 0
+        n = len(self._cur_bucket_counts)
+        for bucket_idx in range(max(0, n - 3), n):
+            count += self._cur_bucket_counts[bucket_idx]
+        return count
 
     async def hard_reset(self, crit_count: int):
         self._stagnation_flag = False

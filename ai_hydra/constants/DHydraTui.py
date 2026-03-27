@@ -317,7 +317,7 @@ class DLabel:
     SERVER_ADDR: Final[str] = "Address"
     SERVER_PUB_PORT: Final[str] = "ZMQ PUB Port"
     SERVER_STATUS: Final[str] = "Status"
-    SHIFTING: Final[str] = "Shifting Thresholds"
+    SHIFTING: Final[str] = "Gearbox Settings"
     SIZING: Final[str] = "Memory Sizing"
     SNAPSHOT: Final[str] = "Snapshot"
     SPACE: Final[str] = " "
