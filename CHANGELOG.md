@@ -19,6 +19,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Changed
 - Removed `THRESHOLD_BUCKETS`. Instead the system uses the last three bucket and limits the MAX_BUCKETS to have a **minimum** of 3.
+- Reworked how the *Linear Model* runs; made it consistent with the *GRU* and *RNN*:
+  - Training now happens at the end of the episode.
+  - The Linear model now uses the *ATH Replay Memory*
+- Enabled the *layers* TUI option for the Linear model; it denotes the number of hidden layers that the NN contains.
+
 
 
 ## [0.22.0] - 2026-03-26 @ 18:14 - Tweaked Layout Release 

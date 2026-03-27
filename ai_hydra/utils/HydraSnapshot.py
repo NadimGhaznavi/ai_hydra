@@ -11,7 +11,7 @@ from datetime import datetime
 import traceback
 
 from ai_hydra.constants.DHydra import DHydra
-from ai_hydra.constants.DHydraTui import DField
+from ai_hydra.constants.DHydraTui import DField, DLabel
 from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN, DGRU
 from ai_hydra.constants.DGame import DGameDef
 from ai_hydra.constants.DReplayMemory import DMemDef
@@ -72,7 +72,7 @@ class HydraSnapshot:
         lines.extend(self._build_model_section(cfg))
         lines.extend(self._build_rewards_section())
         if model_type == DField.RNN or model_type == DField.GRU:
-            lines.extend(self._build_memory_section())
+            lines.extend(self._build_memory_section(cfg))
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
@@ -90,64 +90,29 @@ class HydraSnapshot:
         dropout_p = cfg.get(DNetField.DROPOUT_P)
         learning_rate = cfg.get(DNetField.LEARNING_RATE)
         gamma = cfg.get(DNetField.GAMMA)
-        batch_size = cfg.get(DNetField.BATCH_SIZE)
+        layers = cfg.get(DNetField.LAYERS)
+        tau = cfg.get(DNetField.TAU)
 
         if model_type == DField.LINEAR:
-            return self._build_kv_section(
-                "🧠 Linear Model",
-                [
-                    ("Input Size", str(model_input_size)),
-                    ("Hidden Size", str(model_hidden_size)),
-                    ("Dropout Layer P-Value", str(dropout_p)),
-                    ("Learning Rate", str(learning_rate)),
-                    ("Discount/Gamma", str(gamma)),
-                    ("Batch Size", str(batch_size)),
-                ],
-            )
-
-        if model_type == DField.RNN:
-            layers = cfg.get(DNetField.LAYERS)
-            seq_length = cfg.get(DNetField.SEQ_LENGTH)
-            tau = cfg.get(DNetField.TAU)
-
-            return self._build_kv_section(
-                "🧠 RNN Model",
-                [
-                    ("Input Size", str(model_input_size)),
-                    ("Hidden Size", str(model_hidden_size)),
-                    ("Dropout Layer P-Value", str(dropout_p)),
-                    ("Layers", str(layers)),
-                    ("Learning Rate", str(learning_rate)),
-                    ("Discount/Gamma", str(gamma)),
-                    ("Batch Size", str(batch_size)),
-                    ("Sequence Length", str(seq_length)),
-                    ("Tau", str(tau)),
-                ],
-            )
-
-        if model_type == DField.GRU:
-            layers = cfg.get(DNetField.LAYERS)
-            seq_length = cfg.get(DNetField.SEQ_LENGTH)
-            tau = cfg.get(DNetField.TAU)
-
-            return self._build_kv_section(
-                "🧠 GRU Model",
-                [
-                    ("Input Size", str(model_input_size)),
-                    ("Hidden Size", str(model_hidden_size)),
-                    ("Dropout Layer P-Value", str(dropout_p)),
-                    ("Layers", str(layers)),
-                    ("Learning Rate", str(learning_rate)),
-                    ("Discount/Gamma", str(gamma)),
-                    ("Batch Size", str(batch_size)),
-                    ("Sequence Length", str(seq_length)),
-                    ("Tau", str(tau)),
-                ],
-            )
+            model_name = DLabel.LINEAR
+        elif model_type == DField.RNN:
+            model_name = DLabel.RNN
+        elif model_name == DField.GRU:
+            model_name = DLabel.GRU
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
 
         return self._build_kv_section(
-            "🧠 Model",
-            [("Model Type", str(model_type))],
+            f"🧠 {model_name} Model",
+            [
+                ("Input Size", str(model_input_size)),
+                ("Hidden Size", str(model_hidden_size)),
+                ("Dropout Layer P-Value", str(dropout_p)),
+                ("Layers", str(layers)),
+                ("Learning Rate", str(learning_rate)),
+                ("Discount/Gamma", str(gamma)),
+                ("Tau", str(tau)),
+            ],
         )
 
     def _build_rewards_section(self) -> list[str]:
@@ -181,22 +146,36 @@ class HydraSnapshot:
             ],
         )
 
-    def _build_memory_section(self) -> list[str]:
+    def _build_memory_section(self, cfg: SimCfg) -> list[str]:
         return self._build_kv_section(
             "💾 Replay Memory",
             [
-                ("MAX_TRAINING_FRAMES", DMemDef.MAX_TRAINING_FRAMES),
-                ("MAX_FRAMES", DMemDef.MAX_FRAMES),
-                ("MAX_BUCKETS", DMemDef.MAX_BUCKETS),
-                ("NUM_COOLDOWN_EPISODES", DMemDef.NUM_COOLDOWN_EPISODES),
-                ("THRESHOLD_BUCKETS", DMemDef.THRESHOLD_BUCKETS),
-                ("UPSHIFT_COUNT_THRESHOLD", DMemDef.UPSHIFT_COUNT_THRESHOLD),
+                (
+                    "MAX_TRAINING_FRAMES",
+                    cfg.get(DNetField.MAX_TRAINING_FRAMES),
+                ),
+                ("MAX_FRAMES", cfg.get(DNetField.MAX_FRAMES)),
+                ("MAX_BUCKETS", cfg.get(DNetField.MAX_BUCKETS)),
+                (
+                    "NUM_COOLDOWN_EPISODES",
+                    cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
+                ),
+                (
+                    "UPSHIFT_COUNT_THRESHOLD",
+                    cfg.get(DNetField.UPSHIFT_COUNT_THRESHOLD),
+                ),
                 (
                     "DOWNSHIFT_COUNT_THRESHOLD",
-                    DMemDef.DOWNSHIFT_COUNT_THRESHOLD,
+                    cfg.get(DNetField.DOWNSHIFT_COUNT_THRESHOLD),
                 ),
-                ("MAX_STAGNANT_EPISODES", DMemDef.MAX_STAGNANT_EPISODES),
-                ("MAX_HARD_RESET_EPISODES", DMemDef.MAX_HARD_RESET_EPISODES),
+                (
+                    "MAX_STAGNANT_EPISODES",
+                    cfg.get(DNetField.MAX_STAGNANT_EPISODES),
+                ),
+                (
+                    "MAX_HARD_RESET_EPISODES",
+                    cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
+                ),
             ],
         )
 
