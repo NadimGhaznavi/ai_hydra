@@ -53,7 +53,7 @@ Switch {
     background: black;
     border: round #2aa5ce;
     border-subtitle-color: #5fc442;
-    color: #5fc442;
+    color: #72af75;
     width: 100%;
     padding: 0 1;
 }
@@ -118,7 +118,46 @@ HighScoresLog {
     border-subtitle-color: #72af75;
     color: #72af75;
     text-style: bold;
-    width: 100%;
+}
+#router_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+    height: 6;
+}
+#server_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+    height: 5;
+}
+#mem_sizing_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+    height: 5;
+}
+#shifting_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+    height: 6;
+}
+#stagnation_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #72af75;
+    color: #72af75;
+    text-style: bold;
+    height:4;
 }
 
 
@@ -260,6 +299,9 @@ EventLog {
 .sim_stopped #batch_size_label {
     display: none;
 }
+.sim_stopped #downshift_count_thresh_label {
+    display: none;
+}
 .sim_stopped #dropout_p_label {
     display: none;
 }
@@ -287,10 +329,16 @@ EventLog {
 .sim_stopped #max_buckets_label {
     display: none;
 }
+.sim_stopped #max_crit_stag_eps_label {
+    display: none;
+}
 .sim_stopped #max_frames_label {
     display: none;
 }
 .sim_stopped #max_gear_label {
+    display: none;
+}
+.sim_stopped #max_stag_eps_label {
     display: none;
 }
 .sim_stopped #max_training_frames_label {
@@ -344,6 +392,9 @@ EventLog {
 .sim_running #batch_size_input {
     display: none;
 }
+.sim_running #downshift_count_thresh_input {
+    display: none;
+}
 .sim_running #dropout_p_input {
     display: none;
 }
@@ -365,10 +416,16 @@ EventLog {
 .sim_running #max_buckets_input {
     display: none;
 }
+.sim_running #max_crit_stag_eps_input {
+    display: none;
+}
 .sim_running #max_frames_input {
     display: none;
 }
 .sim_running #max_gear_input {
+    display: none;
+}
+.sim_running #max_stag_eps_input {
     display: none;
 }
 .sim_running #max_training_frames_input {
@@ -432,6 +489,12 @@ EventLog {
 .bad_handshake #batch_size_label {
     display: none;
 }
+.bad_handshake #downshift_count_thresh_input {
+    display: none;
+}
+.bad_handshake #downshift_count_thresh_label {
+    display: none;
+}
 .bad_handshake #dropout_p_input {
     display: none;
 }
@@ -474,6 +537,12 @@ EventLog {
 .bad_handshake #max_buckets_label {
     display: none;
 }
+.bad_handshake #max_crit_stag_eps_input {
+    display: none;
+}
+.bad_handshake #max_crit_stag_eps_label {
+    display: none;
+}
 .bad_handshake #max_frames_input {
     display: none;
 }
@@ -484,6 +553,12 @@ EventLog {
     display: none;
 }
 .bad_handshake #max_gear_label {
+    display: none;
+}
+.bad_handshake #max_stag_eps_input {
+    display: none;
+}
+.bad_handshake #max_stag_eps_label {
     display: none;
 }
 .bad_handshake #max_training_frames_input {

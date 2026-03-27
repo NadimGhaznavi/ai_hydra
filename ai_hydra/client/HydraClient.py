@@ -1021,6 +1021,12 @@ class HydraClientTui(App):
         self.settings.downshift_count_threshold_label.update(
             downshift_count_thresh
         )
+        # MAX_STAGNANT_EPISODES
+        max_stag_eps = self.settings.max_stag_eps_input.value
+        self.settings.max_stag_eps_label.update(max_stag_eps)
+        # MAX_HARD_RESET_EPISODES
+        max_crit_stag_eps = self.settings.max_crit_stag_eps_input.value
+        self.settings.max_crit_stag_eps_label.update(max_crit_stag_eps)
 
         cfg_dict = {
             DNetField.BATCH_SIZE: batch_size,

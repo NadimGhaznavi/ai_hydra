@@ -100,6 +100,26 @@ class TabbedSettings(Widget):
             value=str(DMemDef.DOWNSHIFT_COUNT_THRESHOLD),
             id=DField.DOWNSHIFT_COUNT_THRESHOLD_INPUT,
         )
+        # MAX_STAGNANT_EPISODES
+        self.max_stag_eps_label = Label(
+            id=DField.MAX_STAGNANT_EPISODES_LABEL,
+        )
+        self.max_stag_eps_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.MAX_STAGNANT_EPISODES),
+            id=DField.MAX_STAGNANT_EPISODES_INPUT,
+        )
+        # MAX_HARD_RESET_EPISODES
+        self.max_crit_stag_eps_label = Label(
+            id=DField.MAX_CRIT_STAGNANT_EPISODES_LABEL,
+        )
+        self.max_crit_stag_eps_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DMemDef.MAX_HARD_RESET_EPISODES),
+            id=DField.MAX_CRIT_STAGNANT_EPISODES_INPUT,
+        )
 
     def compose(self) -> ComposeResult:
         with TabbedContent(DLabel.CONFIG, DLabel.NETWORK, DLabel.MEMORY):
@@ -320,88 +340,114 @@ class TabbedSettings(Widget):
 
             # ------ Network tab ---
             yield Vertical(
-                Horizontal(
-                    Label(f"{DLabel.ROUTER_ADDR} : "),
-                    self.router_address,
-                    classes=DField.INPUT_FIELD,
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_ADDR}       : "),
+                        self.router_address,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_PORT}  : "),
+                        self.router_port,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_HB_PORT}: "),
+                        self.router_hb_port,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_STATUS}        : "),
+                        self.router_hb_status,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.ROUTER_BOX,
                 ),
-                Horizontal(
-                    Label(f"{DLabel.ROUTER_PORT}    : "),
-                    self.router_port,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.ROUTER_HB_PORT} : "),
-                    self.router_hb_port,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.ROUTER_STATUS}  : "),
-                    self.router_hb_status,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Label(),
-                Horizontal(
-                    Label(f"{DLabel.SERVER_ADDR} : "),
-                    self.server_address,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.SERVER_PUB_PORT}: "),
-                    self.server_pub_port,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.SERVER_STATUS}  : "),
-                    self.server_status,
-                    classes=DField.INPUT_FIELD,
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.SERVER_ADDR}       : "),
+                        self.server_address,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.SERVER_PUB_PORT}  : "),
+                        self.server_pub_port,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.SERVER_STATUS}        : "),
+                        self.server_status,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.SERVER_BOX,
                 ),
                 id=DField.NETWORK,
             )
 
             # ----- Memory tab ---
             yield Vertical(
-                Horizontal(
-                    Label(f"{DLabel.MAX_FRAMES}         : "),
-                    self.max_frames_label,
-                    self.max_frames_input,
-                    classes=DField.INPUT_FIELD,
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.MAX_FRAMES}         : "),
+                        self.max_frames_label,
+                        self.max_frames_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.MAX_BUCKETS}        : "),
+                        self.max_buckets_label,
+                        self.max_buckets_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.MAX_TRAINING_FRAMES}: "),
+                        self.max_training_frames_label,
+                        self.max_training_frames_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.MEM_SIZING_BOX,
                 ),
-                Horizontal(
-                    Label(f"{DLabel.MAX_BUCKETS}        : "),
-                    self.max_buckets_label,
-                    self.max_buckets_input,
-                    classes=DField.INPUT_FIELD,
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.MAX_GEAR}       : "),
+                        self.max_gear_label,
+                        self.max_gear_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.NUM_COOLDOWN_EPISODES} : "),
+                        self.num_cooldown_eps_label,
+                        self.num_cooldown_eps_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.UPSHIFT_COUNT_THRESHOLD}  : "),
+                        self.upshift_count_threshold_label,
+                        self.upshift_count_threshold_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.DOWNSHIFT_COUNT_THRESHOLD}: "),
+                        self.downshift_count_threshold_label,
+                        self.downshift_count_threshold_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.SHIFTING_BOX,
                 ),
-                Horizontal(
-                    Label(f"{DLabel.MAX_TRAINING_FRAMES}: "),
-                    self.max_training_frames_label,
-                    self.max_training_frames_input,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.MAX_GEAR}       : "),
-                    self.max_gear_label,
-                    self.max_gear_input,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.NUM_COOLDOWN_EPISODES}     : "),
-                    self.num_cooldown_eps_label,
-                    self.num_cooldown_eps_input,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.UPSHIFT_COUNT_THRESHOLD}  : "),
-                    self.upshift_count_threshold_label,
-                    self.upshift_count_threshold_input,
-                    classes=DField.INPUT_FIELD,
-                ),
-                Horizontal(
-                    Label(f"{DLabel.DOWNSHIFT_COUNT_THRESHOLD}  : "),
-                    self.downshift_count_threshold_label,
-                    self.downshift_count_threshold_input,
-                    classes=DField.INPUT_FIELD,
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.MAX_STAGNANT_EPISODES}          : "),
+                        self.max_stag_eps_label,
+                        self.max_stag_eps_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.MAX_HARD_RESET_EPISODES} : "),
+                        self.max_crit_stag_eps_label,
+                        self.max_crit_stag_eps_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.STAGNATION_BOX,
                 ),
             )
 
@@ -414,4 +460,19 @@ class TabbedSettings(Widget):
         )
         self.query_one(f"#{DField.TRAINING_BOX}", Vertical).border_subtitle = (
             DLabel.TRAINING
+        )
+        self.query_one(
+            f"#{DField.MEM_SIZING_BOX}", Vertical
+        ).border_subtitle = DLabel.SIZING
+        self.query_one(f"#{DField.SHIFTING_BOX}", Vertical).border_subtitle = (
+            DLabel.SHIFTING
+        )
+        self.query_one(
+            f"#{DField.STAGNATION_BOX}", Vertical
+        ).border_subtitle = DLabel.STAGNATION
+        self.query_one(f"#{DField.ROUTER_BOX}", Vertical).border_subtitle = (
+            DLabel.ROUTER
+        )
+        self.query_one(f"#{DField.SERVER_BOX}", Vertical).border_subtitle = (
+            DLabel.SERVER
         )
