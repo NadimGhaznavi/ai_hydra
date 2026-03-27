@@ -52,6 +52,7 @@ class DRNN:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.96
     EPSILON_DECAY_RATE: Final[float] = 0.97
     GAMMA: Final[float] = 0.96
@@ -152,6 +153,8 @@ class DNetField:
     MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"
     NEXT_STATE: Final[str] = "next_state"
+    NICE_P_VALUE: Final[str] = "nice_p_value"
+    NICE_STEPS: Final[str] = "nice_steps"
     NUM_COOLDOWN_EPISODES: Final[str] = "num_cooledown_episodes"
     PER_STEP: Final[str] = "per_step"
     RANDOM_SEED: Final[str] = "random_seed"

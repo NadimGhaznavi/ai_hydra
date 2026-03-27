@@ -561,6 +561,7 @@ class HydraClientTui(App):
 
         # GRU model defaults
         elif model_type == DField.GRU:
+            downshift_thresh = DRNN.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DGRU.DROPOUT_P_VALUE
             epsilon_decay = DGRU.EPSILON_DECAY_RATE
             gamma = DGRU.GAMMA
@@ -569,6 +570,15 @@ class HydraClientTui(App):
             lr = f"{DGRU.LEARNING_RATE:.4f}"
             min_epsilon = DGRU.MINIMUM_EPSILON
             layers = DGRU.GRU_LAYERS
+            max_frames = DRNN.MAX_FRAMES
+            max_gear = DRNN.MAX_GEAR
+            max_crit_stag_eps = DRNN.MAX_HARD_RESET_EPISODES
+            max_stag_eps = DRNN.MAX_STAGNANT_EPISODES
+            max_training_frames = DRNN.MAX_TRAINING_FRAMES
+            nice_p_value = DRNN.NICE_P_VALUE
+            nice_steps = DRNN.NICE_STEPS
+            num_cooldown_eps = DRNN.NUM_COOLDOWN_EPISODES
+            upshift_thresh = DRNN.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.RNN)
             self.add_class(DField.GRU)
@@ -1052,6 +1062,13 @@ class HydraClientTui(App):
         # MAX_HARD_RESET_EPISODES
         max_crit_stag_eps = self.settings.max_crit_stag_eps_input.value
         self.settings.max_crit_stag_eps_label.update(max_crit_stag_eps)
+
+        # NICE_P_VALUE
+        nice_p_value = self.settings.nice_p_value_input.value
+        self.settings.nice_p_value_label.update(nice_p_value)
+        # NICE_STEPS
+        nice_steps = self.settings.nice_steps_input.value
+        self.settings.nice_steps_label.update(nice_steps)
 
         cfg_dict = {
             DNetField.BATCH_SIZE: batch_size,

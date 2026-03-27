@@ -42,6 +42,8 @@ class SimCfg:
         DNetField.MIN_EPSILON: DLinear.MINIMUM_EPSILON,
         DNetField.MODEL_TYPE: DField.LINEAR,
         DNetField.MOVE_DELAY: DNetDef.MOVE_DELAY,
+        DNetField.NICE_P_VALUE: DRNN.NICE_P_VALUE,
+        DNetField.NICE_STEPS: DRNN.NICE_STEPS,
         DNetField.NUM_COOLDOWN_EPISODES: DNetField.NUM_COOLDOWN_EPISODES,
         DNetField.PER_STEP: DNetDef.PER_STEP,
         DNetField.RANDOM_SEED: DHydra.RANDOM_SEED,

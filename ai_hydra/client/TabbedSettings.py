@@ -121,7 +121,7 @@ class TabbedSettings(Widget):
             id=DField.MAX_CRIT_STAGNANT_EPISODES_INPUT,
         )
 
-        # Nice p-value
+        # NICE_P_VALUE
         self.nice_p_value_label = Label(
             id=DField.NICE_P_VALUE_LABEL,
         )
@@ -132,7 +132,7 @@ class TabbedSettings(Widget):
             id=DField.NICE_P_VALUE_INPUT,
         )
 
-        # Nice steps
+        # NICE_STEPS
         self.nice_steps_label = Label(
             id=DField.NICE_STEPS_LABEL,
         )
