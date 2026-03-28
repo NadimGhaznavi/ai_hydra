@@ -91,7 +91,7 @@ class ScoresDistPlot(Widget):
 
         cur_epoch = self.metrics.get_cur_epoch()
 
-        if cur_epoch > 0 and cur_epoch % 500 == 0:
+        if cur_epoch > 0 and cur_epoch % 100 == 0:
             if tag == DField.ALL:
                 self.metrics.add_mean_median(
                     epoch=cur_epoch, mean=mean_score, median=median_score

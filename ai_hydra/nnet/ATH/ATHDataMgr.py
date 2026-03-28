@@ -38,12 +38,17 @@ class ATHDataMgr:
     ):
         self._rng = rng
         self.store = data_store
+        self._max_frames = max_frames
+        self._max_gear = max_gear
+        self._max_training_frames = max_training_frames
+
         # Local logging
         self.log = HydraLog(
             client_id=DModule.ATH_DATA_MGR,
             log_level=log_level,
             to_console=True,
         )
+
         # Remote logging: ZeroMQ "Events" PUB/SUB topic
         self.event = HydraEventMQ(
             client_id=DModule.ATH_DATA_MGR, pub_func=pub_func
@@ -53,10 +58,6 @@ class ATHDataMgr:
         self._samples_served = 0
         self._has_logged_startup = False
         self._has_logged_pruning = False
-
-        self._max_frames = max_frames
-        self._max_gear = max_gear
-        self._max_training_frames = max_training_frames
 
     async def append(
         self, t: Transition, final_score: int | None = None
@@ -212,6 +213,7 @@ class ATHDataMgr:
                     ev_type=EV_TYPE.BUCKETS_STATUS,
                     payload={
                         EV_TYPE.BUCKET_COUNTS: bucket_counts,
+                        EV_TYPE.CUR_GEAR: self._cur_gear,
                     },
                 )
             )

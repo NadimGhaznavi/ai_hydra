@@ -39,6 +39,7 @@ class ATHMemory:
             to_console=True,
         )
         self.log.info(f"Set max buckets: {max_buckets}")
+        self.log.info(f"Set max gear: {max_gear}")
         self.log.info(f"Set max training frames: {max_training_frames}")
         self.log.info(f"Set frames: {max_frames}")
         self.log.info(f"Set upshift count threshold: {upshift_count_thresh}")

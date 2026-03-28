@@ -34,6 +34,9 @@ class ATHDataStore:
         max_gear: int,
         max_training_frames: int,
     ):
+        self._max_buckets = max_buckets
+        self._max_gear = max_gear
+        self._max_training_frames = max_training_frames
 
         # Local logging
         self.log = HydraLog(
@@ -41,6 +44,7 @@ class ATHDataStore:
             log_level=log_level,
             to_console=True,
         )
+
         # Remote logging: ZeroMQ "Events" PUB/SUB topic
         self.event = HydraEventMQ(
             client_id=DModule.ATH_DATA_STORE, pub_func=pub_func
@@ -56,10 +60,6 @@ class ATHDataStore:
         self._batch_size: int | None = None
 
         self._stored_frames = 0
-
-        self._max_buckets = max_buckets
-        self._max_gear = max_gear
-        self._max_training_frames = max_training_frames
 
     def append(self, t: Transition):
         self._cur_game.append(t)

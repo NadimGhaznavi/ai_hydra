@@ -342,9 +342,25 @@ class HydraMetrics:
 
     def get_shift_mean_median_snapshot_rows(
         self,
-    ) -> list[tuple[int, int, int, int, float, float]]:
+    ) -> list[
+        tuple[
+            int,
+            int | None,
+            int | None,
+            int | None,
+            float,
+            float,
+            float | None,
+            float | None,
+        ]
+    ]:
         rows = []
         shifts = sorted(self._shift_events, key=lambda e: e.epoch)
+
+        recent_by_epoch = {
+            epoch: (recent_mean, recent_median)
+            for epoch, recent_mean, recent_median in self._recent_mean_and_median
+        }
 
         for epoch, mean_score, median_score in self._mean_and_median:
             active_shift = None
@@ -354,9 +370,22 @@ class HydraMetrics:
                 else:
                     break
 
+            recent_mean, recent_median = recent_by_epoch.get(
+                epoch, (None, None)
+            )
+
             if active_shift is None:
                 rows.append(
-                    (epoch, None, None, None, mean_score, median_score)
+                    (
+                        epoch,
+                        None,
+                        None,
+                        None,
+                        mean_score,
+                        median_score,
+                        recent_mean,
+                        recent_median,
+                    )
                 )
             else:
                 rows.append(
@@ -367,8 +396,11 @@ class HydraMetrics:
                         active_shift.batch_size,
                         mean_score,
                         median_score,
+                        recent_mean,
+                        recent_median,
                     )
                 )
+
         return rows
 
     def set_initial_epsilon(self, value: float) -> None:

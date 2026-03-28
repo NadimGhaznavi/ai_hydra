@@ -289,6 +289,8 @@ class HydraSnapshot:
             "Batch Size",
             "Mean",
             "Median",
+            "Recent Mean",
+            "Recent Median",
         ]
         table_rows: list[list[str]] = []
 
@@ -299,6 +301,8 @@ class HydraSnapshot:
             batch_size,
             mean_score,
             median_score,
+            recent_mean_score,
+            recent_median_score,
         ) in rows:
             table_rows.append(
                 [
@@ -308,6 +312,8 @@ class HydraSnapshot:
                     str(batch_size),
                     f"{mean_score:.2f}",
                     f"{median_score:.2f}",
+                    f"{recent_mean_score:.2f}",
+                    f"{recent_median_score:.2f}",
                 ]
             )
 
