@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### 
+
+---
+
 ## [0.23.0] - 2026-03-28 @ 01:55 - Centerfold Release
 
 ### Added
@@ -26,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Training now happens at the end of the episode.
   - The Linear model now uses the *ATH Replay Memory*
 - Enabled the *layers* TUI option for the Linear model; it denotes the number of hidden layers that the NN contains.
+- Changed the *Snapshot Report* to use the TUI labels instead of the backend variable names.
 
 ### Fixed
 - Set `MAX_MOVES_PENALTY` to `-10` (not to `0`)

@@ -8,6 +8,7 @@
 #    License: GPL 3.0
 
 from __future__ import annotations
+import time
 
 from textual import on
 from textual.app import ComposeResult, Widget
@@ -33,8 +34,9 @@ class TabbedSettings(Widget):
         self.router_hb_status = Label(id=DField.ROUTER_HB_STATUS)
         self.server_address = Label(id=DField.SERVER_ADDR)
         self.server_pub_port = Label(id=DField.SERVER_PUB_PORT)
-        self.server_status = Label(id=DField.SERVER_STATUS)
-        self.cur_epsilon = Label(id=DField.CUR_EPSILON)
+        self.server_status = Label(
+            f"{DStatus.UNKNOWN}", id=DField.SERVER_STATUS
+        )
 
         # ----- ATH Replay memory ---
         # MAX_FRAMES
@@ -198,6 +200,9 @@ class TabbedSettings(Widget):
             value=str(DGameDef.MAX_MOVES_MULTIPLIER),
             id=DField.MAX_MOVES_MULTIPLIER_INPUT,
         )
+
+        # Current epsilon
+        self.cur_epsilon = Label(id=DField.CUR_EPSILON)
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
