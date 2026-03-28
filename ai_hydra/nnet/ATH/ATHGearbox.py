@@ -208,7 +208,7 @@ class ATHGearBox:
         self._stagnation_flag = False
         self._cooldown_count = 0
         old_gear = self._cur_gear
-        self._cur_gear = 3  # seq_length/batch_size == 8/32
+        self._cur_gear = 3
         self._cur_seq_length, self._cur_batch_size = get_gear_data(
             gear=self._cur_gear,
             max_gear=self._max_gear,

@@ -9,6 +9,7 @@
 
 from random import Random
 
+from ai_hydra.constants.DReplayMemory import DMemDef, DMemField
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DEvent import EV_TYPE, EV_STATUS
 
@@ -24,6 +25,7 @@ from ai_hydra.nnet.ATH.ATHCommon import (
 
 
 class ATHDataMgr:
+
     def __init__(
         self,
         log_level: DHydraLog,
@@ -49,42 +51,38 @@ class ATHDataMgr:
 
         # Remote logging: ZeroMQ "Events" PUB/SUB topic
         self.event = HydraEventMQ(
-            client_id=DModule.ATH_DATA_MGR,
-            pub_func=pub_func,
+            client_id=DModule.ATH_DATA_MGR, pub_func=pub_func
         )
 
-        self._cur_gear: int | None = None
+        self._cur_gear = None
         self._samples_served = 0
         self._has_logged_startup = False
         self._has_logged_pruning = False
 
     async def append(
-        self,
-        t: Transition,
-        final_score: int | None = None,
+        self, t: Transition, final_score: int | None = None
     ) -> None:
+
         if not self._has_logged_startup:
             await self._log_startup()
             self._has_logged_startup = True
 
         self.store.append(t)
 
-        if not t.done:
-            return
+        if t.done:
+            if final_score is None:
+                raise ValueError(
+                    "final_score must be provided when appending a terminal transition"
+                )
 
-        if final_score is None:
-            raise ValueError(
-                "final_score must be provided when appending a terminal transition"
-            )
-
-        await self._finalize_game()
+            await self._finalize_game()
 
     def _build_episode_gear_meta(
         self,
         ep_size: int,
     ) -> dict[int, GearMeta]:
         """
-        Build per-gear chunk metadata for one finalized episode.
+        Build metadata for all gears for one episode.
         """
         gear_meta: dict[int, GearMeta] = {}
 
@@ -109,8 +107,7 @@ class ATHDataMgr:
         """
         Build gear-specific chunk metadata for an episode size.
 
-        Chunks are aligned from the end to preserve the newest / terminal
-        part of the episode, matching the original ATH behavior.
+        Chunks are aligned from the end, matching the old ReplayMemory behavior.
         """
         num_chunks = ep_size // seq_length
         rem = ep_size % seq_length
@@ -131,61 +128,46 @@ class ATHDataMgr:
     async def _finalize_game(self) -> None:
         ep_size = self.store.get_cur_ep_size()
         gear_meta = self._build_episode_gear_meta(ep_size)
-
-        self.store.finalize_game(gear_meta=gear_meta)
+        self.store.finalize_game(gear_meta)
 
         await self._prune_if_needed()
         self._rebuild_bucket_index()
 
-    async def _log_startup(self) -> None:
+    async def _log_startup(self):
         self.log.info(f"Initialized. Setting max_frames to {self._max_frames}")
 
     async def _prune_if_needed(self) -> None:
+
         while self.store.get_stored_frame_count() > self._max_frames:
             self.store.pop_first_game()
 
             if not self._has_logged_pruning:
                 msg = f"Memory is full ({self._max_frames}), pruning initiated"
                 self.log.info(msg)
+
                 await self.event.publish(
                     EventMsg(level=EV_STATUS.INFO, message=msg)
                 )
                 self._has_logged_pruning = True
 
-    def _rebuild_bucket_index(self) -> None:
+    def _rebuild_bucket_index(self):
         self.store.reset_bucket_indexes()
         self.store.update_episodes_by_bucket()
         self.store.update_warmed_buckets_list()
 
-    def _get_eligible_eps_for_bucket(self, bucket_idx: int):
-        """
-        Return only episodes that actually have a valid chunk for this
-        bucket index at the current gear.
-        """
-        episodes = self.store.get_eps_by_bucket_idx(bucket_idx=bucket_idx)
-        eligible = []
-
-        for ep in episodes:
-            meta = ep.gear_meta[self._cur_gear]
-            if bucket_idx < meta.num_chunks:
-                eligible.append(ep)
-
-        return eligible
-
     async def sample_chunks(self) -> list[list[Transition]] | None:
         """
         Sample chunks across warmed buckets for the current gear.
-
-        Important invariant:
-        bucket_idx is only safe to use as a chunk index if the episode
-        actually has that chunk at the current gear.
         """
-        if self._cur_gear is None:
-            return None
-
         warmed_buckets = self.store.get_warmed_buckets()
+
         if not warmed_buckets:
             return None
+
+        total_chunks = 0
+        for bucket_idx in warmed_buckets:
+            episodes = self.store.get_eps_by_bucket_idx(bucket_idx=bucket_idx)
+            total_chunks += len(episodes)
 
         _, batch_size = get_gear_data(
             gear=self._cur_gear,
@@ -193,56 +175,32 @@ class ATHDataMgr:
             max_training_frames=self._max_training_frames,
         )
 
-        eligible_by_bucket: dict[int, list] = {}
-        total_chunks = 0
-
-        for bucket_idx in warmed_buckets:
-            eligible = self._get_eligible_eps_for_bucket(bucket_idx)
-            if not eligible:
-                continue
-            eligible_by_bucket[bucket_idx] = eligible
-            total_chunks += len(eligible)
-
-        if not eligible_by_bucket:
-            return None
-
         if total_chunks < batch_size:
             return None
 
         samples: list[list[Transition]] = []
 
-        active_buckets = sorted(eligible_by_bucket.keys())
-        base = batch_size // len(active_buckets)
-        remainder = batch_size % len(active_buckets)
+        base = batch_size // len(warmed_buckets)
+        remainder = batch_size % len(warmed_buckets)
 
-        requested: dict[int, int] = {idx: base for idx in active_buckets}
+        requested: dict[int, int] = {idx: base for idx in warmed_buckets}
 
-        # Bias remainder toward deeper buckets first
-        active_desc = sorted(active_buckets, reverse=True)
+        warmed_desc = sorted(warmed_buckets, reverse=True)
         for i in range(remainder):
-            requested[active_desc[i % len(active_desc)]] += 1
+            requested[warmed_desc[i % len(warmed_desc)]] += 1
 
-        for bucket_idx in active_buckets:
-            eligible = eligible_by_bucket[bucket_idx]
-            num_samples = requested[bucket_idx]
+        for bucket_idx in warmed_buckets:
+            eligible = self.store.get_eps_by_bucket_idx(bucket_idx=bucket_idx)
+            if not eligible:
+                continue
 
-            for _ in range(num_samples):
+            meta_samples = requested[bucket_idx]
+
+            for _ in range(meta_samples):
                 ep = self._rng.choice(eligible)
                 meta = ep.gear_meta[self._cur_gear]
-
-                # Defensive check: this should always hold because of the
-                # eligibility filter above.
-                if bucket_idx >= meta.num_chunks:
-                    continue
-
                 start, end = meta.ranges[bucket_idx]
-                chunk = list(ep.frames[start:end])
-
-                if chunk:
-                    samples.append(chunk)
-
-        if len(samples) < batch_size:
-            return None
+                samples.append(list(ep.frames[start:end]))
 
         self._samples_served += 1
 
@@ -259,10 +217,9 @@ class ATHDataMgr:
                     },
                 )
             )
-
         return samples
 
-    def set_gear(self, gear: int) -> None:
+    def set_gear(self, gear: int):
         if self._cur_gear == gear:
             return
 
