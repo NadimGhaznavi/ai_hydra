@@ -71,15 +71,13 @@ class HydraSnapshot:
 
         lines.extend(self._build_model_section(cfg))
         lines.extend(self._build_rewards_section(cfg))
-        if model_type == DField.RNN or model_type == DField.GRU:
-            lines.extend(self._build_memory_section(cfg))
+        lines.extend(self._build_memory_section(cfg))
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
         lines.extend(self._build_nice_table())
         lines.extend(self._build_shift_mean_median_section())
-        if model_type == DField.RNN or model_type == DField.GRU:
-            lines.extend(self._build_bucket_section())
+        lines.extend(self._build_bucket_section())
 
         return "\n".join(lines).rstrip() + "\n"
 
@@ -160,7 +158,8 @@ class HydraSnapshot:
                     "Max Training Frames",
                     cfg.get(DNetField.MAX_TRAINING_FRAMES),
                 ),
-                ("Highest Gear", cfg.get(DNetField.MAX_GEAR))(
+                ("Highest Gear", cfg.get(DNetField.MAX_GEAR)),
+                (
                     "Cooldown Threshold",
                     cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
                 ),

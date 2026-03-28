@@ -6,9 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.23.1] - 2026-03-28 @ 11:38 - HOTFIX
 
-### 
+### Added
+- Better support for Linear models in the *Snapshot* report.
+- Updated *Snapshot* report documentation example for the [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
+
+### Fixed
+- Corrected syntax error that caused a TUI crash when a *Snapshot* report was run for an RNN or GRU model.
 
 ---
 
