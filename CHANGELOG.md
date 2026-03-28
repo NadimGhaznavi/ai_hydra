@@ -15,7 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
     - Added TUI controls for setting the `NICE_P_VALUE` and `NICE_STEPS` values.
   - **ATH Replay Memory Settings**
     - Added TUI controls for setting the `DOWNSHIFT_COUNT_THRESHOLD`, `MAX_FRAMES`, `MAX_GEAR`, `MAX_HARD_RESET_EPISODES`, `MAX_STAGNANT_EPISODES`, `MAX_TRAINING_FRAMES`, `NUM_COOLDOWN_EPISODES`, and `UPSHIFT_COUNT_THRESHOLD` values.
+  - **Reward Settings**
+    - Added TUI constrols for setting the `FOOD_REWARD`, `COLLISION_PENALTY`, `MAX_MOVES_PENALTY`, `EMPTY_MOVE_REWARD`, `CLOSER_TO_FOOD`, `FURTHER_FROM_FOOD`, and `MAX_MOVES_MULTIPLIER` values.
   - Wired these settings through the entire stack i.e. enabled support in the `SimCfg`, `HydraMgr`, `ATHMemory`, `ATHCommon`, `ATHDataMgr`, `ATHDataStore`, `ATHGearbox`, and `EpsilonNicePolicy` classes.
+- Updated [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
+  - Added detailed configuration information with screenshots.
 
 ### Changed
 - Removed `THRESHOLD_BUCKETS`. Instead the system uses the last three bucket and limits the MAX_BUCKETS to have a **minimum** of 3.
@@ -24,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - The Linear model now uses the *ATH Replay Memory*
 - Enabled the *layers* TUI option for the Linear model; it denotes the number of hidden layers that the NN contains.
 
+### Fixed
+- Set `MAX_MOVES_PENALTY` to `-10` (not to `0`)
 
 
 ## [0.22.0] - 2026-03-26 @ 18:14 - Tweaked Layout Release 

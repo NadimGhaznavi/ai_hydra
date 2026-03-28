@@ -146,6 +146,87 @@ This configuration demonstrates a fully distributed setup where simulation, rout
 
 ----
 
+Settings
+********
+
+Random Seed
+===========
+
+.. image:: https://aihydra.osoyalce.com/images/random-seed.png
+   :alt: Random Seed
+
+
+**AI Hydra** is fully deterministic and the random seed for a simulation run is visible and can be set in the TUI.
+
+Move Delay
+==========
+
+.. image:: https://aihydra.osoyalce.com/images/move-delay.png
+   :alt: Move Delay
+
+When the a simulation is not running in *turbo mode*, the movement of the snake is too fast to see clearly. The **move delay** introduces a delay between steps that slows the simulation down.
+
+Config Settings
+===============
+
+.. image:: https://aihydra.osoyalce.com/images/settings-config.png
+   :alt: Config Settings
+
+The **Config** settings tab allows the user to set:
+
+- **Epsilon** - Initial, minimum, and the epsilon decay rate. The *current epsilon* value is also shown here
+- **Model** - The **model type** (*Linear*, *RNN*, or *GRU*), the number of nodes in the hidden layers, the *p-value* of the model's dropout layer, and the number of layers is configurable here.
+- **Training** - The *learning rate*, *discount/gamma* and *tau* settings can be set here. The current *batch size* and *sequence length* (as set by the **ATH Memory**) are displayed here.
+
+Memory Settings
+===============
+
+.. image:: https://aihydra.osoyalce.com/images/settings-memory.png
+   :alt: Memory Settings
+
+The **Memory** tab allows the user to configure the **ATH Memory**.
+
+- **Memory Sizing**
+  - The **Max Frames** sets the maximum number of stored frames. The **ATH Memory** stores complete games. When the totaly number of frames exceeds this value, the oldest game is deleted from memory.
+  - The **Memory Buckets** is a read-only setting that shows how many memory buckets are used.
+  - The **Max Training Frames** sets the maximum number of frames (**sequnce length** * **batch size**) used during training.
+- **Gearbox Settings**
+  - The **Highest Gear** can be set here to limit the **sequence length** and **batch size**.
+  - The **Cooldown Threshold** determines the minimum number of episodes that must be executed before a gear shift can occur.
+  - The **Upshift Threshold** and **DownShift Threshold** determine when the **ATH Memory** shifts up or down, respectively. This number is the total number of frames stored in the last three **memory buckets**.
+
+Rewards Settings
+================
+
+.. image:: https://aihydra.osoyalce.com/images/settings-rewards.png
+   :alt: Rewards Settings
+
+- **Reward Structure** - This section contains the reward that is allocated to the AI when the snake finds food, hits the wall or itself, or exceeds the maximum number of moves.
+- **Movement Incentives** - This section contains rewards that can be assigned for moving into an empty square, moving towards the food, and moving away from the food.
+- **Max Moves Multiplier** - This setting is used to configure the maximum number of moves the AI can make before the game ends. This is to avoid games where the AI circles endlessly. The maximum number of allowed moved is calculated by multiplying the length of the snake by this **max moves multiplier**.
+
+Epsilon Nice Settings
+=====================
+
+.. image:: https://aihydra.osoyalce.com/images/settings-nice.png
+   :alt: EpsilonNice Settings
+
+
+The **EpsilonNice** policy execute a configurable number of steps in a random direction such that the move does not result in a collision (if possible).
+
+- **Nice P-Value** - The probability that the **EpsilonNice** policy will be activated.
+- **Nice Steps** - The number of consecutive game steps that will be executed using the **EpsilonNice** algorithm.
+
+Network Settings
+================
+
+.. image:: https://aihydra.osoyalce.com/images/settings-network.png
+   :alt: Network Settings
+
+This section shows the hostnames and port numbers that **AI Hydra** is using. These can be configured during startup using command line switches.
+
+----
+
 Deterministic Simulations
 *************************
 

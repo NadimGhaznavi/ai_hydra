@@ -97,7 +97,7 @@ class HydraSnapshot:
             model_name = DLabel.LINEAR
         elif model_type == DField.RNN:
             model_name = DLabel.RNN
-        elif model_name == DField.GRU:
+        elif model_type == DField.GRU:
             model_name = DLabel.GRU
         else:
             raise ValueError(f"Unsupported model type: {model_type}")

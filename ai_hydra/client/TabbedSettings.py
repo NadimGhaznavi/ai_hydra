@@ -413,7 +413,7 @@ class TabbedSettings(Widget):
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MAX_BUCKETS}        : "),
+                        Label(f"{DLabel.MAX_BUCKETS}     : "),
                         self.max_buckets_label,
                         self.max_buckets_input,
                         classes=DField.INPUT_FIELD,

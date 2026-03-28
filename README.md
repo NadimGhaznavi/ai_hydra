@@ -23,6 +23,8 @@ This separation allows fine-grained control over performance and observability.
 
 ### Turbo Mode
 
+![Turbo Mode Switch](https://aihydra.osoyalce.com/images/turbo-mode.png)
+
 The client supports a **Turbo mode** that disables per-step updates. This removes rendering overhead and allows the simulation to run **15×+ faster**, making it ideal for rapid experimentation.
 
 ## Installation
@@ -87,7 +89,9 @@ The shutdown process is not 100% clean, so you may be required to also hit `Cont
 
 ![Architecture](https://aihydra.osoyalce.com/images/architecture.png)
 
-**AI Hydra** components run independently and can be deployed across different machines.
+**AI Hydra** components run independently and can be deployed across different machines. The runtime configuration can be viewed in *Settings* widget under the *Network* tab.
+
+![Settings - Network](https://aihydra.osoyalce.com/images/settings-network.png)
 
 ### Example Deployment
 
@@ -116,6 +120,70 @@ This configuration demonstrates a fully distributed setup where simulation, rout
     $ . hydra-venv/bin/activate
     hydra-venv> ai-hydra-mgr --port 5759 --router-port 6757 --router-hb-port 6758 --router-address bingo
 ```
+
+---
+
+## Settings
+
+### Random Seed
+
+![Random Seed](https://aihydra.osoyalce.com/images/random-seed.png)
+
+**AI Hydra** is fully deterministic and the random seed for a simulation run is visible and can be set in the TUI.
+
+### Move Delay
+
+![Move Delay](https://aihydra.osoyalce.com/images/move-delay.png)
+
+When the a simulation is not running in *turbo mode*, the movement of the snake is too fast to see clearly. The **move delay** introduces a delay between steps that slows the simulation down.
+
+### Config Settings
+
+![Config Settings](https://aihydra.osoyalce.com/images/settings-config.png)
+
+The **Config** settings tab allows the user to set:
+
+- **Epsilon** - Initial, minimum, and the epsilon decay rate. The *current epsilon* value is also shown here
+- **Model** - The **model type** (*Linear*, *RNN*, or *GRU*), the number of nodes in the hidden layers, the *p-value* of the model's dropout layer, and the number of layers is configurable here.
+- **Training** - The *learning rate*, *discount/gamma* and *tau* settings can be set here. The current *batch size* and *sequence length* (as set by the **ATH Memory**) are displayed here.
+
+### Memory Settings
+
+![Memory Settings](https://aihydra.osoyalce.com/images/settings-memory.png)
+
+The **Memory** tab allows the user to configure the **ATH Memory**.
+
+- **Memory Sizing**
+  - The **Max Frames** sets the maximum number of stored frames. The **ATH Memory** stores complete games. When the totaly number of frames exceeds this value, the oldest game is deleted from memory.
+  - The **Memory Buckets** is a read-only setting that shows how many memory buckets are used.
+  - The **Max Training Frames** sets the maximum number of frames (**sequnce length** * **batch size**) used during training.
+- **Gearbox Settings**
+  - The **Highest Gear** can be set here to limit the **sequence length** and **batch size**.
+  - The **Cooldown Threshold** determines the minimum number of episodes that must be executed before a gear shift can occur.
+  - The **Upshift Threshold** and **DownShift Threshold** determine when the **ATH Memory** shifts up or down, respectively. This number is the total number of frames stored in the last three **memory buckets**.
+
+### Rewards Settings
+
+![Rewards Settings](https://aihydra.osoyalce.com/images/settings-rewards.png)
+
+- **Reward Structure** - This section contains the reward that is allocated to the AI when the snake finds food, hits the wall or itself, or exceeds the maximum number of moves.
+- **Movement Incentives** - This section contains rewards that can be assigned for moving into an empty square, moving towards the food, and moving away from the food.
+- **Max Moves Multiplier** - This setting is used to configure the maximum number of moves the AI can make before the game ends. This is to avoid games where the AI circles endlessly. The maximum number of allowed moved is calculated by multiplying the length of the snake by this **max moves multiplier**.
+
+### Epsilon Nice Settings
+
+![EpsilonNice Settings](https://aihydra.osoyalce.com/images/settings-nice.png)
+
+The **EpsilonNice** policy execute a configurable number of steps in a random direction such that the move does not result in a collision (if possible).
+
+- **Nice P-Value** - The probability that the **EpsilonNice** policy will be activated.
+- **Nice Steps** - The number of consecutive game steps that will be executed using the **EpsilonNice** algorithm.
+
+### Network Settings
+
+![Network Settings](https://aihydra.osoyalce.com/images/settings-network.png)
+
+This section shows the hostnames and port numbers that **AI Hydra** is using. These can be configured during startup using command line switches.
 
 ---
 

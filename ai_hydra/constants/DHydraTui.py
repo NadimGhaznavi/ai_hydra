@@ -296,7 +296,7 @@ class DLabel:
     LOOKAHEAD: Final[str] = "Look Ahead"
     LOOKAHEAD_SETTINGS: Final[str] = "Look Ahead Settings"
     LOSS: Final[str] = "Loss"
-    MAX_BUCKETS: Final[str] = "Max Buckets"
+    MAX_BUCKETS: Final[str] = "Memory Buckets"
     MAX_FRAMES: Final[str] = "Max Frames"
     MAX_GEAR: Final[str] = "Highest Gear"
     MAX_HARD_RESET_EPISODES: Final[str] = "Critical Threshold"
