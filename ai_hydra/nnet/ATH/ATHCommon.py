@@ -14,9 +14,6 @@ from ai_hydra.nnet.Transition import Transition
 
 from ai_hydra.constants.DReplayMemory import DMemDef
 
-MAX_TRAINING_FRAMES = DMemDef.MAX_TRAINING_FRAMES
-MAX_GEAR = DMemDef.MAX_GEAR
-
 
 @dataclass(slots=True, frozen=True)
 class GearMeta:

@@ -120,31 +120,31 @@ class HydraSnapshot:
             "💰 Rewards",
             [
                 (
-                    "FOOD_REWARD",
+                    "Food Reward",
                     cfg.get(DNetField.FOOD_REWARD),
                 ),
                 (
-                    "COLLISION_PENALTY",
+                    "Collision Penalty",
                     cfg.get(DNetField.COLLISION_PENALTY),
                 ),
                 (
-                    "MAX_MOVES_PENALTY",
+                    "Max Moves Penalty",
                     cfg.get(DNetField.MAX_MOVES_PENALTY),
                 ),
                 (
-                    "EMPTY_MOVE_REWARD",
+                    "Empty Move Reward",
                     cfg.get(DNetField.EMPTY_MOVE_REWARD),
                 ),
                 (
-                    "CLOSER_TO_FOOD",
+                    "Closer to Food",
                     cfg.get(DNetField.CLOSER_TO_FOOD),
                 ),
                 (
-                    "FURTHER_FROM_FOOD",
+                    "Further from Food",
                     cfg.get(DNetField.FURTHER_FROM_FOOD),
                 ),
                 (
-                    "MAX_MOVES_MULTIPLIER",
+                    "Max Moves Multiplier",
                     cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
                 ),
             ],
@@ -154,30 +154,30 @@ class HydraSnapshot:
         return self._build_kv_section(
             "💾 Replay Memory",
             [
+                ("Max Frames", cfg.get(DNetField.MAX_FRAMES)),
+                ("Memory Buckets", cfg.get(DNetField.MAX_BUCKETS)),
                 (
-                    "MAX_TRAINING_FRAMES",
+                    "Max Training Frames",
                     cfg.get(DNetField.MAX_TRAINING_FRAMES),
                 ),
-                ("MAX_FRAMES", cfg.get(DNetField.MAX_FRAMES)),
-                ("MAX_BUCKETS", cfg.get(DNetField.MAX_BUCKETS)),
-                (
-                    "NUM_COOLDOWN_EPISODES",
+                ("Highest Gear", cfg.get(DNetField.MAX_GEAR))(
+                    "Cooldown Threshold",
                     cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
                 ),
                 (
-                    "UPSHIFT_COUNT_THRESHOLD",
+                    "Upshift Threshold",
                     cfg.get(DNetField.UPSHIFT_COUNT_THRESHOLD),
                 ),
                 (
-                    "DOWNSHIFT_COUNT_THRESHOLD",
+                    "Downshift Threshold",
                     cfg.get(DNetField.DOWNSHIFT_COUNT_THRESHOLD),
                 ),
                 (
-                    "MAX_STAGNANT_EPISODES",
+                    "Stagnant Threshold",
                     cfg.get(DNetField.MAX_STAGNANT_EPISODES),
                 ),
                 (
-                    "MAX_HARD_RESET_EPISODES",
+                    "Critical Stagnant Threshold",
                     cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
                 ),
             ],
