@@ -88,8 +88,6 @@ class HydraMetrics:
 
     def add_bucket_stats(self, bucket_counts) -> None:
 
-        print(bucket_counts)
-
         ordered_counts = tuple(
             count for _, count in sorted(bucket_counts.items())
         )
