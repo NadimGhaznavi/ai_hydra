@@ -205,6 +205,15 @@ class ATHDataMgr:
 
         if self._samples_served % 10 == 0:
             bucket_counts = self.store.get_bucket_counts()
+
+            # When first starting, the memory buckets are not all created
+            # The means that for the first few games the bucket_counts may
+            # be unexpectly short, this causes issues on the client side
+            # in snapshot report, which expects the data to be a specific
+            # size.
+            if len(bucket_counts) != DMemDef.MAX_BUCKETS:
+                return
+
             await self.event.publish(
                 EventMsg(
                     level=EV_STATUS.INFO,
