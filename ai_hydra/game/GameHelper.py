@@ -26,3 +26,11 @@ class MoveResult:
 
     def is_food_eaten(self) -> bool:
         return self.outcome == DGameField.FOOD
+
+
+@dataclass(frozen=True)
+class RewardCfg:
+    values: dict[str, float]
+
+    def get(self, field: str) -> float:
+        return self.values.get(field, 0.0)

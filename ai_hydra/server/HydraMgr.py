@@ -20,7 +20,6 @@ from ai_hydra.constants.DHydra import (
     DHydraLogDef,
     DHydraRouterDef,
     DHydraServerDef,
-    DHydra,
 )
 from ai_hydra.constants.DNNet import DNetField
 from ai_hydra.constants.DHydra import DMethod
@@ -32,6 +31,7 @@ from ai_hydra.zmq.HydraMsg import HydraMsg
 from ai_hydra.nnet.Transition import Transition
 from ai_hydra.nnet.HydraRng import HydraRng
 from ai_hydra.utils.SimCfg import SimCfg
+from ai_hydra.game.GameHelper import RewardCfg
 
 
 class HydraMgr(HydraServer):
@@ -342,13 +342,35 @@ class HydraMgr(HydraServer):
             f"Using random seed: {self.cfg.get(DNetField.RANDOM_SEED)}"
         )
         try:
-            model_type = self.cfg.get(DNetField.MODEL_TYPE)
-
             train_mgr = self._ensure_train_mgr()
+            reward_cfg = RewardCfg(
+                values={
+                    DGameField.EMPTY: self.cfg.get(
+                        DNetField.EMPTY_MOVE_REWARD
+                    ),
+                    DGameField.FOOD: self.cfg.get(DNetField.FOOD_REWARD),
+                    DGameField.WALL: self.cfg.get(DNetField.COLLISION_PENALTY),
+                    DGameField.SNAKE: self.cfg.get(
+                        DNetField.COLLISION_PENALTY
+                    ),
+                    DGameField.MAX_MOVES: self.cfg.get(
+                        DNetField.MAX_MOVES_PENALTY
+                    ),
+                    DGameField.CLOSER_TO_FOOD: self.cfg.get(
+                        DNetField.CLOSER_TO_FOOD
+                    ),
+                    DGameField.FURTHER_FROM_FOOD: self.cfg.get(
+                        DNetField.FURTHER_FROM_FOOD
+                    ),
+                }
+            )
+
             snake = self.snake = SnakeMgr(
                 cfg=self.cfg,
                 log_level=self.log_level,
                 hydra_rng=self.hydra_rng,
+                reward_cfg=reward_cfg,
+                mmm=self.cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
             )
             mq = self.mq
             train_mgr.policy.reset_episode()

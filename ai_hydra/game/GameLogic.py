@@ -29,7 +29,7 @@ from ai_hydra.game.GameBoard import (
     MoveAction,
     Position,
 )
-from ai_hydra.game.MoveResult import MoveResult
+from ai_hydra.game.GameHelper import MoveResult, RewardCfg
 
 
 class GameLogic:
@@ -84,7 +84,8 @@ class GameLogic:
         board: GameBoard,
         action: MoveAction | int,
         rng: random.Random,
-        *,
+        reward_cfg: RewardCfg,
+        mmm: int,  # Max-Moves-Multiplier
         food_ends_episode: bool = False,
     ) -> MoveResult:
         """
@@ -117,7 +118,8 @@ class GameLogic:
 
         # Max moves check (before executing the move)
         snake_length = board.get_snake_length()
-        max_moves = DGameDef.MAX_MOVES_MULTIPLIER * snake_length
+        # mmm == Max Moves Multiplier
+        max_moves = mmm * snake_length
         if new_move_count > max_moves:
             max_moves_board = GameBoard(
                 snake_head=board.snake_head,
@@ -132,7 +134,7 @@ class GameLogic:
             )
             return MoveResult(
                 new_board=max_moves_board,
-                reward=GameLogic.calculate_reward(DGameField.MAX_MOVES),
+                reward=reward_cfg.get(DGameField.MAX_MOVES),
                 outcome=DGameField.MAX_MOVES,
                 is_terminal=True,
             )
@@ -158,7 +160,7 @@ class GameLogic:
             )
             return MoveResult(
                 new_board=collision_board,
-                reward=GameLogic.calculate_reward(DGameField.WALL),
+                reward=reward_cfg.get(DGameField.WALL),
                 outcome=DGameField.WALL,
                 is_terminal=True,
             )
@@ -178,7 +180,7 @@ class GameLogic:
             )
             return MoveResult(
                 new_board=collision_board,
-                reward=GameLogic.calculate_reward(DGameField.SNAKE),
+                reward=reward_cfg.get(DGameField.SNAKE),
                 outcome=DGameField.SNAKE,
                 is_terminal=True,
             )
@@ -210,16 +212,15 @@ class GameLogic:
                 episode_id=board.episode_id,
             )
 
-            outcome = DGameField.FOOD
             return MoveResult(
                 new_board=new_board,
-                reward=GameLogic.calculate_reward(outcome),
-                outcome=outcome,
+                reward=reward_cfg.get(DGameField.FOOD),
+                outcome=DGameField.FOOD,
                 is_terminal=bool(food_ends_episode),
             )
 
         # Empty move....
-        base_reward = GameLogic.calculate_reward(DGameField.EMPTY)
+        base_reward = reward_cfg.get(DGameField.EMPTY)
 
         reward_field = GameLogic._food_direction_reward(
             head=board.snake_head,
@@ -227,7 +228,7 @@ class GameLogic:
             move_dx=move.resulting_direction.dx,
             move_dy=move.resulting_direction.dy,
         )
-        shaping_reward = GameLogic.calculate_reward(reward_field)
+        shaping_reward = reward_cfg.get(reward_field)
 
         # Reward based on move direction relative to the food
         reward_field = GameLogic._food_direction_reward(
@@ -236,7 +237,7 @@ class GameLogic:
             move_dx=move.resulting_direction.dx,
             move_dy=move.resulting_direction.dy,
         )
-        shaping_reward = GameLogic.calculate_reward(reward_field)
+        shaping_reward = reward_cfg.get(reward_field)
         reward = base_reward + shaping_reward
 
         # Empty move: shift body (drop tail)
@@ -307,22 +308,19 @@ class GameLogic:
         ]
 
     @staticmethod
-    def calculate_reward(outcome: str) -> float:
-        reward_map = {
-            DGameField.EMPTY: DGameDef.EMPTY_MOVE_REWARD,
-            DGameField.FOOD: DGameDef.FOOD_REWARD,
-            DGameField.WALL: DGameDef.COLLISION_PENALTY,
-            DGameField.SNAKE: DGameDef.COLLISION_PENALTY,
-            DGameField.MAX_MOVES: DGameDef.EMPTY_MOVE_REWARD,
-            DGameField.CLOSER_TO_FOOD: DGameDef.CLOSER_TO_FOOD,
-            DGameField.FURTHER_FROM_FOOD: DGameDef.FURTHER_FROM_FOOD,
-        }
-        return reward_map.get(outcome, 0.0)
-
-    @staticmethod
     def would_collide(board: GameBoard, action: int) -> bool:
         # rng is irrelevant for collisions because collision is decided
         # before any food respawn logic matters
         dummy_rng = random.Random(0)
-        result = GameLogic.step(board, action, dummy_rng)
+        # Same story for the rewards
+        dummy_reward_cfg = RewardCfg(values={})
+        # And the "max moves multitplier"
+        dummy_mmm = 1  #
+        result = GameLogic.step(
+            board=board,
+            action=action,
+            rng=dummy_rng,
+            reward_cfg=dummy_reward_cfg,
+            mmm=dummy_mmm,
+        )
         return result.is_collision()

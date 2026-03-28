@@ -144,12 +144,17 @@ class DNetField:
 
     ACTION: Final[str] = DGameField.ACTION
     BATCH_SIZE: Final[str] = "batch_size"
+    CLOSER_TO_FOOD: Final[str] = "closer_to_food"
+    COLLISION_PENALTY: Final[str] = "collision_penalty"
     CUR_EPSILON: Final[str] = "cur_epsilon"
     DONE: Final[str] = DGameField.DONE
     DOWNSHIFT_COUNT_THRESHOLD: Final[str] = "downshift_count_threshold"
     DROPOUT_P: Final[str] = "dropout_p"
+    EMPTY_MOVE_REWARD: Final[str] = "empty_move_reward"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
+    FOOD_REWARD: Final[str] = "food_reward"
+    FURTHER_FROM_FOOD: Final[str] = "further_from_food"
     GAMMA: Final[str] = "gamma"
     HIDDEN_SIZE: Final[str] = "hidden_size"
     INITIAL_EPSILON: Final[str] = "initial_epsilon"
@@ -159,6 +164,8 @@ class DNetField:
     MAX_FRAMES: Final[str] = "max_frames"
     MAX_GEAR: Final[str] = "max_gear"
     MAX_HARD_RESET_EPISODES: Final[str] = "max_hard_reset_episodes"
+    MAX_MOVES_MULTIPLIER: Final[str] = "max_moves_multiplier"
+    MAX_MOVES_PENALTY: Final[str] = "max_moves_penalty"
     MAX_STAGNANT_EPISODES: Final[str] = "max_stagnant_episodes"
     MAX_TRAINING_FRAMES: Final[str] = "max_training_frames"
     MIN_EPSILON: Final[str] = "min_epsilon"

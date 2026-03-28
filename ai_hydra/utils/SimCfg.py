@@ -21,14 +21,20 @@ from ai_hydra.constants.DNNet import (
 )
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DHydra import DHydra
+from ai_hydra.constants.DGame import DGameDef
 
 
 class SimCfg:
     _DEFAULTS: ClassVar[dict[str, Any]] = {
         DNetField.BATCH_SIZE: DLinear.BATCH_SIZE,
+        DNetField.CLOSER_TO_FOOD: DGameDef.CLOSER_TO_FOOD,
+        DNetField.COLLISION_PENALTY: DGameDef.COLLISION_PENALTY,
         DNetField.DOWNSHIFT_COUNT_THRESHOLD: DGRU.DOWNSHIFT_COUNT_THRESHOLD,
         DNetField.DROPOUT_P: DLinear.DROPOUT_P,
+        DNetField.EMPTY_MOVE_REWARD: DGameDef.EMPTY_MOVE_REWARD,
         DNetField.EPSILON_DECAY: DLinear.EPSILON_DECAY_RATE,
+        DNetField.FOOD_REWARD: DGameDef.FOOD_REWARD,
+        DNetField.FURTHER_FROM_FOOD: DGameDef.FURTHER_FROM_FOOD,
         DNetField.GAMMA: DLinear.GAMMA,
         DNetField.HIDDEN_SIZE: DLinear.HIDDEN_SIZE,
         DNetField.INITIAL_EPSILON: DLinear.INITIAL_EPSILON,
@@ -37,6 +43,8 @@ class SimCfg:
         DNetField.MAX_FRAMES: DGRU.MAX_FRAMES,
         DNetField.MAX_GEAR: DGRU.MAX_GEAR,
         DNetField.MAX_HARD_RESET_EPISODES: DGRU.MAX_HARD_RESET_EPISODES,
+        DNetField.MAX_MOVES_MULTIPLIER: DGameDef.MAX_MOVES_MULTIPLIER,
+        DNetField.MAX_MOVES_PENALTY: DGameDef.MAX_MOVES_PENALTY,
         DNetField.MAX_STAGNANT_EPISODES: DGRU.MAX_STAGNANT_EPISODES,
         DNetField.MAX_TRAINING_FRAMES: DGRU.MAX_TRAINING_FRAMES,
         DNetField.MIN_EPSILON: DLinear.MINIMUM_EPSILON,
@@ -56,9 +64,14 @@ class SimCfg:
 
     _COERCE: ClassVar[dict[str, Callable[[Any], Any]]] = {
         DNetField.BATCH_SIZE: int,
+        DNetField.CLOSER_TO_FOOD: float,
+        DNetField.COLLISION_PENALTY: float,
         DNetField.DOWNSHIFT_COUNT_THRESHOLD: int,
         DNetField.DROPOUT_P: float,
+        DNetField.EMPTY_MOVE_REWARD: float,
         DNetField.EPSILON_DECAY: float,
+        DNetField.FOOD_REWARD: float,
+        DNetField.FURTHER_FROM_FOOD: float,
         DNetField.GAMMA: float,
         DNetField.HIDDEN_SIZE: int,
         DNetField.INITIAL_EPSILON: float,
@@ -67,6 +80,8 @@ class SimCfg:
         DNetField.MAX_FRAMES: int,
         DNetField.MAX_GEAR: int,
         DNetField.MAX_HARD_RESET_EPISODES: int,
+        DNetField.MAX_MOVES_MULTIPLIER: int,
+        DNetField.MAX_MOVES_PENALTY: float,
         DNetField.MAX_STAGNANT_EPISODES: int,
         DNetField.MAX_TRAINING_FRAMES: int,
         DNetField.MIN_EPSILON: float,

@@ -18,6 +18,7 @@ from textual.validation import Number
 from ai_hydra.constants.DNNet import DLinear, DRNN, MODEL_TYPES
 from ai_hydra.constants.DHydraTui import DLabel, DField, DStatus
 from ai_hydra.constants.DReplayMemory import DMemDef
+from ai_hydra.constants.DGame import DGameDef
 
 
 class TabbedSettings(Widget):
@@ -41,7 +42,7 @@ class TabbedSettings(Widget):
         self.max_frames_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.MAX_FRAMES),
+            value=str(DLinear.MAX_FRAMES),
             id=DField.MAX_FRAMES_INPUT,
         )
         # MAX_TRAINING_FRAMES
@@ -51,7 +52,7 @@ class TabbedSettings(Widget):
         self.max_training_frames_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.MAX_TRAINING_FRAMES),
+            value=str(DLinear.MAX_TRAINING_FRAMES),
             id=DField.MAX_TRAINING_FRAMES_INPUT,
         )
         # MAX_BUCKETS
@@ -68,7 +69,7 @@ class TabbedSettings(Widget):
         self.max_gear_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.MAX_GEAR),
+            value=str(DLinear.MAX_GEAR),
             id=DField.MAX_GEAR_INPUT,
         )
         # NUM_COOLDOWN_EPISODES
@@ -78,7 +79,7 @@ class TabbedSettings(Widget):
         self.num_cooldown_eps_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.NUM_COOLDOWN_EPISODES),
+            value=str(DLinear.NUM_COOLDOWN_EPISODES),
             id=DField.NUM_COOLDOWN_EPISODES_INPUT,
         )
         # UPSHIFT_COUNT_THRESHOLD
@@ -88,7 +89,7 @@ class TabbedSettings(Widget):
         self.upshift_count_threshold_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.UPSHIFT_COUNT_THRESHOLD),
+            value=str(DLinear.UPSHIFT_COUNT_THRESHOLD),
             id=DField.UPSHIFT_COUNT_THRESHOLD_INPUT,
         )
         # DOWNSHIFT_COUNT_THRESHOLD
@@ -98,7 +99,7 @@ class TabbedSettings(Widget):
         self.downshift_count_threshold_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.DOWNSHIFT_COUNT_THRESHOLD),
+            value=str(DLinear.DOWNSHIFT_COUNT_THRESHOLD),
             id=DField.DOWNSHIFT_COUNT_THRESHOLD_INPUT,
         )
         # MAX_STAGNANT_EPISODES
@@ -108,48 +109,106 @@ class TabbedSettings(Widget):
         self.max_stag_eps_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.MAX_STAGNANT_EPISODES),
+            value=str(DLinear.MAX_STAGNANT_EPISODES),
             id=DField.MAX_STAGNANT_EPISODES_INPUT,
         )
         # MAX_HARD_RESET_EPISODES
         self.max_crit_stag_eps_label = Label(
-            id=DField.MAX_CRIT_STAGNANT_EPISODES_LABEL,
+            id=DField.MAX_CRIT_STAGNANT_EPISODES_LABEL
         )
         self.max_crit_stag_eps_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DMemDef.MAX_HARD_RESET_EPISODES),
+            value=str(DLinear.MAX_HARD_RESET_EPISODES),
             id=DField.MAX_CRIT_STAGNANT_EPISODES_INPUT,
         )
 
         # NICE_P_VALUE
-        self.nice_p_value_label = Label(
-            id=DField.NICE_P_VALUE_LABEL,
-        )
+        self.nice_p_value_label = Label(id=DField.NICE_P_VALUE_LABEL)
         self.nice_p_value_input = Input(
             type=DField.NUMBER,
             compact=True,
-            value=str(DRNN.NICE_P_VALUE),
+            value=str(DLinear.NICE_P_VALUE),
             id=DField.NICE_P_VALUE_INPUT,
         )
-
         # NICE_STEPS
-        self.nice_steps_label = Label(
-            id=DField.NICE_STEPS_LABEL,
-        )
+        self.nice_steps_label = Label(id=DField.NICE_STEPS_LABEL)
         self.nice_steps_input = Input(
             type=DField.INTEGER,
             compact=True,
-            value=str(DRNN.NICE_STEPS),
+            value=str(DLinear.NICE_STEPS),
             id=DField.NICE_STEPS_INPUT,
+        )
+
+        # FOOD_REWARD
+        self.food_rewards_label = Label(id=DField.FOOD_REWARD_LABEL)
+        self.food_rewards_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DGameDef.FOOD_REWARD),
+            id=DField.FOOD_REWARD_INPUT,
+        )
+        # COLLISION_PENALTY
+        self.collision_penalty_label = Label(id=DField.COLLISION_PENALTY_LABEL)
+        self.collision_penalty_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DGameDef.COLLISION_PENALTY),
+            id=DField.COLLISION_PENALTY_INPUT,
+        )
+        # MAX_MOVES_PENALTY
+        self.max_moves_penalty_label = Label(id=DField.MAX_MOVES_PENALTY_LABEL)
+        self.max_moves_penalty_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DGameDef.MAX_MOVES_PENALTY),
+            id=DField.MAX_MOVES_PENALTY_INPUT,
+        )
+        # EMPTY_MOVE_REWARD
+        self.empty_move_reward_label = Label(id=DField.EMPTY_MOVE_REWARD_LABEL)
+        self.empty_move_reward_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DGameDef.EMPTY_MOVE_REWARD),
+            id=DField.EMPTY_MOVE_REWARD_INPUT,
+        )
+        # CLOSER_TO_FOOD
+        self.closer_to_food_label = Label(id=DField.CLOSER_TO_FOOD_LABEL)
+        self.closer_to_food_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DGameDef.CLOSER_TO_FOOD),
+            id=DField.CLOSER_TO_FOOD_INPUT,
+        )
+        # FURTHER_FROM_FOOD
+        self.further_from_food_label = Label(id=DField.FURTHER_FROM_FOOD_LABEL)
+        self.further_from_food_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DGameDef.FURTHER_FROM_FOOD),
+            id=DField.FURTHER_FROM_FOOD_INPUT,
+        )
+        # MAX_MOVES_MULTIPLIER
+        self.max_moves_multiplier_label = Label(
+            id=DField.MAX_MOVES_MULTIPLIER_LABEL
+        )
+        self.max_moves_multiplier_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DGameDef.MAX_MOVES_MULTIPLIER),
+            id=DField.MAX_MOVES_MULTIPLIER_INPUT,
         )
 
     def compose(self) -> ComposeResult:
         with TabbedContent(
-            DLabel.CONFIG, DLabel.NETWORK, DLabel.MEMORY, DLabel.NICE
+            DLabel.CONFIG,
+            DLabel.MEMORY,
+            DLabel.REWARDS,
+            DLabel.NICE,
+            DLabel.NETWORK,
         ):
 
-            # ----- Settings Tab ---
+            # ----- Config Tab ---
             yield Vertical(
                 # ----- Epsilon ---
                 Vertical(
@@ -313,22 +372,13 @@ class TabbedSettings(Widget):
                     # Batch size
                     Horizontal(
                         Label(f"{DLabel.BATCH_SIZE:>15s}: "),
-                        Label(
-                            f"{DLinear.BATCH_SIZE}",
-                            id=DField.RNN_BATCH_SIZE_LABEL,
-                        ),
+                        Label(id=DField.RNN_BATCH_SIZE_LABEL),
                         classes=DField.INPUT_FIELD,
                     ),
                     # RNN Sequence Length
                     Horizontal(
-                        Label(
-                            f"{DLabel.SEQUENCE_LENGTH:>15s}: ",
-                            id=DField.SEQ_LENGTH_OPT,
-                        ),
-                        Label(
-                            f"{DRNN.SEQ_LENGTH}",
-                            id=DField.SEQ_LENGTH_LABEL,
-                        ),
+                        Label(f"{DLabel.SEQUENCE_LENGTH:>15s}: "),
+                        Label(id=DField.SEQ_LENGTH_LABEL),
                         classes=DField.INPUT_FIELD,
                     ),
                     # RNN Trainer Tau
@@ -351,52 +401,6 @@ class TabbedSettings(Widget):
                     ),
                     id=DField.TRAINING_BOX,
                 ),
-            )
-
-            # ------ Network tab ---
-            yield Vertical(
-                Vertical(
-                    Horizontal(
-                        Label(f"{DLabel.ROUTER_ADDR}       : "),
-                        self.router_address,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.ROUTER_PORT}  : "),
-                        self.router_port,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.ROUTER_HB_PORT}: "),
-                        self.router_hb_port,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.ROUTER_STATUS}        : "),
-                        self.router_hb_status,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    id=DField.ROUTER_BOX,
-                ),
-                Vertical(
-                    Horizontal(
-                        Label(f"{DLabel.SERVER_ADDR}       : "),
-                        self.server_address,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.SERVER_PUB_PORT}  : "),
-                        self.server_pub_port,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.SERVER_STATUS}        : "),
-                        self.server_status,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    id=DField.SERVER_BOX,
-                ),
-                id=DField.NETWORK,
             )
 
             # ----- Memory tab ---
@@ -466,6 +470,61 @@ class TabbedSettings(Widget):
                 ),
             )
 
+            # ----- Rewards ---
+            yield Vertical(
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.FOOD_REWARD}         : "),
+                        self.food_rewards_label,
+                        self.food_rewards_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.COLLISION_PENALTY}   : "),
+                        self.collision_penalty_label,
+                        self.collision_penalty_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.MAX_MOVES_PENALTY}   : "),
+                        self.max_moves_penalty_label,
+                        self.max_moves_penalty_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.REWARD_STRUCTURE_BOX,
+                ),
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.EMPTY_MOVE_REWARD}   : "),
+                        self.empty_move_reward_label,
+                        self.empty_move_reward_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.CLOSER_TO_FOOD}      : "),
+                        self.closer_to_food_label,
+                        self.closer_to_food_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.FURTHER_FROM_FOOD}   : "),
+                        self.further_from_food_label,
+                        self.further_from_food_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.MOVEMENT_INCENTIVES_BOX,
+                ),
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.MAX_MOVES_MULTIPLIER}: "),
+                        self.max_moves_multiplier_label,
+                        self.max_moves_multiplier_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.EPISODE_CONSTRAINTS_BOX,
+                ),
+            )
+
             # ----- Nice ---
             yield Vertical(
                 Vertical(
@@ -483,6 +542,52 @@ class TabbedSettings(Widget):
                     ),
                     id=DField.NICE_BOX,
                 ),
+            )
+
+            # ------ Network tab ---
+            yield Vertical(
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_ADDR}       : "),
+                        self.router_address,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_PORT}  : "),
+                        self.router_port,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_HB_PORT}: "),
+                        self.router_hb_port,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.ROUTER_STATUS}        : "),
+                        self.router_hb_status,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.ROUTER_BOX,
+                ),
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.SERVER_ADDR}       : "),
+                        self.server_address,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.SERVER_PUB_PORT}  : "),
+                        self.server_pub_port,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.SERVER_STATUS}        : "),
+                        self.server_status,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.SERVER_BOX,
+                ),
+                id=DField.NETWORK,
             )
 
     def on_mount(self) -> None:
@@ -510,3 +615,12 @@ class TabbedSettings(Widget):
         self.query_one(f"#{DField.SERVER_BOX}", Vertical).border_subtitle = (
             DLabel.SERVER
         )
+        self.query_one(
+            f"#{DField.REWARD_STRUCTURE_BOX}", Vertical
+        ).border_subtitle = DLabel.REWARD_STRUCTURE
+        self.query_one(
+            f"#{DField.MOVEMENT_INCENTIVES_BOX}", Vertical
+        ).border_subtitle = DLabel.MOVEMENT_INCENTIVES
+        self.query_one(
+            f"#{DField.EPISODE_CONSTRAINTS_BOX}", Vertical
+        ).border_subtitle = DLabel.EPISODE_CONSTRAINTS

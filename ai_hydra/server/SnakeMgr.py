@@ -13,13 +13,15 @@ import random
 from dataclasses import dataclass
 from typing import Any, Optional
 from datetime import datetime
+import pprint
 import traceback
 
-from ai_hydra.constants.DHydra import DHydra, DHydraLog
+from ai_hydra.constants.DHydra import DHydraLog
 from ai_hydra.constants.DGame import DGameField
 from ai_hydra.constants.DNNet import DNetField
 
 from ai_hydra.game.GameLogic import GameLogic
+from ai_hydra.game.GameHelper import RewardCfg
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.HydraRng import HydraRng
 from ai_hydra.utils.SimCfg import SimCfg
@@ -56,15 +58,24 @@ class SnakeMgr:
         cfg: SimCfg,
         log_level: DHydraLog,
         hydra_rng: HydraRng,
+        reward_cfg: RewardCfg,
+        mmm: int,  # Max-Moves-Multiplier
     ) -> None:
         if cfg is None:
             raise TypeError("SnakeMgr requires cfg (SimCfg)")
         self.cfg = cfg
         self.hydra_rng = hydra_rng
+        self._reward_cfg = reward_cfg
+        self._mmm = mmm
+
         self.log = HydraLog(
             client_id="SnakeMgr",
             log_level=log_level,
             to_console=True,
+        )
+
+        self.log.info(
+            f"Reward Configuration:\n{pprint.pformat(self._reward_cfg.values)}"
         )
 
         self.sessions: dict[str, SnakeSession] = {}
@@ -154,7 +165,13 @@ class SnakeMgr:
             state = sess.board.get_state()
 
             # Apply action
-            result = GameLogic.step(sess.board, int(action), sess.rng)
+            result = GameLogic.step(
+                board=sess.board,
+                action=int(action),
+                rng=sess.rng,
+                reward_cfg=self._reward_cfg,
+                mmm=self._mmm,
+            )
 
             sess.board = result.new_board
 

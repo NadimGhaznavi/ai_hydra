@@ -564,9 +564,6 @@ class HydraClientTui(App):
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.GRU)
             self.add_class(DField.RNN)
-            self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(
-                str(DRNN.BATCH_SIZE)
-            )
 
         # GRU model defaults
         elif model_type == DField.GRU:
@@ -591,9 +588,6 @@ class HydraClientTui(App):
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.RNN)
             self.add_class(DField.GRU)
-            self.query_one(f"#{DField.BATCH_SIZE_LABEL}", Label).update(
-                str(DGRU.BATCH_SIZE)
-            )
 
         else:
             raise ValueError(f"ERROR: Unrecognized model type {model_type}")
@@ -753,12 +747,8 @@ class HydraClientTui(App):
             f"#{DField.HIGHSCORES_LOG}", HighScoresLog
         ).border_subtitle = ""
         self.query_one(f"#{DField.CUR_EPSILON}", Label).update("")
-        self.query_one(f"#{DField.BATCH_SIZE_INPUT}").value = (
-            DLinear.BATCH_SIZE
-        )
-        self.query_one(f"#{DField.SEQ_LENGTH_INPUT}").value = (
-            DLinear.SEQ_LENGTH
-        )
+        self.query_one(f"#{DField.RNN_BATCH_SIZE_LABEL}").update("")
+        self.query_one(f"#{DField.SEQ_LENGTH_LABEL}").update("")
 
     async def _send_handshake(self):
         msg = HydraMsg(
@@ -1086,10 +1076,37 @@ class HydraClientTui(App):
         nice_steps = self.settings.nice_steps_input.value
         self.settings.nice_steps_label.update(nice_steps)
 
+        # FOOD_REWARD
+        food_reward = self.settings.food_rewards_input.value
+        self.settings.food_rewards_label.update(food_reward)
+        # COLLISION_PENALTY
+        collision_penalty = self.settings.collision_penalty_input.value
+        self.settings.collision_penalty_label.update(collision_penalty)
+        # MAX_MOVES_PENALTY
+        max_moves_penalty = self.settings.max_moves_penalty_input.value
+        self.settings.max_moves_penalty_label.update(max_moves_penalty)
+        # EMPTY_MOVE_REWARD
+        empty_move_reward = self.settings.empty_move_reward_input.value
+        self.settings.empty_move_reward_label.update(empty_move_reward)
+        # CLOSER_TO_FOOD
+        closer_to_food = self.settings.closer_to_food_input.value
+        self.settings.closer_to_food_label.update(closer_to_food)
+        # FURTHER_FROM_FOOD
+        further_from_food = self.settings.further_from_food_input.value
+        self.settings.further_from_food_label.update(further_from_food)
+        # MAX_MOVES_MULTIPLIER
+        max_moves_multiplier = self.settings.max_moves_multiplier_input.value
+        self.settings.max_moves_multiplier_label.update(max_moves_multiplier)
+
         cfg_dict = {
+            DNetField.CLOSER_TO_FOOD: closer_to_food,
+            DNetField.COLLISION_PENALTY: collision_penalty,
             DNetField.DOWNSHIFT_COUNT_THRESHOLD: downshift_count_thresh,
             DNetField.DROPOUT_P: dropout_p,
+            DNetField.EMPTY_MOVE_REWARD: empty_move_reward,
             DNetField.EPSILON_DECAY: epsilon_decay,
+            DNetField.FOOD_REWARD: food_reward,
+            DNetField.FURTHER_FROM_FOOD: further_from_food,
             DNetField.GAMMA: gamma,
             DNetField.HIDDEN_SIZE: hidden_size,
             DNetField.INITIAL_EPSILON: initial_epsilon,
@@ -1098,6 +1115,8 @@ class HydraClientTui(App):
             DNetField.MAX_FRAMES: max_frames,
             DNetField.MAX_GEAR: max_gear,
             DNetField.MAX_HARD_RESET_EPISODES: max_crit_stag_eps,
+            DNetField.MAX_MOVES_MULTIPLIER: max_moves_multiplier,
+            DNetField.MAX_MOVES_PENALTY: max_moves_penalty,
             DNetField.MAX_STAGNANT_EPISODES: max_stag_eps,
             DNetField.MIN_EPSILON: min_epsilon,
             DNetField.NUM_COOLDOWN_EPISODES: num_cooldown_eps,

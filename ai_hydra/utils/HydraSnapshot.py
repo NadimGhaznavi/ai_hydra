@@ -70,7 +70,7 @@ class HydraSnapshot:
         model_type = cfg.get(DNetField.MODEL_TYPE)
 
         lines.extend(self._build_model_section(cfg))
-        lines.extend(self._build_rewards_section())
+        lines.extend(self._build_rewards_section(cfg))
         if model_type == DField.RNN or model_type == DField.GRU:
             lines.extend(self._build_memory_section(cfg))
         lines.extend(self._build_event_log_section())
@@ -115,33 +115,37 @@ class HydraSnapshot:
             ],
         )
 
-    def _build_rewards_section(self) -> list[str]:
+    def _build_rewards_section(self, cfg: SimCfg) -> list[str]:
         return self._build_kv_section(
             "💰 Rewards",
             [
                 (
-                    "MAX_MOVES_MULTIPLIER",
-                    DGameDef.MAX_MOVES_MULTIPLIER,
-                ),
-                (
                     "FOOD_REWARD",
-                    DGameDef.FOOD_REWARD,
+                    cfg.get(DNetField.FOOD_REWARD),
                 ),
                 (
                     "COLLISION_PENALTY",
-                    DGameDef.COLLISION_PENALTY,
+                    cfg.get(DNetField.COLLISION_PENALTY),
+                ),
+                (
+                    "MAX_MOVES_PENALTY",
+                    cfg.get(DNetField.MAX_MOVES_PENALTY),
                 ),
                 (
                     "EMPTY_MOVE_REWARD",
-                    DGameDef.EMPTY_MOVE_REWARD,
+                    cfg.get(DNetField.EMPTY_MOVE_REWARD),
                 ),
                 (
                     "CLOSER_TO_FOOD",
-                    DGameDef.CLOSER_TO_FOOD,
+                    cfg.get(DNetField.CLOSER_TO_FOOD),
                 ),
                 (
                     "FURTHER_FROM_FOOD",
-                    DGameDef.FURTHER_FROM_FOOD,
+                    cfg.get(DNetField.FURTHER_FROM_FOOD),
+                ),
+                (
+                    "MAX_MOVES_MULTIPLIER",
+                    cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
                 ),
             ],
         )

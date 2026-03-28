@@ -23,8 +23,8 @@ class GameScorePlot(Widget):
 
     def compose(self) -> ComposeResult:
         yield Horizontal(
-            PlotWidget(id=DField.PLOT_HIGHSCORES),
             PlotWidget(id=DField.PLOT_CUR_SCORE),
+            PlotWidget(id=DField.PLOT_HIGHSCORES),
         )
 
     def clear(self):

@@ -40,10 +40,14 @@ class DField:
     BUTTONS: Final[str] = "buttons"
     CLIENTS: Final[str] = "clients"
     CLIENTS_SCREEN: Final[str] = "clients_screen"
+    CLOSER_TO_FOOD_INPUT: Final[str] = "closer_to_food_input"
+    CLOSER_TO_FOOD_LABEL: Final[str] = "closer_to_food_label"
     CONFIG: Final[str] = "config"
     CONSOLE_BOX: Final[str] = "console_box"
     CPU: Final[str] = "cpu"
     DISCONNECTED: Final[str] = "disconnected"
+    COLLISION_PENALTY_INPUT: Final[str] = "collision_penalty_input"
+    COLLISION_PENALTY_LABEL: Final[str] = "collision_penalty_label"
     CONSOLE: Final[str] = "console"
     CONSOLE_SCREEN: Final[str] = "console_screen"
     COUNT: Final[str] = "count"
@@ -58,14 +62,21 @@ class DField:
     DOWNSHIFT_COUNT_THRESHOLD_LABEL: Final[str] = (
         "downshift_count_thresh_label"
     )
+    EMPTY_MOVE_REWARD_INPUT: Final[str] = "empty_move_reward_input"
+    EMPTY_MOVE_REWARD_LABEL: Final[str] = "empty_move_reward_label"
     EPSILON_BOX: Final[str] = "epsilon_box"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     EPSILON_DECAY_INPUT: Final[str] = "epsilon_decay_input"
     EPSILON_DECAY_LABEL: Final[str] = "epsilon_decay_label"
     EPSILON_DEPLETED: Final[str] = "epsilon_depleted"
+    EPISODE_CONSTRAINTS_BOX: Final[str] = "episode_constraints_box"
     EVENT_LOG: Final[str] = "event_log"
     EVENT_LOG_LOG: Final[str] = "event_log_log"
     EVENTS: Final[str] = "events"
+    FOOD_REWARD_INPUT: Final[str] = "food_reward_input"
+    FOOD_REWARD_LABEL: Final[str] = "food_reward_label"
+    FURTHER_FROM_FOOD_INPUT: Final[str] = "further_from_food_input"
+    FURTHER_FROM_FOOD_LABEL: Final[str] = "further_from_food_label"
     GEAR: Final[str] = "gear"
     GAMMA_INPUT: Final[str] = "gamma_input"
     GAMMA_LABEL: Final[str] = "gamma_label"
@@ -108,6 +119,10 @@ class DField:
     MAX_GEAR_LABEL: Final[str] = "max_gear_label"
     MAX_CRIT_STAGNANT_EPISODES_INPUT: Final[str] = "max_crit_stag_eps_input"
     MAX_CRIT_STAGNANT_EPISODES_LABEL: Final[str] = "max_crit_stag_eps_label"
+    MAX_MOVES_MULTIPLIER_INPUT: Final[str] = "max_moves_multiplier_input"
+    MAX_MOVES_MULTIPLIER_LABEL: Final[str] = "max_moves_multiplier_label"
+    MAX_MOVES_PENALTY_INPUT: Final[str] = "max_moves_penalty_input"
+    MAX_MOVES_PENALTY_LABEL: Final[str] = "max_moves_penalty_label"
     MAX_STAGNANT_EPISODES_INPUT: Final[str] = "max_stag_eps_input"
     MAX_STAGNANT_EPISODES_LABEL: Final[str] = "max_stag_eps_label"
     MAX_TRAINING_FRAMES_INPUT: Final[str] = "max_training_frames_input"
@@ -122,6 +137,7 @@ class DField:
     MOVE_DELAY_BOX: Final[str] = "move_delay_box"
     MOVE_DELAY_LABEL: Final[str] = "move_delay_label"
     MOVE_DELAY_INPUT: Final[str] = "move_delay_input"
+    MOVEMENT_INCENTIVES_BOX: Final[str] = "movement_incentives_box"
     NETWORK: Final[str] = "network"
     NICE_BOX: Final[str] = "nice_box"
     NICE_P_VALUE_INPUT: Final[str] = "nice_p_value_input"
@@ -151,6 +167,7 @@ class DField:
     RESET_RUN_DIVIDER: Final[str] = "reset_run_divider"
     RESUME_RUN: Final[str] = "resume_run"
     RESUME_RUN_DIVIDER: Final[str] = "resume_run_divider"
+    REWARD_STRUCTURE_BOX: Final[str] = "reward_structure_box"
     RNN: Final[str] = "rnn"
     RNN_BATCH_SIZE_LABEL: Final[str] = "rnn_batch_size_label"
     RNN_TAU_INPUT: Final[str] = "rnn_tau_input"
@@ -234,26 +251,32 @@ class DLabel:
     BOTH: Final[str] = "Both"
     CLIENT_TITLE: Final[str] = "Hydra Client"
     CLIENTS: Final[str] = "Clients"
+    CLOSER_TO_FOOD: Final[str] = "Closer to Food"
+    COLLISION_PENALTY: Final[str] = "Collision Penalty"
     COMPLETE: Final[str] = "Complete"
     CONFIG: Final[str] = "Config"
     CONSOLE: Final[str] = "Console"
+    COUNT: Final[str] = "Count"
     CUR_LOSS: Final[str] = "Current Loss"
     CUR_EPSILON: Final[str] = "Current Epsilon"
     CURRENT: Final[str] = "Current"
     CUR_SCORES: Final[str] = "Current Scores"
-    COUNT: Final[str] = "Count"
     DEBUG: Final[str] = "DEBUG"
     DISCONNECTED: Final[str] = "Disonnected"
     DROPOUT_P_VAL: Final[str] = "Dropout P-Value"
     DOWNSHIFT_COUNT_THRESHOLD: Final[str] = "Downshift Threshold"
+    EMPTY_MOVE_REWARD: Final[str] = "Empty Move Reward"
     EPISODE: Final[str] = "Episode"
     EPISODES: Final[str] = "Episodes"
     EPSILON: Final[str] = "Epsilon"
     EPSILON_DECAY: Final[str] = "Epsilon Decay"
     ERROR: Final[str] = "ERROR"
+    EPISODE_CONSTRAINTS: Final[str] = "Episode Constraints"
     EVENT: Final[str] = "Event"
     EVENT_LOG: Final[str] = "Event Log"
     EVENT_TIME: Final[str] = "Event"
+    FOOD_REWARD: Final[str] = "Food Reward"
+    FURTHER_FROM_FOOD: Final[str] = "Further from Food"
     GAME: Final[str] = "Game"
     GAME_SCORES: Final[str] = "Game Scores"
     GAMMA: Final[str] = "Discount/Gamma"
@@ -277,6 +300,8 @@ class DLabel:
     MAX_FRAMES: Final[str] = "Max Frames"
     MAX_GEAR: Final[str] = "Highest Gear"
     MAX_HARD_RESET_EPISODES: Final[str] = "Critical Threshold"
+    MAX_MOVES_MULTIPLIER: Final[str] = "Max Moves Multiplier"
+    MAX_MOVES_PENALTY: Final[str] = "Max Moves Penalty"
     MAX_STAGNANT_EPISODES: Final[str] = "Threshold"
     MAX_TRAINING_FRAMES: Final[str] = "Max Training Frames"
     MEAN: Final[str] = "Mean"
@@ -285,6 +310,7 @@ class DLabel:
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
     MODEL: Final[str] = "Model"
     MOVE_DELAY: Final[str] = "Move Delay"
+    MOVEMENT_INCENTIVES: Final[str] = "Movement Incentives"
     NETWORK: Final[str] = "Network"
     NICE: Final[str] = "Nice"
     NICE_P_VALUE: Final[str] = "Nice P-Value"
@@ -302,6 +328,8 @@ class DLabel:
     RECENT_LOSS: Final[str] = "Recent Loss"
     RESET: Final[str] = "Reset"
     RESUME: Final[str] = "Resume"
+    REWARD_STRUCTURE: Final[str] = "Reward Structure"
+    REWARDS: Final[str] = "Rewards"
     RIGHT: Final[str] = "Right"
     RNN: Final[str] = "RNN"
     RNN_LAYERS: Final[str] = "Layers"
@@ -357,14 +385,14 @@ class DPlotDef:
 
     MAX_LOSS_DATA_POINTS: Final[int] = 125
     MAX_CUR_DATA_POINTS: Final[int] = 200
-    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 75
+    MAX_CUR_LOSS_DATA_POINTS: Final[int] = 90
 
     # GameScorePlot widget settings
     MAX_GAMES = 75
     MAX_GAMES_AVG_DIVISOR: int = 50
 
     # Maximum number of scores stored in the metrics object
-    MAX_CUR_SCORES = 75
+    MAX_CUR_SCORES = 180
 
     # The number of "recent" games in the score distribution histogram
     RECENT_SCORES_MAX = 500

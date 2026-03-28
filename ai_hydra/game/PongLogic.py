@@ -25,7 +25,7 @@ from ai_hydra.game.GameBoard import (
     MoveAction,
     Position,
 )
-from ai_hydra.game.MoveResult import MoveResult
+from ai_hydra.game.GameHelper import MoveResult
 
 
 class PongLogic:

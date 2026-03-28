@@ -180,10 +180,38 @@ HighScoresLog {
 #nice_box {
     background: black;
     border: round #2aa5ce;
-    border-subtitle-color: #c4c242;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
     height:4;
+}
+#reward_structure_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
+    color: #72af75;
+    text-style: bold;
+    height: 5;
+}
+#movement_incentives_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
+    color: #72af75;
+    text-style: bold;
+    height: 5;
+}
+#episode_constraints_box {
+    background: black;
+    border: round #2aa5ce;
+    border-subtitle-color: #42bbc4;
+    border-subtitle-style: bold;
+    color: #72af75;
+    text-style: bold;
+    height: 3;
 }
 
 
@@ -200,6 +228,7 @@ HighScoresLog {
     color: #cdbf2f;
 }
 #move_delay_label {
+    text-style: bold;
     color: #cdbf2f;
 }
 
@@ -228,7 +257,7 @@ HighScoresLog {
     text-style: bold;
     padding: 0 1;
     color: #54ac59;
-    width: 15;
+    width: 25;
     text-align: center;
 }
 .bucket {
@@ -255,11 +284,11 @@ HydraTelemetry {
 GameScorePlot {
     height: 18;
 }
-#plot_highscores {
-    height: 18;
-    width: 80;
-}
 #plot_cur_score {
+    height: 18;
+    width: 90;
+}
+#plot_highscores {
     height: 18;
     width: 50;
 }
@@ -270,7 +299,7 @@ ScoresDistPlot {
 }
 #plot_scores_dist {
     height: 18;
-    width: 80;
+    width: 90;
 }
 #plot_recent_scores_dist {
     height: 18;
@@ -283,7 +312,7 @@ LossPlot {
 }
 #plot_loss {
     height: 18;
-    width: 80;
+    width: 90;
 }
 #plot_recent_loss {
     height: 18;
@@ -325,13 +354,28 @@ EventLog {
 .sim_stopped #batch_size_label {
     display: none;
 }
+.sim_stopped #closer_to_food_label {
+    display: none;
+}
+.sim_stopped #collision_penalty_label {
+    display: none;
+}
 .sim_stopped #downshift_count_thresh_label {
     display: none;
 }
 .sim_stopped #dropout_p_label {
     display: none;
 }
+.sim_stopped #empty_move_reward_label {
+    display: none;
+}
 .sim_stopped #epsilon_decay_label {
+    display: none;
+}
+.sim_stopped #food_reward_label {
+    display: none;
+}
+.sim_stopped #further_from_food_label {
     display: none;
 }
 .sim_stopped #handshake {
@@ -362,6 +406,12 @@ EventLog {
     display: none;
 }
 .sim_stopped #max_gear_label {
+    display: none;
+}
+.sim_stopped #max_moves_multiplier_label {
+    display: none;
+}
+.sim_stopped #max_moves_penalty_label {
     display: none;
 }
 .sim_stopped #max_stag_eps_label {
@@ -424,16 +474,31 @@ EventLog {
 .sim_running #batch_size_input {
     display: none;
 }
+.sim_running #closer_to_food_input {
+    display: none;
+}
+.sim_running #collision_penalty_input {
+    display: none;
+}
 .sim_running #downshift_count_thresh_input {
     display: none;
 }
 .sim_running #dropout_p_input {
     display: none;
 }
+.sim_running #empty_move_reward_input {
+    display: none;
+}
 .sim_running #epsilon_decay_input {
     display: none;
 }
+.sim_running #further_from_food_input {
+    display: none;
+}
 .sim_running #gamma_input {
+    display: none;
+}
+.sim_running #food_reward_input {
     display: none;
 }
 .sim_running #hidden_size_input {
@@ -455,6 +520,12 @@ EventLog {
     display: none;
 }
 .sim_running #max_gear_input {
+    display: none;
+}
+.sim_running #max_moves_multiplier_input {
+    display: none;
+}
+.sim_running #max_moves_penalty_input {
     display: none;
 }
 .sim_running #max_stag_eps_input {
@@ -527,6 +598,18 @@ EventLog {
 .bad_handshake #batch_size_label {
     display: none;
 }
+.bad_handshake #closer_to_food_input {
+    display: none;
+}
+.bad_handshake #closer_to_food_label {
+    display: none;
+}
+.bad_handshake #collision_penalty_input {
+    display: none;
+}
+.bad_handshake #collision_penalty_label {
+    display: none;
+}
 .bad_handshake #downshift_count_thresh_input {
     display: none;
 }
@@ -539,10 +622,28 @@ EventLog {
 .bad_handshake #dropout_p_label {
     display: none;
 }
+.bad_handshake #empty_move_reward_input {
+    display: none;
+}
+.bad_handshake #empty_move_reward_label {
+    display: none;
+}
 .bad_handshake #epsilon_decay_input {
     display: none;
 }
 .bad_handshake #epsilon_decay_label {
+    display: none;
+}
+.bad_handshake #food_reward_input {
+    display: none;
+}
+.bad_handshake #food_reward_label {
+    display: none;
+}
+.bad_handshake #further_from_food_input {
+    display: none;
+}
+.bad_handshake #further_from_food_label {
     display: none;
 }
 .bad_handshake #gamma_input {
@@ -591,6 +692,18 @@ EventLog {
     display: none;
 }
 .bad_handshake #max_gear_label {
+    display: none;
+}
+.bad_handshake #max_moves_multiplier_input {
+    display: none;
+}
+.bad_handshake #max_moves_multiplier_label {
+    display: none;
+}
+.bad_handshake #max_moves_penalty_input {
+    display: none;
+}
+.bad_handshake #max_moves_penalty_label {
     display: none;
 }
 .bad_handshake #max_stag_eps_input {
