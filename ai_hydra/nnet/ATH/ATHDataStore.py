@@ -83,9 +83,8 @@ class ATHDataStore:
 
     def get_bucket_counts(self) -> dict[int, int]:
         return {
-            idx: len(episodes)
-            for idx, episodes in self._episodes_by_bucket.items()
-            if episodes
+            idx: len(self._episodes_by_bucket[idx])
+            for idx in range(self._max_buckets)
         }
 
     def get_eps_by_bucket_idx(self, bucket_idx: int):
