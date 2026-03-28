@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.23.2] - 2026-03-28 @ 14:13 - HOTFIX
 
 ### Fixed
 - When first starting, the memory buckets are not all created. The means that for the first few games the bucket_counts may be unexpectly short, this causes issues on the client side in snapshot report, which expects the data to be a specific size. The simple fix is to have the `ATHDataMgr` check that the bucket count is correct before sending the metrics data.
