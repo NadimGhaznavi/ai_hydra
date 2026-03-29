@@ -531,6 +531,7 @@ class HydraClientTui(App):
             max_frames = DLinear.MAX_FRAMES
             max_gear = DLinear.MAX_GEAR
             max_crit_stag_eps = DLinear.MAX_HARD_RESET_EPISODES
+            max_moves_penalty = DLinear.MAX_MOVES_PENALTY
             max_stag_eps = DLinear.MAX_STAGNANT_EPISODES
             max_training_frames = DLinear.MAX_TRAINING_FRAMES
             nice_p_value = DLinear.NICE_P_VALUE
@@ -555,6 +556,7 @@ class HydraClientTui(App):
             max_frames = DRNN.MAX_FRAMES
             max_gear = DRNN.MAX_GEAR
             max_crit_stag_eps = DRNN.MAX_HARD_RESET_EPISODES
+            max_moves_penalty = DRNN.MAX_MOVES_PENALTY
             max_stag_eps = DRNN.MAX_STAGNANT_EPISODES
             max_training_frames = DRNN.MAX_TRAINING_FRAMES
             nice_p_value = DRNN.NICE_P_VALUE
@@ -579,6 +581,7 @@ class HydraClientTui(App):
             max_frames = DGRU.MAX_FRAMES
             max_gear = DGRU.MAX_GEAR
             max_crit_stag_eps = DGRU.MAX_HARD_RESET_EPISODES
+            max_moves_penalty = DGRU.MAX_MOVES_PENALTY
             max_stag_eps = DGRU.MAX_STAGNANT_EPISODES
             max_training_frames = DGRU.MAX_TRAINING_FRAMES
             nice_p_value = DGRU.NICE_P_VALUE
@@ -627,6 +630,8 @@ class HydraClientTui(App):
         self.settings.nice_steps_input.value = str(nice_steps)
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
+        # Rewards
+        self.settings.max_moves_penalty_input.value = str(max_moves_penalty)
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)

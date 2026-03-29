@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Added
+- Made *Max Moves Penalty* setting model specific and customized the value for the *GRU* model.
+
+---
+
 ## [0.23.3] - 2026-03-29 @ 11:01 - HOTFIX - Working Man Release
 
 ### Added
@@ -14,14 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Increased the granularity of the memory and epsilon nice tables from every 500 to every 100 episodes.
   - Added the *current gear* to the memory bucket table.
   - Added the *recent mean and median* to the mean and median table.
-- Created sane baseline configurations for the *Linear*, *RNN* and *GRU* that avoid destructive training behaviour and promote better recovery behaviour under stagnation and hard reset conditions.
+- Created sane baseline configurations for the *Linear*, *RNN*, and *GRU* that avoid destructive training behaviour and promote better recovery behaviour under stagnation and hard reset conditions.
 
 ### Fixed
 - Modify the `ATHDataStore` to return the complete list of buckets, even if some of them are empty.
-- Complete overhall of the *ATH Memory* modules to ensure they are correct.
+- Complete overhaul of the *ATH Memory* modules to ensure they are correct.
   - Added a LOT of asserts and data validation steps.
   - Basically improved the stability and safety of the *Replay Memory*.
-- `EpsilonNice` wasn't intereacting correctly with the `GameLogic` for collision detection
+- `EpsilonNice` wasn't interacting correctly with the `GameLogic` for collision detection
   - Refactored the `GameLogic:step()` function to isolate the collision detection functions from the *reward* calculations
   - Updated the `GameLogic:would_collide()` method (used by `EpsilonNice`) to use the refactored `GameLogic:step()` changes.
 - **Fixed Multiple Config Propagation Bugs**

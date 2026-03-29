@@ -32,6 +32,7 @@ class DGRU:
     MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 1000
+    MAX_MOVES_PENALTY: Final[float] = -1.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
@@ -62,6 +63,7 @@ class DRNN:
     MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 1000
+    MAX_MOVES_PENALTY: Final[float] = -10.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
@@ -103,6 +105,7 @@ class DLinear:
     MAX_FRAMES: Final[int] = 125000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 1000
+    MAX_MOVES_PENALTY: Final[float] = -10.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
