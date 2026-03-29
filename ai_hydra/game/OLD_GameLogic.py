@@ -40,16 +40,6 @@ class GameLogic:
     """
 
     @staticmethod
-    def create_move(current_direction: Direction, action: MoveAction) -> Move:
-        if action == MoveAction.LEFT_TURN:
-            resulting_direction = current_direction.turn_left()
-        elif action == MoveAction.RIGHT_TURN:
-            resulting_direction = current_direction.turn_right()
-        else:
-            resulting_direction = current_direction
-        return Move(action=action, resulting_direction=resulting_direction)
-
-    @staticmethod
     def _food_direction_reward(
         head: Position,
         food: Position,
@@ -86,32 +76,8 @@ class GameLogic:
         return DGameField.EMPTY
 
     @staticmethod
-    def get_new_snakehead(board: GameBoard, move: Move):
-        return Position(
-            board.snake_head.x + move.resulting_direction.dx,
-            board.snake_head.y + move.resulting_direction.dy,
-        )
-
-    @staticmethod
     def _manhattan_distance(a: Position, b: Position) -> int:
         return abs(a.x - b.x) + abs(a.y - b.y)
-
-    @staticmethod
-    def normalize_action(action: str | int) -> MoveAction:
-        # Normalize action
-        if isinstance(action, str):
-            action = int(action)
-
-        if isinstance(action, int):
-            if action == 0:
-                action = MoveAction.LEFT_TURN
-            elif action == 1:
-                action = MoveAction.STRAIGHT
-            elif action == 2:
-                action = MoveAction.RIGHT_TURN
-            else:
-                raise ValueError(f"Invalid action index: {action}")
-        return action
 
     @staticmethod
     def step(
@@ -131,7 +97,18 @@ class GameLogic:
         """
 
         # Normalize action
-        action = GameLogic.normalize_action(action)
+        if isinstance(action, str):
+            action = int(action)
+
+        if isinstance(action, int):
+            if action == 0:
+                action = MoveAction.LEFT_TURN
+            elif action == 1:
+                action = MoveAction.STRAIGHT
+            elif action == 2:
+                action = MoveAction.RIGHT_TURN
+            else:
+                raise ValueError(f"Invalid action index: {action}")
 
         # Build the move (fixes the undefined 'move' bug)
         move = GameLogic.create_move(board.direction, action)
@@ -166,7 +143,10 @@ class GameLogic:
             )
 
         # Compute new head position
-        new_head = GameLogic.get_new_snakehead(board=board, move=move)
+        new_head = Position(
+            board.snake_head.x + move.resulting_direction.dx,
+            board.snake_head.y + move.resulting_direction.dy,
+        )
 
         # Wall collision
         if not board.is_position_within_bounds(new_head):
@@ -313,6 +293,16 @@ class GameLogic:
         return rng.choice(available_positions)
 
     @staticmethod
+    def create_move(current_direction: Direction, action: MoveAction) -> Move:
+        if action == MoveAction.LEFT_TURN:
+            resulting_direction = current_direction.turn_left()
+        elif action == MoveAction.RIGHT_TURN:
+            resulting_direction = current_direction.turn_right()
+        else:
+            resulting_direction = current_direction
+        return Move(action=action, resulting_direction=resulting_direction)
+
+    @staticmethod
     def get_possible_moves(current_direction: Direction) -> List[Move]:
         return [
             GameLogic.create_move(current_direction, MoveAction.LEFT_TURN),
@@ -321,14 +311,19 @@ class GameLogic:
         ]
 
     @staticmethod
-    def would_collide(board: GameBoard, action: int | str) -> bool:
-        action = GameLogic.normalize_action(action)
-        move = GameLogic.create_move(
-            current_direction=board.direction, action=action
+    def would_collide(board: GameBoard, action: int) -> bool:
+        # rng is irrelevant for collisions because collision is decided
+        # before any food respawn logic matters
+        dummy_rng = random.Random(0)
+        # Same story for the rewards
+        dummy_reward_cfg = RewardCfg(values={})
+        # And the "max moves multitplier"
+        dummy_mmm = 1  #
+        result = GameLogic.step(
+            board=board,
+            action=action,
+            rng=dummy_rng,
+            reward_cfg=dummy_reward_cfg,
+            mmm=dummy_mmm,
         )
-        new_snakehead = GameLogic.get_new_snakehead(board=board, move=move)
-        if board.is_position_within_bounds(
-            new_snakehead
-        ) or board.is_position_occupied_by_snake(new_snakehead):
-            return True
-        return False
+        return result.is_collision()
