@@ -29,9 +29,9 @@ class DGRU:
     HIDDEN_SIZE: Final[int] = 192
     LEARNING_RATE: Final[float] = 0.001
     MAX_BUCKETS: Final[int] = 20
-    MAX_FRAMES: Final[int] = 125000
+    MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
-    MAX_HARD_RESET_EPISODES: Final[int] = 2000
+    MAX_HARD_RESET_EPISODES: Final[int] = 1000
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
@@ -59,9 +59,9 @@ class DRNN:
     HIDDEN_SIZE: Final[int] = 192
     LEARNING_RATE: Final[float] = 0.002
     MAX_BUCKETS: Final[int] = 20
-    MAX_FRAMES: Final[int] = 125000
+    MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
-    MAX_HARD_RESET_EPISODES: Final[int] = 2000
+    MAX_HARD_RESET_EPISODES: Final[int] = 1000
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0

@@ -243,6 +243,8 @@ class HydraMgr(HydraServer):
             model=model,
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
+            stag_thresh=self.cfg.get(DNetField.MAX_STAGNANT_EPISODES),
+            crit_stag_thresh=self.cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
         )
         self._train_mgr_model_type = model_type
         return self._train_mgr

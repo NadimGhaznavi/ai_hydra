@@ -40,10 +40,6 @@ class TrainRunStats:
     avg_loss: float
 
 
-MAX_STAGNANT_EPISODES = DMemDef.MAX_STAGNANT_EPISODES
-MAX_HARD_RESET_EPISODES = DMemDef.MAX_HARD_RESET_EPISODES
-
-
 class TrainMgr:
     """
     Training orchestrator.
@@ -72,6 +68,8 @@ class TrainMgr:
         model: LinearModel | RNNModel | GRUModel,
         log_level: DHydraLog,
         pub_func,
+        stag_thresh: int,
+        crit_stag_thresh: int,
     ) -> None:
         self.event = HydraEventMQ(
             client_id=DModule.TRAIN_MGR,
@@ -82,19 +80,24 @@ class TrainMgr:
             log_level=log_level,
             to_console=True,
         )
+
+        self.log.info(f"Set stagnation threshold: {stag_thresh}")
+        self.log.info(f"Set critical stagnation threshold: {crit_stag_thresh}")
         self.snake_mgr = snake_mgr
         self.policy = policy
         self.trainer = trainer
         self.replay = replay
         self.client_id = client_id
         self.model = model
+        self._stag_thresh = stag_thresh
+        self._base_crit_stag_thresh = crit_stag_thresh
+        self._crit_stag_thresh = crit_stag_thresh
 
         self._stag_alert_status = EV_TYPE.CLEARED
         self._stag_ep_count = 0
         self._hard_reset_ep_count = 0
         self._hard_reset_count = 0
         self._cur_highscore = 0
-        self._max_hard_reset_episodes = MAX_HARD_RESET_EPISODES
 
     # Called at the end of each episode
     async def handle_stagnation(self, final_score):
@@ -118,7 +121,7 @@ class TrainMgr:
             self._stag_ep_count += 1
             self._hard_reset_ep_count += 1
 
-        if self._stag_ep_count >= MAX_STAGNANT_EPISODES:
+        if self._stag_ep_count >= self._stag_thresh:
             if self._stag_alert_status != EV_TYPE.SET:
                 msg = f"Stagnation alert raised"
                 self.log.debug(msg)
@@ -130,11 +133,11 @@ class TrainMgr:
                 await self.policy.enable_nice()
             self._stag_alert_status = EV_TYPE.SET
 
-        if self._hard_reset_ep_count >= self._max_hard_reset_episodes:
+        if self._hard_reset_ep_count >= self._crit_stag_thresh:
             self._hard_reset_count += 1
             if self._hard_reset_count > 1:
-                self._max_hard_reset_episodes = (
-                    MAX_HARD_RESET_EPISODES * self._hard_reset_count
+                self._crit_stag_thresh = (
+                    self._base_crit_stag_thresh * self._hard_reset_count
                 )
                 self.log.debug(
                     f"Critical stagnation alert({self._hard_reset_count}): "

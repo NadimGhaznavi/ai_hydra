@@ -23,7 +23,7 @@ class DMemDef:
     # The highest gear
     MAX_GEAR: Final[int] = 26
     # ATH memory stores this maximum number of frames
-    MAX_FRAMES: Final[int] = 125000
+    MAX_FRAMES: Final[int] = 150000
     # ATH uses this many memory buckets
     MAX_BUCKETS: Final[int] = 20
     # The ATHGearbox won't shift up or down before NUM_COOLDOWN_EPISODES
