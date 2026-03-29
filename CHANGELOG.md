@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.23.3] - 2026-03-29 @ 11:01 - HOTFIX
+## [0.23.3] - 2026-03-29 @ 11:01 - HOTFIX - Working Man Release
 
 ### Added
 - **Enhanced Snapshot Report**
