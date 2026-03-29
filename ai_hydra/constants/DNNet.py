@@ -91,25 +91,25 @@ class DLinear:
     """
 
     BATCH_SIZE: Final[int] = 64
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    DROPOUT_P: Final[float] = 0.1
+    EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.9
     HIDDEN_SIZE: Final[int] = 192
     INITIAL_EPSILON: Final[float] = 0.99
-    EPSILON_DECAY_RATE: Final[float] = 0.985
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
-    DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
+    LINEAR_LAYERS: Final[int] = 2
     MAX_BUCKETS: Final[int] = 20
     MAX_FRAMES: Final[int] = 125000
     MAX_GEAR: Final[int] = 26
-    MAX_HARD_RESET_EPISODES: Final[int] = 2000
+    MAX_HARD_RESET_EPISODES: Final[int] = 1000
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
-    NICE_STEPS: Final[int] = 10
+    NICE_STEPS: Final[int] = 20
     NUM_COOLDOWN_EPISODES: Final[int] = 200
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
-    LINEAR_LAYERS: Final[int] = 2
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
