@@ -141,8 +141,7 @@ class TrainMgr:
                 )
                 self.log.debug(
                     f"Critical stagnation alert({self._hard_reset_count}): "
-                    f"Exceeded {self._hard_reset_count} episodes without "
-                    "improvement"
+                    f"threshold increased to {self._crit_stag_thresh} episodes without improvement"
                 )
             await self.event.publish(
                 EventMsg(
