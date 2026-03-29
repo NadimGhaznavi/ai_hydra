@@ -22,7 +22,7 @@ class DGRU:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 100
     INITIAL_EPSILON: Final[float] = 0.999
     EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.97
@@ -37,12 +37,12 @@ class DGRU:
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.001  # 0.005
     NICE_STEPS: Final[int] = 20
-    NUM_COOLDOWN_EPISODES: Final[int] = 100
+    NUM_COOLDOWN_EPISODES: Final[int] = 200
     OUTPUT_SIZE: Final[int] = 3
     GRU_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
 
 
 class DRNN:
@@ -52,7 +52,7 @@ class DRNN:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 100
     INITIAL_EPSILON: Final[float] = 0.96
     EPSILON_DECAY_RATE: Final[float] = 0.97
     GAMMA: Final[float] = 0.96
@@ -67,12 +67,12 @@ class DRNN:
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
-    NUM_COOLDOWN_EPISODES: Final[int] = 100
+    NUM_COOLDOWN_EPISODES: Final[int] = 200
     OUTPUT_SIZE: Final[int] = 3
     RNN_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
 
 
 class DEpsilonField:
@@ -95,7 +95,7 @@ class DLinear:
     HIDDEN_SIZE: Final[int] = 192
     INITIAL_EPSILON: Final[float] = 0.99
     EPSILON_DECAY_RATE: Final[float] = 0.985
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 100
     DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
     MAX_BUCKETS: Final[int] = 20
@@ -107,12 +107,12 @@ class DLinear:
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 10
-    NUM_COOLDOWN_EPISODES: Final[int] = 100
+    NUM_COOLDOWN_EPISODES: Final[int] = 200
     OUTPUT_SIZE: Final[int] = 3  # left / straight / right
     LINEAR_LAYERS: Final[int] = 2
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
 
 
 class DNetDef:

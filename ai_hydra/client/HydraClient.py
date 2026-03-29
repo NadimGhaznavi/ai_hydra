@@ -671,6 +671,7 @@ class HydraClientTui(App):
 
             # Bucket status
             if ev_type == EV_TYPE.BUCKETS_STATUS:
+                print(ev_payload)
                 # The numeric dictionary keys are turned into string by JSON
                 # Convert them back to ints.
                 raw_bucket_counts = ev_payload[EV_TYPE.BUCKET_COUNTS]

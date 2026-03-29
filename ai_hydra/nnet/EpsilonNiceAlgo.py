@@ -84,9 +84,9 @@ class EpsilonNiceAlgo:
 
     async def played_game(self) -> None:
         self._epoch += 1
-        if self._epoch % 500 == 0:
+        if self._epoch % 100 == 0:
             payload = self.get_stats()
-            payload[DEpsilonNice.WINDOW] = f"{self._epoch-499}-{self._epoch}"
+            payload[DEpsilonNice.WINDOW] = f"{self._epoch-99}-{self._epoch}"
             await self.event.publish(
                 EventMsg(
                     level=DHydraLog.INFO,

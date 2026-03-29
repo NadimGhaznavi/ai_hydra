@@ -94,6 +94,7 @@ class HydraMetrics:
 
         mem_event = MemEvent(
             epoch=self.get_cur_epoch(),
+            gear=gear,
             bucket_counts=ordered_counts,
         )
 
