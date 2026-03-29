@@ -87,6 +87,8 @@ class SimCfg:
         DNetField.MIN_EPSILON: float,
         DNetField.MODEL_TYPE: str,
         DNetField.MOVE_DELAY: float,
+        DNetField.NICE_P_VALUE: float,
+        DNetField.NICE_STEPS: int,
         DNetField.NUM_COOLDOWN_EPISODES: int,
         DNetField.PER_STEP: bool,
         DNetField.RANDOM_SEED: int,

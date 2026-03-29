@@ -331,7 +331,7 @@ class HydraSnapshot:
             table_rows.append([str(value) for value in row])
 
         if table_rows:
-            bucket_count = len(table_rows[0]) - 2
+            bucket_count = len(table_rows[0]) - 1
             headers = ["Epoch", "Gear"] + [
                 f"b{i}" for i in range(2, bucket_count + 1)
             ]

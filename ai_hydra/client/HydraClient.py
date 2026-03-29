@@ -1123,6 +1123,8 @@ class HydraClientTui(App):
             DNetField.MAX_MOVES_PENALTY: max_moves_penalty,
             DNetField.MAX_STAGNANT_EPISODES: max_stag_eps,
             DNetField.MIN_EPSILON: min_epsilon,
+            DNetField.NICE_P_VALUE: nice_p_value,
+            DNetField.NICE_STEPS: nice_steps,
             DNetField.NUM_COOLDOWN_EPISODES: num_cooldown_eps,
             DNetField.PER_STEP: per_step,
             DNetField.MAX_TRAINING_FRAMES: max_training_frames,

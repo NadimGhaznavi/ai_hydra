@@ -22,7 +22,7 @@ class DGRU:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 100
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.999
     EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.97
@@ -52,7 +52,7 @@ class DRNN:
 
     BATCH_SIZE: Final[int] = 64
     DROPOUT_P_VALUE: Final[float] = 0.1
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 100
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.96
     EPSILON_DECAY_RATE: Final[float] = 0.97
     GAMMA: Final[float] = 0.96
@@ -95,7 +95,7 @@ class DLinear:
     HIDDEN_SIZE: Final[int] = 192
     INITIAL_EPSILON: Final[float] = 0.99
     EPSILON_DECAY_RATE: Final[float] = 0.985
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 100
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     DROPOUT_P: Final[float] = 0.1
     LEARNING_RATE: Final[float] = 0.00005
     MAX_BUCKETS: Final[int] = 20
