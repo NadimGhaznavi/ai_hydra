@@ -178,6 +178,9 @@ The **Config** settings tab allows the user to set:
 - **Model** - The **model type** (*Linear*, *RNN*, or *GRU*), the number of nodes in the hidden layers, the *p-value* of the model's dropout layer, and the number of layers is configurable here.
 - **Training** - The *learning rate*, *discount/gamma* and *tau* settings can be set here. The current *batch size* and *sequence length* (as set by the **ATH Memory**) are displayed here.
 
+**IMPORTANT NOTE:**
+The different models (*Linear*, *RNN*, and *GRU*) had different default values associated with them. When you select a model from the *NN model* dropdown menu, the **defaults for that model are loaded into the TUI**. So, if you want a custom setting you must do that **after** you select the model type.
+
 Memory Settings
 ===============
 
