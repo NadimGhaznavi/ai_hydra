@@ -183,16 +183,8 @@ class HydraSnapshot:
         )
 
     def _build_nice_section(self, cfg: SimCfg) -> list[str]:
-        model_type = cfg.get(DNetField.MODEL_TYPE)
-        if model_type == DField.LINEAR:
-            p_value = DLinear.NICE_P_VALUE
-            nice_steps = DLinear.NICE_STEPS
-        elif model_type == DField.RNN:
-            p_value = DRNN.NICE_P_VALUE
-            nice_steps = DRNN.NICE_STEPS
-        elif model_type == DField.GRU:
-            p_value = DGRU.NICE_P_VALUE
-            nice_steps = DGRU.NICE_STEPS
+        p_value = cfg.get(DNetField.NICE_P_VALUE)
+        nice_steps = cfg.get(DNetField.NICE_STEPS)
         return self._build_kv_section(
             "🙂 Epsilon Nice",
             [("P-Value", p_value), ("Nice Steps", nice_steps)],
