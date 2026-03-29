@@ -245,6 +245,7 @@ class GameLogic:
         # Empty move....
         base_reward = reward_cfg.get(DGameField.EMPTY)
 
+        # Shaping reward: moving closer/further to/from food.
         reward_field = GameLogic._food_direction_reward(
             head=board.snake_head,
             food=board.food_position,
@@ -253,14 +254,6 @@ class GameLogic:
         )
         shaping_reward = reward_cfg.get(reward_field)
 
-        # Reward based on move direction relative to the food
-        reward_field = GameLogic._food_direction_reward(
-            head=board.snake_head,
-            food=board.food_position,
-            move_dx=move.resulting_direction.dx,
-            move_dy=move.resulting_direction.dy,
-        )
-        shaping_reward = reward_cfg.get(reward_field)
         reward = base_reward + shaping_reward
 
         # Empty move: shift body (drop tail)
@@ -327,8 +320,11 @@ class GameLogic:
             current_direction=board.direction, action=action
         )
         new_snakehead = GameLogic.get_new_snakehead(board=board, move=move)
-        if board.is_position_within_bounds(
-            new_snakehead
-        ) or board.is_position_occupied_by_snake(new_snakehead):
+
+        if not board.is_position_within_bounds(new_snakehead):
             return True
+
+        if board.is_position_occupied_by_snake(new_snakehead):
+            return True
+
         return False
