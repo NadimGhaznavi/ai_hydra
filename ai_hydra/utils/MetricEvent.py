@@ -28,6 +28,7 @@ class LossEvent:
 @dataclass(slots=True, frozen=True)
 class MemEvent:
     epoch: int
+    gear: int
     bucket_counts: tuple[int, ...]
 
 

@@ -40,7 +40,7 @@ class HydraMetrics:
         self._cur_loss: float | None = None
         self._cur_score: int = 0
         self._elapsed_time: str = "0s"
-        self._next_bucket_snapshot_epoch = 500
+        self._next_bucket_snapshot_epoch = 100
 
         # Current scores data
         self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
@@ -86,7 +86,7 @@ class HydraMetrics:
         self._cur_epsilon = initial_epsilon
         self._init_data()
 
-    def add_bucket_stats(self, bucket_counts) -> None:
+    def add_bucket_stats(self, bucket_counts: dict, gear: int) -> None:
 
         ordered_counts = tuple(
             count for _, count in sorted(bucket_counts.items())
@@ -104,11 +104,12 @@ class HydraMetrics:
 
         mem_event = MemEvent(
             epoch=self._next_bucket_snapshot_epoch,
+            gear=gear,
             bucket_counts=ordered_counts,
         )
 
         self._memory_events.append(mem_event)
-        self._next_bucket_snapshot_epoch += 500
+        self._next_bucket_snapshot_epoch += 100
 
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
@@ -258,7 +259,7 @@ class HydraMetrics:
     def get_bucket_snapshot_rows(self) -> list[tuple[int, ...]]:
         rows = []
         for e in self._memory_events:
-            rows.append((e.epoch, *e.bucket_counts))
+            rows.append((e.epoch, e.gear, *e.bucket_counts))
         return rows
 
     def get_bucket_snaphot(self) -> MemEvent:

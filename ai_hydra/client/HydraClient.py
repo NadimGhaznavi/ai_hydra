@@ -674,11 +674,14 @@ class HydraClientTui(App):
                 # The numeric dictionary keys are turned into string by JSON
                 # Convert them back to ints.
                 raw_bucket_counts = ev_payload[EV_TYPE.BUCKET_COUNTS]
+                cur_gear = ev_payload[EV_TYPE.CUR_GEAR]
                 bucket_counts = {
                     int(k): v for k, v in raw_bucket_counts.items()
                 }
                 # Add the data to the metric object
-                self.metrics.add_bucket_stats(bucket_counts)
+                self.metrics.add_bucket_stats(
+                    bucket_counts=bucket_counts, gear=cur_gear
+                )
                 # Let the TUI widget know there's new data
                 self.query_one(
                     f"#{DField.ATH_Memory}", ATHMemory

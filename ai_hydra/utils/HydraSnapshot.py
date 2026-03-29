@@ -332,9 +332,11 @@ class HydraSnapshot:
 
         if table_rows:
             bucket_count = len(table_rows[0]) - 1
-            headers = ["Epoch"] + [f"b{i}" for i in range(1, bucket_count + 1)]
+            headers = ["Epoch", "Geear"] + [
+                f"b{i}" for i in range(1, bucket_count + 1)
+            ]
         else:
-            headers = ["Epoch"]
+            headers = ["Epoch", "Gear"]
 
         return self._build_table_section(
             "🪣 ATH Memory Bucket Usage",
