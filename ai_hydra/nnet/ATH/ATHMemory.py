@@ -51,7 +51,6 @@ class ATHMemory:
         # Memory storage
         data_store = ATHDataStore(
             log_level=log_level,
-            pub_func=pub_func,
             max_buckets=max_buckets,
             max_gear=max_gear,
             max_training_frames=max_training_frames,

@@ -32,5 +32,15 @@ class MoveResult:
 class RewardCfg:
     values: dict[str, float]
 
+    def __post_init__(self):
+        clean = {}
+        for k, v in self.values.items():
+            if v is None:
+                raise ValueError(f"Reward {k} is None")
+            clean[k] = float(v)
+        object.__setattr__(self, "values", clean)
+
     def get(self, field: str) -> float:
-        return self.values.get(field, 0.0)
+        if field not in self.values:
+            raise KeyError(f"Missing reward field: {field}")
+        return self.values[field]
