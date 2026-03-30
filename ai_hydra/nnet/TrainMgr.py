@@ -109,7 +109,7 @@ class TrainMgr:
             self._hard_reset_ep_count = 0
             if self._stag_alert_status != EV_TYPE.CLEARED:
                 msg = (
-                    f"Stagnation alert cleared (new highscore: {final_score} )"
+                    f"Stagnation alert cleared (new highscore: {final_score})"
                 )
                 self.log.debug(msg)
                 await self.event.publish(
