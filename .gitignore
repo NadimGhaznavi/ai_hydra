@@ -3,6 +3,7 @@ output
 docs/_build/
 hydra_venv
 ai_snake_lab
+experiments
 
 # Coverage reports
 .coverage
