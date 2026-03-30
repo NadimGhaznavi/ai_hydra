@@ -142,7 +142,7 @@ class TrainMgr:
             )
             msg = (
                 f"Critical stagnation alert({self._hard_reset_count}). "
-                f"New threshold set: {self._crit_stag_thresh}",
+                f"New threshold set: {self._crit_stag_thresh}"
             )
 
             self.log.debug(msg)
