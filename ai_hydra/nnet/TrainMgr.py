@@ -107,7 +107,6 @@ class TrainMgr:
             self._cur_highscore = final_score
             self._stag_ep_count = 0
             self._hard_reset_ep_count = 0
-            await self.replay.gearbox.stagnation_cleared()
             if self._stag_alert_status != EV_TYPE.CLEARED:
                 msg = "Stagnation alert cleared"
                 self.log.debug(msg)
@@ -115,6 +114,7 @@ class TrainMgr:
                     EventMsg(level=EV_STATUS.GOOD, message=msg)
                 )
                 await self.policy.disable_nice()
+            await self.replay.gearbox.stagnation_cleared()
             self._stag_alert_status = EV_TYPE.CLEARED
 
         else:
