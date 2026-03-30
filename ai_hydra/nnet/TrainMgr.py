@@ -113,7 +113,7 @@ class TrainMgr:
                 )
                 self.log.debug(msg)
                 await self.event.publish(
-                    EventMsg(level=EV_STATUS.GOOD, message=msg)
+                    EventMsg(level=EV_STATUS.INFO, message=msg)
                 )
                 await self.policy.disable_nice()
             await self.replay.gearbox.stagnation_cleared()
