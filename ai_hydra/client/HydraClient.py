@@ -551,7 +551,7 @@ class HydraClientTui(App):
             hidden_size = DRNN.HIDDEN_SIZE
             initial_epsilon = DRNN.INITIAL_EPSILON
             layers = DRNN.RNN_LAYERS
-            lr = f"{DRNN.LEARNING_RATE:.4f}"
+            lr = f"{DRNN.LEARNING_RATE:.5f}"
             min_epsilon = DRNN.MINIMUM_EPSILON
             max_frames = DRNN.MAX_FRAMES
             max_gear = DRNN.MAX_GEAR
@@ -576,7 +576,7 @@ class HydraClientTui(App):
             hidden_size = DGRU.HIDDEN_SIZE
             initial_epsilon = DGRU.INITIAL_EPSILON
             layers = DGRU.GRU_LAYERS
-            lr = f"{DGRU.LEARNING_RATE:.4f}"
+            lr = f"{DGRU.LEARNING_RATE:.5f}"
             min_epsilon = DGRU.MINIMUM_EPSILON
             max_frames = DGRU.MAX_FRAMES
             max_gear = DGRU.MAX_GEAR
