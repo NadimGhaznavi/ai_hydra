@@ -137,18 +137,20 @@ class TrainMgr:
 
         if self._hard_reset_ep_count >= self._crit_stag_thresh:
             self._hard_reset_count += 1
-            if self._hard_reset_count > 1:
-                self._crit_stag_thresh = (
-                    self._base_crit_stag_thresh * self._hard_reset_count
-                )
-                self.log.debug(
-                    f"Critical stagnation alert({self._hard_reset_count}): "
-                    f"threshold increased to {self._crit_stag_thresh} episodes without improvement"
-                )
+            self._crit_stag_thresh = (
+                self._base_crit_stag_thresh * self._hard_reset_count
+            )
+            self.log.debug(
+                f"Critical stagnation alert({self._hard_reset_count}): "
+                f"threshold increased to {self._crit_stag_thresh} episodes without improvement"
+            )
             await self.event.publish(
                 EventMsg(
                     level=EV_STATUS.BAD,
-                    message=f"Critical stagnation event({self._hard_reset_count}) detected",
+                    message=(
+                        f"Critical stagnation alert({self._hard_reset_count}). "
+                        f"New threshold set: {self._crit_stag_thresh}",
+                    ),
                 )
             )
             self._hard_reset_ep_count = 0
