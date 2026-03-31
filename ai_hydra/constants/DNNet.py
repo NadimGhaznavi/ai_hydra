@@ -24,15 +24,16 @@ class DGRU:
     DROPOUT_P_VALUE: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.999
-    EPSILON_DECAY_RATE: Final[float] = 0.98
+    EMPTY_MOVE_REWARD: Final[float] = 0.1
+    EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.97
-    HIDDEN_SIZE: Final[int] = 208
-    LEARNING_RATE: Final[float] = 0.00075
+    HIDDEN_SIZE: Final[int] = 192
+    LEARNING_RATE: Final[float] = 0.001
     MAX_BUCKETS: Final[int] = 20
     MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 1000
-    MAX_MOVES_PENALTY: Final[float] = -5
+    MAX_MOVES_PENALTY: Final[float] = 0.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
@@ -55,6 +56,7 @@ class DRNN:
     DROPOUT_P_VALUE: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.96
+    EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.97
     GAMMA: Final[float] = 0.96
     HIDDEN_SIZE: Final[int] = 192
@@ -95,6 +97,7 @@ class DLinear:
     BATCH_SIZE: Final[int] = 64
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     DROPOUT_P: Final[float] = 0.1
+    EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.985
     GAMMA: Final[float] = 0.9
     HIDDEN_SIZE: Final[int] = 192

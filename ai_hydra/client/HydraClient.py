@@ -521,6 +521,7 @@ class HydraClientTui(App):
         if model_type == DField.LINEAR:
             downshift_thresh = DLinear.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DLinear.DROPOUT_P
+            empty_move_reward = DLinear.EMPTY_MOVE_REWARD
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
             gamma = DLinear.GAMMA
             hidden_size = DLinear.HIDDEN_SIZE
@@ -546,6 +547,7 @@ class HydraClientTui(App):
         elif model_type == DField.RNN:
             downshift_thresh = DRNN.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DRNN.DROPOUT_P_VALUE
+            empty_move_reward = DRNN.EMPTY_MOVE_REWARD
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
             gamma = DRNN.GAMMA
             hidden_size = DRNN.HIDDEN_SIZE
@@ -571,6 +573,7 @@ class HydraClientTui(App):
         elif model_type == DField.GRU:
             downshift_thresh = DGRU.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DGRU.DROPOUT_P_VALUE
+            empty_move_reward = DGRU.EMPTY_MOVE_REWARD
             epsilon_decay = DGRU.EPSILON_DECAY_RATE
             gamma = DGRU.GAMMA
             hidden_size = DGRU.HIDDEN_SIZE
@@ -632,6 +635,7 @@ class HydraClientTui(App):
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
         # Rewards
         self.settings.max_moves_penalty_input.value = str(max_moves_penalty)
+        self.settings.empty_move_reward_input.value = str(empty_move_reward)
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
