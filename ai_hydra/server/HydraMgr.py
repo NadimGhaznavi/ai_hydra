@@ -130,7 +130,12 @@ class HydraMgr(HydraServer):
         _, policy_rng = self.hydra_rng.new_rng()
         _, replay_rng = self.hydra_rng.new_rng()
 
-        device = torch.device(DField.CPU)
+        if torch.cuda.is_available():
+            device = torch.device(DField.CUDA)
+        elif torch.backends.mps.is_available():
+            device = torch.device(DField.MPS)
+        else:
+            device = torch.device(DField.CPU)
 
         replay = ATHMemory(
             rng=replay_rng,
