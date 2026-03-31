@@ -246,7 +246,7 @@ class ATHGearBox:
                         f"Shifting DOWN: {old_gear} > {self._cur_gear}. "
                         f"New values for sequence length "
                         f"({self._cur_seq_length}) and batch size "
-                        f"({self._cur_batch_size}"
+                        f"({self._cur_batch_size})"
                     ),
                     ev_type=EV_TYPE.SHIFTING,
                     payload={
@@ -282,7 +282,7 @@ class ATHGearBox:
                             f"Shifting UP: {old_gear} > {self._cur_gear}. "
                             f"New values for sequence length "
                             f"({self._cur_seq_length}) and batch size "
-                            f"({self._cur_batch_size}"
+                            f"({self._cur_batch_size})"
                         ),
                         ev_type=EV_TYPE.SHIFTING,
                         payload={
@@ -320,7 +320,7 @@ class ATHGearBox:
                             f"Shifting DOWN: {old_gear} > {self._cur_gear}. "
                             f"New values for sequence length "
                             f"({self._cur_seq_length}) and batch size "
-                            f"({self._cur_batch_size}"
+                            f"({self._cur_batch_size})"
                         ),
                         ev_type=EV_TYPE.SHIFTING,
                         payload={
