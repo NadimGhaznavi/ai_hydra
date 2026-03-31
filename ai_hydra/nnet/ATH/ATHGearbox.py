@@ -151,6 +151,9 @@ class ATHGearBox:
         self._cur_epoch: int = 0
         self._last_upshift: int = 0
 
+        # Log initial settings
+        self._logged_initial_settings = False
+
     async def get_gear(self) -> int:
         """
         Return the active gear, applying any required shift first.
@@ -199,6 +202,25 @@ class ATHGearBox:
         deep_bucket_signal = self.get_deep_bucket_chunk_count()
         cooldown_ready = self._cooldown_count > self._num_cooldown_eps
 
+        if not self._logged_initial_settings:
+            self._logged_initial_settings = True
+            self._cur_seq_length, self._cur_batch_size = get_gear_data(
+                gear=self._cur_gear,
+                max_gear=self._max_gear,
+                max_training_frames=self._max_training_frames,
+            )
+            await self.event.publish(
+                EventMsg(
+                    level=EV_STATUS.WARN,
+                    ev_type=EV_TYPE.SHIFTING,
+                    payload={
+                        DField.GEAR: self._cur_gear,
+                        DField.SEQ_LENGTH: self._cur_seq_length,
+                        DField.BATCH_SIZE: self._cur_batch_size,
+                    },
+                )
+            )
+
         # ----------------------------
         # 1. Stagnation-driven downshift
         # ----------------------------
@@ -222,8 +244,9 @@ class ATHGearBox:
                     message=(
                         f"Stagnation alert({self._stagnation_alert_count}) - "
                         f"Shifting DOWN: {old_gear} > {self._cur_gear}. "
-                        f"New values for sequence length and batch size are "
-                        f"{self._cur_seq_length}/{self._cur_batch_size}"
+                        f"New values for sequence length "
+                        f"({self._cur_seq_length}) and batch size "
+                        f"({self._cur_batch_size}"
                     ),
                     ev_type=EV_TYPE.SHIFTING,
                     payload={
@@ -257,9 +280,9 @@ class ATHGearBox:
                         level=EV_STATUS.GOOD,
                         message=(
                             f"Shifting UP: {old_gear} > {self._cur_gear}. "
-                            f"New values for sequence length and batch size "
-                            f"are {self._cur_seq_length}/"
-                            f"{self._cur_batch_size}"
+                            f"New values for sequence length "
+                            f"({self._cur_seq_length}) and batch size "
+                            f"({self._cur_batch_size}"
                         ),
                         ev_type=EV_TYPE.SHIFTING,
                         payload={
@@ -295,8 +318,9 @@ class ATHGearBox:
                         level=EV_STATUS.WARN,
                         message=(
                             f"Shifting DOWN: {old_gear} > {self._cur_gear}. "
-                            f"New values for sequence length and batch size "
-                            f"are {self._cur_seq_length}/{self._cur_batch_size}"
+                            f"New values for sequence length "
+                            f"({self._cur_seq_length}) and batch size "
+                            f"({self._cur_batch_size}"
                         ),
                         ev_type=EV_TYPE.SHIFTING,
                         payload={
@@ -374,8 +398,8 @@ class ATHGearBox:
         )
         msg = (
             f"Critical Stagnation alert({crit_count}): Radical DOWN shift: "
-            f"{old_gear} > {self._cur_gear}. New sequence length and batch "
-            f"size are {self._cur_seq_length}/{self._cur_batch_size}"
+            f"{old_gear} > {self._cur_gear}. New sequence length "
+            f"({self._cur_seq_length}) and batch size ({self._cur_batch_size})"
         )
         await self.event.publish(
             EventMsg(
