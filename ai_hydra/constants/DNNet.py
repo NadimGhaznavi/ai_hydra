@@ -30,7 +30,7 @@ class DGRU:
     HIDDEN_SIZE: Final[int] = 192
     LEARNING_RATE: Final[float] = 0.001
     MAX_BUCKETS: Final[int] = 20
-    MAX_FRAMES: Final[int] = 150000
+    MAX_FRAMES: Final[int] = 125000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 1000
     MAX_MOVES_PENALTY: Final[float] = 0.0
@@ -39,12 +39,12 @@ class DGRU:
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.01
     NICE_STEPS: Final[int] = 20
-    NUM_COOLDOWN_EPISODES: Final[int] = 200
+    NUM_COOLDOWN_EPISODES: Final[int] = 100
     OUTPUT_SIZE: Final[int] = 3
     GRU_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
 
 
 class DRNN:
