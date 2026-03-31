@@ -37,7 +37,7 @@ class DGRU:
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
-    NICE_P_VALUE: Final[float] = 0.01
+    NICE_P_VALUE: Final[float] = 0.001
     NICE_STEPS: Final[int] = 20
     NUM_COOLDOWN_EPISODES: Final[int] = 100
     OUTPUT_SIZE: Final[int] = 3
