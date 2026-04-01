@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - Made *Max Moves Penalty* setting model specific and customized the value for the *GRU* model.
 - Enhanced stagnation alert cleared message; includes the new highscore.
 - Support for CUDA and MPS.
+- New *GRU Model* defaults.
 
 ### Fixed
 - Increase the *critical stagnation threshold* every time a *critical threshold event* is raised, **including the first time.**
