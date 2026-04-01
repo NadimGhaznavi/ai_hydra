@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
 
+## [Unreleased]
+
+### Changed
+- A *critical stagnation event* triggered a *radical reset* by the *ATH Gearbox*. Previously it did a reset to gear #3. Why #3? Human bias. This change makes the hard reset set the gear to #1. This is more inline with Sutton's *Bitter Lesson*, which is a guiding principle of this project.
 ---
 
 ## [0.24.0] - 2026-04-01 - CUDA/MPS Release
