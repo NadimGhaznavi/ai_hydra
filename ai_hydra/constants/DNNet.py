@@ -127,7 +127,8 @@ class DNetDef:
     """
 
     # State map and hyperparameters
-    DANGER_FEATURES: Final[int] = 3
+    SNAKE_DANGER_FEATURES: Final[int] = 3
+    WALL_DANGER_FEATURES: Final[int] = 3
     DIRECTION_FEATURES: Final[int] = 4
     FOOD_FEATURES: Final[int] = 4
     MOVE_DELAY: Final[float] = 0.02
@@ -136,7 +137,8 @@ class DNetDef:
 
     # Derived
     INPUT_SIZE: Final[int] = (
-        DANGER_FEATURES
+        SNAKE_DANGER_FEATURES
+        + WALL_DANGER_FEATURES
         + DIRECTION_FEATURES
         + FOOD_FEATURES
         + STATE_LENGTH_BITS

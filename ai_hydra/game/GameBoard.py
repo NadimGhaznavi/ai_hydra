@@ -147,26 +147,47 @@ class GameBoard:
         dir_u = (self.direction.dx, self.direction.dy) == (0, -1)
         dir_d = (self.direction.dx, self.direction.dy) == (0, 1)
 
-        def danger_at(p: Position) -> bool:
-            return self._is_wall_collision(p) or self._is_snake_collision(p)
+        def snake_danger_at(p: Position) -> bool:
+            return self._is_snake_collision(p)
+
+        def wall_danger_at(p: Position) -> bool:
+            return self._is_wall_collision(p)
 
         # Relative danger probes (straight, right, left)
         if dir_r:
-            danger_straight = danger_at(point_r)
-            danger_right = danger_at(point_d)
-            danger_left = danger_at(point_u)
+            snake_danger_straight = snake_danger_at(point_r)
+            snake_danger_right = snake_danger_at(point_d)
+            snake_danger_left = snake_danger_at(point_u)
         elif dir_l:
-            danger_straight = danger_at(point_l)
-            danger_right = danger_at(point_u)
-            danger_left = danger_at(point_d)
+            snake_danger_straight = snake_danger_at(point_l)
+            snake_danger_right = snake_danger_at(point_u)
+            snake_danger_left = snake_danger_at(point_d)
         elif dir_u:
-            danger_straight = danger_at(point_u)
-            danger_right = danger_at(point_r)
-            danger_left = danger_at(point_l)
+            snake_danger_straight = snake_danger_at(point_u)
+            snake_danger_right = snake_danger_at(point_r)
+            snake_danger_left = snake_danger_at(point_l)
         else:  # dir_d
-            danger_straight = danger_at(point_d)
-            danger_right = danger_at(point_l)
-            danger_left = danger_at(point_r)
+            snake_danger_straight = snake_danger_at(point_d)
+            snake_danger_right = snake_danger_at(point_l)
+            snake_danger_left = snake_danger_at(point_r)
+
+        # Relative danger probes (straight, right, left)
+        if dir_r:
+            wall_danger_straight = wall_danger_at(point_r)
+            wall_danger_right = wall_danger_at(point_d)
+            wall_danger_left = wall_danger_at(point_u)
+        elif dir_l:
+            wall_danger_straight = wall_danger_at(point_l)
+            wall_danger_right = wall_danger_at(point_u)
+            wall_danger_left = wall_danger_at(point_d)
+        elif dir_u:
+            wall_danger_straight = wall_danger_at(point_u)
+            wall_danger_right = wall_danger_at(point_r)
+            wall_danger_left = wall_danger_at(point_l)
+        else:  # dir_d
+            wall_danger_straight = wall_danger_at(point_d)
+            wall_danger_right = wall_danger_at(point_l)
+            wall_danger_left = wall_danger_at(point_r)
 
         # Food relative direction (normalized -[-1, 1])
         dx = self.food_position.x - head.x
@@ -184,22 +205,26 @@ class GameBoard:
         )
 
         state = [
-            # 1 - 3 danger (relative)
-            danger_left,
-            danger_straight,
-            danger_right,
-            # 4 - 7 direction, one-hot
+            # 1 - 3 snake danger (relative)
+            snake_danger_left,
+            snake_danger_straight,
+            snake_danger_right,
+            # 4 - 6 snake danger (relative)
+            wall_danger_left,
+            wall_danger_straight,
+            wall_danger_right,
+            # 7 - 10 direction, one-hot
             dir_l,
             dir_r,
             dir_u,
             dir_d,
-            # 8 - 9 food delta (normalized
+            # 11 - 12 food delta (normalized
             food_dx,
             food_dy,
-            # 10 - 11 food on same X/Y
+            # 13 - 14 food on same X/Y
             food_on_x,
             food_on_y,
-            # 10.. length bits
+            # 15.. length bits
             *length_bits,
         ]
         # Make sure size of the state map matches what we use in the NN
