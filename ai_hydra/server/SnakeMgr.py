@@ -48,6 +48,9 @@ class SnakeSession:
     step_n: int = 0
 
 
+REWARD_SHAPING_SCORE_THRESHOLD = 7
+
+
 class SnakeMgr:
     """
     Domain manager for Snake game sessions.
@@ -81,6 +84,11 @@ class SnakeMgr:
         self.sessions: dict[str, SnakeSession] = {}
         self.policy: Optional[HydraPolicy] = None
         self._start_time = datetime.now()
+
+        self._reward_shaping_enabled = True
+
+    def disable_reward_shaping(self) -> None:
+        self._reward_shaping_enabled = False
 
     # -------------------------
     # Session lifecycle
@@ -171,6 +179,7 @@ class SnakeMgr:
                 rng=sess.rng,
                 reward_cfg=self._reward_cfg,
                 mmm=self._mmm,
+                reward_shaping=self._reward_shaping_enabled,
             )
 
             sess.board = result.new_board
@@ -218,6 +227,9 @@ class SnakeMgr:
                 self.log.info(
                     f"Epoch: {sess.epoch} - New High Score: {sess.highscore}"
                 )
+                if sess.score == REWARD_SHAPING_SCORE_THRESHOLD:
+                    self.disable_reward_shaping()
+                    self.log.info("Disabling reward shaping")
 
             # ----- The payload for the ZeroMQ "per step" topic ---
             step_payload = None

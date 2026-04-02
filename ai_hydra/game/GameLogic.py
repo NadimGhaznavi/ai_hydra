@@ -126,6 +126,7 @@ class GameLogic:
         rng: random.Random,
         reward_cfg: RewardCfg,
         mmm: int,  # Max-Moves-Multiplier
+        reward_shaping: bool,
         food_ends_episode: bool = False,
     ) -> MoveResult:
         """
@@ -255,7 +256,11 @@ class GameLogic:
         shaping_reward = 0.0
 
         # Disable the shaping reward once the snake is longer than
-        if snake_length <= SHAPING_REWARD_THRESH:
+        # if snake_length <= SHAPING_REWARD_THRESH:
+
+        # Disable the shaping reward (set by the SnakeMgr, based on a
+        # highscore value)
+        if reward_shaping:
             reward_field = GameLogic._food_direction_reward(
                 head=board.snake_head,
                 food=board.food_position,
