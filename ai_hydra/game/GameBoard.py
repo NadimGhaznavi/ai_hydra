@@ -189,11 +189,11 @@ class GameBoard:
             wall_danger_right = wall_danger_at(point_l)
             wall_danger_left = wall_danger_at(point_r)
 
-        # Food relative direction (normalized -[-1, 1])
-        dx = self.food_position.x - head.x
-        dy = self.food_position.y - head.y
-        food_dx = dx / max(1, width)
-        food_dy = dy / max(1, height)
+        # Food location
+        food_left = (self.food_position.x < head.x,)  # food left
+        food_right = (self.food_position.x > head.x,)  # food right
+        food_up = (self.food_position.y < head.y,)  # food up
+        food_down = self.food_position.y > head.y  # food down
 
         # Food on the same X or Y axis
         food_on_x = int(head.x == self.food_position.x)
@@ -218,13 +218,15 @@ class GameBoard:
             dir_r,
             dir_u,
             dir_d,
-            # 11 - 12 food delta (normalized
-            food_dx,
-            food_dy,
-            # 13 - 14 food on same X/Y
+            # 11 - 14 food delta (normalized
+            food_left,
+            food_right,
+            food_up,
+            food_down,
+            # 15 - 17 food on same X/Y
             food_on_x,
             food_on_y,
-            # 15.. length bits
+            # 18.. length bits
             *length_bits,
         ]
         # Make sure size of the state map matches what we use in the NN

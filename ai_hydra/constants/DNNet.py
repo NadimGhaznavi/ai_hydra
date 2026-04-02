@@ -130,7 +130,7 @@ class DNetDef:
     SNAKE_DANGER_FEATURES: Final[int] = 3
     WALL_DANGER_FEATURES: Final[int] = 3
     DIRECTION_FEATURES: Final[int] = 4
-    FOOD_FEATURES: Final[int] = 4
+    FOOD_FEATURES: Final[int] = 6
     MOVE_DELAY: Final[float] = 0.02
     PER_STEP: Final[bool] = True
     STATE_LENGTH_BITS: Final[int] = 7
