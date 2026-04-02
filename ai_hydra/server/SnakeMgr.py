@@ -48,7 +48,7 @@ class SnakeSession:
     step_n: int = 0
 
 
-REWARD_SHAPING_SCORE_THRESHOLD = 7
+REWARD_SHAPING_SCORE_THRESHOLD = 15
 
 
 class SnakeMgr:
