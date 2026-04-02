@@ -35,7 +35,7 @@ from ai_hydra.game.GameHelper import MoveResult, RewardCfg
 # disable the shaping reward. This is to encourage the discovery of
 # "folding behaviour" in the later stages of the game.
 
-SHAPING_REWARD_THRESH = 10
+SHAPING_REWARD_THRESH = 6
 
 
 class GameLogic:
