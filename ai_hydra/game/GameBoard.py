@@ -190,10 +190,10 @@ class GameBoard:
             wall_danger_left = wall_danger_at(point_r)
 
         # Food location
-        food_left = (self.food_position.x < head.x,)  # food left
-        food_right = (self.food_position.x > head.x,)  # food right
-        food_up = (self.food_position.y < head.y,)  # food up
-        food_down = self.food_position.y > head.y  # food down
+        food_left = int(self.food_position.x < head.x)  # food left
+        food_right = int(self.food_position.x > head.x)  # food right
+        food_up = int(self.food_position.y < head.y)  # food up
+        food_down = int(self.food_position.y > head.y)  # food down
 
         # Food on the same X or Y axis
         food_on_x = int(head.x == self.food_position.x)
