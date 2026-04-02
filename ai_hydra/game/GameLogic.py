@@ -260,7 +260,9 @@ class GameLogic:
 
         # Disable the shaping reward (set by the SnakeMgr, based on a
         # highscore value)
-        if reward_shaping:
+        # if reward_shaping:
+
+        if True:
             reward_field = GameLogic._food_direction_reward(
                 head=board.snake_head,
                 food=board.food_position,
