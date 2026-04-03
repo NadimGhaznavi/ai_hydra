@@ -31,12 +31,6 @@ from ai_hydra.game.GameBoard import (
 )
 from ai_hydra.game.GameHelper import MoveResult, RewardCfg
 
-# When the snake length is greater than the SHAPING_REWARD_THRESH, then
-# disable the shaping reward. This is to encourage the discovery of
-# "folding behaviour" in the later stages of the game.
-
-SHAPING_REWARD_THRESH = 6
-
 
 class GameLogic:
     """
@@ -126,7 +120,6 @@ class GameLogic:
         rng: random.Random,
         reward_cfg: RewardCfg,
         mmm: int,  # Max-Moves-Multiplier
-        reward_shaping: bool,
         food_ends_episode: bool = False,
     ) -> MoveResult:
         """
@@ -255,21 +248,13 @@ class GameLogic:
         # Shaping reward: moving closer/further to/from food.
         shaping_reward = 0.0
 
-        # Disable the shaping reward once the snake is longer than
-        # if snake_length <= SHAPING_REWARD_THRESH:
-
-        # Disable the shaping reward (set by the SnakeMgr, based on a
-        # highscore value)
-        # if reward_shaping:
-
-        if True:
-            reward_field = GameLogic._food_direction_reward(
-                head=board.snake_head,
-                food=board.food_position,
-                move_dx=move.resulting_direction.dx,
-                move_dy=move.resulting_direction.dy,
-            )
-            shaping_reward = reward_cfg.get(reward_field)
+        reward_field = GameLogic._food_direction_reward(
+            head=board.snake_head,
+            food=board.food_position,
+            move_dx=move.resulting_direction.dx,
+            move_dy=move.resulting_direction.dy,
+        )
+        shaping_reward = reward_cfg.get(reward_field)
 
         reward = base_reward + shaping_reward
 

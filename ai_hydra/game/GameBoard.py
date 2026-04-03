@@ -223,10 +223,10 @@ class GameBoard:
             food_right,
             food_up,
             food_down,
-            # 15 - 17 food on same X/Y
+            # 15 - 16 food on same X/Y
             food_on_x,
             food_on_y,
-            # 18.. length bits
+            # 17.. length bits
             *length_bits,
         ]
         # Make sure size of the state map matches what we use in the NN
