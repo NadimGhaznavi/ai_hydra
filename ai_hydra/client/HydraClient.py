@@ -331,6 +331,7 @@ class HydraClientTui(App):
 
         # Seed the highscores with a zero for plotting
         self.metrics.add_highscore(0)
+        self.telemtry.game_score_plot.plot_highscores()
 
         # Create references to some TUI element that are frequently updated
         # in the ZeroMQ listening loop.
