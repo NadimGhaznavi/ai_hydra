@@ -266,7 +266,6 @@ class HydraMgr(HydraServer):
             nice_rng=nice_rng,
             mcts_rng=mcts_rng,
             steps=self.cfg.get(DNetField.NICE_STEPS),
-            mcts_depth=self.cfg.get(DNetField.MCTS_DEPTH),
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
             mcts_cfg=mcts_cfg,
