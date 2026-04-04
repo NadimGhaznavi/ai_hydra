@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [0.25.2] - 2026-04-04 @12:48 - Clear Docs Release
+
+### Changed
+- Complete rewrite of the section on *ATH Memory* for the [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
+
+---
+
 ## [0.25.1] - 2026-04-04 @ 01:16 - HOTFIX GRU Tuning
 
 ### Changed

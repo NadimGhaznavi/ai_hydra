@@ -301,60 +301,127 @@ A structured event stream capturing system behavior:
 
 ## ATH Replay Memory
 
-The **ATH (Adaptive Temporal Horizon) Replay Memory** is a dynamic replay 
-system that evolves with the agent.
+This section outlines how the *ATH Memory* works.
 
-Instead of storing isolated transitions for uniform replay, ATH stores 
-**complete episodes** and generates **gear-specific metadata** describing how 
-each episode can be sampled at different temporal horizons.
+### ATH Overview
 
-The ATH gearbox adjusts:
+- Games are stored as ordered sequences of frames.
+- At the end of each episode, the  *Trainer* asks the *ATH Replay Memory* for training data.
+- The *ATH Memory* returns a batch of ordered frames. 
+  - This *ordered set of frames* is referred to as a *sequence*.
+  - The *number of ordered frames* is referred to as the *sequence length*.
+  - The number of *sequences* that are returned is the *batch size*
 
-- **Sequence length**
-- **Batch size**
+### ATH Gears
 
-### Adaptive Training Dynamics
+At the core of *ATH Memory* is the concept of a *gear*.
 
-- Early training → short sequences, large batches
-- Later training → long sequences, smaller batches
+- When the simulation starts, the initial gear is one.
+  - When the *ATH Memory* is in *first gear* (gear one), the *sequence length* is 4.
+  - Gear 2 has a sequence length of 6.
+  - Gear 3 has a sequence length of 8.
+  - Every shift to a higher gear, increases the sequence length by two.
 
-The system shifts gears based on observed performance rather than a fixed 
-schedule.
+### Batch Size
 
-### Temporal Bucket Indexing
+One of the ATH Memory settings is the *Max Training Frames* parameter.
 
-ATH does not bucket experiences by score or outcome.
+The batch size is determined by this simple calculation:
 
-Instead, completed episodes are analyzed against the active gear, and metadata 
-is used to determine which **end-aligned temporal chunks** are available for 
-sampling.
+  `batch_size = max_training_frames // sequence_length`
 
-This produces a bucketed index based on **temporal chunk position and usability**, 
-not reward classification.
+The minimum size of a batch is one.
 
-Sampling then draws across warmed buckets to preserve temporal variety in the 
-training batch.
+### Buckets
 
-This gives ATH a few useful properties:
+The *ATH Memory* contains **20 buckets**. The number **20** was arrived at by
+experimentation and was determined to be a *useful* number.
 
-- Full episodes remain intact in storage
-- Sampling adapts automatically as sequence length changes
-- Training batches retain coverage across different temporal windows
-- Replay stays observable and decoupled from the trainer
+As outlined above, a stored game is broken down into sequences, or ordered
+sets of frames. 
 
-The TUI memory widget visualizes the current bucket distribution and how balanced 
-the replay space is under the active gear.
+- Slicing of a game into sequences starts at the last frame of each game and works its way forward
+  - This ensures that the final frame (with the reward) is always captured
+
+For example:
+
+- Assume that *ATH Memory* is in first gear
+  - This means the sequence length is 4
+- If the game has 17 frames, then:
+  - It will contain 4 sequences, each containing 4 frames
+  - The first frame will be discarded
+- The *ATH Memory* will put this game into bucket 1, 2, 3, and 4
+
+When the system shifts to the second gear, the data is reorganized using
+the new sequence length of 6:
+
+- Now the 17 frames will be split into 2 sequences
+  - Each sequence contains 6 frames
+  - The first 5 frames will be discarded
+- The *ATH Memory* will now put the same game into bucket 1 and 2
+
+**Warmed Buckets**
+
+A bucket is defined as being *warm* when it contains at least one game.
+
+### Selecting Training Data
+
+When the *Trainer* asks the *ATH Memory* for training data, the goal is to
+construct a batch of sequences that all have the same length.
+
+- The *ATH Memory* creates a batch using games from **all active buckets**
+- A batch will contain sequences from:
+  - early-stage gameplay
+  - mid-game gameplay
+  - late-game gameplay
+
+**Key Concept:** *Sampling occurs across time.*
+
+In a traditional replay memory, sequences from the ends of long-running
+games are underrepresented.
+
+### Gearbox Shifting
+
+The *ATH Replay Memory* contains an *ATH Gearbox* module that is responsible
+for changing gears. Its behavior depends on the following settings:
+
+- Upshift threshold
+- Downshift threshold
+- Cooldown threshold
+
+- If the **last three buckets combined** contain at least *upshift threshold*
+  games, the *ATH Gearbox* will shift up
+- If the **last three buckets combined** contain fewer than *downshift threshold*
+  games, the *ATH Gearbox* will shift down
+- The gearbox will not perform any shifting until *cooldown threshold*
+  episodes have elapsed
+
+### Stagnation Shifting
+
+The *Train Manager* also plays a role in gear shifting. Its behavior is
+determined by the following *stagnation* settings:
+
+- Stagnation threshold
+- Critical stagnation threshold
+
+- If *stagnation threshold* episodes elapse without a new high score, the
+  *Train Manager* sends a *stagnation alert* to the *ATH Gearbox*
+  - The gearbox will shift down one gear, unless it has shifted up within
+    the last *stagnation threshold* episodes
+
+- If *critical stagnation threshold* episodes elapse without a new high score,
+  the *Train Manager* sends a *critical stagnation alert* to the *ATH Gearbox*
+  - The gearbox will shift directly to gear 1 (sequence length 4)
+ 
+### ATH Memory Telemetry
+
+The TUI memory widget shows the number of games each bucket contains. Note
+that this number changes when the gear changes.
 
 ![ATH Memory](https://aihydra.osoyalce.com/images/ath-memory.png)
 
-### System Properties
-
-- Training adapts **how** it learns through the gearbox
-- Replay adapts **how episodes are sampled** through gear-aware temporal metadata
-- Memory remains **decoupled, inspectable, and observable**
-
 Lifecycle events such as warm-up, pruning, and gear shifts are emitted and 
-tracked in real time.
+tracked in real time and can be seen in the *Event Log* tab of the TUI.
 
 ---
 
