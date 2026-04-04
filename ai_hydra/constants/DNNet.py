@@ -21,11 +21,13 @@ class DGRU:
     """
 
     BATCH_SIZE: Final[int] = 64
+    CLOSER_TO_FOOD: Final[float] = 0.0
     DROPOUT_P_VALUE: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.999
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.98
+    FURTHER_FROM_FOOD: Final[float] = 0.0
     GAMMA: Final[float] = 0.97
     HIDDEN_SIZE: Final[int] = 224
     LEARNING_RATE: Final[float] = 0.0005
@@ -54,11 +56,13 @@ class DRNN:
     """
 
     BATCH_SIZE: Final[int] = 64
+    CLOSER_TO_FOOD: Final[float] = 0.1
     DROPOUT_P_VALUE: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.96
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.97
+    FURTHER_FROM_FOOD: Final[float] = -0.1
     GAMMA: Final[float] = 0.96
     HIDDEN_SIZE: Final[int] = 192
     LEARNING_RATE: Final[float] = 0.002
@@ -97,10 +101,12 @@ class DLinear:
     """
 
     BATCH_SIZE: Final[int] = 64
+    CLOSER_TO_FOOD: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     DROPOUT_P: Final[float] = 0.1
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.985
+    FURTHER_FROM_FOOD: Final[float] = -0.1
     GAMMA: Final[float] = 0.9
     HIDDEN_SIZE: Final[int] = 192
     INITIAL_EPSILON: Final[float] = 0.99
