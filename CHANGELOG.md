@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.25.0] = 2026-04-04 @ 00:21 - Pre-Hamilton Release
 
 ### Changed
 - A *critical stagnation event* triggered a *radical reset* by the *ATH Gearbox*. Previously it did a reset to gear #3. Why #3? Human bias. This change makes the hard reset set the gear to #1. This is more inline with Sutton's *Bitter Lesson*, which is a guiding principle of this project.
