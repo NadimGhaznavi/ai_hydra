@@ -39,6 +39,7 @@ class DGRU:
     MAX_MOVES_PENALTY: Final[float] = 0.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
+    MCTS_DEPTH: Final[int] = 5
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
@@ -74,6 +75,7 @@ class DRNN:
     MAX_MOVES_PENALTY: Final[float] = -10.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
+    MCTS_DEPTH: Final[int] = 10
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
@@ -120,6 +122,7 @@ class DLinear:
     MAX_MOVES_PENALTY: Final[float] = -10.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
+    MCTS_DEPTH: Final[int] = 10
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
@@ -187,6 +190,7 @@ class DNetField:
     MAX_MOVES_PENALTY: Final[str] = "max_moves_penalty"
     MAX_STAGNANT_EPISODES: Final[str] = "max_stagnant_episodes"
     MAX_TRAINING_FRAMES: Final[str] = "max_training_frames"
+    MCTS_DEPTH: Final[str] = "mcts_depth"
     MIN_EPSILON: Final[str] = "min_epsilon"
     MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"

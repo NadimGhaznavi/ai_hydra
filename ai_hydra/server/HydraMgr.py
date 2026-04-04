@@ -109,12 +109,14 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.Policy.LinearPolicy import LinearPolicy
         from ai_hydra.nnet.Policy.RecurrentPolicy import RecurrentPolicy
         from ai_hydra.nnet.Policy.EpsilonPolicy import EpsilonPolicy
-        from ai_hydra.nnet.Policy.EpsilonNicePolicy import EpsilonNicePolicy
+        from ai_hydra.nnet.Policy.BehaviourPolicy import BehaviourPolicy
 
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
 
-        from ai_hydra.constants.DNNet import DNetField, DLinear, DRNN, DGRU
+        from ai_hydra.mcts.Node import MCTSConfig
+
+        from ai_hydra.constants.DNNet import DNetField
 
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
         master_seed = self.cfg.get(DNetField.RANDOM_SEED)
@@ -127,7 +129,9 @@ class HydraMgr(HydraServer):
         master_seed = self.hydra_rng.get_seed()
 
         # Hydra-style RNG streams
-        _, policy_rng = self.hydra_rng.new_rng()
+        _, epsilon_rng = self.hydra_rng.new_rng()
+        _, nice_rng = self.hydra_rng.new_rng()
+        _, mcts_rng = self.hydra_rng.new_rng()
         _, replay_rng = self.hydra_rng.new_rng()
 
         if torch.cuda.is_available():
@@ -212,7 +216,7 @@ class HydraMgr(HydraServer):
 
         # Policy stack
         epsilon_algo = EpsilonAlgo(
-            rng=policy_rng,
+            rng=epsilon_rng,
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
         )
@@ -223,20 +227,49 @@ class HydraMgr(HydraServer):
         epsilon_nice = EpsilonNiceAlgo(
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
-            rng=policy_rng,
+            rng=nice_rng,
         )
         epsilon_policy = EpsilonPolicy(
             base_policy=nnet_policy, epsilon=epsilon_algo
         )
 
-        behaviour_policy = EpsilonNicePolicy(
+        reward_cfg = RewardCfg(
+            values={
+                DGameField.EMPTY: self.cfg.get(DNetField.EMPTY_MOVE_REWARD),
+                DGameField.FOOD: self.cfg.get(DNetField.FOOD_REWARD),
+                DGameField.WALL: self.cfg.get(DNetField.COLLISION_PENALTY),
+                DGameField.SNAKE: self.cfg.get(DNetField.COLLISION_PENALTY),
+                DGameField.MAX_MOVES: self.cfg.get(
+                    DNetField.MAX_MOVES_PENALTY
+                ),
+                DGameField.CLOSER_TO_FOOD: self.cfg.get(
+                    DNetField.CLOSER_TO_FOOD
+                ),
+                DGameField.FURTHER_FROM_FOOD: self.cfg.get(
+                    DNetField.FURTHER_FROM_FOOD
+                ),
+            }
+        )
+
+        # Monte Carlo Tree Search config
+        mcts_cfg = MCTSConfig(
+            reward_cfg=reward_cfg,
+            mmm=self.cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
+            food_ends_episode=False,
+            search_depth=self.cfg.get(DNetField.MCTS_DEPTH),
+        )
+
+        behaviour_policy = BehaviourPolicy(
             base_policy=epsilon_policy,
             epsilon_n=epsilon_nice,
-            p_value=self.cfg.get(DNetField.NICE_P_VALUE),
-            rng=policy_rng,
+            nice_p_value=self.cfg.get(DNetField.NICE_P_VALUE),
+            nice_rng=nice_rng,
+            mcts_rng=mcts_rng,
             steps=self.cfg.get(DNetField.NICE_STEPS),
+            mcts_depth=self.cfg.get(DNetField.MCTS_DEPTH),
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
+            mcts_cfg=mcts_cfg,
         )
 
         self._train_mgr = TrainMgr(
@@ -250,7 +283,9 @@ class HydraMgr(HydraServer):
             pub_func=self.mq.publish_events,
             stag_thresh=self.cfg.get(DNetField.MAX_STAGNANT_EPISODES),
             crit_stag_thresh=self.cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
+            reward_cfg=reward_cfg,
         )
+
         self._train_mgr_model_type = model_type
         return self._train_mgr
 
@@ -350,33 +385,12 @@ class HydraMgr(HydraServer):
         )
         try:
             train_mgr = self._ensure_train_mgr()
-            reward_cfg = RewardCfg(
-                values={
-                    DGameField.EMPTY: self.cfg.get(
-                        DNetField.EMPTY_MOVE_REWARD
-                    ),
-                    DGameField.FOOD: self.cfg.get(DNetField.FOOD_REWARD),
-                    DGameField.WALL: self.cfg.get(DNetField.COLLISION_PENALTY),
-                    DGameField.SNAKE: self.cfg.get(
-                        DNetField.COLLISION_PENALTY
-                    ),
-                    DGameField.MAX_MOVES: self.cfg.get(
-                        DNetField.MAX_MOVES_PENALTY
-                    ),
-                    DGameField.CLOSER_TO_FOOD: self.cfg.get(
-                        DNetField.CLOSER_TO_FOOD
-                    ),
-                    DGameField.FURTHER_FROM_FOOD: self.cfg.get(
-                        DNetField.FURTHER_FROM_FOOD
-                    ),
-                }
-            )
 
             snake = self.snake = SnakeMgr(
                 cfg=self.cfg,
                 log_level=self.log_level,
                 hydra_rng=self.hydra_rng,
-                reward_cfg=reward_cfg,
+                reward_cfg=train_mgr.reward_cfg,
                 mmm=self.cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
             )
             mq = self.mq

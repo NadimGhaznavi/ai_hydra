@@ -141,6 +141,14 @@ class TabbedSettings(Widget):
             value=str(DLinear.NICE_STEPS),
             id=DField.NICE_STEPS_INPUT,
         )
+        # MCTS_DEPTH
+        self.mcts_depth_label = Label(id=DField.MCTS_DEPTH_LABEL)
+        self.mcts_depth_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DLinear.MCTS_DEPTH),
+            id=DField.MCTS_DEPTH_INPUT,
+        )
 
         # FOOD_REWARD
         self.food_rewards_label = Label(id=DField.FOOD_REWARD_LABEL)
@@ -209,7 +217,7 @@ class TabbedSettings(Widget):
             DLabel.CONFIG,
             DLabel.MEMORY,
             DLabel.REWARDS,
-            DLabel.NICE,
+            DLabel.POLICY,
             DLabel.NETWORK,
         ):
 
@@ -530,8 +538,9 @@ class TabbedSettings(Widget):
                 ),
             )
 
-            # ----- Nice ---
+            # ----- Policy ---
             yield Vertical(
+                # --- Nice ---
                 Vertical(
                     Horizontal(
                         Label(f"{DLabel.NICE_P_VALUE}: "),
@@ -546,6 +555,16 @@ class TabbedSettings(Widget):
                         classes=DField.INPUT_FIELD,
                     ),
                     id=DField.NICE_BOX,
+                ),
+                # --- Monte Carlo Tree Search ---
+                Vertical(
+                    Horizontal(
+                        Label(f"{DLabel.SEARCH_DEPTH}: "),
+                        self.mcts_depth_label,
+                        self.mcts_depth_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    id=DField.MCTS_BOX,
                 ),
             )
 
@@ -629,3 +648,9 @@ class TabbedSettings(Widget):
         self.query_one(
             f"#{DField.EPISODE_CONSTRAINTS_BOX}", Vertical
         ).border_subtitle = DLabel.EPISODE_CONSTRAINTS
+        self.query_one(f"#{DField.NICE_BOX}", Vertical).border_subtitle = (
+            DLabel.EPSILON_NICE
+        )
+        self.query_one(f"#{DField.MCTS_BOX}", Vertical).border_subtitle = (
+            DLabel.MCTS
+        )

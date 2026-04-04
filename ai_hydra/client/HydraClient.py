@@ -539,6 +539,7 @@ class HydraClientTui(App):
             max_moves_penalty = DLinear.MAX_MOVES_PENALTY
             max_stag_eps = DLinear.MAX_STAGNANT_EPISODES
             max_training_frames = DLinear.MAX_TRAINING_FRAMES
+            mcts_depth = DLinear.MCTS_DEPTH
             nice_p_value = DLinear.NICE_P_VALUE
             nice_steps = DLinear.NICE_STEPS
             num_cooldown_eps = DLinear.NUM_COOLDOWN_EPISODES
@@ -568,6 +569,7 @@ class HydraClientTui(App):
             max_moves_penalty = DRNN.MAX_MOVES_PENALTY
             max_stag_eps = DRNN.MAX_STAGNANT_EPISODES
             max_training_frames = DRNN.MAX_TRAINING_FRAMES
+            mcts_depth = DRNN.MCTS_DEPTH
             nice_p_value = DRNN.NICE_P_VALUE
             nice_steps = DRNN.NICE_STEPS
             num_cooldown_eps = DRNN.NUM_COOLDOWN_EPISODES
@@ -597,6 +599,7 @@ class HydraClientTui(App):
             max_moves_penalty = DGRU.MAX_MOVES_PENALTY
             max_stag_eps = DGRU.MAX_STAGNANT_EPISODES
             max_training_frames = DGRU.MAX_TRAINING_FRAMES
+            mcts_depth = DGRU.MCTS_DEPTH
             nice_p_value = DGRU.NICE_P_VALUE
             nice_steps = DGRU.NICE_STEPS
             num_cooldown_eps = DGRU.NUM_COOLDOWN_EPISODES
@@ -639,8 +642,12 @@ class HydraClientTui(App):
         self.settings.max_training_frames_input.value = str(
             max_training_frames
         )
+        # Nice
         self.settings.nice_p_value_input.value = str(nice_p_value)
         self.settings.nice_steps_input.value = str(nice_steps)
+        # Monte Carlo Tree Search
+        self.settings.mcts_depth_input.value = str(mcts_depth)
+        # ATH Memeory
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
         # Rewards
@@ -1102,6 +1109,9 @@ class HydraClientTui(App):
         # NICE_STEPS
         nice_steps = self.settings.nice_steps_input.value
         self.settings.nice_steps_label.update(nice_steps)
+        # MCTS_DEPTH
+        mcts_depth = self.settings.mcts_depth_input.value
+        self.settings.mcts_depth_label.update(mcts_depth)
 
         # FOOD_REWARD
         food_reward = self.settings.food_rewards_input.value
@@ -1145,6 +1155,7 @@ class HydraClientTui(App):
             DNetField.MAX_MOVES_MULTIPLIER: max_moves_multiplier,
             DNetField.MAX_MOVES_PENALTY: max_moves_penalty,
             DNetField.MAX_STAGNANT_EPISODES: max_stag_eps,
+            DNetField.MCTS_DEPTH: mcts_depth,
             DNetField.MIN_EPSILON: min_epsilon,
             DNetField.NICE_P_VALUE: nice_p_value,
             DNetField.NICE_STEPS: nice_steps,

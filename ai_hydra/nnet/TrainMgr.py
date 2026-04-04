@@ -11,7 +11,7 @@ from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.nnet.LinearTrainer import LinearTrainer
 from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
-from ai_hydra.nnet.Policy.EpsilonNicePolicy import EpsilonNicePolicy
+from ai_hydra.nnet.Policy.BehaviourPolicy import BehaviourPolicy
 from ai_hydra.nnet.RecurrentTrainer import RecurrentTrainer
 from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
 from ai_hydra.nnet.models.LinearModel import LinearModel
@@ -19,6 +19,7 @@ from ai_hydra.nnet.models.RNNModel import RNNModel
 from ai_hydra.nnet.models.GRUModel import GRUModel
 from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
+from ai_hydra.game.GameHelper import RewardCfg
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,7 @@ class TrainMgr:
         self,
         *,
         snake_mgr: SnakeMgr,
-        policy: EpsilonNicePolicy,
+        policy: BehaviourPolicy,
         trainer: LinearTrainer | RecurrentTrainer,
         replay: SimpleReplayMemory | ATHMemory,
         client_id: str = DModule.TRAIN_MGR,
@@ -70,6 +71,7 @@ class TrainMgr:
         pub_func,
         stag_thresh: int,
         crit_stag_thresh: int,
+        reward_cfg: RewardCfg,
     ) -> None:
         self.event = HydraEventMQ(
             client_id=DModule.TRAIN_MGR,
@@ -92,6 +94,7 @@ class TrainMgr:
         self._stag_thresh = stag_thresh
         self._base_crit_stag_thresh = crit_stag_thresh
         self._crit_stag_thresh = crit_stag_thresh
+        self.reward_cfg = reward_cfg
 
         self._stag_alert_status = EV_TYPE.CLEARED
         self._stag_ep_count = 0
