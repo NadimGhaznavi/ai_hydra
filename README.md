@@ -2,6 +2,49 @@
 
 ![HydraClient TUI](https://aihydra.osoyalce.com/images/hydra-client.png)
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Startup](#startup)
+- [Shutdown](#shutdown)
+- [Distributed Architecture](#distributed-architecture)
+  - [Example Deployment](#example-custom-distributed-deployment)
+- [Settings](#settings)
+  - [Turbo Mode](#turbo-mode)
+  - [Random Seed](#random-seed)
+  - [Move Delay](#move-delay)
+  - [Config Settings](#config-settings)
+  - [Memory Settings](#memory-settings)
+  - [Rewards Settings](#rewards-settings)
+  - [Epsilon Nice Settings](#epsilon-nice-settings)
+  - [Network Settings](#network-settings)
+- [Deterministic Simulations](#deterministic-simulations)
+- [Supported Models: Linear, RNN, GRU](#supported-models-linear-rnn-and-gru)
+- [Visualizations](#visualizations)
+  - [High Scores, Current, and Average Current Scores](#high-scores-current-and-average-current-scores)
+  - [Loss Plot](#loss-plot)
+  - [Scores Distribution](#scores-distribution)
+  - [Event Log](#event-log)
+- [ATH Replay Memory](#ath-replay-memory)
+  - [Adaptive Training Dynamics](#adaptive-training-dynamics)
+  - [Temporal Bucket Indexing](#temporal-bucket-indexing)
+  - [System Properties](#system-properties)
+- [Train Manager](#train-manager)
+- [Epsilon Nice - Safe Exploration](#epsilon-nice---safe-exploration)
+  - [Epsilon Nice Overview](#epsilon-nice-overview)
+  - [How It Works](#how-it-works)
+  - [Override Behaviour](#override-behaviour)
+  - [Telemetry](#telemetry)
+- [Performance](#performance)
+  - [Aligned Training Pipeline](#aligned-training-pipeline)
+  - [Lean Simulation Loop](#lean-simulation-loop)
+  - [Result](#result)
+- [Snapshot Report](#snapshot-report)
+- [Closing Thoughts](#closing-thought)
+
+---
+
 ## Overview
 
 AI Hydra is a distributed reinforcement learning platform composed of three core components:
@@ -20,12 +63,6 @@ Telemetry is split into two channels:
 - **Per-episode updates** — metrics (high score, loss, epsilon, etc.)  
 
 This separation allows fine-grained control over performance and observability.
-
-### Turbo Mode
-
-![Turbo Mode Switch](https://aihydra.osoyalce.com/images/turbo-mode.png)
-
-The client supports a **Turbo mode** that disables per-step updates. This removes rendering overhead and allows the simulation to run **15×+ faster**, making it ideal for rapid experimentation.
 
 ## Installation
 
@@ -93,7 +130,7 @@ The shutdown process is not 100% clean, so you may be required to also hit `Cont
 
 ![Settings - Network](https://aihydra.osoyalce.com/images/settings-network.png)
 
-### Example Deployment
+### Example, Custom, Distributed Deployment
 
 This configuration demonstrates a fully distributed setup where simulation, routing, and visualization are physically separated across hosts. This example also uses custom ports. The *Hydra Client* is running locally, the *Hydra Router* is running on **bingo**, and the *Hydra Manager* is running on **islands**.
 
@@ -124,6 +161,12 @@ This configuration demonstrates a fully distributed setup where simulation, rout
 ---
 
 ## Settings
+
+### Turbo Mode
+
+![Turbo Mode Switch](https://aihydra.osoyalce.com/images/turbo-mode.png)
+
+The client supports a **Turbo mode** that disables per-step updates. This removes rendering overhead and allows the simulation to run **15×+ faster**, making it ideal for rapid experimentation.
 
 ### Random Seed
 
@@ -226,11 +269,11 @@ The TUI provides real-time insight into training:
 
 Views include:
 
-### High Scores, Current and Average Current Scores
+### High Scores, Current, and Average Current Scores
 
 ![Scores](https://aihydra.osoyalce.com/images/scores.png)
 
-### Loss
+### Loss Plot
 
 - Full training loss over time
 - Sliding window (recent 75 episodes)
@@ -343,9 +386,9 @@ behavior can both adapt when learning plateaus.
 
 ---
 
-## Epsilon Nice - Bounded Safe-Detour Policy
+## Epsilon Nice - Safe Exploration
 
-### Overview
+### Epsilon Nice Overview
 
 **Epsilon Nice** is a conditionally enabled policy wrapper that can temporarily 
 redirect action selection into a short safe-detour mode.
@@ -377,7 +420,7 @@ So:
 - `p_value` controls how often a Nice detour begins
 - `steps` controls how long the detour lasts
 
-### Override Behavior
+### Override Behaviour
 
 During an active Nice detour, the policy looks at the other available actions 
 and gathers the non-colliding alternatives.
@@ -389,7 +432,7 @@ This means Nice does not simply “block fatal moves.”
 It temporarily moves the policy into a safe-alternative action mode for a 
 bounded number of steps.
 
-### Key Properties
+**Key Properties**
 
 - **Post-epsilon gated** - Nice does nothing while normal epsilon exploration is still active
 - **Externally controlled** - Enabled and disabled by the training system
@@ -423,7 +466,7 @@ without relying on a GPU.
 
 Its performance comes from two complementary design pillars:
 
-### 1. Aligned Training Pipeline
+### Aligned Training Pipeline
 
 The training path is tightly aligned across memory, batching, and model execution.
 
@@ -438,7 +481,7 @@ This creates a continuous pipeline:
 Because each stage is designed to match the next, the system avoids unnecessary 
 copying, slicing, or recomputation.
 
-### 2. Lean Simulation Loop
+### Lean Simulation Loop
 
 The core run loop is intentionally minimal and stays focused on simulation and training only.
 
