@@ -311,7 +311,10 @@ A structured event stream capturing system behavior:
 ATH Replay Memory
 *****************
 
-This section outlines how the *ATH Memory* works.
+The *ATH Replay Memory* is a core component of *AI Hydra*.
+
+It sits between the simulation and the *Trainer*, and controls how
+experience is stored, organized, and sampled for learning.
 
 ATH Overview
 ============

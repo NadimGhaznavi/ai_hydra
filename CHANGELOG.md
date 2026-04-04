@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- Table of contents for the ATH Memory in the [PyPI](https://pypi.org/project/ai-hydra/) documentation.
+
+---
+
 ## [0.25.2] - 2026-04-04 @12:48 - Clear Docs Release
 
 ### Changed
