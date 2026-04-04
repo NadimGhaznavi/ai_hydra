@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.25.1] - 2026-04-04 @ 01:16 - HOTFIX Tuning
+## [0.25.1] - 2026-04-04 @ 01:16 - HOTFIX GRU Tuning
 
 ### Changed
 - Made `CLOSER_TO_FOOD` and `FURTHER_FROM_FOOD` rewards model specific.
