@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Changed
 - A *critical stagnation event* triggered a *radical reset* by the *ATH Gearbox*. Previously it did a reset to gear #3. Why #3? Human bias. This change makes the hard reset set the gear to #1. This is more inline with Sutton's *Bitter Lesson*, which is a guiding principle of this project.
+- Made *max moves multiplier* a model specific settings.
+- Set a new GRU baseline
+  - **Proto-Hamiltonian-like** folding behaviour emerging after episode 10,512 (high score of 67)
 ---
 
 ## [0.24.0] - 2026-04-01 - CUDA/MPS Release

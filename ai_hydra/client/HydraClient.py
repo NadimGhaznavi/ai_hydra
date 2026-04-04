@@ -533,6 +533,7 @@ class HydraClientTui(App):
             max_frames = DLinear.MAX_FRAMES
             max_gear = DLinear.MAX_GEAR
             max_crit_stag_eps = DLinear.MAX_HARD_RESET_EPISODES
+            max_moves_multiplier = DLinear.MAX_MOVES_MULTIPLIER
             max_moves_penalty = DLinear.MAX_MOVES_PENALTY
             max_stag_eps = DLinear.MAX_STAGNANT_EPISODES
             max_training_frames = DLinear.MAX_TRAINING_FRAMES
@@ -559,6 +560,7 @@ class HydraClientTui(App):
             max_frames = DRNN.MAX_FRAMES
             max_gear = DRNN.MAX_GEAR
             max_crit_stag_eps = DRNN.MAX_HARD_RESET_EPISODES
+            max_moves_multiplier = DRNN.MAX_MOVES_MULTIPLIER
             max_moves_penalty = DRNN.MAX_MOVES_PENALTY
             max_stag_eps = DRNN.MAX_STAGNANT_EPISODES
             max_training_frames = DRNN.MAX_TRAINING_FRAMES
@@ -585,6 +587,7 @@ class HydraClientTui(App):
             max_frames = DGRU.MAX_FRAMES
             max_gear = DGRU.MAX_GEAR
             max_crit_stag_eps = DGRU.MAX_HARD_RESET_EPISODES
+            max_moves_multiplier = DGRU.MAX_MOVES_MULTIPLIER
             max_moves_penalty = DGRU.MAX_MOVES_PENALTY
             max_stag_eps = DGRU.MAX_STAGNANT_EPISODES
             max_training_frames = DGRU.MAX_TRAINING_FRAMES
@@ -635,6 +638,9 @@ class HydraClientTui(App):
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
         # Rewards
+        self.settings.max_moves_multiplier_input.value = str(
+            max_moves_multiplier
+        )
         self.settings.max_moves_penalty_input.value = str(max_moves_penalty)
         self.settings.empty_move_reward_input.value = str(empty_move_reward)
 
