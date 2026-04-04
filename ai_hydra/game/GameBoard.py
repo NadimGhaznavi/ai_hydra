@@ -195,14 +195,6 @@ class GameBoard:
         food_up = int(self.food_position.y < head.y)  # food up
         food_down = int(self.food_position.y > head.y)  # food down
 
-        # Tail location
-        tail = self.snake_body[-1] if self.snake_body else self.snake_head
-
-        tail_left = int(tail.x < head.x)
-        tail_right = int(tail.x > head.x)
-        tail_up = int(tail.y < head.y)
-        tail_down = int(tail.y > head.y)
-
         # Food on the same X or Y axis
         food_on_x = int(head.x == self.food_position.x)
         food_on_y = int(head.y == self.food_position.y)
@@ -234,12 +226,7 @@ class GameBoard:
             # 15 - 16 food on same X/Y
             food_on_x,
             food_on_y,
-            # 17 - 20 Tail location
-            tail_left,
-            tail_right,
-            tail_up,
-            tail_down,
-            # 21.. length bits
+            # 17.. length bits
             *length_bits,
         ]
         # Make sure size of the state map matches what we use in the NN
