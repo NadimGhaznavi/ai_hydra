@@ -314,7 +314,20 @@ ATH Replay Memory
 The *ATH Replay Memory* is a core component of *AI Hydra*.
 
 It sits between the simulation and the *Trainer*, and controls how
-experience is stored, organized, and sampled for learning.
+experience is stored, organized, and sampled for learning. It is a key
+driver of emergent behavior.
+
+A key takeaway is that the AI can learn new policies even when it is
+trained on the same underlying data, simply by changing how that data
+is sampled.
+
+In particular, reducing the sequence length can expose patterns that
+are not learned when using longer sequences. Evidence suggests that some
+behaviors are easier to learn from shorter temporal windows, and are
+diluted or obscured when the sequence length is too long.
+
+In effect, changing the sequence length changes the temporal resolution
+at which the agent learns.
 
 ATH Overview
 ============
