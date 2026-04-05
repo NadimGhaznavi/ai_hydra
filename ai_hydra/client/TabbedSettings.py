@@ -175,6 +175,14 @@ class TabbedSettings(Widget):
             value=str(DLinear.MCTS_GATE_P_VALUE),
             id=DField.MCTS_GATE_P_VALUE_INPUT,
         )
+        # MCTS_STEPS
+        self.mcts_steps_label = Label(id=DField.MCTS_STEPS_LABEL)
+        self.mcts_steps_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DLinear.MCTS_STEPS),
+            id=DField.MCTS_STEPS_INPUT,
+        )
 
         # FOOD_REWARD
         self.food_rewards_label = Label(id=DField.FOOD_REWARD_LABEL)
@@ -606,6 +614,12 @@ class TabbedSettings(Widget):
                         Label(f"{DLabel.MCTS_EXPLORE_P_VALUE} : "),
                         self.mcts_explore_p_value_label,
                         self.mcts_explore_p_value_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.STEPS}               : "),
+                        self.mcts_steps_label,
+                        self.mcts_steps_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     id=DField.MCTS_BOX,

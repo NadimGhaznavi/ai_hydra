@@ -137,6 +137,8 @@ class DField:
     MCTS_GATE_P_VALUE_LABEL: Final[str] = "mcts_gate_p_value_label"
     MCTS_ITER_INPUT: Final[str] = "mcts_iter_input"
     MCTS_ITER_LABEL: Final[str] = "mcts_iter_label"
+    MCTS_STEPS_INPUT: Final[str] = "mcts_steps_input"
+    MCTS_STEPS_LABEL: Final[str] = "mcts_steps_label"
     MEM_SIZING_BOX: Final[str] = "mem_sizing_box"
     MIN_EPSILON: Final[str] = "min_epsilon"
     MIN_EPSILON_INPUT: Final[str] = "min_epsilon_input"

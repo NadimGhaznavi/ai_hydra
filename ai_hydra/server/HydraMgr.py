@@ -260,6 +260,7 @@ class HydraMgr(HydraServer):
             explore_p_value=self.cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
             gate_p_value=self.cfg.get(DNetField.MCTS_GATE_P_VALUE),
             iterations=self.cfg.get(DNetField.MCTS_ITER),
+            steps=self.cfg.get(DNetField.MCTS_STEPS),
         )
 
         behaviour_policy = BehaviourPolicy(

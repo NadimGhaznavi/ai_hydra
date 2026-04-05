@@ -29,6 +29,7 @@ class MCTSConfig:
     explore_p_value: float
     gate_p_value: float
     iterations: int
+    steps: int
     food_ends_episode: bool = False
 
 

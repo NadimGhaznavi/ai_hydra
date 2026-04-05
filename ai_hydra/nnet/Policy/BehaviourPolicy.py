@@ -29,7 +29,7 @@ class BehaviourPolicy(HydraPolicy):
         base_policy: HydraPolicy,
         epsilon_n: EpsilonNiceAlgo,
         nice_p_value: float,
-        steps: int,
+        nice_steps: int,
         nice_rng: random.Random,
         mcts_rng: random.Random,
         mcts_cfg: MCTSConfig,
@@ -49,21 +49,24 @@ class BehaviourPolicy(HydraPolicy):
         self.epsilon_n = epsilon_n
         self._nice_rng = nice_rng
         self._nice_p_value = nice_p_value
-        self._steps = steps
+        self._nice_steps = nice_steps
         self._mcts_rng = mcts_rng
         self._mcts_cfg = mcts_cfg
 
         self.log.info(f"Nice P-Value set: {nice_p_value}")
-        self.log.info(f"Nice STEPS: {steps}")
+        self.log.info(f"Nice steps: {nice_steps}")
         self.log.info(f"Monte Carlo Search Depth {mcts_cfg.search_depth}")
         self.log.info(f"Monte Carlo Gating P-Value {mcts_cfg.gate_p_value}")
         self.log.info(
             f"Monte Carlo Exploration P-Value {mcts_cfg.explore_p_value}"
         )
-        self.log.info(f"Monte Carlo Interations {mcts_cfg.iterations}")
+        self.log.info(f"Monte Carlo Iterations {mcts_cfg.iterations}")
+        self.log.info(f"Monte Carlo Steps {mcts_cfg.steps}")
 
         self._nice_enabled = False
         self._nice_steps_remaining = 0
+
+        self._mcts_steps_remaining = 0
 
     def cur_epsilon(self):
         return self.base_policy.cur_epsilon()
@@ -111,7 +114,7 @@ class BehaviourPolicy(HydraPolicy):
         await self.base_policy.played_game()
         await self.epsilon_n.played_game()
 
-    def _select_mcts_action(self, board: GameBoard, suggested):
+    def _select_mcts_action(self, board: GameBoard):
         mcts_cfg = self._mcts_cfg
         root = Node(
             board=board,
@@ -139,7 +142,7 @@ class BehaviourPolicy(HydraPolicy):
             return suggested
 
         # Check if Nice is enabled
-        if self._nice_enabled:
+        if self._nice_enabled and self._mcts_steps_remaining == 0:
 
             self.epsilon_n.incr_calls()
 
@@ -153,15 +156,19 @@ class BehaviourPolicy(HydraPolicy):
 
             # Determine whether or not to activate EpsilonNice (on the next step)
             if self._nice_rng.random() < self._nice_p_value:
-                self._nice_steps_remaining = self._steps
+                self._nice_steps_remaining = self._nice_steps
 
         # Check if Monte Carlo Tree Search is enabled
+
+        if self._mcts_steps_remaining > 0:
+            self._mcts_steps_remaining -= 1
+            return self._select_mcts_action(board=board)
+
         if (
             self._mcts_rng.random() < self._mcts_cfg.gate_p_value
             and self._mcts_cfg.search_depth > 0
         ):
-            return self._select_mcts_action(board=board, suggested=suggested)
+            self._mcts_steps_remaining = max(0, self._mcts_cfg.steps - 1)
+            return self._select_mcts_action(board=board)
 
-        # Just the regular NN suggested value
-        else:
-            return suggested
+        return suggested
