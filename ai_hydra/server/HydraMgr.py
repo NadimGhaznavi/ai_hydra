@@ -261,7 +261,7 @@ class HydraMgr(HydraServer):
             gate_p_value=self.cfg.get(DNetField.MCTS_GATE_P_VALUE),
             iterations=self.cfg.get(DNetField.MCTS_ITER),
             rng=mcts_rng,
-            score_thresh=self.cfg.get(DNetField.MCTS_SCORE_THRESH),
+            score_threshold=self.cfg.get(DNetField.MCTS_SCORE_THRESH),
             steps=self.cfg.get(DNetField.MCTS_STEPS),
         )
 
@@ -425,7 +425,7 @@ class HydraMgr(HydraServer):
                     old_state = sess.board.get_state()
 
                     # See if we're engaging Monte Carlo tree search
-                    train_mgr.maybe_trigger_mcts_burst(
+                    await train_mgr.maybe_trigger_mcts_burst(
                         board=sess.board, score=sess.score
                     )
 

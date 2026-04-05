@@ -204,9 +204,10 @@ class TrainMgr:
     ) -> None:
         self._calls += 1
         if (
-            score >= self.mcts_cfg.score_thresh
+            score >= self.mcts_cfg.score_threshold
             and self.mcts_cfg.rng.random() < self.mcts_cfg.gate_p_value
         ):
+            self._triggered += 1
             await self.policy.enable_mcts_burst()
 
     def _reset_window(self) -> None:

@@ -31,7 +31,7 @@ class MCTSConfig:
     iterations: int
     rng: random.Random
     steps: int
-    score_thresh: int
+    score_threshold: int
     food_ends_episode: bool = False
 
 
@@ -97,7 +97,6 @@ class Node:
                 board=result.new_board,
                 parent=self,
                 action_index=action,
-                rng=self.rng,
                 cfg=self.cfg,
                 is_terminal=result.is_terminal,
                 immediate_reward=result.reward,
@@ -121,13 +120,13 @@ class Node:
 
         # 2. Expansion + Simulation
         if current.N == 0:
-            search_depth_value = current.search_depth()
+            search_depth_value = current.rollout()
         else:
             current.create_child()
             if current.child:
                 chosen_child = current.rng.choice(list(current.child.values()))
                 current = chosen_child
-            search_depth_value = current.search_depth()
+            search_depth_value = current.rollout()
 
         # 3. Backpropagation
         node = current
@@ -136,7 +135,7 @@ class Node:
             node.T += search_depth_value
             node = node.parent
 
-    def search_depth(self) -> float:
+    def rollout(self) -> float:
         """
         Random playout from this board for a bounded depth.
         Returns cumulative reward starting from this node.
