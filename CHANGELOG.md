@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [0.26.0] - 2026-04-05 @ 11:19 - Monte Carlo Release
 
 ### Added
-- **Monte Carle Tree Search**
+- **Monte Carlo Tree Search**
   - This policy implements a limited *Monte Carlo Tree Search* (**MCTS**). The goal is not to replace the neural network, but to **selectively enrich the training data** in complex situations.
   - By design, MCTS operates **sparingly** and in **bursts**.
   - A burst is a short sequence of consecutive steps during which decision-making is temporarily delegated from the *neural network* to the *MCTS*. Outside of these bursts, the system behaves normally.
@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
     - **Steps** - The length of an MCTS burst.
     - Once triggered, MCTS remains active for this many consecutive steps.
     - Enables MCTS to guide short action sequences, not just individual moves.
-    - **Score Threshold** - A game must have achieved or surpassed this value for the **MCTS** to tigger.
+    - **Score Threshold** - A game must have achieved or surpassed this value for the **MCTS** to trigger.
 - Updated [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation with updated screenshots.
 
 ### Fixed
