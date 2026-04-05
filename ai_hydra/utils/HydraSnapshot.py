@@ -77,6 +77,7 @@ class HydraSnapshot:
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
         lines.extend(self._build_nice_table())
+        lines.extend(self._build_mcts_table())
         lines.extend(self._build_shift_mean_median_section())
         lines.extend(self._build_bucket_section())
 
@@ -194,6 +195,7 @@ class HydraSnapshot:
                     "Exploration P-Value",
                     cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
                 ),
+                ("Score Threshold", cfg.get(DNetField.MCTS_SCORE_THRESH)),
                 ("Steps", cfg.get(DNetField.MCTS_STEPS)),
             ],
         )
@@ -248,6 +250,35 @@ class HydraSnapshot:
 
         return self._build_table_section(
             "🙂 Epsilon Nice Events", headers, table_rows
+        )
+
+    def _build_mcts_table(self) -> list[str]:
+        rows = self.metrics.get_mcts_events()
+        headers = [
+            "Window",
+            "Calls",
+            "Triggered",
+            "Trigger Rate",
+        ]
+        table_rows: list[list[str]] = []
+
+        for (
+            window,
+            calls,
+            triggered,
+            trigger_rate,
+        ) in rows:
+            table_rows.append(
+                [
+                    window,
+                    str(calls),
+                    str(triggered),
+                    f"{trigger_rate:.4f}",
+                ]
+            )
+
+        return self._build_table_section(
+            "🎲 Monte Carlo Tree Search Events", headers, table_rows
         )
 
     def _build_event_log_section(self) -> list[str]:

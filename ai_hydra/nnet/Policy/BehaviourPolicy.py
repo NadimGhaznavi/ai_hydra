@@ -31,7 +31,6 @@ class BehaviourPolicy(HydraPolicy):
         nice_p_value: float,
         nice_steps: int,
         nice_rng: random.Random,
-        mcts_rng: random.Random,
         mcts_cfg: MCTSConfig,
         pub_func,
     ):
@@ -50,7 +49,6 @@ class BehaviourPolicy(HydraPolicy):
         self._nice_rng = nice_rng
         self._nice_p_value = nice_p_value
         self._nice_steps = nice_steps
-        self._mcts_rng = mcts_rng
         self._mcts_cfg = mcts_cfg
 
         self.log.info(f"Nice P-Value set: {nice_p_value}")
@@ -91,6 +89,20 @@ class BehaviourPolicy(HydraPolicy):
         )
         self.log.info(msg)
 
+    async def enable_mcts_burst(self):
+        """
+        Enable a Monte Carlo Tree Search Burst
+        """
+        # MCTS burst is already enabled
+        if self._mcts_steps_remaining > 0:
+            return
+
+        # EpsilonNice is taking the AI on a detout, don't interrupt it
+        if self._nice_steps_remaining > 0:
+            return
+
+        self._mcts_steps_remaining = self._mcts_cfg.steps
+
     async def enable_nice(self):
         # Globally disabled
         if self._nice_p_value == 0:
@@ -120,7 +132,6 @@ class BehaviourPolicy(HydraPolicy):
             board=board,
             parent=None,
             action_index=None,
-            rng=self._mcts_rng,
             cfg=mcts_cfg,
             is_terminal=False,
             immediate_reward=0.0,
@@ -162,13 +173,6 @@ class BehaviourPolicy(HydraPolicy):
 
         if self._mcts_steps_remaining > 0:
             self._mcts_steps_remaining -= 1
-            return self._select_mcts_action(board=board)
-
-        if (
-            self._mcts_rng.random() < self._mcts_cfg.gate_p_value
-            and self._mcts_cfg.search_depth > 0
-        ):
-            self._mcts_steps_remaining = max(0, self._mcts_cfg.steps - 1)
             return self._select_mcts_action(board=board)
 
         return suggested

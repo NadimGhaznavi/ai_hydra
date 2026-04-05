@@ -26,6 +26,14 @@ class LossEvent:
 
 
 @dataclass(slots=True, frozen=True)
+class MCTSEvent:
+    window: str
+    calls: int
+    triggered: int
+    trigger_rate: float
+
+
+@dataclass(slots=True, frozen=True)
 class MemEvent:
     epoch: int
     gear: int

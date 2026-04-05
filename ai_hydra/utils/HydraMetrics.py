@@ -17,6 +17,7 @@ from ai_hydra.utils.MetricEvent import (
     ScoreEvent,
     LossEvent,
     ShiftEvent,
+    MCTSEvent,
     MemEvent,
     NiceEvent,
 )
@@ -76,6 +77,9 @@ class HydraMetrics:
 
         # EpsilonNice events
         self._epsilon_nice_events: list[NiceEvent] = []
+
+        # Monte Carlo tree search events
+        self._mcts_events: list[MCTSEvent] = []
 
         # Seed the shift events list...
         self.add_shift_event(
@@ -205,6 +209,16 @@ class HydraMetrics:
         )
         return True
 
+    def add_mcts_event(self, window, calls, triggered, trigger_rate):
+        self._mcts_events.append(
+            MCTSEvent(
+                window=window,
+                calls=calls,
+                triggered=triggered,
+                trigger_rate=trigger_rate,
+            )
+        )
+
     def add_mean_median(self, epoch, mean, median):
         self._mean_and_median.append((epoch, mean, median))
 
@@ -313,6 +327,17 @@ class HydraMetrics:
                 e.override_rate,
             )
             for e in self._epsilon_nice_events
+        ]
+
+    def get_mcts_events(self) -> list[tuple[str, int, int, float]]:
+        return [
+            (
+                e.window,
+                e.calls,
+                e.triggered,
+                e.trigger_rate,
+            )
+            for e in self._mcts_events
         ]
 
     def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:

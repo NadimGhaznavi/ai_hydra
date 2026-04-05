@@ -543,6 +543,7 @@ class HydraClientTui(App):
             mcts_iter = DLinear.MCTS_ITER
             mcts_explore_p_value = DLinear.MCTS_EXPLORE_P_VALUE
             mcts_gate_p_value = DLinear.MCTS_GATE_P_VALUE
+            mcts_score_thresh = DLinear.MCTS_SCORE_THRESH
             mcts_steps = DLinear.MCTS_STEPS
             nice_p_value = DLinear.NICE_P_VALUE
             nice_steps = DLinear.NICE_STEPS
@@ -577,6 +578,7 @@ class HydraClientTui(App):
             mcts_iter = DRNN.MCTS_ITER
             mcts_explore_p_value = DRNN.MCTS_EXPLORE_P_VALUE
             mcts_gate_p_value = DRNN.MCTS_GATE_P_VALUE
+            mcts_score_thresh = DRNN.MCTS_SCORE_THRESH
             mcts_steps = DRNN.MCTS_STEPS
             nice_p_value = DRNN.NICE_P_VALUE
             nice_steps = DRNN.NICE_STEPS
@@ -611,6 +613,7 @@ class HydraClientTui(App):
             mcts_iter = DGRU.MCTS_ITER
             mcts_explore_p_value = DGRU.MCTS_EXPLORE_P_VALUE
             mcts_gate_p_value = DGRU.MCTS_GATE_P_VALUE
+            mcts_score_thresh = DGRU.MCTS_SCORE_THRESH
             mcts_steps = DGRU.MCTS_STEPS
             nice_p_value = DGRU.NICE_P_VALUE
             nice_steps = DGRU.NICE_STEPS
@@ -664,6 +667,7 @@ class HydraClientTui(App):
         )
         self.settings.mcts_gate_p_value_input.value = str(mcts_gate_p_value)
         self.settings.mcts_iter_input.value = str(mcts_iter)
+        self.settings.mcts_score_thresh_input.value = str(mcts_steps)
         self.settings.mcts_steps_input.value = str(mcts_steps)
         # ATH Memeory
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
@@ -756,6 +760,18 @@ class HydraClientTui(App):
                 no_safe_alternative=no_safe_alternatives,
                 trigger_rate=trigger_rate,
                 override_rate=override_rate,
+            )
+
+        if sender == DModule.TRAIN_MGR:
+            window = ev_payload[DField.STATS_WINDOW]
+            trigger_rate = ev_payload[DField.MCTS_TRIGGER_RATE]
+            calls = ev_payload[DField.MCTS_CALLS]
+            triggered = ev_payload[DField.MCTS_TRIGGERED]
+            self.metrics.add_mcts_event(
+                window=window,
+                calls=calls,
+                triggered=triggered,
+                trigger_rate=trigger_rate,
             )
 
     async def on_switch_changed(self, event: Switch.Changed) -> None:
@@ -1139,6 +1155,9 @@ class HydraClientTui(App):
         # MCTS_GATE_P_VALUE
         mcts_gate_p_value = self.settings.mcts_gate_p_value_input.value
         self.settings.mcts_gate_p_value_label.update(mcts_gate_p_value)
+        # MCTS_SCORE_THRESH
+        mcts_score_thresh = self.settings.mcts_score_thresh_input.value
+        self.settings.mcts_score_thresh_label.update(mcts_score_thresh)
         # MCTS_STEPS
         mcts_steps = self.settings.mcts_steps_input.value
         self.settings.mcts_steps_label.update(mcts_steps)
@@ -1189,6 +1208,7 @@ class HydraClientTui(App):
             DNetField.MCTS_EXPLORE_P_VALUE: mcts_explore_p_value,
             DNetField.MCTS_GATE_P_VALUE: mcts_gate_p_value,
             DNetField.MCTS_ITER: mcts_iter,
+            DNetField.MCTS_SCORE_THRESH: mcts_score_thresh,
             DNetField.MCTS_STEPS: mcts_steps,
             DNetField.MIN_EPSILON: min_epsilon,
             DNetField.NICE_P_VALUE: nice_p_value,

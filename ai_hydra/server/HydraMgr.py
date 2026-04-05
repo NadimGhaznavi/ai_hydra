@@ -260,6 +260,8 @@ class HydraMgr(HydraServer):
             explore_p_value=self.cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
             gate_p_value=self.cfg.get(DNetField.MCTS_GATE_P_VALUE),
             iterations=self.cfg.get(DNetField.MCTS_ITER),
+            rng=mcts_rng,
+            score_thresh=self.cfg.get(DNetField.MCTS_SCORE_THRESH),
             steps=self.cfg.get(DNetField.MCTS_STEPS),
         )
 
@@ -268,7 +270,6 @@ class HydraMgr(HydraServer):
             epsilon_n=epsilon_nice,
             nice_p_value=self.cfg.get(DNetField.NICE_P_VALUE),
             nice_rng=nice_rng,
-            mcts_rng=mcts_rng,
             nice_steps=self.cfg.get(DNetField.NICE_STEPS),
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
@@ -287,6 +288,7 @@ class HydraMgr(HydraServer):
             stag_thresh=self.cfg.get(DNetField.MAX_STAGNANT_EPISODES),
             crit_stag_thresh=self.cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
             reward_cfg=reward_cfg,
+            mcts_cfg=mcts_cfg,
         )
 
         self._train_mgr_model_type = model_type
@@ -422,7 +424,12 @@ class HydraMgr(HydraServer):
                     # Choose action (server-side)
                     old_state = sess.board.get_state()
 
-                    # EpsilonNice needs the board
+                    # See if we're engaging Monte Carlo tree search
+                    train_mgr.maybe_trigger_mcts_burst(
+                        board=sess.board, score=sess.score
+                    )
+
+                    # EpsilonNice and Monte Carlo tree search needs the board
                     action = train_mgr.policy.select_action(
                         old_state, sess.board
                     )

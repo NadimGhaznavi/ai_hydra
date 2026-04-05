@@ -193,7 +193,7 @@ HighScoresLog {
     border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
-    height: 7;
+    height: 8;
 }
 #reward_structure_box {
     background: black;
@@ -441,6 +441,9 @@ EventLog {
 .sim_stopped #mcts_depth_label {
     display: none;
 }
+.sim_stopped #mcts_score_thresh_label {
+    display: none;
+}
 .sim_stopped #mcts_steps_label {
     display: none;
 }
@@ -565,6 +568,9 @@ EventLog {
     display: none;
 }
 .sim_running #mcts_iter_input {
+    display: none;
+}
+.sim_running #mcts_score_thresh_input {
     display: none;
 }
 .sim_running #mcts_steps_input {
@@ -779,6 +785,12 @@ EventLog {
     display: none;
 }
 .bad_handshake #mcts_iter_label {
+    display: none;
+}
+.bad_handshake #mcts_score_thresh_input {
+    display: none;
+}
+.bad_handshake #mcts_score_thresh_label {
     display: none;
 }
 .bad_handshake #mcts_steps_input {

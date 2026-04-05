@@ -29,7 +29,9 @@ class MCTSConfig:
     explore_p_value: float
     gate_p_value: float
     iterations: int
+    rng: random.Random
     steps: int
+    score_thresh: int
     food_ends_episode: bool = False
 
 
@@ -39,7 +41,6 @@ class Node:
         board: GameBoard,
         parent: Optional["Node"],
         action_index: Optional[int],
-        rng: random.Random,
         cfg: MCTSConfig,
         *,
         is_terminal: bool = False,
@@ -48,7 +49,7 @@ class Node:
         self.board = board
         self.parent = parent
         self.action_index = action_index
-        self.rng = rng
+        self.rng = cfg.rng
         self.cfg = cfg
 
         self.done = is_terminal
