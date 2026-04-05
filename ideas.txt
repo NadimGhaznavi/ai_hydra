@@ -1,6 +1,6 @@
 What could drop into Hydra later
 
-Because of how you separated concerns, you could slot in very different brains.
+ Because of how you separated concerns, you could slot in very different brains.
 
 1️⃣ Transformer policy
 
