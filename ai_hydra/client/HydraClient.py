@@ -669,6 +669,7 @@ class HydraClientTui(App):
         self.settings.mcts_iter_input.value = str(mcts_iter)
         self.settings.mcts_score_thresh_input.value = str(mcts_steps)
         self.settings.mcts_steps_input.value = str(mcts_steps)
+        self.settings.mcts_score_thresh_input.value = str(mcts_score_thresh)
         # ATH Memeory
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
