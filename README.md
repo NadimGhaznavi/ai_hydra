@@ -17,7 +17,7 @@
   - [Config Settings](#config-settings)
   - [Memory Settings](#memory-settings)
   - [Rewards Settings](#rewards-settings)
-  - [Epsilon Nice Settings](#epsilon-nice-settings)
+  - [Policy Settings](#policy-settings) - EpsilonNice and Monte Carlo Tree Search
   - [Network Settings](#network-settings)
 - [Deterministic Simulations](#deterministic-simulations)
 - [Supported Models: Linear, RNN, GRU](#supported-models-linear-rnn-and-gru)
@@ -221,14 +221,42 @@ The **Memory** tab allows the user to configure the **ATH Memory**.
 - **Movement Incentives** - This section contains rewards that can be assigned for moving into an empty square, moving towards the food, and moving away from the food.
 - **Max Moves Multiplier** - This setting is used to configure the maximum number of moves the AI can make before the game ends. This is to avoid games where the AI circles endlessly. The maximum number of allowed moved is calculated by multiplying the length of the snake by this **max moves multiplier**.
 
-### Epsilon Nice Settings
+### Policy Settings
 
-![EpsilonNice Settings](https://aihydra.osoyalce.com/images/settings-nice.png)
+![Policy Settings](https://aihydra.osoyalce.com/images/settings-policy.png)
 
-The **EpsilonNice** policy execute a configurable number of steps in a random direction such that the move does not result in a collision (if possible).
+This tab contains settings for **EpsilonNice** and the **Monte Carlo Tree Search** features.
+
+**EpsilonNice** 
+
+This policy execute a configurable number of steps in a random direction such that the move does not result in a collision (if possible).
 
 - **Nice P-Value** - The probability that the **EpsilonNice** policy will be activated.
 - **Nice Steps** - The number of consecutive game steps that will be executed using the **EpsilonNice** algorithm.
+
+**Monte Carlo Tree Search**
+
+This policy implements a limited *Monte Carlo Tree Search* (**MCTS**). The goal is not to replace the neural network, but to **selectively enrich the training data** in complex situations.
+
+By design, MCTS operates **sparingly** and in **bursts**.
+
+A burst is a short sequence of consecutive steps during which decision-making is temporarily delegated from the *neural network* to the *MCTS*. Outside of these bursts, the system behaves normally.
+
+- **Gating P-Value** - This is the probability that the *MCTS* policy is activated.
+- **Search Depth** - The maxiumum number of steps, *into the future*, that simulation looks.
+- **Iterations** - The number of MCTS simulations performed per decision.
+  - Each iteration expands and evaluates part of the search tree.
+  - Higher values → more accurate action selection.
+- **Exploration P-Value** - The exploration constant used in the UCB (Upper Confidence Bound) formula
+  - Controls the balance between:
+    - exploiting known good actions (lower values)
+    - exploring less visited actions (higher values)
+- **Steps** - The length of an MCTS burst.
+  - Once triggered, MCTS remains active for this many consecutive steps.
+  - Enables MCTS to guide short action sequences, not just individual moves.
+- **Score Threshold** - A game must have achieved or surpassed this value for the **MCTS** to tigger.
+
+**IMPORTANT NOTE:** If the **EpsilonNice** algorithm is active, then the *MCTS* will **not** trigger.
 
 ### Network Settings
 

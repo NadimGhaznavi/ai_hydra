@@ -6,14 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.26.0] - 2026-04-05 @ 11:19 - Monte Carlo Release
+
+### Added
+- **Monte Carle Tree Search**
+  - This policy implements a limited *Monte Carlo Tree Search* (**MCTS**). The goal is not to replace the neural network, but to **selectively enrich the training data** in complex situations.
+  - By design, MCTS operates **sparingly** and in **bursts**.
+  - A burst is a short sequence of consecutive steps during which decision-making is temporarily delegated from the *neural network* to the *MCTS*. Outside of these bursts, the system behaves normally.
+  - The following settings are exposed in the TUI:
+    - **Gating P-Value** - This is the probability that the *MCTS* policy is activated.
+    - **Search Depth** - The maxiumum number of steps, *into the future*, that simulation looks.
+    - **Iterations** - The number of MCTS simulations performed per decision.
+    - Each iteration expands and evaluates part of the search tree.
+    - Higher values → more accurate action selection.
+    - **Exploration P-Value** - The exploration constant used in the UCB (Upper Confidence Bound) formula
+    - Controls the balance between:
+      - exploiting known good actions (lower values)
+      - exploring less visited actions (higher values)
+    - **Steps** - The length of an MCTS burst.
+    - Once triggered, MCTS remains active for this many consecutive steps.
+    - Enables MCTS to guide short action sequences, not just individual moves.
+    - **Score Threshold** - A game must have achieved or surpassed this value for the **MCTS** to tigger.
+- Updated [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation with updated screenshots.
 
 ### Fixed
 - Table of contents for the ATH Memory in the [PyPI](https://pypi.org/project/ai-hydra/) documentation.
+- Formatting of the settings fields.
 
 ---
 
-## [0.25.2] - 2026-04-04 @12:48 - Clear Docs Release
+## [0.25.2] - 2026-04-04 @ 12:48 - Clear Docs Release
 
 ### Changed
 - Complete rewrite of the section on *ATH Memory* for the [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
