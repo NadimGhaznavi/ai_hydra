@@ -155,7 +155,7 @@ class TabbedSettings(Widget):
             type=DField.INTEGER,
             compact=True,
             value=str(DLinear.MCTS_ITER),
-            id=DField.MCTS_DEPTH_INPUT,
+            id=DField.MCTS_ITER_INPUT,
         )
         # MCTS_EXPLORE_P_VALUE
         self.mcts_explore_p_value_label = Label(

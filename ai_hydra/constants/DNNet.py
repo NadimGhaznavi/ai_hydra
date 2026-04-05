@@ -39,7 +39,7 @@ class DGRU:
     MAX_MOVES_PENALTY: Final[float] = 0.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
-    MCTS_DEPTH: Final[int] = 5
+    MCTS_DEPTH: Final[int] = 10
     MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
     MCTS_GATE_P_VALUE: Final[float] = 0.01
     MCTS_ITER: Final[int] = 100
