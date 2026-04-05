@@ -72,6 +72,7 @@ class HydraSnapshot:
         lines.extend(self._build_model_section(cfg))
         lines.extend(self._build_rewards_section(cfg))
         lines.extend(self._build_memory_section(cfg))
+        lines.extend(self._build_mcts_section(cfg))
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
@@ -178,6 +179,20 @@ class HydraSnapshot:
                 (
                     "Critical Stagnant Threshold",
                     cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
+                ),
+            ],
+        )
+
+    def _build_mcts_section(self, cfg: SimCfg) -> list[str]:
+        return self._build_kv_section(
+            "🎲 Monte Carlo Tree Search",
+            [
+                ("Gating P-Value", cfg.get(DNetField.MCTS_GATE_P_VALUE)),
+                ("Search Depth", cfg.get(DNetField.MCTS_DEPTH)),
+                ("Iterations", cfg.get(DNetField.MCTS_ITER)),
+                (
+                    "Exploration P-Value",
+                    cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
                 ),
             ],
         )
