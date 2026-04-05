@@ -193,7 +193,7 @@ HighScoresLog {
     border-subtitle-style: bold;
     color: #72af75;
     text-style: bold;
-    height: 3;
+    height: 6;
 }
 #reward_structure_box {
     background: black;
