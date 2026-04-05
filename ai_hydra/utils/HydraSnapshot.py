@@ -194,6 +194,7 @@ class HydraSnapshot:
                     "Exploration P-Value",
                     cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
                 ),
+                ("Steps", cfg.get(DNetField.MCTS_STEPS)),
             ],
         )
 
