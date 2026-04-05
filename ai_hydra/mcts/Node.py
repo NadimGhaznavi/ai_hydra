@@ -19,17 +19,17 @@ from ai_hydra.game.GameLogic import GameLogic
 from ai_hydra.game.GameHelper import RewardCfg
 
 GAME_ACTIONS = [0, 1, 2]
-P_EXPLORE_VALUE = 0.9
-SEARCH_DEPTH = 10
 
 
 @dataclass
 class MCTSConfig:
     reward_cfg: RewardCfg
     mmm: int
+    search_depth: int
+    explore_p_value: float
+    gate_p_value: float
+    iterations: int
     food_ends_episode: bool = False
-    search_depth: int = SEARCH_DEPTH
-    explore_c: float = P_EXPLORE_VALUE
 
 
 class Node:
@@ -71,7 +71,7 @@ class Node:
         if self.parent is None or self.parent.N == 0:
             return self.T / self.N
 
-        return (self.T / self.N) + self.cfg.explore_c * sqrt(
+        return (self.T / self.N) + self.cfg.explore_p_value * sqrt(
             log(self.parent.N) / self.N
         )
 

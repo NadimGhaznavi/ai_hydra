@@ -257,6 +257,9 @@ class HydraMgr(HydraServer):
             mmm=self.cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
             food_ends_episode=False,
             search_depth=self.cfg.get(DNetField.MCTS_DEPTH),
+            explore_p_value=self.cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
+            gate_p_value=self.cfg.get(DNetField.MCTS_GATE_P_VALUE),
+            iterations=self.cfg.get(DNetField.MCTS_ITER),
         )
 
         behaviour_policy = BehaviourPolicy(

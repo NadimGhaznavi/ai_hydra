@@ -21,8 +21,6 @@ from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 from ai_hydra.mcts.Node import MCTSConfig, Node
 
-MCTS_SEARCH_ITERATIONS = 100
-
 
 class BehaviourPolicy(HydraPolicy):
     def __init__(
@@ -58,6 +56,11 @@ class BehaviourPolicy(HydraPolicy):
         self.log.info(f"Nice P-Value set: {nice_p_value}")
         self.log.info(f"Nice STEPS: {steps}")
         self.log.info(f"Monte Carlo Search Depth {mcts_cfg.search_depth}")
+        self.log.info(f"Monte Carlo Gating P-Value {mcts_cfg.gate_p_value}")
+        self.log.info(
+            f"Monte Carlo Exploration P-Value {mcts_cfg.explore_p_value}"
+        )
+        self.log.info(f"Monte Carlo Interations {mcts_cfg.iterations}")
 
         self._nice_enabled = False
         self._nice_steps_remaining = 0
@@ -120,7 +123,7 @@ class BehaviourPolicy(HydraPolicy):
             immediate_reward=0.0,
         )
 
-        for _ in range(MCTS_SEARCH_ITERATIONS):
+        for _ in range(self._mcts_cfg.iterations):
             root.explore()
 
         _, action = root.next()
@@ -156,7 +159,10 @@ class BehaviourPolicy(HydraPolicy):
             return suggested
 
         # Check if Monte Carlo Tree Search is enabled
-        elif self._mcts_cfg.search_depth > 0:
+        elif (
+            self._mcts_rng.random() < self._mcts_cfg.gate_p_value
+            and self._mcts_cfg.search_depth > 0
+        ):
             return self._select_mcts_action(board=board, suggested=suggested)
 
         # Just the regular NN suggested value

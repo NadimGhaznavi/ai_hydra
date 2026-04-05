@@ -149,6 +149,32 @@ class TabbedSettings(Widget):
             value=str(DLinear.MCTS_DEPTH),
             id=DField.MCTS_DEPTH_INPUT,
         )
+        # MCTS_SEARCH_ITERATIONS
+        self.mcts_iter_label = Label(id=DField.MCTS_ITER_LABEL)
+        self.mcts_iter_input = Input(
+            type=DField.INTEGER,
+            compact=True,
+            value=str(DLinear.MCTS_ITER),
+            id=DField.MCTS_DEPTH_INPUT,
+        )
+        # MCTS_EXPLORE_P_VALUE
+        self.mcts_explore_p_value_label = Label(
+            id=DField.MCTS_EXPLORE_P_VALUE_LABEL
+        )
+        self.mcts_explore_p_value_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DLinear.MCTS_EXPLORE_P_VALUE),
+            id=DField.MCTS_EXPLORE_P_VALUE_LABEL,
+        )
+        # MCTS_GATE_P_VALUE
+        self.mcts_gate_p_value_label = Label(id=DField.MCTS_GATE_P_VALUE_LABEL)
+        self.mcts_gate_p_value_input = Input(
+            type=DField.NUMBER,
+            compact=True,
+            value=str(DLinear.MCTS_GATE_P_VALUE),
+            id=DField.MCTS_GATE_P_VALUE_LABEL,
+        )
 
         # FOOD_REWARD
         self.food_rewards_label = Label(id=DField.FOOD_REWARD_LABEL)
@@ -559,9 +585,27 @@ class TabbedSettings(Widget):
                 # --- Monte Carlo Tree Search ---
                 Vertical(
                     Horizontal(
+                        Label(f"{DLabel.MCTS_GATE_P_VALUE}: "),
+                        self.mcts_gate_p_value_label,
+                        self.mcts_gate_p_value_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
                         Label(f"{DLabel.SEARCH_DEPTH}: "),
                         self.mcts_depth_label,
                         self.mcts_depth_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.MCTS_ITER}: "),
+                        self.mcts_iter_label,
+                        self.mcts_iter_input,
+                        classes=DField.INPUT_FIELD,
+                    ),
+                    Horizontal(
+                        Label(f"{DLabel.MCTS_EXPLORE_P_VALUE}: "),
+                        self.mcts_explore_p_value_label,
+                        self.mcts_explore_p_value_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     id=DField.MCTS_BOX,

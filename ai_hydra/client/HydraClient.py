@@ -1112,6 +1112,15 @@ class HydraClientTui(App):
         # MCTS_DEPTH
         mcts_depth = self.settings.mcts_depth_input.value
         self.settings.mcts_depth_label.update(mcts_depth)
+        # MCTS_ITER
+        mcts_iter = self.settings.mcts_iter_input.value
+        self.settings.mcts_iter_label.update(mcts_iter)
+        # MCTS_EXPLORE_P_VALUE
+        mcts_explore_p_value = self.settings.mcts_explore_p_value_input.value
+        self.settings.mcts_explore_p_value_label.update(mcts_explore_p_value)
+        # MCTS_GATE_P_VALUE
+        mcts_gate_p_value = self.settings.mcts_gate_p_value_input.value
+        self.settings.mcts_gate_p_value_label.update(mcts_gate_p_value)
 
         # FOOD_REWARD
         food_reward = self.settings.food_rewards_input.value
@@ -1156,6 +1165,9 @@ class HydraClientTui(App):
             DNetField.MAX_MOVES_PENALTY: max_moves_penalty,
             DNetField.MAX_STAGNANT_EPISODES: max_stag_eps,
             DNetField.MCTS_DEPTH: mcts_depth,
+            DNetField.MCTS_EXPLORE_P_VALUE: mcts_explore_p_value,
+            DNetField.MCTS_GATE_P_VALUE: mcts_gate_p_value,
+            DNetField.MCTS_ITER: mcts_iter,
             DNetField.MIN_EPSILON: min_epsilon,
             DNetField.NICE_P_VALUE: nice_p_value,
             DNetField.NICE_STEPS: nice_steps,

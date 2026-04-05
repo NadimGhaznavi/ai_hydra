@@ -429,6 +429,15 @@ EventLog {
 .sim_stopped #max_training_frames_label {
     display: none;
 }
+.sim_stopped #mcts_gate_p_value_label {
+    display: none;
+}
+.sim_stopped #mcts_iter_label {
+    display: none;
+}
+.sim_stopped #mcts_explore_p_value_label {
+    display: none;
+}
 .sim_stopped #mcts_depth_label {
     display: none;
 }
@@ -544,6 +553,15 @@ EventLog {
     display: none;
 }
 .sim_running #max_training_frames_input {
+    display: none;
+}
+.sim_running #mcts_gate_p_value_input {
+    display: none;
+}
+.sim_running #mcts_explore_p_value_input {
+    display: none;
+}
+.sim_running #mcts_iter_input {
     display: none;
 }
 .sim_running #mcts_depth_input {
@@ -737,6 +755,24 @@ EventLog {
     display: none;
 }
 .bad_handshake #mcts_depth_label {
+    display: none;
+}
+.bad_handshake #mcts_gate_p_value_input {
+    display: none;
+}
+.bad_handshake #mcts_gate_p_value_label {
+    display: none;
+}
+.bad_handshake #mcts_explore_p_value_input {
+    display: none;
+}
+.bad_handshake #mcts_explore_p_value_label {
+    display: none;
+}
+.bad_handshake #mcts_iter_input {
+    display: none;
+}
+.bad_handshake #mcts_iter_label {
     display: none;
 }
 .bad_handshake #min_epsilon_label {

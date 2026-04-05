@@ -40,6 +40,9 @@ class DGRU:
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MCTS_DEPTH: Final[int] = 5
+    MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
+    MCTS_GATE_P_VALUE: Final[float] = 0.01
+    MCTS_ITER: Final[int] = 100
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
@@ -76,6 +79,9 @@ class DRNN:
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MCTS_DEPTH: Final[int] = 10
+    MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
+    MCTS_GATE_P_VALUE: Final[float] = 0.01
+    MCTS_ITER: Final[int] = 100
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
@@ -123,6 +129,9 @@ class DLinear:
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MCTS_DEPTH: Final[int] = 10
+    MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
+    MCTS_GATE_P_VALUE: Final[float] = 0.01
+    MCTS_ITER: Final[int] = 100
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
@@ -189,6 +198,9 @@ class DNetField:
     MAX_STAGNANT_EPISODES: Final[str] = "max_stagnant_episodes"
     MAX_TRAINING_FRAMES: Final[str] = "max_training_frames"
     MCTS_DEPTH: Final[str] = "mcts_depth"
+    MCTS_ITER: Final[str] = "mcts_iter"
+    MCTS_EXPLORE_P_VALUE: Final[str] = "mcts_explore_p_value"
+    MCTS_GATE_P_VALUE: Final[str] = "mcts_gate_p_value"
     MIN_EPSILON: Final[str] = "min_epsilon"
     MODEL_TYPE: Final[str] = "model_type"
     MOVE_DELAY: Final[str] = "move_delay"
