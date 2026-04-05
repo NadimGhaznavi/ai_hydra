@@ -165,7 +165,7 @@ class TabbedSettings(Widget):
             type=DField.NUMBER,
             compact=True,
             value=str(DLinear.MCTS_EXPLORE_P_VALUE),
-            id=DField.MCTS_EXPLORE_P_VALUE_LABEL,
+            id=DField.MCTS_EXPLORE_P_VALUE_INPUT,
         )
         # MCTS_GATE_P_VALUE
         self.mcts_gate_p_value_label = Label(id=DField.MCTS_GATE_P_VALUE_LABEL)
@@ -173,7 +173,7 @@ class TabbedSettings(Widget):
             type=DField.NUMBER,
             compact=True,
             value=str(DLinear.MCTS_GATE_P_VALUE),
-            id=DField.MCTS_GATE_P_VALUE_LABEL,
+            id=DField.MCTS_GATE_P_VALUE_INPUT,
         )
 
         # FOOD_REWARD
