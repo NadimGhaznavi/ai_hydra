@@ -41,7 +41,7 @@ class DGRU:
     MAX_TRAINING_FRAMES: Final[int] = 512
     MCTS_DEPTH: Final[int] = 10
     MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
-    MCTS_GATE_P_VALUE: Final[float] = 0.001
+    MCTS_GATE_P_VALUE: Final[float] = 0.005
     MCTS_ITER: Final[int] = 100
     MCTS_SCORE_THRESH: Final[int] = 40
     MCTS_STEPS: Final[int] = 20
@@ -82,7 +82,7 @@ class DRNN:
     MAX_TRAINING_FRAMES: Final[int] = 512
     MCTS_DEPTH: Final[int] = 10
     MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
-    MCTS_GATE_P_VALUE: Final[float] = 0.001
+    MCTS_GATE_P_VALUE: Final[float] = 0.005
     MCTS_ITER: Final[int] = 100
     MCTS_SCORE_THRESH: Final[int] = 40
     MCTS_STEPS: Final[int] = 20
@@ -134,7 +134,7 @@ class DLinear:
     MAX_TRAINING_FRAMES: Final[int] = 512
     MCTS_DEPTH: Final[int] = 10
     MCTS_EXPLORE_P_VALUE: Final[float] = 0.9
-    MCTS_GATE_P_VALUE: Final[float] = 0.001
+    MCTS_GATE_P_VALUE: Final[float] = 0.005
     MCTS_ITER: Final[int] = 100
     MCTS_SCORE_THRESH: Final[int] = 40
     MCTS_STEPS: Final[int] = 20
