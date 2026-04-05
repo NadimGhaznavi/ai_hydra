@@ -446,19 +446,19 @@ class TabbedSettings(Widget):
             yield Vertical(
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.MAX_FRAMES}         : "),
+                        Label(f"{DLabel.MAX_FRAMES}          : "),
                         self.max_frames_label,
                         self.max_frames_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MAX_BUCKETS}     : "),
+                        Label(f"{DLabel.MAX_BUCKETS}      : "),
                         self.max_buckets_label,
                         self.max_buckets_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MAX_TRAINING_FRAMES}: "),
+                        Label(f"{DLabel.MAX_TRAINING_FRAMES} : "),
                         self.max_training_frames_label,
                         self.max_training_frames_input,
                         classes=DField.INPUT_FIELD,
@@ -467,25 +467,25 @@ class TabbedSettings(Widget):
                 ),
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.MAX_GEAR}       : "),
+                        Label(f"{DLabel.MAX_GEAR}        : "),
                         self.max_gear_label,
                         self.max_gear_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.NUM_COOLDOWN_EPISODES} : "),
+                        Label(f"{DLabel.NUM_COOLDOWN_EPISODES}  : "),
                         self.num_cooldown_eps_label,
                         self.num_cooldown_eps_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.UPSHIFT_COUNT_THRESHOLD}  : "),
+                        Label(f"{DLabel.UPSHIFT_COUNT_THRESHOLD}   : "),
                         self.upshift_count_threshold_label,
                         self.upshift_count_threshold_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.DOWNSHIFT_COUNT_THRESHOLD}: "),
+                        Label(f"{DLabel.DOWNSHIFT_COUNT_THRESHOLD} : "),
                         self.downshift_count_threshold_label,
                         self.downshift_count_threshold_input,
                         classes=DField.INPUT_FIELD,
@@ -494,13 +494,13 @@ class TabbedSettings(Widget):
                 ),
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.MAX_STAGNANT_EPISODES}          : "),
+                        Label(f"{DLabel.MAX_STAGNANT_EPISODES}           : "),
                         self.max_stag_eps_label,
                         self.max_stag_eps_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MAX_HARD_RESET_EPISODES} : "),
+                        Label(f"{DLabel.MAX_HARD_RESET_EPISODES}  : "),
                         self.max_crit_stag_eps_label,
                         self.max_crit_stag_eps_input,
                         classes=DField.INPUT_FIELD,
@@ -513,19 +513,19 @@ class TabbedSettings(Widget):
             yield Vertical(
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.FOOD_REWARD}         : "),
+                        Label(f"{DLabel.FOOD_REWARD}          : "),
                         self.food_rewards_label,
                         self.food_rewards_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.COLLISION_PENALTY}   : "),
+                        Label(f"{DLabel.COLLISION_PENALTY}    : "),
                         self.collision_penalty_label,
                         self.collision_penalty_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MAX_MOVES_PENALTY}   : "),
+                        Label(f"{DLabel.MAX_MOVES_PENALTY}    : "),
                         self.max_moves_penalty_label,
                         self.max_moves_penalty_input,
                         classes=DField.INPUT_FIELD,
@@ -534,19 +534,19 @@ class TabbedSettings(Widget):
                 ),
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.EMPTY_MOVE_REWARD}   : "),
+                        Label(f"{DLabel.EMPTY_MOVE_REWARD}    : "),
                         self.empty_move_reward_label,
                         self.empty_move_reward_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.CLOSER_TO_FOOD}      : "),
+                        Label(f"{DLabel.CLOSER_TO_FOOD}       : "),
                         self.closer_to_food_label,
                         self.closer_to_food_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.FURTHER_FROM_FOOD}   : "),
+                        Label(f"{DLabel.FURTHER_FROM_FOOD}    : "),
                         self.further_from_food_label,
                         self.further_from_food_input,
                         classes=DField.INPUT_FIELD,
@@ -555,7 +555,7 @@ class TabbedSettings(Widget):
                 ),
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.MAX_MOVES_MULTIPLIER}: "),
+                        Label(f"{DLabel.MAX_MOVES_MULTIPLIER} : "),
                         self.max_moves_multiplier_label,
                         self.max_moves_multiplier_input,
                         classes=DField.INPUT_FIELD,
@@ -569,13 +569,13 @@ class TabbedSettings(Widget):
                 # --- Nice ---
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.NICE_P_VALUE}: "),
+                        Label(f"{DLabel.NICE_P_VALUE}        : "),
                         self.nice_p_value_label,
                         self.nice_p_value_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.NICE_STEPS}  : "),
+                        Label(f"{DLabel.NICE_STEPS}          : "),
                         self.nice_steps_label,
                         self.nice_steps_input,
                         classes=DField.INPUT_FIELD,
@@ -585,25 +585,25 @@ class TabbedSettings(Widget):
                 # --- Monte Carlo Tree Search ---
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.MCTS_GATE_P_VALUE}: "),
+                        Label(f"{DLabel.MCTS_GATE_P_VALUE}      : "),
                         self.mcts_gate_p_value_label,
                         self.mcts_gate_p_value_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.SEARCH_DEPTH}: "),
+                        Label(f"{DLabel.SEARCH_DEPTH}        : "),
                         self.mcts_depth_label,
                         self.mcts_depth_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MCTS_ITER}: "),
+                        Label(f"{DLabel.MCTS_ITER}          : "),
                         self.mcts_iter_label,
                         self.mcts_iter_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.MCTS_EXPLORE_P_VALUE}: "),
+                        Label(f"{DLabel.MCTS_EXPLORE_P_VALUE} : "),
                         self.mcts_explore_p_value_label,
                         self.mcts_explore_p_value_input,
                         classes=DField.INPUT_FIELD,
@@ -616,22 +616,22 @@ class TabbedSettings(Widget):
             yield Vertical(
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.ROUTER_ADDR}       : "),
+                        Label(f"{DLabel.ROUTER_ADDR}        : "),
                         self.router_address,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.ROUTER_PORT}  : "),
+                        Label(f"{DLabel.ROUTER_PORT}   : "),
                         self.router_port,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.ROUTER_HB_PORT}: "),
+                        Label(f"{DLabel.ROUTER_HB_PORT} : "),
                         self.router_hb_port,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.ROUTER_STATUS}        : "),
+                        Label(f"{DLabel.ROUTER_STATUS}         : "),
                         self.router_hb_status,
                         classes=DField.INPUT_FIELD,
                     ),
@@ -639,17 +639,17 @@ class TabbedSettings(Widget):
                 ),
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.SERVER_ADDR}       : "),
+                        Label(f"{DLabel.SERVER_ADDR}        : "),
                         self.server_address,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.SERVER_PUB_PORT}  : "),
+                        Label(f"{DLabel.SERVER_PUB_PORT}   : "),
                         self.server_pub_port,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
-                        Label(f"{DLabel.SERVER_STATUS}        : "),
+                        Label(f"{DLabel.SERVER_STATUS}         : "),
                         self.server_status,
                         classes=DField.INPUT_FIELD,
                     ),

@@ -155,11 +155,8 @@ class BehaviourPolicy(HydraPolicy):
             if self._nice_rng.random() < self._nice_p_value:
                 self._nice_steps_remaining = self._steps
 
-            # Let the NN decide as it normally does....
-            return suggested
-
         # Check if Monte Carlo Tree Search is enabled
-        elif (
+        if (
             self._mcts_rng.random() < self._mcts_cfg.gate_p_value
             and self._mcts_cfg.search_depth > 0
         ):
