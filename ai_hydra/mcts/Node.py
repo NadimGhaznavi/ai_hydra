@@ -119,22 +119,22 @@ class Node:
 
         # 2. Expansion + Simulation
         if current.N == 0:
-            rollout_value = current.rollout()
+            search_depth_value = current.search_depth()
         else:
             current.create_child()
             if current.child:
                 chosen_child = current.rng.choice(list(current.child.values()))
                 current = chosen_child
-            rollout_value = current.rollout()
+            search_depth_value = current.search_depth()
 
         # 3. Backpropagation
         node = current
         while node is not None:
             node.N += 1
-            node.T += rollout_value
+            node.T += search_depth_value
             node = node.parent
 
-    def rollout(self) -> float:
+    def search_depth(self) -> float:
         """
         Random playout from this board for a bounded depth.
         Returns cumulative reward starting from this node.
@@ -147,7 +147,7 @@ class Node:
         depth = 0
         terminal = False
 
-        while not terminal and depth < self.cfg.rollout_depth:
+        while not terminal and depth < self.cfg.search_depth:
             action = self.rng.choice(GAME_ACTIONS)
             result = GameLogic.step(
                 board=board,
