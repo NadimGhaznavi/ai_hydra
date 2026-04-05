@@ -90,7 +90,7 @@ class TrainMgr:
         self.log.info(f"Set stagnation threshold: {stag_thresh}")
         self.log.info(f"Set critical stagnation threshold: {crit_stag_thresh}")
         self.log.info(
-            f"Set Monte Carlo score threshold: {mcts_cfg.score_thresh}"
+            f"Set Monte Carlo score threshold: {mcts_cfg.score_threshold}"
         )
         self.log.info(
             f"Set Monte Carlo gating p-value {mcts_cfg.gate_p_value}"
