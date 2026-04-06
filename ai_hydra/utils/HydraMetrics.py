@@ -197,6 +197,7 @@ class HydraMetrics:
             if self._recent_scores_dist[old_score] == 0:
                 del self._recent_scores_dist[old_score]
 
+        print(f"# MCTS scores: {len(self._cur_mcts_scores)}")
         return True
 
     def add_final_score(self, score: int) -> None:
