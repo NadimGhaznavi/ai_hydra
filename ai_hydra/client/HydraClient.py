@@ -277,6 +277,7 @@ class HydraClientTui(App):
             await self.on_quit()
 
         elif button_id == DGameMethod.RESET_RUN:
+            self.metrics._init_data()
             await self._send_reset()
 
         elif button_id == DGameMethod.RESUME_RUN:
@@ -296,7 +297,7 @@ class HydraClientTui(App):
                 self.mq.disable_per_step_sub()
             await self._send_start_run()
             mcts_freq = self.settings.mcts_frequency_input.value
-            self.metrics.set_mcts_freq(frequency=int(mcts_freq))
+            self.metrics.set_mcts_freq(frequency=int(mcts_freq)
 
         elif button_id == DGameMethod.STOP_RUN:
             await self._send_stop_run()
