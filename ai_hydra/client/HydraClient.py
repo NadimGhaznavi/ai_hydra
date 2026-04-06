@@ -520,10 +520,12 @@ class HydraClientTui(App):
         model_type = event.value
         # Linear model defaults
         if model_type == DField.LINEAR:
+            closer_to_food = DLinear.CLOSER_TO_FOOD
             downshift_thresh = DLinear.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DLinear.DROPOUT_P
             empty_move_reward = DLinear.EMPTY_MOVE_REWARD
             epsilon_decay = DLinear.EPSILON_DECAY_RATE
+            further_from_food = DLinear.FURTHER_FROM_FOOD
             gamma = DLinear.GAMMA
             hidden_size = DLinear.HIDDEN_SIZE
             initial_epsilon = DLinear.INITIAL_EPSILON
@@ -547,10 +549,12 @@ class HydraClientTui(App):
 
         # RNN model defaults
         elif model_type == DField.RNN:
+            closer_to_food = DRNN.CLOSER_TO_FOOD
             downshift_thresh = DRNN.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DRNN.DROPOUT_P_VALUE
             empty_move_reward = DRNN.EMPTY_MOVE_REWARD
             epsilon_decay = DRNN.EPSILON_DECAY_RATE
+            further_from_food = DRNN.FURTHER_FROM_FOOD
             gamma = DRNN.GAMMA
             hidden_size = DRNN.HIDDEN_SIZE
             initial_epsilon = DRNN.INITIAL_EPSILON
@@ -574,10 +578,12 @@ class HydraClientTui(App):
 
         # GRU model defaults
         elif model_type == DField.GRU:
+            closer_to_food = DGRU.CLOSER_TO_FOOD
             downshift_thresh = DGRU.DOWNSHIFT_COUNT_THRESHOLD
             dropout_p = DGRU.DROPOUT_P_VALUE
             empty_move_reward = DGRU.EMPTY_MOVE_REWARD
             epsilon_decay = DGRU.EPSILON_DECAY_RATE
+            further_from_food = DGRU.FURTHER_FROM_FOOD
             gamma = DGRU.GAMMA
             hidden_size = DGRU.HIDDEN_SIZE
             initial_epsilon = DGRU.INITIAL_EPSILON
@@ -638,11 +644,13 @@ class HydraClientTui(App):
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
         # Rewards
+        self.settings.closer_to_food_input.value = str(closer_to_food)
+        self.settings.empty_move_reward_input.value = str(empty_move_reward)
+        self.settings.further_from_food_input.value = str(further_from_food)
         self.settings.max_moves_multiplier_input.value = str(
             max_moves_multiplier
         )
         self.settings.max_moves_penalty_input.value = str(max_moves_penalty)
-        self.settings.empty_move_reward_input.value = str(empty_move_reward)
 
         # Update HydraMetrics
         self.metrics.set_initial_epsilon(initial_epsilon)
