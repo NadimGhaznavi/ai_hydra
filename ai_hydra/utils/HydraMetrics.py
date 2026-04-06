@@ -34,13 +34,13 @@ class HydraMetrics:
 
     def __init__(self, initial_epsilon: float) -> None:
         self._cur_epsilon = initial_epsilon
-        self.init_data()
+        self._init_data()
 
     def set_mcts_freq(self, frequency: int):
         max_data_pts = MAX_CUR_SCORES // frequency
         self._cur_mcts_scores = deque(maxlen=max_data_pts)
 
-    def init_data(self):
+    def _init_data(self):
         self._cur_epoch: int = 0
         self._cur_loss: float | None = None
         self._cur_score: int = 0
