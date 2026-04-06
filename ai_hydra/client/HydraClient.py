@@ -765,19 +765,6 @@ class HydraClientTui(App):
                 override_rate=override_rate,
             )
 
-        if sender == DModule.TRAIN_MGR:
-            if DField.STATS_WINDOW in ev_payload:
-                window = ev_payload[DField.STATS_WINDOW]
-                trigger_rate = ev_payload[DField.MCTS_TRIGGER_RATE]
-                calls = ev_payload[DField.MCTS_CALLS]
-                triggered = ev_payload[DField.MCTS_TRIGGERED]
-                self.metrics.add_mcts_event(
-                    window=window,
-                    calls=calls,
-                    triggered=triggered,
-                    trigger_rate=trigger_rate,
-                )
-
     async def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.control.id != DField.TURBO_MODE:
             return

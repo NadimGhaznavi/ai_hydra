@@ -11,7 +11,7 @@ from collections import deque
 from statistics import mean, median
 
 from ai_hydra.constants.DNNet import DRNN
-from ai_hydra.constants.DHydraTui import DPlotDef
+from ai_hydra.constants.DHydraTui import DPlotDef, DField
 from ai_hydra.utils.MetricEvent import (
     HighscoreEvent,
     ScoreEvent,
@@ -41,7 +41,6 @@ class HydraMetrics:
         self._cur_loss: float | None = None
         self._cur_score: int = 0
         self._elapsed_time: str = "0s"
-        self._next_bucket_snapshot_epoch = 100
 
         # Current scores data
         self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
@@ -71,15 +70,17 @@ class HydraMetrics:
         # Gear shift events
         self._shift_events: list[ShiftEvent] = []
 
-        # ATH Memory events
+        # ATH Memory
         self._memory_events: list[MemEvent] = []
         self._latest_memory_event: MemEvent | None = None
+        self._next_bucket_snapshot_epoch = 100
+        # MCTS ATH Memory
+        self._mcts_memory_events: list[MemEvent] = []
+        self._mcts_latest_memory_event: MemEvent | None = None
+        self._next_mcts_bucket_snapshot_epoch = 100
 
         # EpsilonNice events
         self._epsilon_nice_events: list[NiceEvent] = []
-
-        # Monte Carlo tree search events
-        self._mcts_events: list[MCTSEvent] = []
 
         # Seed the shift events list...
         self.add_shift_event(
@@ -91,6 +92,18 @@ class HydraMetrics:
         self._init_data()
 
     def add_bucket_stats(self, bucket_counts: dict, gear: int) -> None:
+        self._add_bucket_stats(
+            bucket_counts=bucket_counts, gear=gear, mem_type=DField.ATH_Memory
+        )
+
+    def add_mctp_bucket_stats(self, bucket_counts: dict, gear: int) -> None:
+        self._add_bucket_stats(
+            bucket_counts=bucket_counts, gear=gear, mem_type=DField.MCTS_MEMORY
+        )
+
+    def _add_bucket_stats(
+        self, bucket_counts: dict, gear: int, mem_type: str
+    ) -> None:
 
         ordered_counts = tuple(
             count for _, count in sorted(bucket_counts.items())
@@ -102,10 +115,14 @@ class HydraMetrics:
             bucket_counts=ordered_counts,
         )
 
-        self._latest_memory_event = mem_event
-
-        if self._cur_epoch < self._next_bucket_snapshot_epoch:
-            return
+        if mem_type == DField.ATH_Memory:
+            self._latest_memory_event = mem_event
+            if self._cur_epoch < self._next_bucket_snapshot_epoch:
+                return
+        elif mem_type == DField.MCTS_MEMORY:
+            self._mcts_latest_memory_event = mem_event
+            if self._cur_epoch < self._next_mcts_bucket_snapshot_epoch:
+                return
 
         mem_event = MemEvent(
             epoch=self._next_bucket_snapshot_epoch,
@@ -113,8 +130,12 @@ class HydraMetrics:
             bucket_counts=ordered_counts,
         )
 
-        self._memory_events.append(mem_event)
-        self._next_bucket_snapshot_epoch += 100
+        if mem_type == DField.ATH_Memory:
+            self._memory_events.append(mem_event)
+            self._next_bucket_snapshot_epoch += 100
+        elif mem_type == DField.MCTS_MEMORY:
+            self._mcts_memory_events.append(mem_event)
+            self._next_mcts_bucket_snapshot_epoch += 100
 
     def add_cur_epoch(self, epoch: int) -> None:
         self._cur_epoch = epoch
@@ -209,16 +230,6 @@ class HydraMetrics:
         )
         return True
 
-    def add_mcts_event(self, window, calls, triggered, trigger_rate):
-        self._mcts_events.append(
-            MCTSEvent(
-                window=window,
-                calls=calls,
-                triggered=triggered,
-                trigger_rate=trigger_rate,
-            )
-        )
-
     def add_mean_median(self, epoch, mean, median):
         self._mean_and_median.append((epoch, mean, median))
 
@@ -280,6 +291,15 @@ class HydraMetrics:
     def get_bucket_snaphot(self) -> MemEvent:
         return self._latest_memory_event
 
+    def get_mcts_bucket_snapshot_rows(self) -> list[tuple[int, ...]]:
+        rows = []
+        for e in self._mcts_memory_events:
+            rows.append((e.epoch, e.gear, *e.bucket_counts))
+        return rows
+
+    def get_mcts_bucket_snaphot(self) -> MemEvent:
+        return self._mcts_latest_memory_event
+
     def get_cur_epoch(self) -> int:
         return self._cur_epoch
 
@@ -327,17 +347,6 @@ class HydraMetrics:
                 e.override_rate,
             )
             for e in self._epsilon_nice_events
-        ]
-
-    def get_mcts_events(self) -> list[tuple[str, int, int, float]]:
-        return [
-            (
-                e.window,
-                e.calls,
-                e.triggered,
-                e.trigger_rate,
-            )
-            for e in self._mcts_events
         ]
 
     def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:

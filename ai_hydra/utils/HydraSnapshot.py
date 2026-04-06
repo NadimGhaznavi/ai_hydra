@@ -77,9 +77,9 @@ class HydraSnapshot:
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
         lines.extend(self._build_nice_table())
-        lines.extend(self._build_mcts_table())
         lines.extend(self._build_shift_mean_median_section())
-        lines.extend(self._build_bucket_section())
+        lines.extend(self._build_bucket_table())
+        lines.extend(self._build_mcts_bucket_table())
 
         return "\n".join(lines).rstrip() + "\n"
 
@@ -188,15 +188,13 @@ class HydraSnapshot:
         return self._build_kv_section(
             "🎲 Monte Carlo Tree Search",
             [
-                ("Gating P-Value", cfg.get(DNetField.MCTS_GATE_P_VALUE)),
-                ("Search Depth", cfg.get(DNetField.MCTS_DEPTH)),
-                ("Iterations", cfg.get(DNetField.MCTS_ITER)),
+                (DLabel.MCTS_FREQUENCY, cfg.get(DNetField.MCTS_FREQUENCY)),
+                (DLabel.SEARCH_DEPTH, cfg.get(DNetField.MCTS_DEPTH)),
+                (DLabel.MCTS_ITER, cfg.get(DNetField.MCTS_ITER)),
                 (
-                    "Exploration P-Value",
+                    DLabel.MCTS_EXPLORE_P_VALUE,
                     cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
                 ),
-                ("Score Threshold", cfg.get(DNetField.MCTS_SCORE_THRESH)),
-                ("Steps", cfg.get(DNetField.MCTS_STEPS)),
             ],
         )
 
@@ -250,35 +248,6 @@ class HydraSnapshot:
 
         return self._build_table_section(
             "🙂 Epsilon Nice Events", headers, table_rows
-        )
-
-    def _build_mcts_table(self) -> list[str]:
-        rows = self.metrics.get_mcts_events()
-        headers = [
-            "Window",
-            "Calls",
-            "Triggered",
-            "Trigger Rate",
-        ]
-        table_rows: list[list[str]] = []
-
-        for (
-            window,
-            calls,
-            triggered,
-            trigger_rate,
-        ) in rows:
-            table_rows.append(
-                [
-                    window,
-                    str(calls),
-                    str(triggered),
-                    f"{trigger_rate:.4f}",
-                ]
-            )
-
-        return self._build_table_section(
-            "🎲 Monte Carlo Tree Search Events", headers, table_rows
         )
 
     def _build_event_log_section(self) -> list[str]:
@@ -363,7 +332,7 @@ class HydraSnapshot:
             table_rows,
         )
 
-    def _build_bucket_section(self) -> list[str]:
+    def _build_bucket_table(self) -> list[str]:
         rows = self.metrics.get_bucket_snapshot_rows()
         table_rows: list[list[str]] = []
 
@@ -380,6 +349,27 @@ class HydraSnapshot:
 
         return self._build_table_section(
             "🪣 ATH Memory Bucket Usage",
+            headers,
+            table_rows,
+        )
+
+    def _build_mcts_bucket_table(self) -> list[str]:
+        rows = self.metrics.get_mcts_bucket_snapshot_rows()
+        table_rows: list[list[str]] = []
+
+        for row in rows:
+            table_rows.append([str(value) for value in row])
+
+        if table_rows:
+            bucket_count = len(table_rows[0]) - 1
+            headers = ["Epoch", "Gear"] + [
+                f"b{i}" for i in range(2, bucket_count + 1)
+            ]
+        else:
+            headers = ["Epoch", "Gear"]
+
+        return self._build_table_section(
+            "🪣 Monte-Carlo ATH Memory Bucket Usage",
             headers,
             table_rows,
         )
