@@ -3,9 +3,7 @@ from textual.containers import Horizontal
 from textual.widgets import Label
 from textual.color import Color
 
-from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.utils.HydraMetrics import HydraMetrics
-from ai_hydra.utils.MetricEvent import MemEvent
 
 BUCKET = "bucket"
 BASE_COLOR = "#0f1e10"
@@ -23,15 +21,23 @@ def percent_to_hex(p: float) -> str:
 class ATHMemory(Widget):
 
     def __init__(
-        self, metrics: HydraMetrics, max_buckets: int, *args, **kwargs
+        self,
+        metrics: HydraMetrics,
+        max_buckets: int,
+        mem_id: str,
+        mem_label: str,
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.metrics = metrics
         self._max_buckets = max_buckets
+        self._mem_id = mem_id
+        self._mem_label = mem_label
 
     def compose(self) -> ComposeResult:
         with Horizontal():
-            yield Label("Memory", id=DField.REPLAY_MEM)
+            yield Label(self._mem_label, id=self._mem_id)
             for i in range(self._max_buckets):
                 yield Label(id=f"b{i}", classes=BUCKET)
 

@@ -167,29 +167,13 @@ class TabbedSettings(Widget):
             value=str(DLinear.MCTS_EXPLORE_P_VALUE),
             id=DField.MCTS_EXPLORE_P_VALUE_INPUT,
         )
-        # MCTS_GATE_P_VALUE
-        self.mcts_gate_p_value_label = Label(id=DField.MCTS_GATE_P_VALUE_LABEL)
-        self.mcts_gate_p_value_input = Input(
+        # MCTS_FREQUENCY
+        self.mcts_frequency_label = Label(id=DField.MCTS_FREQUENCY_LABEL)
+        self.mcts_frequency_input = Input(
             type=DField.NUMBER,
             compact=True,
-            value=str(DLinear.MCTS_GATE_P_VALUE),
-            id=DField.MCTS_GATE_P_VALUE_INPUT,
-        )
-        # MCTS_STEPS
-        self.mcts_steps_label = Label(id=DField.MCTS_STEPS_LABEL)
-        self.mcts_steps_input = Input(
-            type=DField.INTEGER,
-            compact=True,
-            value=str(DLinear.MCTS_STEPS),
-            id=DField.MCTS_STEPS_INPUT,
-        )
-        # MCTS_SCORE_THRESH
-        self.mcts_score_thresh_label = Label(id=DField.MCTS_SCORE_THRESH_LABEL)
-        self.mcts_score_thresh_input = Input(
-            type=DField.INTEGER,
-            compact=True,
-            value=str(DLinear.MCTS_SCORE_THRESH),
-            id=DField.MCTS_SCORE_THRESH_INPUT,
+            value=str(DLinear.MCTS_FREQUENCY),
+            id=DField.MCTS_FREQUENCY_INPUT,
         )
 
         # FOOD_REWARD
@@ -601,9 +585,9 @@ class TabbedSettings(Widget):
                 # --- Monte Carlo Tree Search ---
                 Vertical(
                     Horizontal(
-                        Label(f"{DLabel.MCTS_GATE_P_VALUE:>19s} : "),
-                        self.mcts_gate_p_value_label,
-                        self.mcts_gate_p_value_input,
+                        Label(f"{DLabel.MCTS_FREQUENCY:>19s} : "),
+                        self.mcts_frequency_label,
+                        self.mcts_frequency_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     Horizontal(
@@ -622,18 +606,6 @@ class TabbedSettings(Widget):
                         Label(f"{DLabel.MCTS_EXPLORE_P_VALUE:>19s} : "),
                         self.mcts_explore_p_value_label,
                         self.mcts_explore_p_value_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.STEPS:>19s} : "),
-                        self.mcts_steps_label,
-                        self.mcts_steps_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.MCTS_SCORE_THRESH:>19s} : "),
-                        self.mcts_score_thresh_label,
-                        self.mcts_score_thresh_input,
                         classes=DField.INPUT_FIELD,
                     ),
                     id=DField.MCTS_BOX,

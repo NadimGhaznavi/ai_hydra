@@ -346,6 +346,52 @@ class ATHDataStore:
                 "Stored frame count went negative — memory corruption detected"
             )
 
+    def reset_bucket_indexes(self) -> None:
+        """
+        Reset the derived bucket index to an empty state.
+
+        This method:
+        - clears all bucket-to-episode mappings
+        - does NOT modify canonical storage (_games)
+        - does NOT update warmed buckets (caller must do that)
+
+        Invariants:
+            - resulting structure has keys 0 .. max_buckets - 1
+            - all bucket lists are empty
+        """
+
+        self._episodes_by_bucket = {
+            idx: [] for idx in range(self._max_buckets)
+        }
+
+        # Optional sanity check (cheap and useful)
+        if len(self._episodes_by_bucket) != self._max_buckets:
+            raise RuntimeError(
+                "Bucket index reset failed: incorrect number of buckets"
+            )
+
+        for idx, episodes in self._episodes_by_bucket.items():
+            if episodes:
+                raise RuntimeError(
+                    f"Bucket {idx} not empty after reset — corruption detected"
+                )
+
+    def set_gear(self, gear: int) -> None:
+        """
+        Set the current active gear for derived bucket indexing.
+
+        Parameters:
+            gear (int):
+                Active ATH gear. Must be in the valid 1-based range.
+
+        Invariants:
+            - gear must be valid for this store's configured max_gear
+            - this method does NOT rebuild bucket indexes
+            - this method does NOT mutate canonical storage
+        """
+        assert_valid_gear(gear=gear, max_gear=self._max_gear)
+        self._cur_gear = gear
+
     def update_warmed_buckets_list(self) -> None:
         """
         Recompute the list of bucket indices that contain at least one episode.
@@ -442,49 +488,3 @@ class ATHDataStore:
 
             for bucket_idx in range(num_populated_buckets):
                 self._episodes_by_bucket[bucket_idx].append(ep)
-
-    def reset_bucket_indexes(self) -> None:
-        """
-        Reset the derived bucket index to an empty state.
-
-        This method:
-        - clears all bucket-to-episode mappings
-        - does NOT modify canonical storage (_games)
-        - does NOT update warmed buckets (caller must do that)
-
-        Invariants:
-            - resulting structure has keys 0 .. max_buckets - 1
-            - all bucket lists are empty
-        """
-
-        self._episodes_by_bucket = {
-            idx: [] for idx in range(self._max_buckets)
-        }
-
-        # Optional sanity check (cheap and useful)
-        if len(self._episodes_by_bucket) != self._max_buckets:
-            raise RuntimeError(
-                "Bucket index reset failed: incorrect number of buckets"
-            )
-
-        for idx, episodes in self._episodes_by_bucket.items():
-            if episodes:
-                raise RuntimeError(
-                    f"Bucket {idx} not empty after reset — corruption detected"
-                )
-
-    def set_gear(self, gear: int) -> None:
-        """
-        Set the current active gear for derived bucket indexing.
-
-        Parameters:
-            gear (int):
-                Active ATH gear. Must be in the valid 1-based range.
-
-        Invariants:
-            - gear must be valid for this store's configured max_gear
-            - this method does NOT rebuild bucket indexes
-            - this method does NOT mutate canonical storage
-        """
-        assert_valid_gear(gear=gear, max_gear=self._max_gear)
-        self._cur_gear = gear

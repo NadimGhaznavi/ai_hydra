@@ -131,6 +131,125 @@ class GameBoard:
     def get_snake_head(self) -> Position:
         return self.snake_head
 
+    def get_grid_state(self) -> list[float]:
+        head = self.snake_head
+        dir_vec = self.direction
+
+        # === 1. Relative dangers (snake body vs wall) ===
+        def snake_danger_at(p: Position) -> bool:
+            return self._is_snake_collision(p)
+
+        def wall_danger_at(p: Position) -> bool:
+            return self._is_wall_collision(p)
+
+        if dir_vec.dx == 1 and dir_vec.dy == 0:  # right
+            straight = Position(head.x + 1, head.y)
+            right = Position(head.x, head.y + 1)
+            left = Position(head.x, head.y - 1)
+        elif dir_vec.dx == -1 and dir_vec.dy == 0:  # left
+            straight = Position(head.x - 1, head.y)
+            right = Position(head.x, head.y - 1)
+            left = Position(head.x, head.y + 1)
+        elif dir_vec.dx == 0 and dir_vec.dy == -1:  # up
+            straight = Position(head.x, head.y - 1)
+            right = Position(head.x + 1, head.y)
+            left = Position(head.x - 1, head.y)
+        else:  # down
+            straight = Position(head.x, head.y + 1)
+            right = Position(head.x - 1, head.y)
+            left = Position(head.x + 1, head.y)
+
+        snake_d_l = snake_danger_at(left)
+        snake_d_s = snake_danger_at(straight)
+        snake_d_r = snake_danger_at(right)
+        wall_d_l = wall_danger_at(left)
+        wall_d_s = wall_danger_at(straight)
+        wall_d_r = wall_danger_at(right)
+
+        # === 2. Direction one-hot ===
+        dir_l = int(dir_vec.dx == -1 and dir_vec.dy == 0)
+        dir_r = int(dir_vec.dx == 1 and dir_vec.dy == 0)
+        dir_u = int(dir_vec.dx == 0 and dir_vec.dy == -1)
+        dir_d = int(dir_vec.dx == 0 and dir_vec.dy == 1)
+
+        # === 3. Food features ===
+        food_left = int(self.food_position.x < head.x)
+        food_right = int(self.food_position.x > head.x)
+        food_up = int(self.food_position.y < head.y)
+        food_down = int(self.food_position.y > head.y)
+        food_on_x = int(head.x == self.food_position.x)
+        food_on_y = int(head.y == self.food_position.y)
+
+        # === 4. Length bits ===
+        length_bits = self._int_to_bits(
+            self.STATE_LENGTH_BITS, self.get_snake_length()
+        )
+
+        # === 5. 5x5 Directional Local Occupancy Grid ===
+        local_grid = []
+        for dy in range(-2, 3):  # rows relative to direction
+            for dx in range(-2, 3):  # columns
+                if dx == 0 and dy == 0:
+                    local_grid.append(0.0)  # head marker
+                    continue
+
+                # Rotate coordinates so current direction always points "up"
+                if dir_r:  # facing right
+                    wx = head.x + dy
+                    wy = head.y - dx
+                elif dir_l:  # facing left
+                    wx = head.x - dy
+                    wy = head.y + dx
+                elif dir_u:  # facing up
+                    wx = head.x + dx
+                    wy = head.y + dy
+                else:  # facing down
+                    wx = head.x - dx
+                    wy = head.y - dy
+
+                pos = Position(wx, wy)
+
+                if not self.is_position_within_bounds(pos):
+                    local_grid.append(-1.0)  # wall
+                elif self._is_snake_collision(pos):
+                    local_grid.append(1.0)  # body
+                elif pos == self.food_position:
+                    local_grid.append(0.5)  # food
+                else:
+                    local_grid.append(0.0)  # empty
+
+        # === Final state vector ===
+        state = [
+            # Dangers (6)
+            snake_d_l,
+            snake_d_s,
+            snake_d_r,
+            wall_d_l,
+            wall_d_s,
+            wall_d_r,
+            # Direction (4)
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+            # Food (6)
+            food_left,
+            food_right,
+            food_up,
+            food_down,
+            food_on_x,
+            food_on_y,
+            # Length bits (7)
+            *length_bits,
+            # Local grid (25)
+            *local_grid,
+        ]
+
+        assert (
+            len(state) == DNetDef.INPUT_SIZE
+        ), f"Expected {DNetDef.INPUT_SIZE}, got {len(state)}"
+        return [float(x) for x in state]
+
     def get_state(self) -> list[float]:
         head = self.snake_head
         width, height = self.grid_size

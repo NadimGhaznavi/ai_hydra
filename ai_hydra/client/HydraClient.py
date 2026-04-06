@@ -243,7 +243,18 @@ class HydraClientTui(App):
         yield ATHMemory(
             metrics=self.metrics,
             max_buckets=DMemDef.MAX_BUCKETS,
+            mem_id=DField.REPLAY_MEM,
+            mem_label=DLabel.MEMORY,
             id=DField.ATH_Memory,
+        )
+
+        # ATH Memory widget
+        yield ATHMemory(
+            metrics=self.metrics,
+            max_buckets=DMemDef.MAX_BUCKETS,
+            mem_id=DField.MCTS_REPLAY_MEM,
+            mem_label=DLabel.MCTS_MEMORY,
+            id=DField.MCTS_MEMORY,
         )
 
         # Focus widget: This is hidden, but it allows me to move focus away
@@ -542,9 +553,7 @@ class HydraClientTui(App):
             mcts_depth = DLinear.MCTS_DEPTH
             mcts_iter = DLinear.MCTS_ITER
             mcts_explore_p_value = DLinear.MCTS_EXPLORE_P_VALUE
-            mcts_gate_p_value = DLinear.MCTS_GATE_P_VALUE
-            mcts_score_thresh = DLinear.MCTS_SCORE_THRESH
-            mcts_steps = DLinear.MCTS_STEPS
+            mcts_frequency = DLinear.MCTS_FREQUENCY
             nice_p_value = DLinear.NICE_P_VALUE
             nice_steps = DLinear.NICE_STEPS
             num_cooldown_eps = DLinear.NUM_COOLDOWN_EPISODES
@@ -577,9 +586,7 @@ class HydraClientTui(App):
             mcts_depth = DRNN.MCTS_DEPTH
             mcts_iter = DRNN.MCTS_ITER
             mcts_explore_p_value = DRNN.MCTS_EXPLORE_P_VALUE
-            mcts_gate_p_value = DRNN.MCTS_GATE_P_VALUE
-            mcts_score_thresh = DRNN.MCTS_SCORE_THRESH
-            mcts_steps = DRNN.MCTS_STEPS
+            mcts_frequency = DRNN.MCTS_FREQUENCY
             nice_p_value = DRNN.NICE_P_VALUE
             nice_steps = DRNN.NICE_STEPS
             num_cooldown_eps = DRNN.NUM_COOLDOWN_EPISODES
@@ -612,9 +619,7 @@ class HydraClientTui(App):
             mcts_depth = DGRU.MCTS_DEPTH
             mcts_iter = DGRU.MCTS_ITER
             mcts_explore_p_value = DGRU.MCTS_EXPLORE_P_VALUE
-            mcts_gate_p_value = DGRU.MCTS_GATE_P_VALUE
-            mcts_score_thresh = DGRU.MCTS_SCORE_THRESH
-            mcts_steps = DGRU.MCTS_STEPS
+            mcts_frequency = DGRU.MCTS_FREQUENCY
             nice_p_value = DGRU.NICE_P_VALUE
             nice_steps = DGRU.NICE_STEPS
             num_cooldown_eps = DGRU.NUM_COOLDOWN_EPISODES
@@ -665,11 +670,8 @@ class HydraClientTui(App):
         self.settings.mcts_explore_p_value_input.value = str(
             mcts_explore_p_value
         )
-        self.settings.mcts_gate_p_value_input.value = str(mcts_gate_p_value)
+        self.settings.mcts_frequency_input.value = str(mcts_frequency)
         self.settings.mcts_iter_input.value = str(mcts_iter)
-        self.settings.mcts_score_thresh_input.value = str(mcts_steps)
-        self.settings.mcts_steps_input.value = str(mcts_steps)
-        self.settings.mcts_score_thresh_input.value = str(mcts_score_thresh)
         # ATH Memeory
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
@@ -1145,6 +1147,7 @@ class HydraClientTui(App):
         # NICE_STEPS
         nice_steps = self.settings.nice_steps_input.value
         self.settings.nice_steps_label.update(nice_steps)
+
         # MCTS_DEPTH
         mcts_depth = self.settings.mcts_depth_input.value
         self.settings.mcts_depth_label.update(mcts_depth)
@@ -1154,15 +1157,9 @@ class HydraClientTui(App):
         # MCTS_EXPLORE_P_VALUE
         mcts_explore_p_value = self.settings.mcts_explore_p_value_input.value
         self.settings.mcts_explore_p_value_label.update(mcts_explore_p_value)
-        # MCTS_GATE_P_VALUE
-        mcts_gate_p_value = self.settings.mcts_gate_p_value_input.value
-        self.settings.mcts_gate_p_value_label.update(mcts_gate_p_value)
-        # MCTS_SCORE_THRESH
-        mcts_score_thresh = self.settings.mcts_score_thresh_input.value
-        self.settings.mcts_score_thresh_label.update(mcts_score_thresh)
-        # MCTS_STEPS
-        mcts_steps = self.settings.mcts_steps_input.value
-        self.settings.mcts_steps_label.update(mcts_steps)
+        # MCTS_FREQUENCY
+        mcts_frequency = self.settings.mcts_frequency_input.value
+        self.settings.mcts_frequency_label.update(mcts_frequency)
 
         # FOOD_REWARD
         food_reward = self.settings.food_rewards_input.value
@@ -1208,10 +1205,8 @@ class HydraClientTui(App):
             DNetField.MAX_STAGNANT_EPISODES: max_stag_eps,
             DNetField.MCTS_DEPTH: mcts_depth,
             DNetField.MCTS_EXPLORE_P_VALUE: mcts_explore_p_value,
-            DNetField.MCTS_GATE_P_VALUE: mcts_gate_p_value,
+            DNetField.MCTS_FREQUENCY: mcts_frequency,
             DNetField.MCTS_ITER: mcts_iter,
-            DNetField.MCTS_SCORE_THRESH: mcts_score_thresh,
-            DNetField.MCTS_STEPS: mcts_steps,
             DNetField.MIN_EPSILON: min_epsilon,
             DNetField.NICE_P_VALUE: nice_p_value,
             DNetField.NICE_STEPS: nice_steps,

@@ -97,7 +97,6 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.TrainMgr import TrainMgr
 
         from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
-        from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
 
         from ai_hydra.nnet.LinearTrainer import LinearTrainer
         from ai_hydra.nnet.RecurrentTrainer import RecurrentTrainer
@@ -114,7 +113,7 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
 
-        from ai_hydra.mcts.Node import MCTSConfig
+        from ai_hydra.mcts.MCTSConfig import MCTSConfig
 
         from ai_hydra.constants.DNNet import DNetField
 

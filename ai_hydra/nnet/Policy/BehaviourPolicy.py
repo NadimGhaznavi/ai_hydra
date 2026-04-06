@@ -10,7 +10,6 @@
 from typing import Sequence
 import random
 
-from ai_hydra.constants.DNNet import DRNN
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DEvent import EV_STATUS
 
@@ -19,7 +18,8 @@ from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
 from ai_hydra.game.GameBoard import GameBoard
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
-from ai_hydra.mcts.Node import MCTSConfig, Node
+from ai_hydra.mcts.Node import Node
+from ai_hydra.mcts.MCTSConfig import MCTSConfig
 
 
 class BehaviourPolicy(HydraPolicy):

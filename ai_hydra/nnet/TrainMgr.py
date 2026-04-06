@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ai_hydra.constants.DHydra import DModule, DHydraLog
-from ai_hydra.constants.DReplayMemory import DMemDef
 from ai_hydra.constants.DEvent import EV_STATUS, EV_TYPE
 from ai_hydra.constants.DHydraTui import DField
 
@@ -11,7 +10,6 @@ from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.utils.HydraLog import HydraLog
 from ai_hydra.nnet.ATH.ATHMemory import ATHMemory
 from ai_hydra.nnet.LinearTrainer import LinearTrainer
-from ai_hydra.nnet.Policy.HydraPolicy import HydraPolicy
 from ai_hydra.nnet.Policy.BehaviourPolicy import BehaviourPolicy
 from ai_hydra.nnet.RecurrentTrainer import RecurrentTrainer
 from ai_hydra.nnet.SimpleReplayMemory import SimpleReplayMemory
@@ -22,7 +20,7 @@ from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 from ai_hydra.game.GameHelper import RewardCfg
 from ai_hydra.game.GameBoard import GameBoard
-from ai_hydra.mcts.Node import MCTSConfig
+from ai_hydra.mcts.MCTSConfig import MCTSConfig
 
 
 @dataclass(frozen=True)

@@ -16,23 +16,9 @@ from typing import Optional
 
 from ai_hydra.game.GameBoard import GameBoard
 from ai_hydra.game.GameLogic import GameLogic
-from ai_hydra.game.GameHelper import RewardCfg
+from ai_hydra.mcts.MCTSConfig import MCTSConfig
 
 GAME_ACTIONS = [0, 1, 2]
-
-
-@dataclass
-class MCTSConfig:
-    reward_cfg: RewardCfg
-    mmm: int
-    search_depth: int
-    explore_p_value: float
-    gate_p_value: float
-    iterations: int
-    rng: random.Random
-    steps: int
-    score_threshold: int
-    food_ends_episode: bool = False
 
 
 class Node:
