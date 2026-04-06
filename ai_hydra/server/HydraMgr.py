@@ -519,7 +519,7 @@ class HydraMgr(HydraServer):
                         if count % train_mgr.mcts_cfg.frequency == 0:
                             train_mgr.trigger_mcts()
                             mcts_control_enabled = True
-                            train_mgr.snake_mgr.mcts_enabled(True)
+                            snake.mcts_enabled(True)
 
                     # Publish
                     if mq is not None:
