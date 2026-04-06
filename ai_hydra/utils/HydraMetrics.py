@@ -37,7 +37,7 @@ class HydraMetrics:
         self._init_data()
 
     def set_mcts_freq(self, frequency: int):
-        max_data_pts = AVG_CUR_SCORES // frequency
+        max_data_pts = MAX_CUR_SCORES // frequency
         self._cur_mcts_scores = deque(maxlen=max_data_pts)
 
     def _init_data(self):
@@ -197,7 +197,6 @@ class HydraMetrics:
             if self._recent_scores_dist[old_score] == 0:
                 del self._recent_scores_dist[old_score]
 
-        print(f"# MCTS scores: {len(self._cur_mcts_scores)}")
         return True
 
     def add_final_score(self, score: int) -> None:
