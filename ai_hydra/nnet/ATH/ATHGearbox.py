@@ -261,7 +261,7 @@ class ATHGearBox:
                 EventMsg(
                     level=EV_STATUS.WARN,
                     message=(
-                        f"Stagnation alert({self._stagnation_alert_count}) - "
+                        f"{self._mcts_label}Stagnation alert({self._stagnation_alert_count}) - "
                         f"Shifting DOWN: {old_gear} > {self._cur_gear} - "
                         f"{self._cur_seq_length}/{self._cur_batch_size}"
                     ),
@@ -302,7 +302,7 @@ class ATHGearBox:
                     EventMsg(
                         level=EV_STATUS.GOOD,
                         message=(
-                            f"Shifting UP: {old_gear} > {self._cur_gear} - "
+                            f"{self._mcts_label}Shifting UP: {old_gear} > {self._cur_gear} - "
                             f"{self._cur_seq_length}/{self._cur_batch_size}"
                         ),
                         ev_type=EV_TYPE.SHIFTING,
@@ -344,7 +344,7 @@ class ATHGearBox:
                     EventMsg(
                         level=EV_STATUS.WARN,
                         message=(
-                            f"Shifting DOWN: {old_gear} > {self._cur_gear} - "
+                            f"{self._mcts_label}Shifting DOWN: {old_gear} > {self._cur_gear} - "
                             f"{self._cur_seq_length}/{self._cur_batch_size})"
                         ),
                         ev_type=EV_TYPE.SHIFTING,
@@ -457,7 +457,7 @@ class ATHGearBox:
 
     async def stagnation_cleared(self):
         if self._stagnation_alert_count != 0:
-            msg = "Resetting stagnation count to 0"
+            msg = f"{self._mcts_label}Resetting stagnation count to 0"
             await self.event.publish(
                 EventMsg(
                     level=EV_STATUS.INFO,
