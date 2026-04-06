@@ -54,12 +54,11 @@ class BehaviourPolicy(HydraPolicy):
         self.log.info(f"Nice P-Value set: {nice_p_value}")
         self.log.info(f"Nice steps: {nice_steps}")
         self.log.info(f"Monte Carlo Search Depth {mcts_cfg.search_depth}")
-        self.log.info(f"Monte Carlo Gating P-Value {mcts_cfg.gate_p_value}")
+        self.log.info(f"Monte Carlo Frequency {mcts_cfg.frequency}")
         self.log.info(
             f"Monte Carlo Exploration P-Value {mcts_cfg.explore_p_value}"
         )
         self.log.info(f"Monte Carlo Iterations {mcts_cfg.iterations}")
-        self.log.info(f"Monte Carlo Steps {mcts_cfg.steps}")
 
         self._nice_enabled = False
         self._nice_steps_remaining = 0
