@@ -4,6 +4,7 @@ from textual.widgets import Label
 from textual.color import Color
 
 from ai_hydra.utils.HydraMetrics import HydraMetrics
+from ai_hydra.constants.DHydraTui import DField
 
 BUCKET = "bucket"
 BASE_COLOR = "#0f1e10"
@@ -43,7 +44,11 @@ class ATHMemory(Widget):
 
     def refresh_data(self) -> None:
 
-        mem_event = self.metrics.get_bucket_snaphot()
+        if self._mem_id == DField.REPLAY_MEM:
+            mem_event = self.metrics.get_bucket_snaphot()
+        elif self._mem_id == DField.MCTS_REPLAY_MEM:
+            mem_event = self.metrics.get_mcts_bucket_snaphot()
+
         if mem_event is None:
             return
 
