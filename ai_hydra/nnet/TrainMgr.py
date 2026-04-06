@@ -193,7 +193,7 @@ class TrainMgr:
             )
             self._reset_window()
 
-    async def trigger_mcts(self, board: GameBoard) -> None:
+    async def trigger_mcts(self) -> None:
         await self.policy.enable_mcts()
 
     def _reset_window(self) -> None:
