@@ -36,6 +36,10 @@ class HydraMetrics:
         self._cur_epsilon = initial_epsilon
         self._init_data()
 
+    def set_mcts_freq(self, frequency: int):
+        max_data_pts = AVG_CUR_SCORES // frequency
+        self._cur_mcts_scores = deque(maxlen=max_data_pts)
+
     def _init_data(self):
         self._cur_epoch: int = 0
         self._cur_loss: float | None = None
@@ -44,7 +48,7 @@ class HydraMetrics:
 
         # Current scores data
         self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
-        self._cur_mcts_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
+        self._cur_mcts_scores: deque[ScoreEvent] = None
         self._avg_cur_scores: deque[ScoreEvent] = deque(maxlen=AVG_CUR_SCORES)
         self._avg_cur_scores_buf: list = []
 
