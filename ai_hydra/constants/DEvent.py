@@ -33,6 +33,7 @@ class EV_TYPE:
     BUCKET_CAPACITIES: Final[str] = "bucket_capacities"
     BUCKET_COUNTS: Final[str] = "bucket_counts"
     BUCKETS_STATUS: Final[str] = "buckets_status"
+    MCTS_BUCKETS_STATUS: Final[str] = "mcts_buckets_status"
     CLEARED: Final[str] = "cleared"
     CUR_GEAR: Final[str] = "cur_gear"
     SET: Final[str] = "set"
