@@ -474,10 +474,6 @@ class HydraMgr(HydraServer):
                             use_mcts=mcts_control_enabled
                         )
 
-                        if mcts_control_enabled:
-                            mcts_control_enabled = False
-                            train_mgr.policy.disable_mcts()
-
                         # Anti-Stagnation strategy
                         if DNetField.FINAL_SCORE in scores_payload:
                             await train_mgr.handle_stagnation(
@@ -513,6 +509,10 @@ class HydraMgr(HydraServer):
                         await train_mgr.replay.append(
                             t=t, final_score=sess.score
                         )
+
+                    if sess.done and mcts_control_enabled:
+                        mcts_control_enabled = False
+                        train_mgr.policy.disable_mcts()
 
                     # Publish
                     if mq is not None:
