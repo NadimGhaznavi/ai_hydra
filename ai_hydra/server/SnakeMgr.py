@@ -216,6 +216,7 @@ class SnakeMgr:
             if done:
                 if self._mcts_enabled:
                     scores_payload[DNetField.FINAL_MCTS_SCORE] = sess.score
+                    self.log.debug(f"Final MCTS Score: {sess.score}")
                 else:
                     scores_payload[DNetField.FINAL_SCORE] = sess.score
 
