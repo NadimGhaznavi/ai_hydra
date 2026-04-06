@@ -98,7 +98,7 @@ class HydraMetrics:
 
     def add_bucket_stats(self, bucket_counts: dict, gear: int) -> None:
         self._add_bucket_stats(
-            bucket_counts=bucket_counts, gear=gear, mem_type=DField.ATH_Memory
+            bucket_counts=bucket_counts, gear=gear, mem_type=DField.ATH_MEMORY
         )
 
     def add_mctp_bucket_stats(self, bucket_counts: dict, gear: int) -> None:
@@ -120,7 +120,7 @@ class HydraMetrics:
             bucket_counts=ordered_counts,
         )
 
-        if mem_type == DField.ATH_Memory:
+        if mem_type == DField.ATH_MEMORY:
             self._latest_memory_event = mem_event
             if self._cur_epoch < self._next_bucket_snapshot_epoch:
                 return
@@ -135,7 +135,7 @@ class HydraMetrics:
             bucket_counts=ordered_counts,
         )
 
-        if mem_type == DField.ATH_Memory:
+        if mem_type == DField.ATH_MEMORY:
             self._memory_events.append(mem_event)
             self._next_bucket_snapshot_epoch += 100
         elif mem_type == DField.MCTS_MEMORY:

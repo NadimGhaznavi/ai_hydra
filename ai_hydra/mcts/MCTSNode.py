@@ -14,21 +14,24 @@ from math import sqrt, log
 import random
 from typing import Optional
 
+from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.game.GameBoard import GameBoard
 from ai_hydra.game.GameLogic import GameLogic
 from ai_hydra.mcts.MCTSConfig import MCTSConfig
+from ai_hydra.utils.HydraLog import HydraLog
 
 GAME_ACTIONS = [0, 1, 2]
 
 
-class Node:
+class MCTSNode:
     def __init__(
         self,
         board: GameBoard,
-        parent: Optional["Node"],
+        parent: Optional["MCTSNode"],
         action_index: Optional[int],
         cfg: MCTSConfig,
         *,
+        log_level: DHydraLog,
         is_terminal: bool = False,
         immediate_reward: float = 0.0,
     ):
@@ -40,8 +43,15 @@ class Node:
 
         self.done = is_terminal
         self.immediate_reward = immediate_reward
+        self._log_level = log_level
 
-        self.child: Optional[dict[int, Node]] = None
+        self.log = HydraLog(
+            client_id=DModule.MCTS_NODE,
+            log_level=log_level,
+            to_console=True,
+        )
+
+        self.child: Optional[dict[int, MCTSNode]] = None
 
         # accumulated rollout value
         self.T = 0.0
@@ -67,7 +77,7 @@ class Node:
         if self.done:
             return
 
-        child: dict[int, Node] = {}
+        child: dict[int, MCTSNode] = {}
 
         for action in GAME_ACTIONS:
             result = GameLogic.step(
@@ -79,13 +89,14 @@ class Node:
                 food_ends_episode=self.cfg.food_ends_episode,
             )
 
-            child[action] = Node(
+            child[action] = MCTSNode(
                 board=result.new_board,
                 parent=self,
                 action_index=action,
                 cfg=self.cfg,
                 is_terminal=result.is_terminal,
                 immediate_reward=result.reward,
+                log_level=self._log_level,
             )
 
         self.child = child
@@ -151,7 +162,7 @@ class Node:
 
         return total
 
-    def next(self) -> tuple["Node", int]:
+    def next(self) -> tuple["MCTSNode", int]:
         if self.done:
             raise ValueError("game has ended")
 

@@ -29,7 +29,7 @@ class DField:
     """
 
     ALL: Final[str] = "all"
-    ATH_Memory: Final[str] = "ath_memory"
+    ATH_MEMORY: Final[str] = "ath_memory"
     BAD_HANDSHAKE: Final[str] = "bad_handshake"
     BATCH_SIZE: Final[str] = "batch_size"
     BATCH_SIZE_INPUT: Final[str] = "batch_size_input"

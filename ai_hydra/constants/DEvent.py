@@ -18,7 +18,7 @@ EVENT_MAP = {
     DModule.ATH_DATA_MGR: ("💾", "ATH Data Mgr"),
     DModule.ATH_GEARBOX: ("🏁", "ATH Gearbox"),
     DModule.EPSILON_ALGO: ("🧭", "Epsilon"),
-    DModule.EPSILON_NICE_POLICY: ("🙂", "Nice Policy"),
+    DModule.BEHAVIOUR_POLICY: ("🙂", "Behaviour Policy"),
     DModule.HYDRA_RNG: ("🎲", "Random"),
     DModule.SIMPLE_REPLAY_MEMORY: ("💾", "Replay Memory"),
     DModule.TRAIN_MGR: ("💪", "Train Manager"),

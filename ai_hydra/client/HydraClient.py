@@ -245,7 +245,7 @@ class HydraClientTui(App):
             max_buckets=DMemDef.MAX_BUCKETS,
             mem_id=DField.REPLAY_MEM,
             mem_label=DLabel.MEMORY,
-            id=DField.ATH_Memory,
+            id=DField.ATH_MEMORY,
         )
 
         # ATH Memory widget
@@ -757,7 +757,7 @@ class HydraClientTui(App):
                 )
                 # Let the TUI widget know there's new data
                 self.query_one(
-                    f"#{DField.ATH_Memory}", ATHMemory
+                    f"#{DField.ATH_MEMORY}", ATHMemory
                 ).refresh_data()
 
             # Bucket status
@@ -843,6 +843,8 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.CUR_EPSILON}", Label).update("")
         self.query_one(f"#{DField.RNN_BATCH_SIZE_LABEL}").update("")
         self.query_one(f"#{DField.SEQ_LENGTH_LABEL}").update("")
+        self.query_one(f"#{DField.ATH_MEMORY}", ATHMemory).clear()
+        self.query_one(f"#{DField.MCTS_MEMORY}", ATHMemory).clear()
 
     async def _send_handshake(self):
         msg = HydraMsg(

@@ -36,6 +36,11 @@ class ATHMemory(Widget):
         self._mem_id = mem_id
         self._mem_label = mem_label
 
+    def clear(self):
+        for count in range(self._max_buckets):
+            label_id = f"b{count}"
+            self.query_one(f"#{label_id}", Label).update("")
+
     def compose(self) -> ComposeResult:
         with Horizontal():
             yield Label(self._mem_label, id=self._mem_id)
@@ -60,8 +65,9 @@ class ATHMemory(Widget):
         bucket_idx = 0
         for count in bucket_counts:
             label_id = f"b{bucket_idx}"
-            cur_label = self.query_one(f"#{label_id}", Label)
-            cur_label.update(str(count))
+            cur_label = self.query_one(f"#{label_id}", Label).update(
+                str(count)
+            )
 
             pct = 1.0 if span == 0 else (count - min_size) / span
             alpha_hex = percent_to_hex(pct)
