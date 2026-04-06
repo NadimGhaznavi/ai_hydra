@@ -156,6 +156,7 @@ class HydraMgr(HydraServer):
                 DNetField.DOWNSHIFT_COUNT_THRESHOLD
             ),
             num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
+            is_mcts=False,
         )
 
         mcts_replay = ATHMemory(
@@ -173,6 +174,7 @@ class HydraMgr(HydraServer):
                 DNetField.DOWNSHIFT_COUNT_THRESHOLD
             ),
             num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
+            is_mcts=True,
         )
 
         # Linear Model

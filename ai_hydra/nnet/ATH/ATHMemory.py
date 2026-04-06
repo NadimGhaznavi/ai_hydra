@@ -31,7 +31,7 @@ class ATHMemory:
         upshift_count_thresh: int,
         downshift_count_thresh: int,
         num_cooldown_eps: int,
-        is_mcts: bool = False,
+        is_mcts: bool,
     ):
         # Local logging
         self.log = HydraLog(
