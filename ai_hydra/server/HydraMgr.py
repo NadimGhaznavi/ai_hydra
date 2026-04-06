@@ -130,7 +130,8 @@ class HydraMgr(HydraServer):
         # Hydra-style RNG streams
         _, epsilon_rng = self.hydra_rng.new_rng()
         _, nice_rng = self.hydra_rng.new_rng()
-        _, mcts_rng = self.hydra_rng.new_rng()
+        _, mcts_policy_rng = self.hydra_rng.new_rng()
+        _, mcts_replay_rng = self.hydra_rng.new_rng()
         _, replay_rng = self.hydra_rng.new_rng()
 
         if torch.cuda.is_available():
@@ -158,7 +159,7 @@ class HydraMgr(HydraServer):
         )
 
         mcts_replay = ATHMemory(
-            rng=mcts_rng,
+            rng=mcts_replay_rng,
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
             max_buckets=self.cfg.get(DNetField.MAX_BUCKETS),
@@ -277,7 +278,7 @@ class HydraMgr(HydraServer):
             explore_p_value=self.cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
             frequency=self.cfg.get(DNetField.MCTS_FREQUENCY),
             iterations=self.cfg.get(DNetField.MCTS_ITER),
-            rng=mcts_rng,
+            rng=mcts_policy_rng,
         )
 
         behaviour_policy = BehaviourPolicy(
@@ -485,10 +486,6 @@ class HydraMgr(HydraServer):
                         if loss is not None:
                             ep_payload[DNetField.LOSS] = loss
 
-                        if count % train_mgr.mcts_cfg.frequency == 0:
-                            train_mgr.trigger_mcts()
-                            mcts_control_enabled = True
-
                     reward = state_dict[DGameField.REWARD]
                     new_state = state_dict[DNetField.NEXT_STATE]
 
@@ -510,9 +507,15 @@ class HydraMgr(HydraServer):
                             t=t, final_score=sess.score
                         )
 
-                    if sess.done and mcts_control_enabled:
-                        mcts_control_enabled = False
-                        train_mgr.policy.disable_mcts()
+                    if sess.done:
+
+                        if mcts_control_enabled:
+                            mcts_control_enabled = False
+                            train_mgr.policy.disable_mcts()
+
+                        if count % train_mgr.mcts_cfg.frequency == 0:
+                            train_mgr.trigger_mcts()
+                            mcts_control_enabled = True
 
                     # Publish
                     if mq is not None:
