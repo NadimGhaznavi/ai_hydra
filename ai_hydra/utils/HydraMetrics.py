@@ -44,6 +44,7 @@ class HydraMetrics:
 
         # Current scores data
         self._cur_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
+        self._cur_mcts_scores: deque[ScoreEvent] = deque(maxlen=MAX_CUR_SCORES)
         self._avg_cur_scores: deque[ScoreEvent] = deque(maxlen=AVG_CUR_SCORES)
         self._avg_cur_scores_buf: list = []
 
@@ -164,6 +165,35 @@ class HydraMetrics:
 
     def add_event_log_msg(self, msg):
         self._eventlog_msgs.append(msg)
+
+    def add_final_mcts_score(self, score: int) -> None:
+        cur_scores = self._cur_mcts_scores
+
+        # Don't insert dupes
+        if cur_scores and self._cur_epoch == cur_scores[-1].epoch:
+            return False
+
+        # Current Scores plot data
+        score_event = ScoreEvent(epoch=self._cur_epoch, score=score)
+        cur_scores.append(score_event)
+
+        # All time score distribution data
+        self._scores_dist[score] = self._scores_dist.get(score, 0) + 1
+        self._scores_dist_list.append(score)
+
+        # Recent time score distribution data
+        self._recent_scores_dist[score] = (
+            self._recent_scores_dist.get(score, 0) + 1
+        )
+        self._recent_scores_dist_list.append(score)
+
+        if len(self._recent_scores_dist_list) > RECENT_SCORES_MAX:
+            old_score = self._recent_scores_dist_list.pop(0)
+            self._recent_scores_dist[old_score] -= 1
+            if self._recent_scores_dist[old_score] == 0:
+                del self._recent_scores_dist[old_score]
+
+        return True
 
     def add_final_score(self, score: int) -> None:
         cur_scores = self._cur_scores
@@ -305,6 +335,9 @@ class HydraMetrics:
 
     def get_cur_score(self) -> int:
         return self._cur_score
+
+    def get_cur_mcts_score_plot_points(self) -> list[tuple[int, int]]:
+        return [(e.epoch, e.score) for e in self._cur_mcts_scores]
 
     def get_cur_score_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.score) for e in self._cur_scores]

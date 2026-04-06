@@ -64,6 +64,19 @@ class GameScorePlot(Widget):
         plot.set_ylabel(DLabel.CUR_SCORES)
         plot.show_legend(location=LegendLocation.TOPLEFT)
 
+        mcts_score_events = self.metrics.get_cur_mcts_score_plot_points()
+        if not mcts_score_events:
+            return
+
+        mcts_episodes, mcts_scores = zip(*mcts_score_events)
+        plot.plot(
+            x=mcts_episodes,
+            y=mcts_scores,
+            line_style=DColor.PURPLE,
+            hires_mode=HiResMode.BRAILLE,
+            label=DLabel.MCTS_SCORE,
+        )
+
     def plot_highscores(self):
         plot_points = self.metrics.get_highscore_plot_points()
         if not plot_points:

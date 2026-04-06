@@ -82,12 +82,17 @@ class SnakeMgr:
         self.policy: Optional[HydraPolicy] = None
         self._start_time = datetime.now()
 
+        self._mcts_enabled = False
+
     # -------------------------
     # Session lifecycle
     # -------------------------
 
     def has_session(self, client_id: str) -> bool:
         return client_id in self.sessions
+
+    def mcts_enabled(self, flag: bool) -> None:
+        self._mcts_enabled = flag
 
     # -------------------------
     # Game operations (Phase 1)
@@ -209,7 +214,10 @@ class SnakeMgr:
             }
             # Create a "final score" field for the TUI
             if done:
-                scores_payload[DNetField.FINAL_SCORE] = sess.score
+                if self._mcts_enabled:
+                    scores_payload[DNetField.FINAL_MCTS_SCORE] = sess.score
+                else:
+                    scores_payload[DNetField.FINAL_SCORE] = sess.score
 
             # Add a "highscore" event
             if sess.score > sess.highscore:

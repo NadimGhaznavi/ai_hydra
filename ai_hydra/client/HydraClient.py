@@ -488,6 +488,7 @@ class HydraClientTui(App):
             cur_score = payload.get(DGameField.CUR_SCORE)
             highscore = payload.get(DGameField.HIGHSCORE)
             final_score = payload.get(DNetField.FINAL_SCORE)
+            final_mcts_score = payload.get(DNetField.FINAL_MCTS_SCORE)
 
             # Load the data into the metrics object
             metrics.add_cur_epoch(cur_epoch)
@@ -495,6 +496,13 @@ class HydraClientTui(App):
             is_new_highscore = metrics.add_highscore(highscore)
             if final_score is not None:
                 is_new_final_score = metrics.add_final_score(final_score)
+                if is_new_final_score:
+                    self.telemtry.game_score_plot.plot_cur_scores()
+                    self.telemtry.scores_dist_plot.plot_all()
+            if final_mcts_score is not None:
+                is_new_final_score = metrics.add_final_mcts_score(
+                    final_mcts_score
+                )
                 if is_new_final_score:
                     self.telemtry.game_score_plot.plot_cur_scores()
                     self.telemtry.scores_dist_plot.plot_all()

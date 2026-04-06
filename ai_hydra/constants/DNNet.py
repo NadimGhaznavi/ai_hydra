@@ -185,6 +185,7 @@ class DNetField:
     EMPTY_MOVE_REWARD: Final[str] = "empty_move_reward"
     EPSILON_DECAY: Final[str] = "epsilon_decay"
     FINAL_SCORE: Final[str] = "final_score"
+    FINAL_MCTS_SCORE: Final[str] = "final_mcts_score"
     FOOD_REWARD: Final[str] = "food_reward"
     FURTHER_FROM_FOOD: Final[str] = "further_from_food"
     GAMMA: Final[str] = "gamma"

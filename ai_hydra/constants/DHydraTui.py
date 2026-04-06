@@ -332,6 +332,7 @@ class DLabel:
     MCTS_EXPLORE_P_VALUE: Final[str] = "Exploration P-Value"
     MCTS_FREQUENCY: Final[str] = "Frequency"
     MCTS_ITER: Final[str] = "Iterations"
+    MCTS_SCORE: Final[str] = "Monte Carlo"
     MOVE_DELAY: Final[str] = "Move Delay"
     MOVEMENT_INCENTIVES: Final[str] = "Movement Incentives"
     NETWORK: Final[str] = "Network"
