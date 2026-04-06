@@ -153,7 +153,6 @@ class BehaviourPolicy(HydraPolicy):
 
         # Check if Monte Carlo Tree Search is enabled
         if self._mcts_enabled:
-            self._mcts_steps_remaining -= 1
             return self._select_mcts_action(board=board)
 
         # Check if Nice is enabled

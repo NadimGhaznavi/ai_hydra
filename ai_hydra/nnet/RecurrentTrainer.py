@@ -106,7 +106,7 @@ class RecurrentTrainer:
         if use_mcts and self._mcts_cold_memory:
             self._mcts_cold_memory = False
             self.log.debug(
-                "Monte Carlo - Training with {len(chunks)} batches with "
+                f"Monte Carlo - Training with {len(chunks)} batches with "
                 f"sequence length {len(chunks[0])}"
             )
 
