@@ -277,8 +277,8 @@ class HydraClientTui(App):
             await self.on_quit()
 
         elif button_id == DGameMethod.RESET_RUN:
-            self.metrics.clear()
             await self._send_reset()
+            self.reset_tui()
 
         elif button_id == DGameMethod.RESUME_RUN:
             await self._send_resume_run()
