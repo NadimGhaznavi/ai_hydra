@@ -217,6 +217,7 @@ class HydraMgr(HydraServer):
             trainer = RecurrentTrainer(
                 model=model,
                 replay=replay,
+                mcts_replay=mcts_replay,
                 lr=self.cfg.get(DNetField.LEARNING_RATE),
                 device=device,
                 log_level=self.log_level,
@@ -469,8 +470,8 @@ class HydraMgr(HydraServer):
                             train_mgr.policy.cur_epsilon()
                         )
 
-                        # train_mgr.replay.append(t=t, final_score=sess.score)
                         await train_mgr.trainer.train_long_memory()
+
                         # Anti-Stagnation strategy
                         if DNetField.FINAL_SCORE in scores_payload:
                             await train_mgr.handle_stagnation(
@@ -502,7 +503,14 @@ class HydraMgr(HydraServer):
                         done=bool(done),
                     )
 
-                    await train_mgr.replay.append(t=t, final_score=sess.score)
+                    if mcts_control_enabled:
+                        await train_mgr.mcts_replay.append(
+                            t=t, final_score=sess.score
+                        )
+                    else:
+                        await train_mgr.replay.append(
+                            t=t, final_score=sess.score
+                        )
 
                     # Publish
                     if mq is not None:

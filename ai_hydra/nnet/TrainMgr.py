@@ -65,7 +65,8 @@ class TrainMgr:
         snake_mgr: SnakeMgr,
         policy: BehaviourPolicy,
         trainer: LinearTrainer | RecurrentTrainer,
-        replay: SimpleReplayMemory | ATHMemory,
+        replay: ATHMemory,
+        mcts_replay: ATHMemory,
         client_id: str = DModule.TRAIN_MGR,
         model: LinearModel | RNNModel | GRUModel,
         log_level: DHydraLog,
@@ -97,6 +98,7 @@ class TrainMgr:
         self.policy = policy
         self.trainer = trainer
         self.replay = replay
+        self.mcts_replay = mcts_replay
         self.client_id = client_id
         self.model = model
         self._stag_thresh = stag_thresh

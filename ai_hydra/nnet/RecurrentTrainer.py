@@ -31,6 +31,7 @@ class RecurrentTrainer:
         self,
         model,
         replay: ATHMemory,
+        mcts_replay: ATHMemory,
         lr: float,
         log_level: DHydraLog,
         device: torch.device | None = None,
@@ -43,6 +44,7 @@ class RecurrentTrainer:
             self.target_model.eval()
 
         self.replay = replay
+        self.mcts_replay = mcts_replay
         self._tau = None
         self._gamma = None
 
@@ -58,7 +60,10 @@ class RecurrentTrainer:
         )
 
         self._losses: list[float] = []
+
         self._cold_memory = True
+        self._mcts_cold_memory = True
+
         if DQN_WITH_TARGET and DOUBLE_DQN:
             raise ValueError(
                 "You cannot enable both DQN_WITH_TARGET and DOUBLE_DQN"
@@ -88,13 +93,24 @@ class RecurrentTrainer:
                 self._tau * param.data + (1.0 - self._tau) * target_param.data
             )
 
-    async def train_long_memory(self) -> float | None:
+    async def train_long_memory(self, use_mcts: bool) -> float | None:
 
-        chunks = await self.replay.data_mgr.sample_chunks()
+        if use_mcts:
+            chunks = await self.mcts_replay.data_mgr.sample_chunks()
+        else:
+            chunks = await self.replay.data_mgr.sample_chunks()
+
         if chunks is None:
             return
 
-        if self._cold_memory:
+        if use_mcts and self._mcts_cold_memory:
+            self._mcts_cold_memory = False
+            self.log.debug(
+                "Monte Carlo - Training with {len(chunks)} batches with "
+                f"sequence length {len(chunks[0])}"
+            )
+
+        if not use_mcts and self._cold_memory:
             self._cold_memory = False
             self.log.debug(
                 f"Training with {len(chunks)} batches with sequence length "
