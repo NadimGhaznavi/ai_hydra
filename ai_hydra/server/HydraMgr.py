@@ -474,6 +474,10 @@ class HydraMgr(HydraServer):
                             use_mcts=mcts_control_enabled
                         )
 
+                        if mcts_control_enabled:
+                            mcts_control_enabled = False
+                            train_mgr.policy.disable_mcts()
+
                         # Anti-Stagnation strategy
                         if DNetField.FINAL_SCORE in scores_payload:
                             await train_mgr.handle_stagnation(
@@ -488,10 +492,6 @@ class HydraMgr(HydraServer):
                         if count % train_mgr.mcts_cfg.frequency == 0:
                             train_mgr.trigger_mcts()
                             mcts_control_enabled = True
-
-                        if mcts_control_enabled:
-                            mcts_control_enabled = False
-                            train_mgr.policy.disable_mcts()
 
                     reward = state_dict[DGameField.REWARD]
                     new_state = state_dict[DNetField.NEXT_STATE]
