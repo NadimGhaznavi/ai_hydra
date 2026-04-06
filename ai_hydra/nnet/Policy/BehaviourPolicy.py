@@ -88,14 +88,14 @@ class BehaviourPolicy(HydraPolicy):
         )
         self.log.info(msg)
 
-    async def disable_mcts(self):
+    def disable_mcts(self):
         """
         Disable Monte Carlo Tree Search control
         """
         # MCTS burst is already enabled
         self._mcts_enabled = False
 
-    async def enable_mcts(self):
+    def enable_mcts(self):
         """
         Enable a Monte Carlo Tree Search control for an episode
         """
