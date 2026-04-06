@@ -252,6 +252,11 @@ class ATHGearBox:
             self._cooldown_count = 0
             self._stagnation_flag = False
 
+            if self._is_mcts:
+                mcts_flag = True
+            else:
+                mcts_flag = False
+
             await self.event.publish(
                 EventMsg(
                     level=EV_STATUS.WARN,
@@ -265,6 +270,7 @@ class ATHGearBox:
                         DField.GEAR: self._cur_gear,
                         DField.SEQ_LENGTH: self._cur_seq_length,
                         DField.BATCH_SIZE: self._cur_batch_size,
+                        DField.MCTS_MEMORY: mcts_flag,
                     },
                 )
             )
@@ -287,6 +293,11 @@ class ATHGearBox:
                     max_training_frames=self._max_training_frames,
                 )
 
+                if self._is_mcts:
+                    mcts_flag = True
+                else:
+                    mcts_flag = False
+
                 await self.event.publish(
                     EventMsg(
                         level=EV_STATUS.GOOD,
@@ -299,6 +310,7 @@ class ATHGearBox:
                             DField.GEAR: self._cur_gear,
                             DField.SEQ_LENGTH: self._cur_seq_length,
                             DField.BATCH_SIZE: self._cur_batch_size,
+                            DField.MCTS_MEMORY: mcts_flag,
                         },
                     )
                 )
@@ -323,6 +335,11 @@ class ATHGearBox:
                     max_training_frames=self._max_training_frames,
                 )
 
+                if self._is_mcts:
+                    mcts_flag = True
+                else:
+                    mcts_flag = False
+
                 await self.event.publish(
                     EventMsg(
                         level=EV_STATUS.WARN,
@@ -335,6 +352,7 @@ class ATHGearBox:
                             DField.GEAR: self._cur_gear,
                             DField.SEQ_LENGTH: self._cur_seq_length,
                             DField.BATCH_SIZE: self._cur_batch_size,
+                            DField.MCTS_MEMORY: mcts_flag,
                         },
                     )
                 )
