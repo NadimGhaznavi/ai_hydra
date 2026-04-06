@@ -470,7 +470,9 @@ class HydraMgr(HydraServer):
                             train_mgr.policy.cur_epsilon()
                         )
 
-                        await train_mgr.trainer.train_long_memory()
+                        await train_mgr.trainer.train_long_memory(
+                            use_mcts=mcts_control_enabled
+                        )
 
                         # Anti-Stagnation strategy
                         if DNetField.FINAL_SCORE in scores_payload:
