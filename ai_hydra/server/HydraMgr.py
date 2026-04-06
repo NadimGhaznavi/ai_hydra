@@ -157,6 +157,23 @@ class HydraMgr(HydraServer):
             num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
         )
 
+        mcts_replay = ATHMemory(
+            rng=mcts_rng,
+            log_level=self.log_level,
+            pub_func=self.mq.publish_events,
+            max_buckets=self.cfg.get(DNetField.MAX_BUCKETS),
+            max_gear=self.cfg.get(DNetField.MAX_GEAR),
+            max_training_frames=self.cfg.get(DNetField.MAX_TRAINING_FRAMES),
+            max_frames=self.cfg.get(DNetField.MAX_FRAMES),
+            upshift_count_thresh=self.cfg.get(
+                DNetField.UPSHIFT_COUNT_THRESHOLD
+            ),
+            downshift_count_thresh=self.cfg.get(
+                DNetField.DOWNSHIFT_COUNT_THRESHOLD
+            ),
+            num_cooldown_eps=self.cfg.get(DNetField.NUM_COOLDOWN_EPISODES),
+        )
+
         # Linear Model
         if model_type == DField.LINEAR:
             self.log.info("Using Linear Model")
@@ -257,11 +274,9 @@ class HydraMgr(HydraServer):
             food_ends_episode=False,
             search_depth=self.cfg.get(DNetField.MCTS_DEPTH),
             explore_p_value=self.cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
-            gate_p_value=self.cfg.get(DNetField.MCTS_GATE_P_VALUE),
+            frequency=self.cfg.get(DNetField.MCTS_FREQUENCY),
             iterations=self.cfg.get(DNetField.MCTS_ITER),
             rng=mcts_rng,
-            score_threshold=self.cfg.get(DNetField.MCTS_SCORE_THRESH),
-            steps=self.cfg.get(DNetField.MCTS_STEPS),
         )
 
         behaviour_policy = BehaviourPolicy(
@@ -280,6 +295,7 @@ class HydraMgr(HydraServer):
             policy=behaviour_policy,
             trainer=trainer,
             replay=replay,
+            mcts_replay=mcts_replay,
             client_id=DModule.TRAIN_MGR,
             model=model,
             log_level=self.log_level,
@@ -404,6 +420,7 @@ class HydraMgr(HydraServer):
             snake.start_time(datetime.now())
 
             count = 0
+            mcts_control_enabled = False
 
             try:
                 while not self._run_loop_stop_event.is_set():
@@ -422,11 +439,6 @@ class HydraMgr(HydraServer):
 
                     # Choose action (server-side)
                     old_state = sess.board.get_state()
-
-                    # See if we're engaging Monte Carlo tree search
-                    await train_mgr.maybe_trigger_mcts_burst(
-                        board=sess.board, score=sess.score
-                    )
 
                     # EpsilonNice and Monte Carlo tree search needs the board
                     action = train_mgr.policy.select_action(
@@ -469,6 +481,14 @@ class HydraMgr(HydraServer):
                         loss = train_mgr.trainer.get_avg_loss()
                         if loss is not None:
                             ep_payload[DNetField.LOSS] = loss
+
+                        if count % train_mgr.mcts_cfg.frequency == 0:
+                            train_mgr.trigger_mcts()
+                            mcts_control_enabled = True
+
+                        if mcts_control_enabled:
+                            mcts_control_enabled = False
+                            train_mgr.policy.disable_mcts()
 
                     reward = state_dict[DGameField.REWARD]
                     new_state = state_dict[DNetField.NEXT_STATE]

@@ -35,6 +35,7 @@ class ATHDataMgr:
         max_frames: int,
         max_gear: int,
         max_training_frames: int,
+        is_mcts: bool,
     ):
         """
         Initialize ATHDataMgr.
@@ -104,6 +105,13 @@ class ATHDataMgr:
         self._max_frames = max_frames
         self._max_gear = max_gear
         self._max_training_frames = max_training_frames
+        self._is_mcts = is_mcts
+
+        # Monte Carle MCTS label
+        if is_mcts:
+            self._mcts_label = "Monte Carlo "
+        else:
+            self._mcts_label = ""
 
         # Local logging
         self.log = HydraLog(
@@ -389,7 +397,7 @@ class ATHDataMgr:
                 )
 
             if not self._has_logged_pruning:
-                msg = f"Memory is full ({self._max_frames}), pruning initiated"
+                msg = f"{self._mcts_label}Memory is full ({self._max_frames}), pruning initiated"
                 self.log.info(msg)
                 await self.event.publish(
                     EventMsg(level=EV_STATUS.INFO, message=msg)
@@ -537,10 +545,15 @@ class ATHDataMgr:
         if self._samples_served % 10 == 0:
             bucket_counts = self.store.get_bucket_counts()
 
+            if self._is_mcts:
+                ev_type = EV_TYPE.MCTS_BUCKETS_STATUS
+            else:
+                ev_type = EV_TYPE.BUCKETS_STATUS
+
             await self.event.publish(
                 EventMsg(
                     level=EV_STATUS.INFO,
-                    ev_type=EV_TYPE.BUCKETS_STATUS,
+                    ev_type=ev_type,
                     payload={
                         EV_TYPE.BUCKET_COUNTS: bucket_counts,
                         EV_TYPE.CUR_GEAR: self._cur_gear,

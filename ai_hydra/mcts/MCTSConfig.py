@@ -22,9 +22,7 @@ class MCTSConfig:
     mmm: int
     search_depth: int
     explore_p_value: float
-    gate_p_value: float
+    frequency: int
     iterations: int
     rng: random.Random
-    steps: int
-    score_threshold: int
     food_ends_episode: bool = False

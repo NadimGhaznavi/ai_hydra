@@ -711,17 +711,23 @@ class HydraClientTui(App):
                 batch_size = ev_payload[DField.BATCH_SIZE]
                 seq_length = ev_payload[DField.SEQ_LENGTH]
                 gear = ev_payload[DField.GEAR]
+                is_mcts = ev_payload[DField.MCTS_MEMORY]
 
-                self.query_one(
-                    f"#{DField.RNN_BATCH_SIZE_LABEL}", Label
-                ).update(str(batch_size))
-                self.query_one(f"#{DField.SEQ_LENGTH_LABEL}", Label).update(
-                    str(seq_length)
-                )
+                # We only display the main memory seq_length and batch_size
+                # in the TUI, not the MCTS values (they can be seen in the
+                # event log widget)
 
-                self.metrics.add_shift_event(
-                    gear=gear, seq_length=seq_length, batch_size=batch_size
-                )
+                if not is_mcts:
+                    self.query_one(
+                        f"#{DField.RNN_BATCH_SIZE_LABEL}", Label
+                    ).update(str(batch_size))
+                    self.query_one(
+                        f"#{DField.SEQ_LENGTH_LABEL}", Label
+                    ).update(str(seq_length))
+
+                    self.metrics.add_shift_event(
+                        gear=gear, seq_length=seq_length, batch_size=batch_size
+                    )
 
         if sender == DModule.ATH_DATA_MGR:
 

@@ -197,16 +197,8 @@ class TrainMgr:
             )
             self._reset_window()
 
-    async def maybe_trigger_mcts_burst(
-        self, board: GameBoard, score: int
-    ) -> None:
-        self._calls += 1
-        if (
-            score >= self.mcts_cfg.score_threshold
-            and self.mcts_cfg.rng.random() < self.mcts_cfg.gate_p_value
-        ):
-            self._triggered += 1
-            await self.policy.enable_mcts_burst()
+    async def trigger_mcts(self, board: GameBoard) -> None:
+        await self.policy.enable_mcts()
 
     def _reset_window(self) -> None:
         """

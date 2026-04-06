@@ -31,6 +31,7 @@ class ATHMemory:
         upshift_count_thresh: int,
         downshift_count_thresh: int,
         num_cooldown_eps: int,
+        is_mcts: bool = False,
     ):
         # Local logging
         self.log = HydraLog(
@@ -38,19 +39,27 @@ class ATHMemory:
             log_level=log_level,
             to_console=True,
         )
-        self.log.info(f"Set max buckets: {max_buckets}")
-        self.log.info(f"Set max gear: {max_gear}")
-        self.log.info(f"Set max training frames: {max_training_frames}")
-        self.log.info(f"Set frames: {max_frames}")
-        self.log.info(f"Set upshift count threshold: {upshift_count_thresh}")
+
+        MCTS = ""
+        if is_mcts:
+            MCTS = "Monte Carlo "
+
+        self.log.info(f"{MCTS}buckets: {max_buckets}")
+        self.log.info(f"{MCTS}Set max gear: {max_gear}")
+        self.log.info(f"{MCTS}Set max training frames: {max_training_frames}")
+        self.log.info(f"{MCTS}Set frames: {max_frames}")
         self.log.info(
-            f"Set downshift count threshold: {downshift_count_thresh}"
+            f"{MCTS}Set upshift count threshold: {upshift_count_thresh}"
         )
-        self.log.info(f"Set number of cooldown episodes: {num_cooldown_eps}")
+        self.log.info(
+            f"{MCTS}Set downshift count threshold: {downshift_count_thresh}"
+        )
+        self.log.info(
+            f"{MCTS}Set number of cooldown episodes: {num_cooldown_eps}"
+        )
 
         # Memory storage
         data_store = ATHDataStore(
-            log_level=log_level,
             max_buckets=max_buckets,
             max_gear=max_gear,
             max_training_frames=max_training_frames,
@@ -65,6 +74,7 @@ class ATHMemory:
             max_frames=max_frames,
             max_gear=max_gear,
             max_training_frames=max_training_frames,
+            is_mcts=is_mcts,
         )
 
         # The ATH Gearbox a.k.a. "The Automatic ATH Transmission."
@@ -78,6 +88,7 @@ class ATHMemory:
             num_cooldown_eps=num_cooldown_eps,
             max_gear=max_gear,
             max_training_frames=max_training_frames,
+            is_mcts=is_mcts,
         )
 
     async def append(

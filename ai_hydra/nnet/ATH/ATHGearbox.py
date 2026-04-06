@@ -51,6 +51,7 @@ class ATHGearBox:
         num_cooldown_eps: int,
         max_gear: int,
         max_training_frames: int,
+        is_mcts: bool,
     ):
         if not isinstance(data_store, ATHDataStore):
             raise TypeError(
@@ -116,6 +117,13 @@ class ATHGearBox:
         self._num_cooldown_eps = num_cooldown_eps
         self._max_gear = max_gear
         self._max_training_frames = max_training_frames
+        self._is_mcts = is_mcts
+
+        # MCTS Label
+        if is_mcts:
+            self._mcts_label = "Monte Carlo "
+        else:
+            self._mcts_label = ""
 
         # Local logging
         self.log = HydraLog(
@@ -391,10 +399,16 @@ class ATHGearBox:
             max_training_frames=self._max_training_frames,
         )
         msg = (
-            f"Critical Stagnation alert({crit_count}): Radical DOWN shift: "
+            f"{self._mcts_label}Critical Stagnation alert({crit_count}): "
+            f"Radical DOWN shift: "
             f"{old_gear} > {self._cur_gear} - "
             f"{self._cur_seq_length}/{self._cur_batch_size}"
         )
+        if self._is_mcts:
+            mcts_flag = True
+        else:
+            mcts_flag = False
+
         await self.event.publish(
             EventMsg(
                 level=EV_STATUS.BAD,
@@ -404,6 +418,7 @@ class ATHGearBox:
                     DField.GEAR: self._cur_gear,
                     DField.SEQ_LENGTH: self._cur_seq_length,
                     DField.BATCH_SIZE: self._cur_batch_size,
+                    DField.MCTS_MEMORY: mcts_flag,
                 },
             )
         )
@@ -433,13 +448,14 @@ class ATHGearBox:
         # Don't downshift if we just upshifted....
         num_ep_since_upshift = self._cur_epoch - self._last_upshift
         if num_ep_since_upshift > DMemDef.MAX_STAGNANT_EPISODES:
-            self.log.debug(
-                "Received stagnation warning: Setting stagnation flag"
+            self.log.info(
+                f"{self._mcts_label}Received stagnation warning: Setting stagnation flag"
             )
             self._stagnation_flag = True
             self._stagnation_alert_count += 1
             return
 
-        self.log.debug(
-            "Received stagnation warning: Ignoring because of recent upshift"
+        self.log.info(
+            f"{self._mcts_label}Received stagnation warning: Ignoring because "
+            "of recent upshift"
         )

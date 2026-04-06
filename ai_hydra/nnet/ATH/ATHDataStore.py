@@ -10,10 +10,7 @@
 
 from __future__ import annotations
 
-from ai_hydra.constants.DHydra import DHydraLog, DModule
-
 from ai_hydra.nnet.Transition import Transition
-from ai_hydra.utils.HydraLog import HydraLog
 
 from ai_hydra.nnet.ATH.ATHCommon import (
     Episode,
@@ -39,7 +36,6 @@ class ATHDataStore:
 
     def __init__(
         self,
-        log_level: DHydraLog,
         max_buckets: int,
         max_gear: int,
         max_training_frames: int,
@@ -70,13 +66,6 @@ class ATHDataStore:
         self._max_buckets = max_buckets
         self._max_gear = max_gear
         self._max_training_frames = max_training_frames
-
-        # Local logging
-        self.log = HydraLog(
-            client_id=DModule.ATH_DATA_STORE,
-            log_level=log_level,
-            to_console=True,
-        )
 
         # Canonical storage
         self._games: list[Episode] = []

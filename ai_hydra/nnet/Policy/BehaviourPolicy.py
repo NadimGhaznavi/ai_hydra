@@ -64,7 +64,7 @@ class BehaviourPolicy(HydraPolicy):
         self._nice_enabled = False
         self._nice_steps_remaining = 0
 
-        self._mcts_steps_remaining = 0
+        self._mcts_enabled = False
 
     def cur_epsilon(self):
         return self.base_policy.cur_epsilon()
@@ -89,19 +89,19 @@ class BehaviourPolicy(HydraPolicy):
         )
         self.log.info(msg)
 
-    async def enable_mcts_burst(self):
+    async def disable_mcts(self):
         """
-        Enable a Monte Carlo Tree Search Burst
+        Disable Monte Carlo Tree Search control
         """
         # MCTS burst is already enabled
-        if self._mcts_steps_remaining > 0:
-            return
+        self._mcts_enabled = False
 
-        # EpsilonNice is taking the AI on a detout, don't interrupt it
-        if self._nice_steps_remaining > 0:
-            return
-
-        self._mcts_steps_remaining = self._mcts_cfg.steps
+    async def enable_mcts(self):
+        """
+        Enable a Monte Carlo Tree Search control for an episode
+        """
+        # MCTS burst is already enabled
+        self._mcts_enabled = True
 
     async def enable_nice(self):
         # Globally disabled
@@ -152,6 +152,11 @@ class BehaviourPolicy(HydraPolicy):
             self._nice_steps_remaining = 0
             return suggested
 
+        # Check if Monte Carlo Tree Search is enabled
+        if self._mcts_enabled:
+            self._mcts_steps_remaining -= 1
+            return self._select_mcts_action(board=board)
+
         # Check if Nice is enabled
         if self._nice_enabled and self._mcts_steps_remaining == 0:
 
@@ -168,11 +173,5 @@ class BehaviourPolicy(HydraPolicy):
             # Determine whether or not to activate EpsilonNice (on the next step)
             if self._nice_rng.random() < self._nice_p_value:
                 self._nice_steps_remaining = self._nice_steps
-
-        # Check if Monte Carlo Tree Search is enabled
-
-        if self._mcts_steps_remaining > 0:
-            self._mcts_steps_remaining -= 1
-            return self._select_mcts_action(board=board)
 
         return suggested
