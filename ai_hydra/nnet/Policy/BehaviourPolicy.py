@@ -156,7 +156,7 @@ class BehaviourPolicy(HydraPolicy):
             return self._select_mcts_action(board=board)
 
         # Check if Nice is enabled
-        if self._nice_enabled and self._mcts_steps_remaining == 0:
+        if self._nice_enabled:
 
             self.epsilon_n.incr_calls()
 
