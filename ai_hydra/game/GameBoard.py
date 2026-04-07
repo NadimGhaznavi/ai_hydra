@@ -133,7 +133,7 @@ class GameBoard:
 
     def get_state(self) -> list[float]:
         head = self.snake_head
-        radius = 4
+        radius = 3
 
         # Egocentric basis vectors:
         # - forward is the snake's current heading
@@ -142,9 +142,6 @@ class GameBoard:
         right = Direction(-forward.dy, forward.dx)
 
         grid: list[float] = []
-
-        # last element is tail
-        tail_pos = self.snake_body[-1] if self.snake_body else None
 
         # Build a 7x7 local window centered on the head.
         # Local coordinates:
@@ -159,23 +156,20 @@ class GameBoard:
                     grid.append(0.0)  # head/origin
                     continue
 
-                # Egocentric world position
-                wx = head.x + (dx * right.dx) - (dy * forward.dx)
-                wy = head.y + (dx * right.dy) - (dy * forward.dy)
+                wx = head.x + (dx * right.dx) + ((-dy) * forward.dx)
+                wy = head.y + (dx * right.dy) + ((-dy) * forward.dy)
                 pos = Position(wx, wy)
 
                 if not self.is_position_within_bounds(pos):
                     grid.append(-0.5)  # wall
-                elif pos == self.food_position:
-                    grid.append(1.0)  # food (highest priority)
-                elif self.snake_body and pos == tail_pos:
-                    grid.append(0.2)  # tail = low danger
                 elif pos in self.snake_body:
-                    grid.append(0.5)  # body segment = high danger
+                    grid.append(0.5)  # snake body
+                elif pos == self.food_position:
+                    grid.append(1.0)  # food
                 else:
                     grid.append(0.0)  # empty
 
-        # Continuous relative food position
+        # Food position in local egocentric coordinates
         rel_x = self.food_position.x - head.x
         rel_y = self.food_position.y - head.y
 
@@ -187,6 +181,12 @@ class GameBoard:
             food_dx = -1.0
         elif local_dx > 0:
             food_dx = 1.0
+
+        food_dy = 0.0
+        if local_dy < 0:
+            food_dy = -1.0
+        elif local_dy > 0:
+            food_dy = 1.0
 
         food_dy = 0.0
         if local_dy < 0:
