@@ -97,7 +97,7 @@ class GameBoard:
     grid_size: Tuple[int, int]
     seed: int
     episode_id: int
-    STATE_LENGTH_BITS = DNetDef.STATE_LENGTH_BITS  # int(7)
+    STATE_LENGTH_BITS = 7  # DNetDef.STATE_LENGTH_BITS  # int(7)
 
     def clone(self) -> "GameBoard":
         # With immutability, "clone" is basically identity, but keep it explicit.
