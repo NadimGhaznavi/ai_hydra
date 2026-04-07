@@ -373,11 +373,11 @@ At the core of *ATH Memory* is the concept of a *gear*.
 
 ### Batch Size
 
-One of the ATH Memory settings is the *Max Training Frames* parameter.
+One of the ATH Memory settings is the **Max Training Frames** parameter.
 
 The batch size is determined by this simple calculation:
 
-  `batch_size = max_training_frames // sequence_length`
+`batch_size = max_training_frames // sequence_length`
 
 The minimum size of a batch is one.
 
@@ -494,6 +494,11 @@ so they can respond in different ways:
 
 - **ATH Gearbox** adjusts sequence length and batch size by shifting gears
 - **Epsilon Nice** can be enabled as a bounded corrective policy layer
+
+Additionally, when a new high score is achieved the *Train Manager* calls 
+`reset_cooldown()` on the *ATH Gearbox* delaying an upshift to allow the AI
+to fully exploit the opportunities at the current sequence length and batch
+size.
 
 This makes stagnation a first-class runtime signal rather than a passive metric.
 

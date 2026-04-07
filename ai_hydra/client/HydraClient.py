@@ -720,6 +720,7 @@ class HydraClientTui(App):
                 self.metrics.add_shift_event(
                     gear=gear, seq_length=seq_length, batch_size=batch_size
                 )
+                self.metrics.set_cur_gear(gear=gear)
 
         if sender == DModule.ATH_DATA_MGR:
 

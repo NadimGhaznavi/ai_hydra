@@ -389,19 +389,6 @@ The batch size is determined by this simple calculation:
 The minimum size of a batch is one.
 
 Buckets
-=======
-
-The *ATH Memory* contains **20 buckets**. The number **20** was arrived at by
-experimentation and was determined to be a *useful* number.
-
-As outlined above, a stored game is broken down into sequences, or ordered
-sets of frames. 
-
-- Slicing of a game into sequences starts at the last frame of each game and works its way forward
-  - This ensures that the final frame (with the reward) is always captured
-
-For example:
-
 - Assume that *ATH Memory* is in first gear
   - This means the sequence length is 4
 - If the game has 17 frames, then:
@@ -508,6 +495,9 @@ so they can respond in different ways:
 
 - **ATH Gearbox** adjusts sequence length and batch size by shifting gears
 - **Epsilon Nice** can be enabled as a bounded corrective policy layer
+
+Additionally, when a new high score is achieved the *Train Manager* calls 
+`reset_cooldown()` on the *ATH Gearbox* thereby delaying an upshift to allow the AI to fully exploit the opportunities at the current sequence length and batch size.
 
 This makes stagnation a first-class runtime signal rather than a passive metric.
 

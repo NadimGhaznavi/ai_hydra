@@ -296,17 +296,17 @@ class HydraSnapshot:
 
     def _build_highscore_section(self) -> list[str]:
         rows = self.metrics.get_highscore_snapshot_rows()
-        headers = ["Epoch", "Highscore", "Time", "Epsilon"]
+        headers = ["Epoch", "Gear", "Highscore", "Time", "Epsilon"]
         table_rows: list[list[str]] = []
 
-        for epoch, highscore, epsilon, ev_time in rows:
+        for epoch, gear, highscore, epsilon, ev_time in rows:
             try:
-                print(f"Epsilon {epsilon}, type: {type(epsilon)}")
                 epsilon_str = "" if epsilon is None else f"{epsilon:.4f}"
                 time_str = "" if ev_time is None else str(ev_time)
                 table_rows.append(
                     [
                         str(epoch),
+                        str(gear),
                         str(highscore),
                         time_str,
                         epsilon_str,

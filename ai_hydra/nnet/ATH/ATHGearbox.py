@@ -391,7 +391,7 @@ class ATHGearBox:
             max_training_frames=self._max_training_frames,
         )
         msg = (
-            f"Critical Stagnation alert({crit_count}): Radical DOWN shift: "
+            f"Critical Stagnation alert({crit_count}): Extreme DOWN shift: "
             f"{old_gear} > {self._cur_gear} - "
             f"{self._cur_seq_length}/{self._cur_batch_size}"
         )
@@ -415,6 +415,17 @@ class ATHGearBox:
 
     def incr_epoch(self):
         self._cur_epoch += 1
+
+    async def reset_cooldown(self, highscore: int):
+        self._cooldown_count = 0
+        msg = f"Resetting cooldown count to 0 (new highscore: {highscore})"
+        await self.event.publish(
+            EventMsg(
+                level=EV_STATUS.INFO,
+                message=msg,
+            )
+        )
+        self.log.debug(msg)
 
     async def stagnation_cleared(self):
         if self._stagnation_alert_count != 0:

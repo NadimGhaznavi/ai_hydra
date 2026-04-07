@@ -28,7 +28,7 @@ class DGRU:
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.98
     FURTHER_FROM_FOOD: Final[float] = 0.0
-    GAMMA: Final[float] = 0.97
+    GAMMA: Final[float] = 0.975
     HIDDEN_SIZE: Final[int] = 224
     LEARNING_RATE: Final[float] = 0.0005
     MAX_BUCKETS: Final[int] = 20
