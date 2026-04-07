@@ -416,6 +416,17 @@ class ATHGearBox:
     def incr_epoch(self):
         self._cur_epoch += 1
 
+    async def reset_cooldown(self, highscore: int):
+        self._cooldown_count = 0
+        msg = f"Resetting cooldown count to 0 (new highscore: {highscore})"
+        await self.event.publish(
+            EventMsg(
+                level=EV_STATUS.INFO,
+                message=msg,
+            )
+        )
+        self.log.debug(msg)
+
     async def stagnation_cleared(self):
         if self._stagnation_alert_count != 0:
             msg = "Resetting stagnation count to 0"
