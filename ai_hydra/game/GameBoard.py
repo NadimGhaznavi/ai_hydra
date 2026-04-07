@@ -133,7 +133,7 @@ class GameBoard:
 
     def get_state(self) -> list[float]:
         head = self.snake_head
-        radius = 3
+        radius = 4
 
         # Egocentric basis vectors:
         # - forward is the snake's current heading
@@ -165,13 +165,13 @@ class GameBoard:
                 pos = Position(wx, wy)
 
                 if not self.is_position_within_bounds(pos):
-                    grid.append(-1.0)  # wall
+                    grid.append(-0.5)  # wall
                 elif pos == self.food_position:
                     grid.append(1.0)  # food (highest priority)
                 elif self.snake_body and pos == tail_pos:
                     grid.append(0.2)  # tail = low danger
                 elif pos in self.snake_body:
-                    grid.append(0.8)  # body segment = high danger
+                    grid.append(0.5)  # body segment = high danger
                 else:
                     grid.append(0.0)  # empty
 
@@ -179,16 +179,25 @@ class GameBoard:
         rel_x = self.food_position.x - head.x
         rel_y = self.food_position.y - head.y
 
-        food_local_x = (rel_x * right.dx) + (rel_y * right.dy)
-        food_local_y = -((rel_x * forward.dx) + (rel_y * forward.dy))
+        local_dx = (rel_x * right.dx) + (rel_y * right.dy)
+        local_dy = -((rel_x * forward.dx) + (rel_y * forward.dy))
 
-        # Normalize by half board size
-        half_size = max(self.grid_size[0], self.grid_size[1]) / 2.0
+        food_dx = 0.0
+        if local_dx < 0:
+            food_dx = -1.0
+        elif local_dx > 0:
+            food_dx = 1.0
+
+        food_dy = 0.0
+        if local_dy < 0:
+            food_dy = -1.0
+        elif local_dy > 0:
+            food_dy = 1.0
 
         state = [
-            *grid,  # 49 values
-            food_local_x / half_size,  # 50
-            food_local_y / half_size,  # 51
+            *grid,  # 81
+            food_dx,  # 82
+            food_dy,  # 83
         ]
 
         return [float(x) for x in state]
