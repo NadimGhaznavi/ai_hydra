@@ -391,7 +391,7 @@ class ATHGearBox:
             max_training_frames=self._max_training_frames,
         )
         msg = (
-            f"Critical Stagnation alert({crit_count}): Radical DOWN shift: "
+            f"Critical Stagnation alert({crit_count}): Extreme DOWN shift: "
             f"{old_gear} > {self._cur_gear} - "
             f"{self._cur_seq_length}/{self._cur_batch_size}"
         )
