@@ -149,6 +149,7 @@ class GameBoard:
         #   dy > 0 => behind
         #   dx < 0 => left
         #   dx > 0 => right
+
         for dy in range(-radius, radius + 1):
             for dx in range(-radius, radius + 1):
                 if dx == 0 and dy == 0:
@@ -160,11 +161,11 @@ class GameBoard:
                 pos = Position(wx, wy)
 
                 if not self.is_position_within_bounds(pos):
-                    grid.append(-1.0)  # wall
+                    grid.append(-0.5)  # wall
                 elif pos in self.snake_body:
-                    grid.append(1.0)  # snake body
+                    grid.append(0.5)  # snake body
                 elif pos == self.food_position:
-                    grid.append(0.5)  # food
+                    grid.append(1.0)  # food
                 else:
                     grid.append(0.0)  # empty
 
@@ -175,25 +176,21 @@ class GameBoard:
         local_dx = (rel_x * right.dx) + (rel_y * right.dy)
         local_dy = -((rel_x * forward.dx) + (rel_y * forward.dy))
 
-        food_ahead = int(local_dx == 0 and local_dy < 0)
-        food_right = int(local_dy == 0 and local_dx > 0)
-        food_left = int(local_dy == 0 and local_dx < 0)
-        food_behind = int(local_dx == 0 and local_dy > 0)
+        food_dx = 0.0
+        if local_dx < 0:
+            food_dx = -1.0
+        elif local_dx > 0:
+            food_dx = 1.0
 
-        max_x = max(1, self.grid_size[0] - 1)
-        max_y = max(1, self.grid_size[1] - 1)
-
-        food_dx = local_dx / max_x
-        food_dy = local_dy / max_y
-
+        food_dy = 0.0
+        if local_dy < 0:
+            food_dy = -1.0
+        elif local_dy > 0:
+            food_dy = 1.0
         state = [
             *grid,  # 49
-            food_ahead,  # 50
-            food_right,  # 51
-            food_left,  # 52
-            food_behind,  # 53
-            food_dx,  # 54
-            food_dy,  # 55
+            food_dx,  # 50
+            food_dy,  # 51
         ]
 
         return [float(x) for x in state]
