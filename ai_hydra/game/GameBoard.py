@@ -143,6 +143,9 @@ class GameBoard:
 
         grid: list[float] = []
 
+        # last element is tail
+        tail_pos = self.snake_body[-1] if self.snake_body else None
+
         # Build a 7x7 local window centered on the head.
         # Local coordinates:
         #   dy < 0 => ahead
@@ -156,41 +159,36 @@ class GameBoard:
                     grid.append(0.0)  # head/origin
                     continue
 
-                wx = head.x + (dx * right.dx) + ((-dy) * forward.dx)
-                wy = head.y + (dx * right.dy) + ((-dy) * forward.dy)
+                # Egocentric world position
+                wx = head.x + (dx * right.dx) - (dy * forward.dx)
+                wy = head.y + (dx * right.dy) - (dy * forward.dy)
                 pos = Position(wx, wy)
 
                 if not self.is_position_within_bounds(pos):
-                    grid.append(-0.5)  # wall
-                elif pos in self.snake_body:
-                    grid.append(0.5)  # snake body
+                    grid.append(-1.0)  # wall
                 elif pos == self.food_position:
-                    grid.append(1.0)  # food
+                    grid.append(1.0)  # food (highest priority)
+                elif self.snake_body and pos == tail_pos:
+                    grid.append(0.2)  # tail = low danger
+                elif pos in self.snake_body:
+                    grid.append(0.8)  # body segment = high danger
                 else:
                     grid.append(0.0)  # empty
 
-        # Food position in local egocentric coordinates
+        # Continuous relative food position
         rel_x = self.food_position.x - head.x
         rel_y = self.food_position.y - head.y
 
-        local_dx = (rel_x * right.dx) + (rel_y * right.dy)
-        local_dy = -((rel_x * forward.dx) + (rel_y * forward.dy))
+        food_local_x = (rel_x * right.dx) + (rel_y * right.dy)
+        food_local_y = -((rel_x * forward.dx) + (rel_y * forward.dy))
 
-        food_dx = 0.0
-        if local_dx < 0:
-            food_dx = -1.0
-        elif local_dx > 0:
-            food_dx = 1.0
+        # Normalize by half board size
+        half_size = max(self.grid_size[0], self.grid_size[1]) / 2.0
 
-        food_dy = 0.0
-        if local_dy < 0:
-            food_dy = -1.0
-        elif local_dy > 0:
-            food_dy = 1.0
         state = [
-            *grid,  # 49
-            food_dx,  # 50
-            food_dy,  # 51
+            *grid,  # 49 values
+            food_local_x / half_size,  # 50
+            food_local_y / half_size,  # 51
         ]
 
         return [float(x) for x in state]
