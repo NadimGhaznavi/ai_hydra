@@ -138,7 +138,7 @@ class DNetDef:
     MOVE_DELAY: Final[float] = 0.02
     PER_STEP: Final[bool] = True
 
-    INPUT_SIZE: Final[int] = 53
+    INPUT_SIZE: Final[int] = 55
 
 
 class DNetField:

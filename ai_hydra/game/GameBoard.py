@@ -180,12 +180,20 @@ class GameBoard:
         food_left = int(local_dy == 0 and local_dx < 0)
         food_behind = int(local_dx == 0 and local_dy > 0)
 
+        max_x = max(1, self.grid_size[0] - 1)
+        max_y = max(1, self.grid_size[1] - 1)
+
+        food_dx = local_dx / max_x
+        food_dy = local_dy / max_y
+
         state = [
             *grid,  # 49
             food_ahead,  # 50
             food_right,  # 51
             food_left,  # 52
             food_behind,  # 53
+            food_dx,  # 54
+            food_dy,  # 55
         ]
 
         return [float(x) for x in state]
