@@ -117,9 +117,9 @@ class TrainMgr:
                 )
                 await self.policy.disable_nice()
             await self.replay.gearbox.stagnation_cleared()
-            await self.replay.gearbox.reset_cooldown(
-                highscore=self._cur_highscore
-            )
+            # await self.replay.gearbox.reset_cooldown(
+            #    highscore=self._cur_highscore
+            # )
             self._stag_alert_status = EV_TYPE.CLEARED
 
         else:
