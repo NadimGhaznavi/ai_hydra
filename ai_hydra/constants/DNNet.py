@@ -21,13 +21,13 @@ class DGRU:
     """
 
     BATCH_SIZE: Final[int] = 64
-    CLOSER_TO_FOOD: Final[float] = 0.0
+    CLOSER_TO_FOOD: Final[float] = 0.2
     DROPOUT_P_VALUE: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.999
     EMPTY_MOVE_REWARD: Final[float] = 0.0
-    EPSILON_DECAY_RATE: Final[float] = 0.98
-    FURTHER_FROM_FOOD: Final[float] = 0.0
+    EPSILON_DECAY_RATE: Final[float] = 0.99
+    FURTHER_FROM_FOOD: Final[float] = -0.2
     GAMMA: Final[float] = 0.975
     HIDDEN_SIZE: Final[int] = 224
     LEARNING_RATE: Final[float] = 0.0005
@@ -36,7 +36,7 @@ class DGRU:
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 500
     MAX_MOVES_MULTIPLIER: Final[int] = 150
-    MAX_MOVES_PENALTY: Final[float] = 0.0
+    MAX_MOVES_PENALTY: Final[float] = -10
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
@@ -47,7 +47,7 @@ class DGRU:
     GRU_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 100
 
 
 class DRNN:
