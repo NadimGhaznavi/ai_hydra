@@ -195,9 +195,9 @@ class GameBoard:
             food_dy = 1.0
 
         state = [
-            *grid,  # 81
-            food_dx,  # 82
-            food_dy,  # 83
+            *grid,  # 49
+            food_dx,  # 50
+            food_dy,  # 51
         ]
 
         return [float(x) for x in state]
