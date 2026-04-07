@@ -39,6 +39,7 @@ class HydraMetrics:
         self._cur_epoch: int = 0
         self._cur_loss: float | None = None
         self._cur_score: int = 0
+        self._cur_gear: int = 1
         self._elapsed_time: str = "0s"
         self._next_bucket_snapshot_epoch = 100
 
@@ -198,6 +199,7 @@ class HydraMetrics:
         events.append(
             HighscoreEvent(
                 epoch=self._cur_epoch,
+                gear=self._cur_gear,
                 highscore=highscore,
                 epsilon=self._cur_epsilon,
                 elapsed_time=self._elapsed_time,
@@ -284,9 +286,11 @@ class HydraMetrics:
     def get_highscore_plot_points(self) -> list[tuple[int, int]]:
         return [(e.epoch, e.highscore) for e in self._highscore_events]
 
-    def get_highscore_snapshot_rows(self) -> list[tuple[int, int, float, str]]:
+    def get_highscore_snapshot_rows(
+        self,
+    ) -> list[tuple[int, int, int, float, str]]:
         return [
-            (e.epoch, e.highscore, e.epsilon, e.elapsed_time)
+            (e.epoch, e.gear, e.highscore, e.epsilon, e.elapsed_time)
             for e in self._highscore_events
         ]
 
@@ -404,6 +408,9 @@ class HydraMetrics:
                 )
 
         return rows
+
+    def set_cur_gear(self, gear: int):
+        self._cur_gear = gear
 
     def set_initial_epsilon(self, value: float) -> None:
         self._cur_epsilon = value

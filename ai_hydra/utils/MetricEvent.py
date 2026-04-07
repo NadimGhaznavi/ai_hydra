@@ -14,6 +14,7 @@ from dataclasses import dataclass
 @dataclass(slots=True, frozen=True)
 class HighscoreEvent:
     epoch: int
+    gear: int
     highscore: int
     epsilon: float | None
     elapsed_time: str | None
