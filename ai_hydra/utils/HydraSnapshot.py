@@ -254,7 +254,6 @@ class HydraSnapshot:
 
         for epoch, gear, highscore, epsilon, ev_time in rows:
             try:
-                print(f"Epsilon {epsilon}, type: {type(epsilon)}")
                 epsilon_str = "" if epsilon is None else f"{epsilon:.4f}"
                 time_str = "" if ev_time is None else str(ev_time)
                 table_rows.append(
