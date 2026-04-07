@@ -32,10 +32,10 @@ class DGRU:
     HIDDEN_SIZE: Final[int] = 224
     LEARNING_RATE: Final[float] = 0.0005
     MAX_BUCKETS: Final[int] = 20
-    MAX_FRAMES: Final[int] = 125000
+    MAX_FRAMES: Final[int] = 100000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 500
-    MAX_MOVES_MULTIPLIER: Final[int] = 150
+    MAX_MOVES_MULTIPLIER: Final[int] = 100
     MAX_MOVES_PENALTY: Final[float] = -10
     MAX_STAGNANT_EPISODES: Final[int] = 300
     MAX_TRAINING_FRAMES: Final[int] = 512
@@ -47,7 +47,7 @@ class DGRU:
     GRU_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 100
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
 
 
 class DRNN:
@@ -138,7 +138,7 @@ class DNetDef:
     MOVE_DELAY: Final[float] = 0.02
     PER_STEP: Final[bool] = True
 
-    INPUT_SIZE: Final[int] = 83
+    INPUT_SIZE: Final[int] = 51
 
 
 class DNetField:
