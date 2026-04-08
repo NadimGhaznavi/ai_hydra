@@ -257,7 +257,7 @@ class HydraSnapshot:
                 if epsilon is None:
                     epsilon_str = ""
                 else:
-                    f"{float(epsilon):.4f}"
+                    epsilon_str = f"{float(epsilon):.4f}"
                 time_str = "" if ev_time is None else str(ev_time)
                 table_rows.append(
                     [
