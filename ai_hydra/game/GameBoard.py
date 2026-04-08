@@ -160,15 +160,15 @@ class GameBoard:
                 wy = head.y + (dx * right.dy) + ((-dy) * forward.dy)
                 pos = Position(wx, wy)
 
-                most_of_snake = self.snake_body[:-2]
-                end_of_snake = self.snake_body[-2:]
+                most_of_snake = self.snake_body[:-1]
+                end_of_snake = self.snake_body[-1:]
 
                 if not self.is_position_within_bounds(pos):
                     grid.append(-0.5)  # wall
                 elif pos in most_of_snake:
                     grid.append(0.5)  # Most of the snake
                 elif pos in end_of_snake:
-                    grid.append(0.2)  # End parts of the snake
+                    grid.append(0.4)  # End parts of the snake
                 elif pos == self.food_position:
                     grid.append(1.0)  # food
                 else:
