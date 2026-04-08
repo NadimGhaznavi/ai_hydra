@@ -32,7 +32,7 @@ class DGRU:
     HIDDEN_SIZE: Final[int] = 224
     LEARNING_RATE: Final[float] = 0.0005
     MAX_BUCKETS: Final[int] = 20
-    MAX_FRAMES: Final[int] = 100000
+    MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
     MAX_HARD_RESET_EPISODES: Final[int] = 500
     MAX_MOVES_MULTIPLIER: Final[int] = 100
