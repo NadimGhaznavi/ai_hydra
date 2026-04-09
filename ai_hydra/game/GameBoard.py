@@ -188,12 +188,6 @@ class GameBoard:
         elif local_dy > 0:
             food_dy = 1.0
 
-        food_dy = 0.0
-        if local_dy < 0:
-            food_dy = -1.0
-        elif local_dy > 0:
-            food_dy = 1.0
-
         state = [
             *grid,  # 49
             food_dx,  # 50
