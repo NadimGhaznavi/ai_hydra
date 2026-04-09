@@ -764,7 +764,7 @@ class HydraClientTui(App):
         # Reset metrics data
         initial_epsilon = self.query_one(
             f"#{DField.INITIAL_EPSILON_INPUT}", Input
-        )
+        ).value
         self.metrics.clear(initial_epsilon=initial_epsilon)
         # Clear widgets
         self.query_one(f"#{DField.HIGHSCORES_LOG}", HighScoresLog).clear()
