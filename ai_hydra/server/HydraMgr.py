@@ -405,11 +405,6 @@ class HydraMgr(HydraServer):
                     # Choose action (server-side)
                     old_state = sess.board.get_state()
 
-                    # See if we're engaging Monte Carlo tree search
-                    await train_mgr.maybe_trigger_mcts_burst(
-                        board=sess.board, score=sess.score
-                    )
-
                     # EpsilonNice and Monte Carlo tree search needs the board
                     action = train_mgr.policy.select_action(
                         old_state, sess.board
