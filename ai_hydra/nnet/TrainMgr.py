@@ -22,7 +22,6 @@ from ai_hydra.server.SnakeMgr import SnakeMgr
 from ai_hydra.zmq.HydraEventMQ import EventMsg, HydraEventMQ
 from ai_hydra.game.GameHelper import RewardCfg
 from ai_hydra.game.GameBoard import GameBoard
-from ai_hydra.mcts.Node import MCTSConfig
 
 
 @dataclass(frozen=True)
@@ -75,7 +74,6 @@ class TrainMgr:
         stag_thresh: int,
         crit_stag_thresh: int,
         reward_cfg: RewardCfg,
-        mcts_cfg: MCTSConfig,
     ) -> None:
         self.event = HydraEventMQ(
             client_id=DModule.TRAIN_MGR,
@@ -89,12 +87,6 @@ class TrainMgr:
 
         self.log.info(f"Set stagnation threshold: {stag_thresh}")
         self.log.info(f"Set critical stagnation threshold: {crit_stag_thresh}")
-        self.log.info(
-            f"Set Monte Carlo score threshold: {mcts_cfg.score_threshold}"
-        )
-        self.log.info(
-            f"Set Monte Carlo gating p-value {mcts_cfg.gate_p_value}"
-        )
         self.snake_mgr = snake_mgr
         self.policy = policy
         self.trainer = trainer
@@ -105,7 +97,6 @@ class TrainMgr:
         self._base_crit_stag_thresh = crit_stag_thresh
         self._crit_stag_thresh = crit_stag_thresh
         self.reward_cfg = reward_cfg
-        self.mcts_cfg = mcts_cfg
 
         self._stag_alert_status = EV_TYPE.CLEARED
         self._stag_ep_count = 0
@@ -201,17 +192,6 @@ class TrainMgr:
                 EventMsg(level=DHydraLog.INFO, payload=payload)
             )
             self._reset_window()
-
-    async def maybe_trigger_mcts_burst(
-        self, board: GameBoard, score: int
-    ) -> None:
-        self._calls += 1
-        if (
-            score >= self.mcts_cfg.score_threshold
-            and self.mcts_cfg.rng.random() < self.mcts_cfg.gate_p_value
-        ):
-            self._triggered += 1
-            await self.policy.enable_mcts_burst()
 
     def _reset_window(self) -> None:
         """

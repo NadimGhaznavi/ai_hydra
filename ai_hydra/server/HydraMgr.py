@@ -114,8 +114,6 @@ class HydraMgr(HydraServer):
         from ai_hydra.nnet.EpsilonAlgo import EpsilonAlgo
         from ai_hydra.nnet.EpsilonNiceAlgo import EpsilonNiceAlgo
 
-        from ai_hydra.mcts.Node import MCTSConfig
-
         from ai_hydra.constants.DNNet import DNetField
 
         model_type = self.cfg.get(DNetField.MODEL_TYPE)
@@ -131,7 +129,6 @@ class HydraMgr(HydraServer):
         # Hydra-style RNG streams
         _, epsilon_rng = self.hydra_rng.new_rng()
         _, nice_rng = self.hydra_rng.new_rng()
-        _, mcts_rng = self.hydra_rng.new_rng()
         _, replay_rng = self.hydra_rng.new_rng()
 
         if torch.cuda.is_available():
@@ -251,20 +248,6 @@ class HydraMgr(HydraServer):
             }
         )
 
-        # Monte Carlo Tree Search config
-        mcts_cfg = MCTSConfig(
-            reward_cfg=reward_cfg,
-            mmm=self.cfg.get(DNetField.MAX_MOVES_MULTIPLIER),
-            food_ends_episode=False,
-            search_depth=self.cfg.get(DNetField.MCTS_DEPTH),
-            explore_p_value=self.cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
-            gate_p_value=self.cfg.get(DNetField.MCTS_GATE_P_VALUE),
-            iterations=self.cfg.get(DNetField.MCTS_ITER),
-            rng=mcts_rng,
-            score_threshold=self.cfg.get(DNetField.MCTS_SCORE_THRESH),
-            steps=self.cfg.get(DNetField.MCTS_STEPS),
-        )
-
         behaviour_policy = BehaviourPolicy(
             base_policy=epsilon_policy,
             epsilon_n=epsilon_nice,
@@ -273,7 +256,6 @@ class HydraMgr(HydraServer):
             nice_steps=self.cfg.get(DNetField.NICE_STEPS),
             log_level=self.log_level,
             pub_func=self.mq.publish_events,
-            mcts_cfg=mcts_cfg,
         )
 
         self._train_mgr = TrainMgr(
@@ -288,7 +270,6 @@ class HydraMgr(HydraServer):
             stag_thresh=self.cfg.get(DNetField.MAX_STAGNANT_EPISODES),
             crit_stag_thresh=self.cfg.get(DNetField.MAX_HARD_RESET_EPISODES),
             reward_cfg=reward_cfg,
-            mcts_cfg=mcts_cfg,
         )
 
         self._train_mgr_model_type = model_type
