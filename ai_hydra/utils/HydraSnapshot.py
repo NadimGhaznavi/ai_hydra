@@ -12,9 +12,7 @@ import traceback
 
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DHydraTui import DField, DLabel
-from ai_hydra.constants.DNNet import DNetDef, DNetField, DLinear, DRNN, DGRU
-from ai_hydra.constants.DGame import DGameDef
-from ai_hydra.constants.DReplayMemory import DMemDef
+from ai_hydra.constants.DNNet import DNetDef, DNetField
 from ai_hydra.utils.SimCfg import SimCfg
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
