@@ -21,16 +21,16 @@ class DGRU:
     """
 
     BATCH_SIZE: Final[int] = 64
-    CLOSER_TO_FOOD: Final[float] = 0.2
+    CLOSER_TO_FOOD: Final[float] = 0.1
     DROPOUT_P_VALUE: Final[float] = 0.1
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
-    INITIAL_EPSILON: Final[float] = 0.999
+    INITIAL_EPSILON: Final[float] = 0.99
     EMPTY_MOVE_REWARD: Final[float] = 0.0
-    EPSILON_DECAY_RATE: Final[float] = 0.99
-    FURTHER_FROM_FOOD: Final[float] = -0.2
-    GAMMA: Final[float] = 0.975
-    HIDDEN_SIZE: Final[int] = 224
-    LEARNING_RATE: Final[float] = 0.0005
+    EPSILON_DECAY_RATE: Final[float] = 0.985
+    FURTHER_FROM_FOOD: Final[float] = -0.1
+    GAMMA: Final[float] = 0.95
+    HIDDEN_SIZE: Final[int] = 192
+    LEARNING_RATE: Final[float] = 0.0001
     MAX_BUCKETS: Final[int] = 20
     MAX_FRAMES: Final[int] = 150000
     MAX_GEAR: Final[int] = 26
