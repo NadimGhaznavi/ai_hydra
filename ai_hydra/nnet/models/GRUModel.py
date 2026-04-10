@@ -10,7 +10,7 @@
 import torch
 import torch.nn as nn
 
-from ai_hydra.constants.DNNet import DNetDef, DGRU
+from ai_hydra.constants.DNNet import DNetDef
 from ai_hydra.constants.DHydra import DModule
 from ai_hydra.constants.DHydra import DHydraLog
 
@@ -34,7 +34,7 @@ class GRUModel(nn.Module):
 
     def _init_model(self):
         input_size = DNetDef.INPUT_SIZE
-        output_size = DGRU.OUTPUT_SIZE
+        output_size = DNetDef.OUTPUT_SIZE
 
         self.m_in = nn.Sequential(
             nn.Linear(input_size, self._hidden_size),

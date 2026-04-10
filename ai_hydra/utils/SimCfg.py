@@ -12,13 +12,9 @@ from __future__ import annotations
 from typing import Any, Callable, ClassVar
 import traceback
 
-from ai_hydra.constants.DNNet import (
-    DNetField,
-    DNetDef,
-    DLinear,
-    DRNN,
-    DGRU,
-)
+from ai_hydra.constants.DNNet import DNetField, DNetDef
+from ai_hydra.constants.DModels import DLinear, DRNN
+
 from ai_hydra.constants.DHydraTui import DField
 from ai_hydra.constants.DHydra import DHydra
 from ai_hydra.constants.DGame import DGameDef

@@ -10,7 +10,6 @@
 from typing import Sequence
 import random
 
-from ai_hydra.constants.DNNet import DRNN
 from ai_hydra.constants.DHydra import DHydraLog, DModule
 from ai_hydra.constants.DEvent import EV_STATUS
 

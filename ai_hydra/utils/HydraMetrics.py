@@ -10,7 +10,7 @@
 from collections import deque
 from statistics import mean, median
 
-from ai_hydra.constants.DNNet import DRNN
+from ai_hydra.constants.DModels import DLinear
 from ai_hydra.constants.DHydraTui import DPlotDef
 from ai_hydra.utils.MetricEvent import (
     HighscoreEvent,
@@ -84,7 +84,9 @@ class HydraMetrics:
 
         # Seed the shift events list...
         self.add_shift_event(
-            gear=0, seq_length=DRNN.SEQ_LENGTH, batch_size=DRNN.BATCH_SIZE
+            gear=0,
+            seq_length=DLinear.SEQ_LENGTH,
+            batch_size=DLinear.BATCH_SIZE,
         )
 
     def clear(self, initial_epsilon: float) -> None:

@@ -16,7 +16,7 @@ from textual.widgets import TabbedContent, Label, Input, Select
 from textual.containers import Horizontal, Vertical
 from textual.validation import Number
 
-from ai_hydra.constants.DNNet import DLinear, DRNN, MODEL_TYPES
+from ai_hydra.constants.DModels import DLinear, DRNN, MODEL_TYPES
 from ai_hydra.constants.DHydraTui import DLabel, DField, DStatus
 from ai_hydra.constants.DReplayMemory import DMemDef
 from ai_hydra.constants.DGame import DGameDef
