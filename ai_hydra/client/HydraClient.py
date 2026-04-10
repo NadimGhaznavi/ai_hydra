@@ -42,14 +42,9 @@ from ai_hydra.constants.DEvent import EV_TYPE, EV_STATUS
 from ai_hydra.constants.DHydraMQ import DHydraMQDef, DHydraMQ, DEvent
 from ai_hydra.constants.DHydraTui import DField, DFile, DLabel, DStatus
 from ai_hydra.constants.DGame import DGameField, DGameMethod
-from ai_hydra.constants.DNNet import (
-    DNetField,
-    DNetDef,
-    DLinear,
-    DRNN,
-    DGRU,
-    MODEL_TYPE_TABLE,
-)
+from ai_hydra.constants.DNNet import DNetField, DNetDef
+from ai_hydra.constants.DModels import DLinear, DRNN, DGRU, MODEL_TYPE_TABLE
+
 from ai_hydra.constants.DEpsilonNice import DEpsilonNice
 from ai_hydra.constants.DReplayMemory import DMemDef
 

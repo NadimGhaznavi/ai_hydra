@@ -10,7 +10,7 @@
 from collections import deque
 from statistics import mean, median
 
-from ai_hydra.constants.DNNet import DRNN
+from ai_hydra.constants.DModels import DRNN
 from ai_hydra.constants.DHydraTui import DPlotDef
 from ai_hydra.utils.MetricEvent import (
     HighscoreEvent,

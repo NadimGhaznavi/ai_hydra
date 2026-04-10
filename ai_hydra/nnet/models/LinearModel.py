@@ -10,7 +10,7 @@
 import torch
 import torch.nn as nn
 
-from ai_hydra.constants.DNNet import DNetDef, DLinear
+from ai_hydra.constants.DNNet import DNetDef
 from ai_hydra.constants.DHydra import DModule
 from ai_hydra.constants.DHydra import DHydraLog
 
@@ -46,7 +46,7 @@ class LinearModel(nn.Module):
             nn.ReLU(),
             self.hidden_block,
             nn.Dropout(p=self._dropout_p),
-            nn.Linear(self._hidden_size, DLinear.OUTPUT_SIZE),
+            nn.Linear(self._hidden_size, DNetDef.OUTPUT_SIZE),
         )
 
     def set_params(
