@@ -107,7 +107,7 @@ class DLinear:
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.985
     FURTHER_FROM_FOOD: Final[float] = -0.1
-    GAMMA: Final[float] = 0.9
+    GAMMA: Final[float] = 0.95
     HIDDEN_SIZE: Final[int] = 192
     INITIAL_EPSILON: Final[float] = 0.99
     LEARNING_RATE: Final[float] = 0.00005
