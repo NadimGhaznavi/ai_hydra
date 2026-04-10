@@ -4,6 +4,63 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0] - 2026-04-10 @ 07:38 - Fish Eye Release
+
+### Changed
+**Fish Eye** - Achieves highscore of 80 with the linear model
+- Wrote a new `GameBoard:get_state()` function that transforms the game board into an egocentric frame of reference, giving the agent a consistent “forward-facing” view of its surroundings. Combines dense local spatial encoding (7×7 grid) with abstract directional signals to guide decision-making.
+  - Rotates the world so the snake never has to learn “up/down/left/right” separately
+  - Gives it a local radar scan (7×7 grid)
+  - Adds a compass ping toward the food
+**Cooldown Reset Feature**
+- At the end of each episode; if a new high score has been achieved:
+  - The `TrainMgr` signals the `ATH Gearbox`
+  - The *gearbox* resets the cooldown counter, giving the NN a chance to contintue to mine the training data using the current sequence length and batch size.
+- Updated [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation 
+
+### Removed
+- **Monte Carlo Tree Search**: It's a terrible, computationally expensive way to play the game.
+
+### Fixed
+- On reset, the initial epsilon widget was being passed to the `HydraMetrics` class instead of the actual initial value of epsilon.
+
+
+---
+
+## [0.26.0] - 2026-04-05 @ 11:19 - Monte Carlo Release
+
+### Added
+- **Monte Carlo Tree Search**
+  - This policy implements a limited *Monte Carlo Tree Search* (**MCTS**). The goal is not to replace the neural network, but to **selectively enrich the training data** in complex situations.
+  - By design, MCTS operates **sparingly** and in **bursts**.
+  - A burst is a short sequence of consecutive steps during which decision-making is temporarily delegated from the *neural network* to the *MCTS*. Outside of these bursts, the system behaves normally.
+  - The following settings are exposed in the TUI:
+    - **Gating P-Value** - This is the probability that the *MCTS* policy is activated.
+    - **Search Depth** - The maxiumum number of steps, *into the future*, that simulation looks.
+    - **Iterations** - The number of MCTS simulations performed per decision.
+    - Each iteration expands and evaluates part of the search tree.
+    - Higher values → more accurate action selection.
+    - **Exploration P-Value** - The exploration constant used in the UCB (Upper Confidence Bound) formula
+    - Controls the balance between:
+      - exploiting known good actions (lower values)
+      - exploring less visited actions (higher values)
+    - **Steps** - The length of an MCTS burst.
+    - Once triggered, MCTS remains active for this many consecutive steps.
+    - Enables MCTS to guide short action sequences, not just individual moves.
+    - **Score Threshold** - A game must have achieved or surpassed this value for the **MCTS** to trigger.
+- Updated [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation with updated screenshots.
+
+### Fixed
+- Table of contents for the ATH Memory in the [PyPI](https://pypi.org/project/ai-hydra/) documentation.
+- Formatting of the settings fields.
+
+---
+
+## [0.25.2] - 2026-04-04 @12:48 - Clear Docs Release
+
+### Changed
+- Complete rewrite of the section on *ATH Memory* for the [PyPI](https://pypi.org/project/ai-hydra/) and [RTD](https://ai-hydra.readthedocs.io/en/latest/) documentation.
+
 ---
 
 ## [0.26.0] - 2026-04-05 @ 11:19 - Monte Carlo Release

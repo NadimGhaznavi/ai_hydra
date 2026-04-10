@@ -97,7 +97,7 @@ class GameBoard:
     grid_size: Tuple[int, int]
     seed: int
     episode_id: int
-    STATE_LENGTH_BITS = DNetDef.STATE_LENGTH_BITS  # int(7)
+    STATE_LENGTH_BITS = 7  # DNetDef.STATE_LENGTH_BITS  # int(7)
 
     def clone(self) -> "GameBoard":
         # With immutability, "clone" is basically identity, but keep it explicit.
@@ -132,6 +132,71 @@ class GameBoard:
         return self.snake_head
 
     def get_state(self) -> list[float]:
+        head = self.snake_head
+        radius = 3
+
+        # Egocentric basis vectors:
+        # - forward is the snake's current heading
+        # - right is 90 degrees clockwise from forward
+        forward = self.direction
+        right = Direction(-forward.dy, forward.dx)
+
+        grid: list[float] = []
+
+        # Build a 7x7 local window centered on the head.
+        # Local coordinates:
+        #   dy < 0 => ahead
+        #   dy > 0 => behind
+        #   dx < 0 => left
+        #   dx > 0 => right
+
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
+                if dx == 0 and dy == 0:
+                    grid.append(0.0)  # head/origin
+                    continue
+
+                wx = head.x + (dx * right.dx) + ((-dy) * forward.dx)
+                wy = head.y + (dx * right.dy) + ((-dy) * forward.dy)
+                pos = Position(wx, wy)
+
+                if not self.is_position_within_bounds(pos):
+                    grid.append(-0.5)  # wall
+                elif pos in self.snake_body:
+                    grid.append(0.5)  # Most of the snake
+                elif pos == self.food_position:
+                    grid.append(1.0)  # food
+                else:
+                    grid.append(0.0)  # empty
+
+        # Food position in local egocentric coordinates
+        rel_x = self.food_position.x - head.x
+        rel_y = self.food_position.y - head.y
+
+        local_dx = (rel_x * right.dx) + (rel_y * right.dy)
+        local_dy = -((rel_x * forward.dx) + (rel_y * forward.dy))
+
+        food_dx = 0.0
+        if local_dx < 0:
+            food_dx = -1.0
+        elif local_dx > 0:
+            food_dx = 1.0
+
+        food_dy = 0.0
+        if local_dy < 0:
+            food_dy = -1.0
+        elif local_dy > 0:
+            food_dy = 1.0
+
+        state = [
+            *grid,  # 49
+            food_dx,  # 50
+            food_dy,  # 51
+        ]
+
+        return [float(x) for x in state]
+
+    def UNUSED_get_state(self) -> list[float]:
         head = self.snake_head
         width, height = self.grid_size
 
