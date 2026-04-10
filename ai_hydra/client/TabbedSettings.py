@@ -141,56 +141,6 @@ class TabbedSettings(Widget):
             value=str(DLinear.NICE_STEPS),
             id=DField.NICE_STEPS_INPUT,
         )
-        # MCTS_DEPTH
-        self.mcts_depth_label = Label(id=DField.MCTS_DEPTH_LABEL)
-        self.mcts_depth_input = Input(
-            type=DField.INTEGER,
-            compact=True,
-            value=str(DLinear.MCTS_DEPTH),
-            id=DField.MCTS_DEPTH_INPUT,
-        )
-        # MCTS_SEARCH_ITERATIONS
-        self.mcts_iter_label = Label(id=DField.MCTS_ITER_LABEL)
-        self.mcts_iter_input = Input(
-            type=DField.INTEGER,
-            compact=True,
-            value=str(DLinear.MCTS_ITER),
-            id=DField.MCTS_ITER_INPUT,
-        )
-        # MCTS_EXPLORE_P_VALUE
-        self.mcts_explore_p_value_label = Label(
-            id=DField.MCTS_EXPLORE_P_VALUE_LABEL
-        )
-        self.mcts_explore_p_value_input = Input(
-            type=DField.NUMBER,
-            compact=True,
-            value=str(DLinear.MCTS_EXPLORE_P_VALUE),
-            id=DField.MCTS_EXPLORE_P_VALUE_INPUT,
-        )
-        # MCTS_GATE_P_VALUE
-        self.mcts_gate_p_value_label = Label(id=DField.MCTS_GATE_P_VALUE_LABEL)
-        self.mcts_gate_p_value_input = Input(
-            type=DField.NUMBER,
-            compact=True,
-            value=str(DLinear.MCTS_GATE_P_VALUE),
-            id=DField.MCTS_GATE_P_VALUE_INPUT,
-        )
-        # MCTS_STEPS
-        self.mcts_steps_label = Label(id=DField.MCTS_STEPS_LABEL)
-        self.mcts_steps_input = Input(
-            type=DField.INTEGER,
-            compact=True,
-            value=str(DLinear.MCTS_STEPS),
-            id=DField.MCTS_STEPS_INPUT,
-        )
-        # MCTS_SCORE_THRESH
-        self.mcts_score_thresh_label = Label(id=DField.MCTS_SCORE_THRESH_LABEL)
-        self.mcts_score_thresh_input = Input(
-            type=DField.INTEGER,
-            compact=True,
-            value=str(DLinear.MCTS_SCORE_THRESH),
-            id=DField.MCTS_SCORE_THRESH_INPUT,
-        )
 
         # FOOD_REWARD
         self.food_rewards_label = Label(id=DField.FOOD_REWARD_LABEL)
@@ -597,46 +547,6 @@ class TabbedSettings(Widget):
                         classes=DField.INPUT_FIELD,
                     ),
                     id=DField.NICE_BOX,
-                ),
-                # --- Monte Carlo Tree Search ---
-                Vertical(
-                    Horizontal(
-                        Label(f"{DLabel.MCTS_GATE_P_VALUE:>19s} : "),
-                        self.mcts_gate_p_value_label,
-                        self.mcts_gate_p_value_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.SEARCH_DEPTH:>19s} : "),
-                        self.mcts_depth_label,
-                        self.mcts_depth_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.MCTS_ITER:>19s} : "),
-                        self.mcts_iter_label,
-                        self.mcts_iter_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.MCTS_EXPLORE_P_VALUE:>19s} : "),
-                        self.mcts_explore_p_value_label,
-                        self.mcts_explore_p_value_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.STEPS:>19s} : "),
-                        self.mcts_steps_label,
-                        self.mcts_steps_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    Horizontal(
-                        Label(f"{DLabel.MCTS_SCORE_THRESH:>19s} : "),
-                        self.mcts_score_thresh_label,
-                        self.mcts_score_thresh_input,
-                        classes=DField.INPUT_FIELD,
-                    ),
-                    id=DField.MCTS_BOX,
                 ),
             )
 

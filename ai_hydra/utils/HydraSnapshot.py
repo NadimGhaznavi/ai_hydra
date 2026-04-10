@@ -70,12 +70,10 @@ class HydraSnapshot:
         lines.extend(self._build_model_section(cfg))
         lines.extend(self._build_rewards_section(cfg))
         lines.extend(self._build_memory_section(cfg))
-        lines.extend(self._build_mcts_section(cfg))
         lines.extend(self._build_event_log_section())
         lines.extend(self._build_highscore_section())
         lines.extend(self._build_nice_section(cfg))
         lines.extend(self._build_nice_table())
-        lines.extend(self._build_mcts_table())
         lines.extend(self._build_shift_mean_median_section())
         lines.extend(self._build_bucket_section())
 
@@ -182,22 +180,6 @@ class HydraSnapshot:
             ],
         )
 
-    def _build_mcts_section(self, cfg: SimCfg) -> list[str]:
-        return self._build_kv_section(
-            "🎲 Monte Carlo Tree Search",
-            [
-                ("Gating P-Value", cfg.get(DNetField.MCTS_GATE_P_VALUE)),
-                ("Search Depth", cfg.get(DNetField.MCTS_DEPTH)),
-                ("Iterations", cfg.get(DNetField.MCTS_ITER)),
-                (
-                    "Exploration P-Value",
-                    cfg.get(DNetField.MCTS_EXPLORE_P_VALUE),
-                ),
-                ("Score Threshold", cfg.get(DNetField.MCTS_SCORE_THRESH)),
-                ("Steps", cfg.get(DNetField.MCTS_STEPS)),
-            ],
-        )
-
     def _build_nice_section(self, cfg: SimCfg) -> list[str]:
         p_value = cfg.get(DNetField.NICE_P_VALUE)
         nice_steps = cfg.get(DNetField.NICE_STEPS)
@@ -248,35 +230,6 @@ class HydraSnapshot:
 
         return self._build_table_section(
             "🙂 Epsilon Nice Events", headers, table_rows
-        )
-
-    def _build_mcts_table(self) -> list[str]:
-        rows = self.metrics.get_mcts_events()
-        headers = [
-            "Window",
-            "Calls",
-            "Triggered",
-            "Trigger Rate",
-        ]
-        table_rows: list[list[str]] = []
-
-        for (
-            window,
-            calls,
-            triggered,
-            trigger_rate,
-        ) in rows:
-            table_rows.append(
-                [
-                    window,
-                    str(calls),
-                    str(triggered),
-                    f"{trigger_rate:.4f}",
-                ]
-            )
-
-        return self._build_table_section(
-            "🎲 Monte Carlo Tree Search Events", headers, table_rows
         )
 
     def _build_event_log_section(self) -> list[str]:
