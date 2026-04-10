@@ -17,7 +17,6 @@ from ai_hydra.utils.MetricEvent import (
     ScoreEvent,
     LossEvent,
     ShiftEvent,
-    MCTSEvent,
     MemEvent,
     NiceEvent,
 )
