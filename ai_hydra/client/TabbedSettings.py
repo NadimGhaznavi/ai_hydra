@@ -633,6 +633,3 @@ class TabbedSettings(Widget):
         self.query_one(f"#{DField.NICE_BOX}", Vertical).border_subtitle = (
             DLabel.EPSILON_NICE
         )
-        self.query_one(f"#{DField.MCTS_BOX}", Vertical).border_subtitle = (
-            DLabel.MCTS
-        )
