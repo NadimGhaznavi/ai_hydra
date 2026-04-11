@@ -93,7 +93,7 @@ class GameScorePlot(Widget):
                 label=DLabel.MEAN,
             )
 
-        rec_mean_points = self.metrics.get_mean_and_median()
+        rec_mean_points = self.metrics.get_recent_mean_and_median()
         if rec_mean_points:
             episodes, means, _ = zip(*rec_mean_points)
 

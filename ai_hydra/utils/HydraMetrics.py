@@ -323,12 +323,10 @@ class HydraMetrics:
         return [(e.epoch, e.loss) for e in self._recent_losses]
 
     def get_mean_and_median(self) -> list[tuple[int, float, float]]:
-        return [(e.epoch, e.mean, e.median) for e in self._mean_and_median]
+        return self._mean_and_median
 
     def get_recent_mean_and_median(self) -> list[tuple[int, float, float]]:
-        return [
-            (e.epoch, e.mean, e.median) for e in self._recent_mean_and_median
-        ]
+        return self._recent_mean_and_median
 
     def get_recent_scores_dist_plot_points(
         self,
