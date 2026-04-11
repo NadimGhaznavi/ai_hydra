@@ -458,10 +458,7 @@ class HydraMgr(HydraServer):
                         done=bool(done),
                     )
 
-                    if sess.score > 0:
-                        await train_mgr.replay.append(
-                            t=t, final_score=sess.score
-                        )
+                    await train_mgr.replay.append(t=t, final_score=sess.score)
 
                     # Publish
                     if mq is not None:

@@ -24,7 +24,8 @@ from ai_hydra.nnet.ATH.ATHCommon import (
     assert_valid_gear,
 )
 
-MIN_EPISODES = 150
+# Number of episodes before anything is returned from sample_chunks()
+MIN_EPISODES = 1
 
 
 class ATHDataMgr:
@@ -173,7 +174,11 @@ class ATHDataMgr:
                 f"final_score must be int, got {type(final_score).__name__}"
             )
 
-        await self._finalize_game()
+        if final_score > 0:
+            await self._finalize_game()
+
+        else:
+            self.store.discard_cur_game()
 
     def _build_episode_gear_meta(
         self,

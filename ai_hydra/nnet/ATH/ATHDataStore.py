@@ -112,6 +112,9 @@ class ATHDataStore:
 
         self._cur_game.append(t)
 
+    def discard_cur_game(self):
+        self._cur_game = []
+
     def finalize_game(self, gear_meta: dict[int, GearMeta]) -> None:
         """
         Finalize the current in-progress episode and add it to canonical storage.
