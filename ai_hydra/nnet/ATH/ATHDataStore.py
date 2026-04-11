@@ -132,8 +132,6 @@ class ATHDataStore:
             - gear_meta must be consistent with episode size
             - Episode will enforce its own internal invariants
         """
-        self._cur_epoch += 1
-
         if not self._cur_game:
             raise ValueError(
                 "Cannot finalize empty episode (_cur_game is empty)"
