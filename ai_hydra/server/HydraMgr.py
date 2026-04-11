@@ -434,7 +434,6 @@ class HydraMgr(HydraServer):
                             train_mgr.policy.cur_epsilon()
                         )
 
-                        # train_mgr.replay.append(t=t, final_score=sess.score)
                         await train_mgr.trainer.train_long_memory()
                         # Anti-Stagnation strategy
                         if DNetField.FINAL_SCORE in scores_payload:
@@ -459,7 +458,10 @@ class HydraMgr(HydraServer):
                         done=bool(done),
                     )
 
-                    await train_mgr.replay.append(t=t, final_score=sess.score)
+                    if sess.score > 0:
+                        await train_mgr.replay.append(
+                            t=t, final_score=sess.score
+                        )
 
                     # Publish
                     if mq is not None:
