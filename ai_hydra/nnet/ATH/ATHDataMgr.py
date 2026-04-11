@@ -174,11 +174,7 @@ class ATHDataMgr:
                 f"final_score must be int, got {type(final_score).__name__}"
             )
 
-        if final_score > 0:
-            await self._finalize_game()
-
-        else:
-            self.store.discard_cur_game()
+        await self._finalize_game()
 
     def _build_episode_gear_meta(
         self,
