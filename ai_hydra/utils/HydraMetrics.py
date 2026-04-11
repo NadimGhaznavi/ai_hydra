@@ -280,6 +280,24 @@ class HydraMetrics:
     def get_elapsed_time(self) -> str:
         return self._elapsed_time
 
+    def get_epsilon_nice_events(
+        self,
+    ) -> list[tuple[str, int, int, int, int, int, int, float, float]]:
+        return [
+            (
+                e.window,
+                e.epoch,
+                e.calls,
+                e.triggered,
+                e.fatal_suggested,
+                e.overrides,
+                e.no_safe_alternative,
+                e.trigger_rate,
+                e.override_rate,
+            )
+            for e in self._epsilon_nice_events
+        ]
+
     def get_eventlog_msgs(self) -> list:
         return self._eventlog_msgs
 
@@ -301,26 +319,16 @@ class HydraMetrics:
     def get_loss_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.loss) for e in self._losses]
 
-    def get_epsilon_nice_events(
-        self,
-    ) -> list[tuple[str, int, int, int, int, int, int, float, float]]:
-        return [
-            (
-                e.window,
-                e.epoch,
-                e.calls,
-                e.triggered,
-                e.fatal_suggested,
-                e.overrides,
-                e.no_safe_alternative,
-                e.trigger_rate,
-                e.override_rate,
-            )
-            for e in self._epsilon_nice_events
-        ]
-
     def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.loss) for e in self._recent_losses]
+
+    def get_mean_and_median(self) -> list[tuple[int, float, float]]:
+        return [(e.epoch, e.mean, e.median) for e in self._mean_and_median]
+
+    def get_recent_mean_and_median(self) -> list[tuple[int, float, float]]:
+        return [
+            (e.epoch, e.mean, e.median) for e in self._recent_mean_and_median
+        ]
 
     def get_recent_scores_dist_plot_points(
         self,

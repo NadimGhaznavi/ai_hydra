@@ -80,6 +80,31 @@ class GameScorePlot(Widget):
             hires_mode=HiResMode.BRAILLE,
             label=DLabel.HIGHSCORE,
         )
+
+        mean_points = self.metrics.get_mean_and_median()
+        if mean_points:
+            episodes, means, _ = zip(*mean_points)
+
+            plot.plot(
+                x=episodes,
+                y=means,
+                line_style=DColor.RED,
+                hires_mode=HiResMode.BRAILLE,
+                label=DLabel.MEAN,
+            )
+
+        rec_mean_points = self.metrics.get_mean_and_median()
+        if rec_mean_points:
+            episodes, means, _ = zip(*rec_mean_points)
+
+            plot.plot(
+                x=episodes,
+                y=means,
+                line_style=DColor.PURPLE,
+                hires_mode=HiResMode.BRAILLE,
+                label=DLabel.RECENT_MEAN,
+            )
+
         plot.set_xlabel(DLabel.EPISODES)
         plot.set_ylabel(DLabel.HIGHSCORES)
         plot.show_legend(location=LegendLocation.TOPLEFT)

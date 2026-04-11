@@ -352,6 +352,7 @@ class DLabel:
     RANDOM_SEED: Final[str] = "Random Seed"
     RECENT_COUNT: Final[str] = "Recent Scores"
     RECENT_LOSS: Final[str] = "Recent Loss"
+    RECENT_MEAN: Final[str] = "Recent Mean"
     RESET: Final[str] = "Reset"
     RESUME: Final[str] = "Resume"
     REWARD_STRUCTURE: Final[str] = "Reward Structure"
