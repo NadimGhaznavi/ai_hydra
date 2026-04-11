@@ -26,11 +26,11 @@ class DGRU:
     DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
     INITIAL_EPSILON: Final[float] = 0.99
     EMPTY_MOVE_REWARD: Final[float] = 0.0
-    EPSILON_DECAY_RATE: Final[float] = 0.985
+    EPSILON_DECAY_RATE: Final[float] = 0.97
     FURTHER_FROM_FOOD: Final[float] = -0.1
     GAMMA: Final[float] = 0.95
     HIDDEN_SIZE: Final[int] = 192
-    LEARNING_RATE: Final[float] = 0.0001
+    LEARNING_RATE: Final[float] = 0.0004
     MAX_BUCKETS: Final[int] = 20
     MAX_FRAMES: Final[int] = 125000
     MAX_GEAR: Final[int] = 26

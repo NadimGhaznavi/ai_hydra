@@ -634,12 +634,15 @@ class HydraClientTui(App):
         self.settings.max_training_frames_input.value = str(
             max_training_frames
         )
+
         # Nice
         self.settings.nice_p_value_input.value = str(nice_p_value)
         self.settings.nice_steps_input.value = str(nice_steps)
+
         # ATH Memeory
         self.settings.num_cooldown_eps_input.value = str(num_cooldown_eps)
         self.settings.upshift_count_threshold_input.value = str(upshift_thresh)
+
         # Rewards
         self.settings.max_moves_multiplier_input.value = str(
             max_moves_multiplier

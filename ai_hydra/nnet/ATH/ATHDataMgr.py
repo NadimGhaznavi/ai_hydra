@@ -24,6 +24,8 @@ from ai_hydra.nnet.ATH.ATHCommon import (
     assert_valid_gear,
 )
 
+MIN_EPISODES = 500
+
 
 class ATHDataMgr:
     def __init__(
@@ -123,6 +125,7 @@ class ATHDataMgr:
         self._samples_served: int = 0
         self._has_logged_startup: bool = False
         self._has_logged_pruning: bool = False
+        self._num_episodes = 0
 
     async def append(
         self,
@@ -325,6 +328,8 @@ class ATHDataMgr:
             - finalized episode metadata must match the episode size
             - derived bucket state must be rebuilt after any storage mutation
         """
+        self._num_episodes += 1
+
         ep_size = self.store.get_cur_ep_size()
 
         if not isinstance(ep_size, int):
@@ -467,6 +472,9 @@ class ATHDataMgr:
         actually has that chunk at the current gear.
         """
         if self._cur_gear is None:
+            return None
+
+        if self._num_episodes < MIN_EPISODES:
             return None
 
         warmed_buckets = self.store.get_warmed_buckets()
