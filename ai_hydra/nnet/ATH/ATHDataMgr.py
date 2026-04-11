@@ -24,7 +24,7 @@ from ai_hydra.nnet.ATH.ATHCommon import (
     assert_valid_gear,
 )
 
-MIN_EPISODES = 500
+MIN_EPISODES = 150
 
 
 class ATHDataMgr:
