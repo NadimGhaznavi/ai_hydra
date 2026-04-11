@@ -420,15 +420,6 @@ class HydraMgr(HydraServer):
 
                     done = state_dict[DGameField.DONE]
 
-                    # Build/store transition (unchanged for now)
-                    t = Transition(
-                        old_state=tuple(old_state),
-                        action=int(action),
-                        reward=float(reward),
-                        new_state=tuple(new_state),
-                        done=bool(done),
-                    )
-
                     # Episode-end bookkeeping
                     if done:
                         sess.epoch += 1
@@ -442,11 +433,6 @@ class HydraMgr(HydraServer):
                         ep_payload[DNetField.CUR_EPSILON] = (
                             train_mgr.policy.cur_epsilon()
                         )
-
-                        await train_mgr.replay.append(
-                            t=t, final_score=sess.score
-                        )
-                        await train_mgr.trainer.train_long_memory()
 
                         # Anti-Stagnation strategy
                         if DNetField.FINAL_SCORE in scores_payload:
@@ -462,11 +448,19 @@ class HydraMgr(HydraServer):
                     reward = state_dict[DGameField.REWARD]
                     new_state = state_dict[DNetField.NEXT_STATE]
 
-                    # If it's done, we already added the final frame...
-                    if not done:
-                        await train_mgr.replay.append(
-                            t=t, final_score=sess.score
-                        )
+                    # Build/store transition (unchanged for now)
+                    t = Transition(
+                        old_state=tuple(old_state),
+                        action=int(action),
+                        reward=float(reward),
+                        new_state=tuple(new_state),
+                        done=bool(done),
+                    )
+
+                    await train_mgr.replay.append(t=t, final_score=sess.score)
+
+                    if done:
+                        await train_mgr.trainer.train_long_memory()
 
                     # Publish
                     if mq is not None:
