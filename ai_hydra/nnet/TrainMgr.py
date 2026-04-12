@@ -107,14 +107,6 @@ class TrainMgr:
         self._reset_window()
         self._epoch = 0
 
-    def get_stats(self) -> dict[str, int | float]:
-        trigger_rate = self._triggered / self._calls if self._calls else 0.0
-        return {
-            DField.MCTS_CALLS: self._calls,
-            DField.MCTS_TRIGGERED: self._triggered,
-            DField.MCTS_TRIGGER_RATE: round(trigger_rate, 6),
-        }
-
     # Called at the end of each episode
     async def handle_stagnation(self, final_score):
         self.replay.gearbox.incr_epoch()
@@ -184,14 +176,6 @@ class TrainMgr:
             if self._stag_alert_status != EV_TYPE.SET:
                 await self.policy.enable_nice()
             self._stag_alert_status = EV_TYPE.SET
-
-        if self._epoch % 100 == 0:
-            payload = self.get_stats()
-            payload[DField.STATS_WINDOW] = f"{self._epoch-99}-{self._epoch}"
-            await self.event.publish(
-                EventMsg(level=DHydraLog.INFO, payload=payload)
-            )
-            self._reset_window()
 
     def _reset_window(self) -> None:
         """

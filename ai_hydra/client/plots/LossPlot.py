@@ -77,7 +77,7 @@ class LossPlot(Widget):
             y=losses,
             line_style=DColor.GREEN,
             hires_mode=HiResMode.BRAILLE,
-            label=DLabel.LOSS,
+            label=ylabel,
         )
         plot.set_ylimits()
         plot.set_xlabel(DLabel.EPISODES)

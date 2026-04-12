@@ -328,6 +328,19 @@ LossPlot {
     width: 50;
 }
 
+/* --- MeanScoresPlot --- */
+MeanScoresPlot {
+    height: 18;
+}
+#plot_recent_mean {
+    height: 18;
+    width: 90;
+}
+#plot_mean {
+    height: 18;
+    width: 50;
+}
+
 /* --- EventLog --- */
 EventLog {
     height: 18;

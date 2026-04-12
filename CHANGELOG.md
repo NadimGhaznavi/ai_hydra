@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## [Unreleased]
+
+### Added
+
+- **New Mean Scores Plots**
+  - Added a pair of plots showing the mean score over time
+  - Added data storage and get methods to the `HydraMetrics` class
+
+---
+
 ## [0.27.0] - 2026-04-10 @ 07:38 - Fish Eye Release
 
 ### Changed
@@ -23,7 +35,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Fixed
 - On reset, the initial epsilon widget was being passed to the `HydraMetrics` class instead of the actual initial value of epsilon.
-
 
 ---
 

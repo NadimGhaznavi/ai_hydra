@@ -21,6 +21,8 @@ from ai_hydra.nnet.ATH.ATHCommon import (
     assert_valid_gear,
 )
 
+MIN_WARM_BUCKET_POPULATION = 20
+
 
 class ATHDataStore:
     """
@@ -372,7 +374,7 @@ class ATHDataStore:
         # Deterministic ordering
         for idx in range(self._max_buckets):
             episodes = self._episodes_by_bucket[idx]
-            if episodes:
+            if len(episodes) >= MIN_WARM_BUCKET_POPULATION:
                 warmed.append(idx)
 
         # Optional sanity checks (cheap, keep them)

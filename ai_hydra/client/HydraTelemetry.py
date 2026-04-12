@@ -18,6 +18,7 @@ from ai_hydra.utils.HydraMetrics import HydraMetrics
 from ai_hydra.client.plots.GameScorePlot import GameScorePlot
 from ai_hydra.client.plots.ScoresDistPlot import ScoresDistPlot
 from ai_hydra.client.plots.LossPlot import LossPlot
+from ai_hydra.client.plots.MeanScoresPlot import MeanScoresPlot
 from ai_hydra.client.EventLog import EventLog
 
 
@@ -34,11 +35,15 @@ class HydraTelemetry(Widget):
             id=DField.SCORES_DIST_PLOT, metrics=self.metrics
         )
         self.loss_plot = LossPlot(id=DField.LOSS_PLOT, metrics=self.metrics)
+        self.mean_scores_plot = MeanScoresPlot(
+            id=DField.MEAN_SCORES_PLOT, metrics=self.metrics
+        )
         self.event_log = EventLog(id=DField.EVENT_LOG, metrics=self.metrics)
 
     def clear(self):
         self.event_log.clear()
         self.loss_plot.clear()
+        self.mean_scores_plot.clear()
         self.scores_dist_plot.clear()
         self.game_score_plot.clear()
 
@@ -47,9 +52,11 @@ class HydraTelemetry(Widget):
             DLabel.GAME_SCORES,
             DLabel.SCORE_DISTRIBUTION,
             DLabel.LOSS,
+            DLabel.MEAN_SCORES,
             DLabel.EVENT_LOG,
         ):
             yield self.game_score_plot
             yield self.scores_dist_plot
             yield self.loss_plot
+            yield self.mean_scores_plot
             yield self.event_log

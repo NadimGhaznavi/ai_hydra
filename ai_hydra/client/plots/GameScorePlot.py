@@ -6,12 +6,14 @@
 #    GitHub: https://github.com/NadimGhaznavi/ai_hydra
 #    Website: https://ai-hydra.readthedocs.io/en/latest
 #    License: GPL 3.0
+import traceback
 
 from textual.app import ComposeResult, Widget
 from textual.containers import Horizontal
 from textual_plot import HiResMode, LegendLocation, PlotWidget
 
 from ai_hydra.constants.DHydraTui import DField, DLabel, DColor
+from ai_hydra.client.plots.PlotUtils import thin_series
 from ai_hydra.utils.HydraMetrics import HydraMetrics
 
 
@@ -65,46 +67,28 @@ class GameScorePlot(Widget):
         plot.show_legend(location=LegendLocation.TOPLEFT)
 
     def plot_highscores(self):
-        plot_points = self.metrics.get_highscore_plot_points()
-        if not plot_points:
-            return
-        episodes, scores = zip(*plot_points)
 
         plot = self.query_one(f"#{DField.PLOT_HIGHSCORES}", PlotWidget)
         plot.clear()
 
-        plot.plot(
-            x=episodes,
-            y=scores,
-            line_style=DColor.GREEN,
-            hires_mode=HiResMode.BRAILLE,
-            label=DLabel.HIGHSCORE,
-        )
+        try:
 
-        mean_points = self.metrics.get_mean_and_median()
-        if mean_points:
-            episodes, means, _ = zip(*mean_points)
+            # Highscores
+            highscore_pts = self.metrics.get_highscore_plot_points()
+            if highscore_pts:
+                episodes, scores = zip(*highscore_pts)
+                plot.plot(
+                    x=episodes,
+                    y=scores,
+                    line_style=DColor.GREEN,
+                    hires_mode=HiResMode.BRAILLE,
+                    label=DLabel.HIGHSCORE,
+                )
 
-            plot.plot(
-                x=episodes,
-                y=means,
-                line_style=DColor.RED,
-                hires_mode=HiResMode.BRAILLE,
-                label=DLabel.MEAN,
-            )
+            plot.set_xlabel(DLabel.EPISODES)
+            plot.set_ylabel(DLabel.SCORES)
+            plot.show_legend(location=LegendLocation.TOPRIGHT)
 
-        rec_mean_points = self.metrics.get_recent_mean_and_median()
-        if rec_mean_points:
-            episodes, means, _ = zip(*rec_mean_points)
-
-            plot.plot(
-                x=episodes,
-                y=means,
-                line_style=DColor.PURPLE,
-                hires_mode=HiResMode.BRAILLE,
-                label=DLabel.RECENT_MEAN,
-            )
-
-        plot.set_xlabel(DLabel.EPISODES)
-        plot.set_ylabel(DLabel.HIGHSCORES)
-        plot.show_legend(location=LegendLocation.TOPLEFT)
+        except Exception as e:
+            print(f"ERROR: {e}")
+            print(f"TRACEBACK: {traceback.format_exc()}")

@@ -17,6 +17,7 @@ from ai_hydra.utils.MetricEvent import (
     ScoreEvent,
     LossEvent,
     ShiftEvent,
+    MeanAndMedianEvent,
     MemEvent,
     NiceEvent,
 )
@@ -24,9 +25,12 @@ from ai_hydra.utils.MetricEvent import (
 MAX_CUR_SCORES = DPlotDef.MAX_CUR_SCORES
 RECENT_SCORES_MAX = DPlotDef.RECENT_SCORES_MAX
 RECENT_LOSS_MAX = DPlotDef.RECENT_LOSS_MAX
+RECENT_MEAN_MAX = DPlotDef.RECENT_MEAN_MAX
 
 AVG_DIVISOR = 5
 AVG_CUR_SCORES = MAX_CUR_SCORES // AVG_DIVISOR
+
+MEANS_BUFFER_MAX = 20
 
 
 class HydraMetrics:
@@ -67,6 +71,13 @@ class HydraMetrics:
         # Epoch, mean and median values
         self._mean_and_median: list[tuple[int, float, float]] = []
         self._recent_mean_and_median: list[tuple[int, float, float]] = []
+
+        # New mean and median values
+        self._means_and_medians: list[MeanAndMedianEvent] = []
+        self._recent_means_and_medians: deque[MeanAndMedianEvent] = deque(
+            maxlen=RECENT_MEAN_MAX
+        )
+        self._means_and_medians_buffer: list[ScoreEvent] = []
 
         # Gear shift events
         self._shift_events: list[ShiftEvent] = []
@@ -177,6 +188,24 @@ class HydraMetrics:
             self._recent_scores_dist[old_score] -= 1
             if self._recent_scores_dist[old_score] == 0:
                 del self._recent_scores_dist[old_score]
+
+        # --- Recent mean and median values
+        self._means_and_medians_buffer.append(
+            ScoreEvent(
+                epoch=self._cur_epoch,
+                score=score,
+            )
+        )
+        if len(self._means_and_medians_buffer) == MEANS_BUFFER_MAX:
+            scores = [ev.score for ev in self._means_and_medians_buffer]
+            event = MeanAndMedianEvent(
+                epoch=self._cur_epoch,
+                mean=mean(scores),
+                median=median(scores),
+            )
+            self._means_and_medians.append(event)
+            self._recent_means_and_medians.append(event)
+            self._means_and_medians_buffer.clear()
 
         return True
 
@@ -322,8 +351,11 @@ class HydraMetrics:
     def get_recent_loss_plot_points(self) -> list[tuple[int, float]]:
         return [(e.epoch, e.loss) for e in self._recent_losses]
 
-    def get_mean_and_median(self) -> list[tuple[int, float, float]]:
-        return self._mean_and_median
+    def get_means(self) -> list[tuple[int, float]]:
+        return [(e.epoch, e.mean) for e in self._means_and_medians]
+
+    def get_recent_means(self) -> list[tuple[int, float]]:
+        return [(e.epoch, e.mean) for e in self._recent_means_and_medians]
 
     def get_recent_mean_and_median(self) -> list[tuple[int, float, float]]:
         return self._recent_mean_and_median

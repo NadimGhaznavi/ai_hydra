@@ -27,6 +27,13 @@ class LossEvent:
 
 
 @dataclass(slots=True, frozen=True)
+class MeanAndMedianEvent:
+    epoch: int
+    mean: float
+    median: float
+
+
+@dataclass(slots=True, frozen=True)
 class MemEvent:
     epoch: int
     gear: int

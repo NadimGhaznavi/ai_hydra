@@ -495,6 +495,8 @@ class HydraClientTui(App):
                 )
                 highscore_event = metrics.get_last_highscore_event()
                 highscore_log.add_highscore(highscore_event)
+
+                # Call this to make sure the mean scores get plotted
                 self.telemtry.game_score_plot.plot_highscores()
 
             # Only update the score, if "per_step" is enabled.
@@ -502,6 +504,9 @@ class HydraClientTui(App):
                 self._w_board_box.border_subtitle = (
                     f"{DLabel.SCORE}: {cur_score:<2}"
                 )
+
+            # Update the mean value plots
+            self.telemtry.mean_scores_plot.plot_all()
 
     async def on_shutdown_request(self) -> None:
         if self.mq is not None:

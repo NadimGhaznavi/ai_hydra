@@ -128,22 +128,7 @@ class DField:
     MAX_STAGNANT_EPISODES_LABEL: Final[str] = "max_stag_eps_label"
     MAX_TRAINING_FRAMES_INPUT: Final[str] = "max_training_frames_input"
     MAX_TRAINING_FRAMES_LABEL: Final[str] = "max_training_frames_label"
-    MCTS_BOX: Final[str] = "mcts_box"
-    MCTS_CALLS: Final[str] = "mcts_calls"
-    MCTS_DEPTH_INPUT: Final[str] = "mcts_depth_input"
-    MCTS_DEPTH_LABEL: Final[str] = "mcts_depth_label"
-    MCTS_EXPLORE_P_VALUE_INPUT: Final[str] = "mcts_explore_p_value_input"
-    MCTS_EXPLORE_P_VALUE_LABEL: Final[str] = "mcts_explore_p_value_label"
-    MCTS_GATE_P_VALUE_INPUT: Final[str] = "mcts_gate_p_value_input"
-    MCTS_GATE_P_VALUE_LABEL: Final[str] = "mcts_gate_p_value_label"
-    MCTS_ITER_INPUT: Final[str] = "mcts_iter_input"
-    MCTS_ITER_LABEL: Final[str] = "mcts_iter_label"
-    MCTS_SCORE_THRESH_INPUT: Final[str] = "mcts_score_thresh_input"
-    MCTS_SCORE_THRESH_LABEL: Final[str] = "mcts_score_thresh_label"
-    MCTS_STEPS_INPUT: Final[str] = "mcts_steps_input"
-    MCTS_STEPS_LABEL: Final[str] = "mcts_steps_label"
-    MCTS_TRIGGER_RATE: Final[str] = "mcts_trigger_rate"
-    MCTS_TRIGGERED: Final[str] = "mcts_triggered"
+    MEAN_SCORES_PLOT: Final[str] = "mean_scores_plot"
     MEM_SIZING_BOX: Final[str] = "mem_sizing_box"
     MIN_EPSILON: Final[str] = "min_epsilon"
     MIN_EPSILON_INPUT: Final[str] = "min_epsilon_input"
@@ -171,7 +156,9 @@ class DField:
     PLOT_CUR_SCORE: Final[str] = "plot_cur_score"
     PLOT_HIGHSCORES: Final[str] = "plot_highscores"
     PLOT_LOSS: Final[str] = "plot_loss"
+    PLOT_MEAN: Final[str] = "plot_mean"
     PLOT_RECENT_LOSS: Final[str] = "plot_recent_loss"
+    PLOT_RECENT_MEAN: Final[str] = "plot_recent_mean"
     PLOT_RECENT_SCORES_DIST: Final[str] = "plot_recent_scores_dist"
     PLOT_SCORES_DIST: Final[str] = "plot_scores_dist"
     QUIT: Final[str] = "quit"
@@ -325,6 +312,7 @@ class DLabel:
     MAX_STAGNANT_EPISODES: Final[str] = "Threshold"
     MAX_TRAINING_FRAMES: Final[str] = "Max Training Frames"
     MEAN: Final[str] = "Mean"
+    MEAN_SCORES: Final[str] = "Mean Scores"
     MEMORY: Final[str] = "Memory"
     MEDIAN: Final[str] = "Median"
     MIN_EPSILON: Final[str] = "Minimum Epsilon"
@@ -353,6 +341,7 @@ class DLabel:
     RECENT_COUNT: Final[str] = "Recent Scores"
     RECENT_LOSS: Final[str] = "Recent Loss"
     RECENT_MEAN: Final[str] = "Recent Mean"
+    RECENT_MEANS: Final[str] = "Recent Means"
     RESET: Final[str] = "Reset"
     RESUME: Final[str] = "Resume"
     REWARD_STRUCTURE: Final[str] = "Reward Structure"
@@ -420,7 +409,14 @@ class DPlotDef:
     MAX_GAMES_AVG_DIVISOR: int = 50
 
     # Maximum number of scores stored in the metrics object
-    MAX_CUR_SCORES = 180
+    MAX_CUR_SCORES = 150
+
+    # The number of "recent" games in the mean scores plot
+    RECENT_MEAN_MAX = 100
+
+    # The number of mean data points in the "Mean Scores" plot
+    MAX_MEAN_DATA_POINTS = 100
+    MAX_RECENT_MEAN_DATA_POINTS = 125
 
     # The number of "recent" games in the score distribution histogram
     RECENT_SCORES_MAX = 500
