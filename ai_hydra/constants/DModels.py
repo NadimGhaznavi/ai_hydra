@@ -90,7 +90,7 @@ class DLinear:
 
     BATCH_SIZE: Final[int] = 64
     CLOSER_TO_FOOD: Final[float] = 0.1
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 15
     DROPOUT_P: Final[float] = 0.1
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.985
@@ -107,14 +107,14 @@ class DLinear:
     MAX_MOVES_MULTIPLIER: Final[int] = 100
     MAX_MOVES_PENALTY: Final[float] = -10.0
     MAX_STAGNANT_EPISODES: Final[int] = 300
-    MAX_TRAINING_FRAMES: Final[int] = 512
+    MAX_TRAINING_FRAMES: Final[int] = 256
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
     NICE_STEPS: Final[int] = 20
-    NUM_COOLDOWN_EPISODES: Final[int] = 200
+    NUM_COOLDOWN_EPISODES: Final[int] = 50
     SEQ_LENGTH: Final[int] = 4
     TAU: Final[float] = 0.05
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 30
 
 
 MODEL_TYPE_TABLE: Final[dict] = {

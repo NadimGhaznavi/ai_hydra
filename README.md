@@ -306,6 +306,13 @@ Views include:
 
 ![Scores](https://aihydra.osoyalce.com/images/scores.png)
 
+### Scores Distribution
+
+- Global score histogram
+- Recent performance window (last 500 episodes)
+
+![Score Distribution](https://aihydra.osoyalce.com/images/scores-histogram.png)
+
 ### Loss Plot
 
 - Full training loss over time
@@ -313,12 +320,12 @@ Views include:
 
 ![Loss Plot](https://aihydra.osoyalce.com/images/loss-plot.png)
 
-### Scores Distribution
+### Mean Plots
 
-- Global score histogram
-- Recent performance window (last 500 episodes)
+- Sliding window (recent 2000 episodes) of recent mean values
+- Full mean (averaged over 20 episodes) plot
 
-![Score Distribution](https://aihydra.osoyalce.com/images/scores-histogram.png)
+![Mean Plots](https://aihydra.osoyalce.com/images/mean-plots.png)
 
 ### Event Log
 
