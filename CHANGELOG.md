@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [Unreleased]
+## [0.28.0] - 2026-04-13 @ 11:48 - Eenie Meenie Release
 
 ### Added
 - **New Mean Scores Plots**
@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Fixed
 - Redunant and incorrect `q_target` calculation that occured outside of the `with torch.no_grad()` block. This was a pretty serious bug.
+- Removed Monte Carlo Tree Search code; this feature was removed as it was not useful.
 
 ---
 
