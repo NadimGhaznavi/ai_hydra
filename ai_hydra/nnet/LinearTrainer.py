@@ -23,6 +23,7 @@ from ai_hydra.utils.HydraLog import HydraLog
 GRAD_CLIPPING = True
 DQN_WITH_TARGET = False
 DOUBLE_DQN = True
+# DOUBLE_DQN = False
 
 
 class LinearTrainer:
@@ -78,7 +79,6 @@ class LinearTrainer:
             )
 
     async def train_long_memory(self) -> float | None:
-
         chunks = await self.replay.data_mgr.sample_chunks()
         if chunks is None:
             return
@@ -140,6 +140,7 @@ class LinearTrainer:
         q_pred = q_pred_all.gather(2, actions.unsqueeze(-1)).squeeze(
             -1
         )  # [B, T]
+        # q_pred = q_pred[:, -1]
 
         self.model.eval()
         with torch.no_grad():
@@ -173,8 +174,7 @@ class LinearTrainer:
                 max_next_q = next_q.max(dim=2).values  # [B, T]
 
             q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
-
-        q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
+            # q_target = q_target[:, -1]
 
         loss = self.criterion(q_pred, q_target)
 

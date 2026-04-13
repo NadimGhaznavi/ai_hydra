@@ -21,7 +21,7 @@ from ai_hydra.nnet.ATH.ATHCommon import (
     assert_valid_gear,
 )
 
-MIN_WARM_BUCKET_POPULATION = 20
+MIN_WARM_BUCKET_POPULATION = 5
 
 
 class ATHDataStore:
@@ -85,6 +85,9 @@ class ATHDataStore:
         self._cur_game: list[Transition] = []
         self._stored_frames = 0
 
+        # score → list of episode indices (or references)
+        self._score_index: dict[int, list[int]] = {}
+
         # Current gear context for derived indexes / sampling views
         self._cur_gear: int | None = None
 
@@ -117,7 +120,9 @@ class ATHDataStore:
     def discard_cur_game(self):
         self._cur_game = []
 
-    def finalize_game(self, gear_meta: dict[int, GearMeta]) -> None:
+    def finalize_game(
+        self, gear_meta: dict[int, GearMeta], final_score: int
+    ) -> None:
         """
         Finalize the current in-progress episode and add it to canonical storage.
 
@@ -181,6 +186,13 @@ class ATHDataStore:
 
         self._games.append(episode)
         self._stored_frames += ep_size
+
+        ep_idx = len(self._games) - 1
+
+        if final_score not in self._score_index:
+            self._score_index[final_score] = []
+
+        self._score_index[final_score].append(ep_idx)
 
         # Clear current episode buffer
         self._cur_game = []
@@ -257,6 +269,15 @@ class ATHDataStore:
 
         return self._episodes_by_bucket[bucket_idx]
 
+    def get_score_counts(self) -> dict[int, int]:
+        scores = {
+            score: len(idxs) for score, idxs in self.get_score_idx_items()
+        }
+        return dict(sorted(scores.items()))
+
+    def get_score_idx_items(self):
+        return self._score_index.items()
+
     def get_stored_frame_count(self) -> int:
         """
         Return the total number of frames stored across all finalized episodes.
@@ -313,42 +334,21 @@ class ATHDataStore:
         # Return a copy to prevent external mutation
         return list(self._warmed_buckets)
 
-    def pop_first_game(self) -> None:
-        """
-        Remove the oldest episode from canonical storage.
+    def pop_game_by_score(self, score: int) -> None:
+        if score not in self._score_index:
+            raise RuntimeError(f"No episodes for score {score}")
 
-        This method:
-        - removes the first (oldest) episode from _games
-        - updates the stored frame count accordingly
+        if not self._score_index[score]:
+            raise RuntimeError(f"Empty index list for score {score}")
 
-        Invariants:
-            - _games must not be empty
-            - _stored_frames must remain consistent with total stored frames
-        """
+        # Oldest episode for this score
+        ep_idx = self._score_index[score].pop(0)
 
-        if not self._games:
-            raise ValueError(
-                "Cannot pop from empty replay memory (_games is empty)"
-            )
-
-        episode = self._games.pop(0)
-
-        if not isinstance(episode, Episode):
-            raise TypeError(
-                f"Corrupted state: expected Episode, got {type(episode).__name__}"
-            )
-
-        if episode.size < 0:
-            raise ValueError(
-                f"Corrupted episode: size must be >= 0, got {episode.size}"
-            )
-
+        episode = self._games[ep_idx]
         self._stored_frames -= episode.size
 
-        if self._stored_frames < 0:
-            raise RuntimeError(
-                "Stored frame count went negative — memory corruption detected"
-            )
+        # Mark as None (lazy delete)
+        self._games[ep_idx] = None
 
     def update_warmed_buckets_list(self) -> None:
         """
@@ -420,6 +420,9 @@ class ATHDataStore:
                 )
 
         for ep in self._games:
+            if ep is None:
+                continue
+
             if not isinstance(ep, Episode):
                 raise TypeError(
                     f"Corrupted state: expected Episode, got {type(ep).__name__}"

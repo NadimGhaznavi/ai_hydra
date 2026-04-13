@@ -27,6 +27,11 @@ class TabbedSettings(Widget):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        # Config
+
+        # Current epsilon
+        self.cur_epsilon = Label(id=DField.CUR_EPSILON)
+
         # Network configuration
         self.router_address = Label(id=DField.ROUTER_ADDR)
         self.router_port = Label(id=DField.ROUTER_PORT)
@@ -200,9 +205,6 @@ class TabbedSettings(Widget):
             value=str(DGameDef.MAX_MOVES_MULTIPLIER),
             id=DField.MAX_MOVES_MULTIPLIER_INPUT,
         )
-
-        # Current epsilon
-        self.cur_epsilon = Label(id=DField.CUR_EPSILON)
 
     def compose(self) -> ComposeResult:
         with TabbedContent(

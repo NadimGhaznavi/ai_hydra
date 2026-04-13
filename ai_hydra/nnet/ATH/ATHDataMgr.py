@@ -174,7 +174,7 @@ class ATHDataMgr:
                 f"final_score must be int, got {type(final_score).__name__}"
             )
 
-        await self._finalize_game()
+        await self._finalize_game(final_score=final_score)
 
     def _build_episode_gear_meta(
         self,
@@ -313,7 +313,7 @@ class ATHDataMgr:
             ranges=tuple(ranges),
         )
 
-    async def _finalize_game(self) -> None:
+    async def _finalize_game(self, final_score: int) -> None:
         """
         Finalize the current in-progress episode.
 
@@ -347,7 +347,7 @@ class ATHDataMgr:
         if not gear_meta:
             raise RuntimeError("Gear metadata build returned empty result")
 
-        self.store.finalize_game(gear_meta=gear_meta)
+        self.store.finalize_game(gear_meta=gear_meta, final_score=final_score)
 
         await self._prune_if_needed()
         self._rebuild_bucket_index()
@@ -384,7 +384,19 @@ class ATHDataMgr:
         while stored_frames > self._max_frames:
             before = stored_frames
 
-            self.store.pop_first_game()
+            score_counts = {
+                score: len(idxs)
+                for score, idxs in self.store.get_score_idx_items()
+                if idxs
+            }
+
+            if not score_counts:
+                raise RuntimeError("No scores available for pruning")
+
+            # Most overrepresented score
+            target_score = max(score_counts, key=score_counts.get)
+
+            self.store.pop_game_by_score(target_score)
 
             stored_frames = self.store.get_stored_frame_count()
 

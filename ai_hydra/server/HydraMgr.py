@@ -425,9 +425,6 @@ class HydraMgr(HydraServer):
                         sess.epoch += 1
                         count += 1
 
-                        if count % 200 == 0:
-                            self.log.info(f"Epoch: {count}")
-
                         # Epsilon
                         await train_mgr.policy.played_game()
                         ep_payload[DNetField.CUR_EPSILON] = (

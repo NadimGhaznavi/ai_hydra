@@ -177,6 +177,12 @@ class TrainMgr:
                 await self.policy.enable_nice()
             self._stag_alert_status = EV_TYPE.SET
 
+        if self._epoch % 100 == 0:
+            self.log.debug(
+                f"Stored Games: Epoch {self._epoch} - "
+                f"{self.replay.store.get_score_counts()}"
+            )
+
     def _reset_window(self) -> None:
         """
         Reset rolling window counters

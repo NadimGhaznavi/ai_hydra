@@ -49,7 +49,7 @@ class ATHMemory:
         self.log.info(f"Set number of cooldown episodes: {num_cooldown_eps}")
 
         # Memory storage
-        data_store = ATHDataStore(
+        self.store = ATHDataStore(
             log_level=log_level,
             max_buckets=max_buckets,
             max_gear=max_gear,
@@ -61,7 +61,7 @@ class ATHMemory:
             log_level=log_level,
             rng=rng,
             pub_func=pub_func,
-            data_store=data_store,
+            data_store=self.store,
             max_frames=max_frames,
             max_gear=max_gear,
             max_training_frames=max_training_frames,
@@ -71,7 +71,7 @@ class ATHMemory:
         self.gearbox = ATHGearBox(
             log_level=log_level,
             pub_func=pub_func,
-            data_store=data_store,
+            data_store=self.store,
             max_buckets=max_buckets,
             upshift_count_thresh=upshift_count_thresh,
             downshift_count_thresh=downshift_count_thresh,

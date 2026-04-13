@@ -23,7 +23,7 @@ class DGRU:
     BATCH_SIZE: Final[int] = 64
     CLOSER_TO_FOOD: Final[float] = 0.1
     DROPOUT_P_VALUE: Final[float] = 0.1
-    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 50
+    DOWNSHIFT_COUNT_THRESHOLD: Final[int] = 15
     INITIAL_EPSILON: Final[float] = 0.99
     EMPTY_MOVE_REWARD: Final[float] = 0.0
     EPSILON_DECAY_RATE: Final[float] = 0.97
@@ -41,12 +41,12 @@ class DGRU:
     MAX_TRAINING_FRAMES: Final[int] = 512
     MINIMUM_EPSILON: Final[float] = 0.0
     NICE_P_VALUE: Final[float] = 0.005
-    NICE_STEPS: Final[int] = 20
-    NUM_COOLDOWN_EPISODES: Final[int] = 100
+    NICE_STEPS: Final[int] = 30
+    NUM_COOLDOWN_EPISODES: Final[int] = 20
     GRU_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
-    TAU: Final[float] = 0.001
-    UPSHIFT_COUNT_THRESHOLD: Final[int] = 150
+    TAU: Final[float] = 0.5
+    UPSHIFT_COUNT_THRESHOLD: Final[int] = 30
 
 
 class DRNN:
@@ -79,7 +79,7 @@ class DRNN:
     NUM_COOLDOWN_EPISODES: Final[int] = 200
     RNN_LAYERS: Final[int] = 3
     SEQ_LENGTH: Final[int] = 4
-    TAU: Final[float] = 0.001
+    TAU: Final[float] = 0.05
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
 
 
@@ -113,7 +113,7 @@ class DLinear:
     NICE_STEPS: Final[int] = 20
     NUM_COOLDOWN_EPISODES: Final[int] = 200
     SEQ_LENGTH: Final[int] = 4
-    TAU: Final[float] = 0.001
+    TAU: Final[float] = 0.05
     UPSHIFT_COUNT_THRESHOLD: Final[int] = 300
 
 

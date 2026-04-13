@@ -542,6 +542,7 @@ class HydraClientTui(App):
             nice_p_value = DLinear.NICE_P_VALUE
             nice_steps = DLinear.NICE_STEPS
             num_cooldown_eps = DLinear.NUM_COOLDOWN_EPISODES
+            tau = DLinear.TAU
             upshift_thresh = DLinear.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.RNN)
             self.remove_class(DField.GRU)
@@ -571,6 +572,7 @@ class HydraClientTui(App):
             nice_p_value = DRNN.NICE_P_VALUE
             nice_steps = DRNN.NICE_STEPS
             num_cooldown_eps = DRNN.NUM_COOLDOWN_EPISODES
+            tau = DRNN.TAU
             upshift_thresh = DRNN.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.GRU)
@@ -600,6 +602,7 @@ class HydraClientTui(App):
             nice_p_value = DGRU.NICE_P_VALUE
             nice_steps = DGRU.NICE_STEPS
             num_cooldown_eps = DGRU.NUM_COOLDOWN_EPISODES
+            tau = DGRU.TAU
             upshift_thresh = DGRU.UPSHIFT_COUNT_THRESHOLD
             self.remove_class(DField.LINEAR)
             self.remove_class(DField.RNN)
@@ -629,6 +632,7 @@ class HydraClientTui(App):
         self.query_one(f"#{DField.RNN_LAYERS_INPUT}", Input).value = str(
             layers
         )
+        self.query_one(f"#{DField.RNN_TAU_INPUT}", Input).value = str(tau)
         self.settings.downshift_count_threshold_input.value = str(
             downshift_thresh
         )

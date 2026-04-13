@@ -9,10 +9,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [Unreleased]
 
 ### Added
-
 - **New Mean Scores Plots**
   - Added a pair of plots showing the mean score over time
   - Added data storage and get methods to the `HydraMetrics` class
+
+### Changed
+- **ATH Memory Pruning**
+  - Games used to be stored in a FIFO and aged out based on that structure.
+  - The new design tracks games by score and prunes to balance the stored games by score.
+  - Added server side logs that show the stored memory games-by-score every 100 episodes
+  - Radical retuning of the GRU.
+- Increased minimum number of episodes from 1 to 5 to define a memory bucket as warmed
+
+### Fixed
+- Redunant and incorrect `q_target` calculation that occured outside of the `with torch.no_grad()` block. This was a pretty serious bug.
 
 ---
 
