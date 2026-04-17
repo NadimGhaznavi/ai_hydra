@@ -102,12 +102,6 @@ class RecurrentTrainer:
                 f"{len(chunks[0])}"
             )
 
-        # Shapes (B = batch_size, T = seq_length, F = feature/input size)
-        # states      -> [B, T, F]
-        # actions     -> [B, T]
-        # rewards     -> [B, T]
-        # next_states -> [B, T, F]
-        # dones       -> [B, T]
         states = torch.tensor(
             np.array(
                 [[t.old_state for t in chunk] for chunk in chunks],
@@ -153,7 +147,7 @@ class RecurrentTrainer:
         q_pred = q_pred_all.gather(2, actions.unsqueeze(-1)).squeeze(
             -1
         )  # [B, T]
-        q_pred = q_pred[:, -1]
+        # q_pred = q_pred[:, -1]
 
         with torch.no_grad():
             if DOUBLE_DQN:
@@ -186,7 +180,7 @@ class RecurrentTrainer:
                 max_next_q = next_q.max(dim=2).values  # [B, T]
 
             q_target = rewards + self._gamma * max_next_q * (1.0 - dones)
-            q_target = q_target[:, -1]
+            # q_target = q_target[:, -1]
 
         loss = self.criterion(q_pred, q_target)
 
