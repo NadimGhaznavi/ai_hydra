@@ -11,27 +11,31 @@
 # https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/#installing-the-theme
 
 # theme                  : "minimal-mistakes-jekyll"
-#remote_theme: "NadimGhaznavi/minimal-mistakes"
-remote_theme: "mmistakes/minimal-mistakes"
+remote_theme: "NadimGhaznavi/minimal-mistakes"
+#remote_theme: "mmistakes/minimal-mistakes"
 
 # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
-minimal_mistakes_skin: "neon"
+minimal_mistakes_skin: "dark"
 #minimal_mistakes_skin: "sunrise"
 #minimal_mistakes_skin: "air"
 
 # Site Settings
+# Site Settings
+mycount:
+  endpoint: "https://count.osoyalce.com/count"
+  site: "aihydra"
 locale: "en-US"
 rtl: # true, false (default) # turns direction of the page into right to left for RTL languages
 title: "AI Hydra"
 title_separator: "-"
 subtitle: # site tagline that appears below site title in masthead
-name: "Nadim-Daniel"
-description: "MBRL Sandbox"
-url: https://aihydra.osoyalce.com/ # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
-baseurl: "/" # the subpath of your site, e.g. "/blog"
-repository: NadimGhaznavi/ai_hydra # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
+name: "aihydra"
+description: "AI Reinforcement learning sandbox with the Snake Game"
+url: "https://aihydra.osoyalce.com" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
+baseurl: "" # the subpath of your site, e.g. "/blog"
+repository: NadimGhaznavi/ai-hydra # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
 teaser: # path of fallback teaser image, e.g. "/assets/images/500x300.png"
-logo: "/images/ai_hydra.png" # /images/banner.png # path of logo image to display in the masthead, e.g. "/assets/images/88x88.png"
+logo: "/images/aihydra.png"
 masthead_title: # overrides the website title displayed in the masthead, use " " for no title
 breadcrumbs: # true, false (default)
 words_per_minute: 200
@@ -117,27 +121,18 @@ analytics:
 
 # Site Author
 author:
-  name: "Nadim-Daniel"
+  name: "Nadim-Daniel Ghaznavi"
   avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio: "Human Bean"
+  bio: "Creator"
   location: "Hamilton, ON"
   email: "nghaznavi@gmail.com"
   links:
-    - label: "Website"
-      icon: "fas fa-fw fa-link"
-      url: "https://www.osoyalce.com"
-    - label: "Twitter"
-      icon: "fab fa-fw fa-twitter-square"
-      url: "https://x.com/NadimDGhaznavi"
-    - label: "Facebook"
-      icon: "fab fa-fw fa-facebook-square"
-      url: "https://www.facebook.com/nadim.ghaznavi"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
-      url: "https://github.com/NadimGhaznavi/"
-    - label: "Instagram"
-      icon: "fab fa-fw fa-instagram"
-      url: "https://www.instagram.com/nadimghaznavi/"
+      url: "https://github.com/NadimGhaznavi"
+    - label: "My Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://www.osoyalce.com/"
 
 # Site Footer
 footer:
@@ -160,12 +155,12 @@ footer:
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       # url:
-  since: "2013"
+  since: "2026"
 
 # Reading Files
 include:
   - .htaccess
-  - _pages
+  - pages
 exclude:
   - "*.sublime-project"
   - "*.sublime-workspace"
@@ -178,7 +173,6 @@ exclude:
   - assets/js/_main.js
   - assets/js/vendor
   - Capfile
-  - CHANGELOG
   - config
   - Gemfile
   - Gruntfile.js
@@ -305,6 +299,13 @@ compress_html:
 
 # Defaults
 defaults:
+  # Documentation pages use the theme's narrow left author sidebar.
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
   # _posts
   - scope:
       path: ""
@@ -312,7 +313,7 @@ defaults:
     values:
       layout: single
       author_profile: true
-      read_time: true
+      read_time: false
       comments: # true
       share: true
       related: true
