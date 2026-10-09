@@ -1,19 +1,42 @@
-# .github/workflows/rebuild-site.yml
-name: Rebuild GitHub Pages Site
+name: Rebuild Jekyll Site
 
 on:
-  workflow_dispatch:  # manual trigger
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  rebuild:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
 
-      - name: Trigger GitHub Pages Build
-        run: |
-          git config --global user.email "nghaznavi@gmail.com"
-          git config --global user.name "Nadim Ghaznavi"
-          git commit --allow-empty -m "Trigger GitHub Pages rebuild"
-          git push
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
