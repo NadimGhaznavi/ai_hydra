@@ -1,5 +1,5 @@
 ---
-title: "AI Hydra: Hybrid Neural Network + Tree Search System"
+title: "AI Hydra vs. The Snake Game"
 author_profile: true
 layout: single
 ---
